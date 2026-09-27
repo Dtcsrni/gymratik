@@ -4,19 +4,101 @@ import sys
 import re
 import tempfile
 import unittest
+from html.parser import HTMLParser
 from pathlib import Path
+from urllib.parse import unquote
 
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from validate_canonical_routines import validate_path  # noqa: E402
+from standardize_muscle_visuals import (  # noqa: E402
+    close_unterminated_segmented_progress_style,
+    standardize_offline_image_sources,
+    standardize_series_entry_zone,
+)
 
 
 CANONICAL = ROOT / "data" / "rutinas_autocontenidas" / "canonicas"
 
 
 class CanonicalRoutineValidationTests(unittest.TestCase):
+    def test_unterminated_progress_style_is_closed_before_the_next_stylesheet(self) -> None:
+        malformed = (
+            '<head><style data-enhancement="segmented-progress-bars-v1">.progress{color:red}'
+            '<style data-enhancement="interaction-feedback-v1">.clear{color:blue}</style></head>'
+        )
+        repaired = close_unterminated_segmented_progress_style(malformed)
+        self.assertIn(
+            '.progress{color:red}\n</style>\n<style data-enhancement="interaction-feedback-v1">',
+            repaired,
+        )
+        self.assertEqual(close_unterminated_segmented_progress_style(repaired), repaired)
+
+    def test_series_entry_standardizer_adds_licensed_icons_and_touch_slider_feedback(self) -> None:
+        source = """<script>
+const performancePanel = document.createElement('div');
+const repsTitle = document.createElement('span'); repsTitle.textContent = 'Repeticiones realizadas · opcional'; const repsClear = document.createElement('button');
+const loadHead = document.createElement('span'); loadHead.className = 'performanceLoadHead';
+    const loadTitle = document.createElement('span'); loadTitle.textContent = 'Carga utilizada (opcional)';
+const updateLoadControl = () => {};
+loadOutput.textContent = item.performanceLoadSelected ? `${Number.isInteger(value) ? value : value.toFixed(1)} ${item.performanceLoadUnit}` : 'Sin registrar · tocar para añadir'; loadClear.hidden = !item.performanceLoadSelected;
+item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden = !selected; repsDown.disabled
+</script>"""
+        standardized = standardize_series_entry_zone(source)
+        self.assertIn("createPerformanceIcon('repeat-2')", standardized)
+        self.assertIn("createPerformanceIcon('weight')", standardized)
+        self.assertIn("const updateRangeFill = input =>", standardized)
+        self.assertIn("updateRangeFill(item.performanceReps)", standardized)
+        self.assertIn("loadOutput.dataset.selected = String(item.performanceLoadSelected)", standardized)
+
+    def test_standardizer_replaces_img_src_without_overwriting_provenance(self) -> None:
+        source = (
+            '<img data-original-src="https://shop.lifefitness.com/machine.jpg" '
+            'src="https://shop.lifefitness.com/machine.jpg" alt="Máquina">'
+        )
+        standardized = standardize_offline_image_sources(source)
+        self.assertIn('data-original-src="https://shop.lifefitness.com/machine.jpg"', standardized)
+        self.assertIn(
+            'src="../medios_publicados/ejercicios-compartido/images/0577-T0yTjgW-machine-only.webp"',
+            standardized,
+        )
+
+    def test_optional_gifs_reveal_packaged_posters_when_offline(self) -> None:
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            source = path.read_text(encoding="utf-8")
+            with self.subTest(path=path.name):
+                self.assertEqual(source.count('data-fix="offline-optional-gif-fallback-v1"'), 1)
+                self.assertIn('.warmupVisual[data-media-state="FALLBACK_STATIC"] .warmupFallback', source)
+                self.assertIn('.gifFrame[data-media-state="FALLBACK_STATIC"] .gifFallback', source)
+                self.assertIn("document.addEventListener('error', event => revealPoster(event.target), true)", source)
+                self.assertIn("fallback.hidden = false", source)
+
+    def test_all_routine_images_are_local_and_packaged(self) -> None:
+        class ImageSources(HTMLParser):
+            def __init__(self) -> None:
+                super().__init__()
+                self.sources: list[str] = []
+
+            def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+                if tag.lower() == "img":
+                    source = dict(attrs).get("src") or ""
+                    if source:
+                        self.sources.append(source)
+
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*.html")):
+            parser = ImageSources()
+            parser.feed(path.read_text(encoding="utf-8"))
+            for source in parser.sources:
+                with self.subTest(routine=path.name, source=source[:100]):
+                    self.assertFalse(source.startswith(("http://", "https://")), "la imagen requiere red")
+                    if source.startswith("data:image/"):
+                        continue
+                    asset = (path.parent / unquote(source.split("?", 1)[0])).resolve()
+                    self.assertTrue(asset.is_relative_to(ROOT.resolve()), "la imagen sale del repositorio")
+                    self.assertTrue(asset.is_file(), f"no existe el recurso empaquetado: {source}")
+
     def test_day2_matches_its_declared_contract(self) -> None:
         self.assertEqual(
             validate_path(CANONICAL / "Rutina_Dia_2_Pierna_Gluteo_V1.html"), []
@@ -177,7 +259,9 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
                 self.assertIn("const restRemaining = Math.max(0, recommendation.minMs - restElapsed);", timing_display)
                 self.assertIn("Descanso restante: <strong>${formatCountdown(restRemaining)}</strong>", timing_display)
                 self.assertIn("item.restDisplay.hidden = !restActive", timing_display)
-                self.assertIn("if (!row.complete && timing?.restStartedAt) notifyRestReady(item, timing, restElapsed);", timing_display)
+                self.assertIn("if (!root?.sessionEndedAt && timing?.restStartedAt) notifyRestReady(item, timing, restElapsed);", timing_display)
+                self.assertIn("Boolean(!root?.sessionEndedAt && timing?.restStartedAt && restRemaining > 0)", timing_display)
+                self.assertIn("exerciseItems.some(entry => !snapshot(entry).complete)", source)
                 self.assertIn("button.classList.toggle('is-resting', resting && restRemaining > 0)", complete_button)
                 self.assertIn("button.classList.toggle('is-series-active', seriesActive && !preparing)", complete_button)
                 self.assertIn("summaryButton.classList.toggle('isResting', restActive)", timing_display)
@@ -187,24 +271,52 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
                     source.index('<aside class="floatingSessionSummary"') : source.index("</aside>")
                 ]
                 self.assertEqual(source.count('<aside class="floatingSessionSummary"'), 1)
-                self.assertIn('id="summaryActivity"', floating_summary)
-                self.assertIn('id="summaryActivityLabel"', floating_summary)
-                self.assertIn('id="summaryActivityClock"', floating_summary)
+                self.assertEqual(floating_summary.count('<button'), 1)
+                self.assertIn('id="summaryActivityIcon"', floating_summary)
+                self.assertIn('id="summaryHeadline"', floating_summary)
+                self.assertEqual(source.count('id="summaryActivityHeadline"'), 1)
+                self.assertEqual(source.count('id="summaryActivityStatus"'), 1)
+                self.assertEqual(source.count('id="summaryOverallProgress"'), 1)
+                self.assertEqual(floating_summary.count('id="summaryActivityMascot"'), 1)
+                self.assertNotIn('id="summaryActivity"', floating_summary)
                 self.assertIn("let currentActivity = null", timing_display)
                 self.assertIn("Descanso listo · ${item.title}", timing_display)
-                self.assertIn("activityPanel.classList.toggle('isActive'", timing_display)
+                self.assertIn("activityButton.classList.toggle('isActive'", timing_display)
+                self.assertIn("activityHeadline.textContent = progressText", timing_display)
+                self.assertIn("if (compactActivityHeadline) compactActivityHeadline.textContent = activityText", timing_display)
+                self.assertIn("const mascotState = currentActivity?.kind === 'rest' ? 'rest' : currentActivity?.kind === 'active' ? 'exercise' : ''", timing_display)
+                self.assertIn("mascot.removeAttribute('src')", timing_display)
+                self.assertIn("25fps.gif", timing_display)
+                self.assertIn("window.TrainingProgressStore?.getProfile?.().then(updateActivityMascotProfile)", source)
+                self.assertIn("activityStatus.classList.toggle('isIdle', !currentActivity || currentActivity.kind === 'ready')", timing_display)
+                self.assertIn("overallProgress.setAttribute('aria-valuenow', String(doneSeries))", timing_display)
                 summary_style = re.search(
                     r'<style data-fix="rest-countdown-activity-v1">.*?</style>', source, re.S
                 )
                 self.assertIsNotNone(summary_style)
-                self.assertIn(".summaryActivity.isResting", summary_style.group(0))
-                self.assertIn(".summaryActivity.isActive", summary_style.group(0))
-                self.assertNotIn(".summaryActivity{position:fixed", summary_style.group(0))
+                self.assertIn(".summaryToggle.isResting", summary_style.group(0))
+                self.assertIn(".summaryToggle.isActive", summary_style.group(0))
+                self.assertNotIn(".summaryActivity{", summary_style.group(0))
                 self.assertIn(".summaryExercise.isSeriesActive .summaryExerciseState", summary_style.group(0))
                 self.assertIn("button.completeSetButton.is-resting", summary_style.group(0))
                 self.assertIn("animation:restSlowPulse 2.4s", summary_style.group(0))
                 self.assertIn("animation:activityFastPulse .68s", summary_style.group(0))
                 self.assertIn(".exerciseTracker:has(.completeSetButton.is-series-active) .seriesProgressSegment.is-current", summary_style.group(0))
+                self.assertIn("#summaryActivityHeadline", summary_style.group(0))
+                self.assertIn("#floatingSessionSummary{position:fixed!important", summary_style.group(0))
+                self.assertIn("max-height:min(54dvh,480px)", summary_style.group(0))
+                self.assertIn(".summaryExercise::after", summary_style.group(0))
+                self.assertIn(".summaryExercise::before,.summaryExercise::after", summary_style.group(0))
+                self.assertIn("transform:scaleX(var(--summary-progress,0))", summary_style.group(0))
+                self.assertIn(".summaryExercise.isSeriesActive::after", summary_style.group(0))
+                self.assertIn("white-space:nowrap!important;display:block!important", summary_style.group(0))
+                self.assertIn(".summaryExercise.isSeriesActive::after,button.completeSetButton", summary_style.group(0))
+                self.assertIn(".summaryProgressTrack>span", summary_style.group(0))
+                self.assertIn(".summaryActivityStatus.isIdle .summaryActivityIndicator{background:#82aebb;animation:none}", summary_style.group(0))
+                self.assertIn(".seriesProgressSegment.is-current.is-resting", summary_style.group(0))
+                self.assertIn("@keyframes activityFillGlow", summary_style.group(0))
+                self.assertNotIn("@keyframes progressActivityFill", summary_style.group(0))
+                self.assertNotRegex(summary_style.group(0), r"@keyframes activityFillGlow\s*\{[^}]*transform\s*:")
                 self.assertIn("@media(prefers-reduced-motion:reduce)", summary_style.group(0))
 
     def test_repetition_selector_uses_exercise_range_plus_four_without_defaulting(self) -> None:
@@ -225,12 +337,25 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
                 self.assertIn("item.performanceReps.dataset.selected === 'true'", source)
                 self.assertIn("reps <= item.repMaximum + 4", source)
                 self.assertIn("performanceRepsNudge", control)
-                self.assertIn("Elige entre ${item.repMinimum} y ${item.repMaximum + 4}", control)
-                self.assertIn("aria-live', 'polite", control)
+                self.assertIn("repsLabelText.textContent = 'Repeticiones'", source)
+                self.assertIn("createPerformanceIcon('repeat-2')", source)
+                self.assertIn("Sin registrar · ${item.repMinimum}–${item.repMaximum + 4} posibles", reps_logic)
+                self.assertIn("repsClear.addEventListener('click'", source)
+                self.assertIn("aria-live', 'polite", source)
                 self.assertIn("Math.min(item.repMaximum + 4", reps_logic)
                 self.assertIn("Math.max(item.repMinimum", reps_logic)
                 self.assertIn("savePerformanceDraft()", reps_logic)
                 self.assertIn("data-enhancement=\"interaction-feedback-v1\"", source)
+                self.assertIn("performanceClear", source)
+                self.assertIn("loadClear.addEventListener('click'", source)
+                self.assertIn("loadLabelText.textContent = 'Carga'", source)
+                self.assertIn("createPerformanceIcon('weight')", source)
+                self.assertIn("Puedes completar la serie sin registrar", source)
+                self.assertIn("item.performanceRepsClear.hidden = true", source)
+                self.assertNotIn("repsClear.hidden = true; updateRangeFill", source)
+                self.assertEqual(source.count("repsClear.addEventListener('click'"), 1)
+                self.assertEqual(source.count("loadClear.addEventListener('click'"), 1)
+                self.assertEqual(source.count("const activeRest = Boolean("), 1)
                 self.assertIn("button:not(:disabled):active", source)
                 self.assertNotIn("Number(item.performanceReps.value) > 0 ?", source)
 
@@ -242,7 +367,7 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
                 self.assertIn("warmup.phase = 'preparing'", source)
                 self.assertIn("warmup.preparationEndsAt = warmupPreparationEndsAt", source)
                 self.assertIn("timing.preparationEndsAt = endsAt", source)
-                self.assertIn("getWarmupTiming().phase === 'preparing' && getWarmupTiming().preparationEndsAt", source)
+                self.assertIn("if (restoredWarmup.phase === 'preparing')", source)
                 self.assertIn("Omitir ejercicio · mantén 10 s", source)
                 self.assertIn("setTimeout(() => { skipHoldTimer = 0", source)
                 self.assertIn("loadOutput.addEventListener('click'", source)
@@ -322,13 +447,24 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
             with self.subTest(path=path.name):
                 self.assertEqual(source.count('data-enhancement="segmented-progress-bars-v1"'), 1)
                 self.assertIn("warmupProgressSegments", source)
+                self.assertIn('id="warmupProgress"', source)
+                self.assertIn('aria-label="Progreso del calentamiento"', source)
+                self.assertIn("warmupProgress.setAttribute('aria-valuenow', String(completedPhases))", source)
+                self.assertIn("warmupProgress.dataset.state = progressState", source)
+                self.assertEqual(source.count('id="warmupAction"'), 1)
+                self.assertIn("warmupActionButton?.addEventListener('click'", source)
+                self.assertIn('id="warmupInstructions"', source)
+                self.assertIn("Sigue las actividades, tiempos y técnica indicados arriba", source)
+                self.assertNotIn('id="warmupStart"', source)
+                self.assertNotIn('id="warmupAdvance"', source)
+                self.assertNotIn('id="warmupFinish"', source)
+                self.assertNotIn("warmupFinishButton", source)
                 self.assertIn("Progreso del calentamiento", source)
-                self.assertIn("aria-valuemax', '2'", source)
+                self.assertIn('aria-valuemax="2"', source)
                 self.assertIn("seriesProgressSegments", source)
                 self.assertIn("Series completadas", source)
                 self.assertIn("seriesProgress.setAttribute('aria-valuenow', String(done))", source)
                 self.assertIn("segment.classList.toggle('is-complete'", source)
-                self.assertIn("warmupProgress.dataset.state = warmupState", source)
                 self.assertIn("seriesProgress.dataset.state = seriesState", source)
                 self.assertIn("'empty'", source)
                 self.assertIn("'filling'", source)
@@ -337,6 +473,33 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
                 self.assertIn("@keyframes progressPulse", source)
                 self.assertIn("@keyframes progressFinish", source)
                 self.assertIn("prefers-reduced-motion:reduce", source)
+
+    def test_all_routines_have_well_formed_progress_and_open_licensed_logging_icons(self) -> None:
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            source = path.read_text(encoding="utf-8")
+            with self.subTest(path=path.name):
+                progress_style = source.index('<style data-enhancement="segmented-progress-bars-v1">')
+                interaction_style = source.index('<style data-enhancement="interaction-feedback-v1">')
+                self.assertLess(source.index("</style>", progress_style), interaction_style)
+                self.assertIn("createPerformanceIcon('repeat-2')", source)
+                self.assertIn("createPerformanceIcon('weight')", source)
+                self.assertIn("class=\"lucide lucide-repeat-2\"", source)
+                self.assertIn("class=\"lucide lucide-weight\"", source)
+
+    def test_each_exercise_has_one_dynamic_action_for_approximation_and_sets(self) -> None:
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            source = path.read_text(encoding="utf-8")
+            with self.subTest(path=path.name):
+                self.assertIn('class="setButton warmupSet"', source)
+                self.assertRegex(source, r'class="setButton warmupSet"[^>]*\shidden')
+                self.assertIn('class="completeSetButton"', source)
+                self.assertIn('id="exerciseWarmupHint"', source)
+                self.assertIn("Registrar 1 serie ligera de aproximación", source)
+                self.assertIn("if (warmup && state[warmup.dataset.key] !== true) {", source)
+                self.assertIn("state[warmup.dataset.key] = true;", source)
+                self.assertNotIn("warmup.click(); return;", source)
+                self.assertIn("longPressDetected = false; startSeriesButton.style.setProperty('--hold-progress', '0%');", source)
+                self.assertIn("button.classList.toggle('is-preparing', preparing)", source)
 
     def test_load_slider_can_be_saved_when_completing_a_series(self) -> None:
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
@@ -549,7 +712,7 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
                         source,
                     )
                 self.assertIn('data-enhancement="warmup-motion-zoom-v2"', source)
-                self.assertIn("object-fit:cover!important;", source)
+                self.assertIn("object-fit:contain!important}", source)
 
 
 if __name__ == "__main__":

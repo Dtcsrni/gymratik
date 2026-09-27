@@ -34,6 +34,7 @@ La matriz crecerá con la implementación. `Planned` significa que no existe tod
 | FUN-PWA-005 | RISK-011 | ADR-016 | TST-PWA-005 | Partial |
 | FUN-PWA-006 | RISK-011 | ADR-016 | TST-PWA-006 | Partial |
 | FUN-PWA-007 | RISK-004 | ADR-015 | TST-PWA-029 | Partial |
+| FUN-PWA-008 | RISK-011 | ADR-016 | TST-PWA-030 | Partial |
 | FUN-PRO-001 | RISK-004 | ADR-013 | TST-PRO-001 | Partial |
 | FUN-PRO-002 | RISK-004, RISK-014 | ADR-015 | TST-PRO-002 | Partial |
 | FUN-PRO-003 | RISK-004 | ADR-013 | TST-PRO-003 | Partial |
@@ -47,6 +48,7 @@ La matriz crecerá con la implementación. `Planned` significa que no existe tod
 | FUN-PRO-011 | RISK-003 | ADR-013, ADR-015 | TST-PRO-011 | Partial |
 | FUN-PRO-012 | RISK-004 | ADR-014 | TST-PRO-012 | Partial |
 | FUN-PRO-013 | RISK-004 | ADR-014 | TST-PRO-013 | Partial |
+| FUN-PRO-014 | RISK-004 | ADR-013 | TST-PRO-014 | Partial |
 | NFR-REL-001 | RISK-004 | ADR-013, ADR-015 | TST-PWA-012 | Partial |
 | NFR-REL-002 | RISK-004 | ADR-013, ADR-015 | TST-PWA-013 | Partial |
 | NFR-AVA-001 | RISK-011 | ADR-016 | TST-PWA-014 | Partial; offline real pending |
@@ -75,7 +77,7 @@ La matriz crecerá con la implementación. `Planned` significa que no existe tod
 | SDD-001 · Rutina canónica y versionado | Contenido de `DIA_1/2/3/4_CONTENIDO_Y_MAQUETACION`, RISK-011 | TDD-002 / `TST-CAN-001..004` | In progress |
 | SDD-002 · Plantilla y máquina de estados UI | FUN-TRN-001, FUN-TRN-006, NFR-USA-001 | TDD-003 / `TST-CAN-003`, `TST-UI-*` | Partial |
 | SDD-003 · Medios y procedencia | NFR-SEC-002, NFR-PRI-002, límites de evidencia | TDD-004 / `TST-MED-*` | In progress |
-| [SDD-004](../03-architecture/SDD-004-generacion-validacion-publicacion-pwa.md) · Builders, shell, perfil, offline y publicación PWA | FUN-PWA-001..006, FUN-PRO-001..011, NFR-PWA aplicables, NFR-COM-001, RISK-011 | [TDD-005](../05-quality/TDD-005-pwa-perfil-e2e.md) / `TST-PWA-*`, `TST-PRO-*`, `TST-BLD-001` | In progress |
+| [SDD-004](../03-architecture/SDD-004-generacion-validacion-publicacion-pwa.md) · Builders, shell, perfil, offline y publicación PWA | FUN-PWA-001..008, FUN-PRO-001..014, NFR-PWA aplicables, NFR-COM-001, RISK-011 | [TDD-005](../05-quality/TDD-005-pwa-perfil-e2e.md) / `TST-PWA-*`, `TST-PRO-*`, `TST-BLD-001` | In progress |
 | SDD-005 · Gymratik local-first | FUN-TRN-001..009, RISK-004 | TDD-006 / `TST-TRN-*`, `TST-REL-001` | Planned |
 | SDD-006 · Outbox y recuperación | FUN-SYN-001..004, FUN-EXP-001..002, RISK-004/RISK-014 | TDD-007 / `TST-SYN-*`, `TST-REC-001` | Planned |
 | SDD-007 · Nutrición e IA | FUN-NUT-001..009, FUN-AI-001..006, RISK-002/RISK-009/RISK-012 | TDD-008 / `TST-NUT-*`, `TST-AI-*` | Planned |

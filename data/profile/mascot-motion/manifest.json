@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "description": "Mascotas Gymratik locales: ciclo GIF solo durante ejercicio/descanso; WebP estático con movimiento reducido.",
+  "defaultVariant": "neutral",
+  "minimumFps": 25,
+  "records": [
+    {
+      "variant": "female",
+      "state": "exercise",
+      "gif": "data/profile/mascot-motion/female-exercise-25fps.gif",
+      "still": "data/profile/mascot-motion/female-exercise-still.webp",
+      "width": 128,
+      "height": 128,
+      "fps": 25,
+      "frames": 66,
+      "frameDurationMs": 40,
+      "gifBytes": 530477,
+      "sha256": "34107b2a068d2de75678d083a7e39e231bf8f48d2a0f43df540780b04f6e700b",
+      "source": "data/profile/mascot-motion/sources/female-exercise.webp"
+    },
+    {
+      "variant": "female",
+      "state": "rest",
+      "gif": "data/profile/mascot-motion/female-rest-25fps.gif",
+      "still": "data/profile/mascot-motion/female-rest-still.webp",
+      "width": 128,
+      "height": 128,
+      "fps": 25,
+      "frames": 66,
+      "frameDurationMs": 40,
+      "gifBytes": 503783,
+      "sha256": "ab36382ad082fdb91f2e169b3629a42993464ae5d3f5ce4b76e7af810924b7e7",
+      "source": "data/profile/mascot-motion/sources/female-rest.webp"
+    },
+    {
+      "variant": "male",
+      "state": "exercise",
+      "gif": "data/profile/mascot-motion/male-exercise-25fps.gif",
+      "still": "data/profile/mascot-motion/male-exercise-still.webp",
+      "width": 128,
+      "height": 128,
+      "fps": 25,
+      "frames": 66,
+      "frameDurationMs": 40,
+      "gifBytes": 427464,
+      "sha256": "35e977f0d7b1ed2f9c1ef23e02e8ad56a447a923cfe8c4e95f8a5537a7ebc41b",
+      "source": "data/profile/mascot-motion/sources/male-exercise.webp"
+    },
+    {
+      "variant": "male",
+      "state": "rest",
+      "gif": "data/profile/mascot-motion/male-rest-25fps.gif",
+      "still": "data/profile/mascot-motion/male-rest-still.webp",
+      "width": 128,
+      "height": 128,
+      "fps": 25,
+      "frames": 66,
+      "frameDurationMs": 40,
+      "gifBytes": 432117,
+      "sha256": "e9bcab2eaaef0d0b90078398b8ac258a0d13e825c061bc295d7900520c9b2f33",
+      "source": "data/profile/mascot-motion/sources/male-rest.webp"
+    },
+    {
+      "variant": "neutral",
+      "state": "exercise",
+      "gif": "data/profile/mascot-motion/neutral-exercise-25fps.gif",
+      "still": "data/profile/mascot-motion/neutral-exercise-still.webp",
+      "width": 128,
+      "height": 128,
+      "fps": 25,
+      "frames": 66,
+      "frameDurationMs": 40,
+      "gifBytes": 621067,
+      "sha256": "76f2bf0e6e48b5a38b465ac606cfc8c3733411ca67a292516cad9524af043952",
+      "source": "data/profile/mascot-motion/sources/neutral-exercise.webp"
+    },
+    {
+      "variant": "neutral",
+      "state": "rest",
+      "gif": "data/profile/mascot-motion/neutral-rest-25fps.gif",
+      "still": "data/profile/mascot-motion/neutral-rest-still.webp",
+      "width": 128,
+      "height": 128,
+      "fps": 25,
+      "frames": 66,
+      "frameDurationMs": 40,
+      "gifBytes": 661412,
+      "sha256": "15bf919e69755ba593a5811235aec59f7678273e1cfe5cb762e1cba603cd7d97",
+      "source": "data/profile/mascot-motion/sources/neutral-rest.webp"
+    }
+  ]
+}

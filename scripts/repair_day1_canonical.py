@@ -203,10 +203,35 @@ def main() -> None:
         source = source.replace(marker, newline + CARDS_4_5.replace("\n", newline) + marker, 1)
     elif '<div class="num">4</div>' not in source or '<div class="num">5</div>' not in source:
         raise RuntimeError("Solo existe una de las tarjetas 4 o 5; se evita alterar una tarjeta parcial")
+    for exercise in (4, 5):
+        card_start = source.index(f"<!-- {exercise} -->")
+        card_end = source.index(f"<!-- {exercise + 1} -->", card_start)
+        card = source[card_start:card_end]
+        technique_start = card.find('<div class="techSteps">')
+        tracker_start = card.find('<div class="exerciseTracker"')
+        if technique_start < 0 or tracker_start < 0:
+            raise RuntimeError(f"La tarjeta {exercise} no contiene técnica y contador de series")
+        depth = 0
+        technique_end = None
+        for tag in re.finditer(r"<div\b[^>]*>|</div>", card[technique_start:]):
+            depth += 1 if not tag.group(0).startswith("</") else -1
+            if depth == 0:
+                technique_end = technique_start + tag.end()
+                break
+        if technique_end is None:
+            raise RuntimeError(f"La técnica de la tarjeta {exercise} tiene etiquetas div sin balance")
+        technique = card[technique_start:technique_end]
+        card = card[:technique_start] + card[technique_end:]
+        tracker_start = card.find('<div class="exerciseTracker"')
+        card = card[:tracker_start] + technique + newline + card[tracker_start:]
+        card = re.sub(r"\n</div></article>(\s*)$", r"\n</article>\1", card)
+        card = card.replace('</button></div></div></div></div>', '</button></div></div></div>', 1)
+        source = source[:card_start] + card + source[card_end:]
     source = source.replace('images/0592-b6hQYMb-start.jpg', 'images/0592-b6hQYMb.jpg')
     card6_start = source.index('<!-- 6 -->')
     main_end = source.index('</main>', card6_start)
     source = source[:card6_start] + DAY1_CARD6.replace("\n", newline) + newline + source[main_end:]
+    source = source.replace(newline + '</div></article>' + newline + '</main>', newline + '</article>' + newline + '</main>', 1)
     source = source.replace(
         'Siguiente: 06 · Press de pecho complementario',
         'Siguiente: 06 · Curl de bíceps sentado en máquina',

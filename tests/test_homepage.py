@@ -191,7 +191,7 @@ class HomepageContractTests(unittest.TestCase):
             'id="remindersEnabled"',
             'id="routineDaySuggestion"',
             'id="routineReminder"',
-            'El aviso aparece al abrir o volver a la portada',
+            'El aviso solo aparece al abrir o volver a la portada',
             'commonTrainingDays(history)',
             'session.warmupCompleted === true && Number(session.completedSeries) > 0',
             '56 * MILLISECONDS_PER_DAY',
@@ -207,9 +207,26 @@ class HomepageContractTests(unittest.TestCase):
             with self.subTest(marker=marker):
                 self.assertIn(marker, self.html)
 
+    def test_initial_profile_form_is_progressive_and_optional(self):
+        quick_fields = self.html[
+            self.html.index('<div class="profile-grid">', self.html.index('id="profileForm"')):
+            self.html.index('<details class="profile-extra">', self.html.index('id="profileForm"'))
+        ]
+        self.assertIn('¿Cómo te llamamos?', quick_fields)
+        self.assertIn('Sexo, solo para elegir la mascota', quick_fields)
+        self.assertIn('id="profileSex"', quick_fields)
+        self.assertNotIn('id="profileBirthDate"', quick_fields)
+        self.assertNotIn('id="profileHeightCm"', quick_fields)
+        self.assertIn('<summary>Personalizar más (opcional)</summary>', self.html)
+        self.assertIn('id="profileEditorSummary"', self.html)
+        self.assertIn('profileConfigured ? \'Editar datos del perfil\' : \'Completar perfil\'', self.html)
+        self.assertIn('Aún no hay datos que guardar.', self.html)
+        self.assertIn('if (!profileIsDefined)', self.html)
+        self.assertIn('profileEditor.open = true', self.html)
+
     def test_profile_editor_closes_and_page_reloads_after_successful_save(self):
         self.assertIn('<details id="profileEditor" class="profile-editor">', self.html)
-        self.assertIn('<summary>Editar datos del perfil</summary>', self.html)
+        self.assertIn('<summary id="profileEditorSummary">Completar perfil</summary>', self.html)
         self.assertIn("profileEditor.open = true", self.html)
         save_handler = self.html.split("profileForm.addEventListener('submit'", 1)[1].split("profileSex.addEventListener", 1)[0]
         save_profile = save_handler.index('await window.TrainingProgressStore.saveProfile')
@@ -313,7 +330,7 @@ class HomepageContractTests(unittest.TestCase):
                 self.assertIn("repsInput.type = 'range'", source)
                 self.assertIn("loadInput.type = 'range'", source)
                 self.assertIn("Repeticiones realizadas", source)
-                self.assertIn("lb · libras", source)
+                self.assertIn("value === 'kg' ? 'Kilogramos' : 'Libras'", source)
                 self.assertIn("loadKg", source)
                 self.assertIn("'repeticiones'", source)
                 self.assertNotIn(" rep.", source)

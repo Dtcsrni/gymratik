@@ -59,7 +59,9 @@ class ServiceWorkerContractTests(unittest.TestCase):
         for source in (self.service_worker, self.generator):
             with self.subTest(source=source[:40]):
                 self.assertIn("PRECACHE_PROGRESS", source)
-                self.assertIn("for (const path of PRECACHE)", source)
+                self.assertIn("Math.min(6, PRECACHE.length)", source)
+                self.assertIn("await Promise.all(Array.from", source)
+                self.assertIn("if (firstError) throw firstError", source)
                 self.assertIn("await self.skipWaiting()", source)
                 self.assertLess(source.index("await cache.put(CACHE_COMPLETE_KEY"), source.index("await self.skipWaiting()"))
                 self.assertIn("ACTIVATE_UPDATE", source)
@@ -69,15 +71,31 @@ class ServiceWorkerContractTests(unittest.TestCase):
                 self.assertIn("key.startsWith('entrenamiento-pwa-')", source)
                 self.assertNotIn("cache.addAll(PRECACHE)", source)
 
-    def test_optional_animations_are_not_in_offline_precache(self):
-        self.assertNotIn("/videos/", self.service_worker)
-        self.assertNotIn(".gif'", self.service_worker)
+    def test_exercise_gifs_and_session_mascots_are_precached(self):
+        resources = build_precache()
+        exercise_gifs = [resource for resource in resources if "/videos/" in resource and resource.lower().endswith(".gif")]
+        self.assertGreaterEqual(len(exercise_gifs), 32)
+        self.assertTrue(all((ROOT / resource.removeprefix("./")).is_file() for resource in exercise_gifs))
+        for resource in exercise_gifs:
+            self.assertIn(resource, self.service_worker)
+        for variant in ("female", "male", "neutral"):
+            for state in ("exercise", "rest"):
+                with self.subTest(variant=variant, state=state):
+                    self.assertIn(f"{variant}-{state}-25fps.gif", self.service_worker)
+                    self.assertIn(f"{variant}-{state}-still.webp", self.service_worker)
 
     def test_complete_cache_marker_is_written_after_download(self):
         for source in (self.service_worker, self.generator):
             with self.subTest(source=source[:40]):
                 self.assertIn("__gymratik_complete__", source)
                 self.assertIn("PREVIOUS_CACHE_NAME", source)
+
+    def test_deep_offline_navigation_fallback_anchors_shell_to_registration_scope(self):
+        for source in (self.service_worker, self.generator):
+            with self.subTest(source=source[:40]):
+                self.assertIn("new URL('./', self.registration.scope).href", source)
+                self.assertIn("<base href=", source)
+                self.assertIn("headers.delete('content-length')", source)
 
 
 if __name__ == "__main__":

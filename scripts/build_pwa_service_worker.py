@@ -20,7 +20,7 @@ ROUTINE_FILES = (
 )
 HTML_ATTR_PATTERN = re.compile(r"(?:src|data-static-src|gif|thumbnail)\s*[:=]\s*[\"']([^\"']+)")
 TEXT_RESOURCE_SUFFIXES = {".css", ".html", ".js", ".json", ".svg", ".txt", ".webmanifest", ".xml"}
-IMAGE_SUFFIXES = {".avif", ".jpeg", ".jpg", ".png", ".svg", ".webp"}
+IMAGE_SUFFIXES = {".avif", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp"}
 ESTIMATE_META = re.compile(r"<meta name=\"gymratik-resource-estimate\" content='[^']*'>")
 
 
@@ -83,14 +83,22 @@ def build_precache() -> list[str]:
         "./data/profile/mouse-female-effort.webp",
         "./data/profile/mouse-male-effort.webp",
         "./data/profile/gymratik-machine-sprite.webp",
+        *[
+            f"./data/profile/mascot-motion/{variant}-{state}-25fps.gif"
+            for variant in ("female", "male", "neutral")
+            for state in ("exercise", "rest")
+        ],
+        *[
+            f"./data/profile/mascot-motion/{variant}-{state}-still.webp"
+            for variant in ("female", "male", "neutral")
+            for state in ("exercise", "rest")
+        ],
     ]
     routines = [f"./data/rutinas_autocontenidas/canonicas/{name}" for name in ROUTINE_FILES]
     resources = set(base + routines)
     for name in ROUTINE_FILES:
         resources.update(routine_resources(CANONICAL_DIR / name))
-    # Videos son opcionales durante la preparación offline; imágenes y demás
-    # recursos referenciados siguen siendo parte de la versión completa.
-    resources = {resource for resource in resources if "/videos/" not in resource.lower() and not resource.lower().endswith(".gif")}
+    # Incluir GIF didácticos para que la técnica también funcione sin conexión.
     return base + routines + sorted(resources - set(base + routines))
 
 
@@ -203,15 +211,26 @@ self.addEventListener('install', (event) => {{
       let bytesCompleted = 0;
       try {{
         await reportProgress(completed, bytesCompleted);
-        for (const path of PRECACHE) {{
-          const request = new Request(path, {{ cache: 'reload' }});
-          const response = await fetch(request);
-          if (!response.ok) throw new Error(`No se pudo descargar ${{path}} (${{response.status}})`);
-          await cache.put(request, response);
-          completed += 1;
-          bytesCompleted += RESOURCE_BYTES[path] || 0;
-          await reportProgress(completed, bytesCompleted, path);
-        }}
+        let nextIndex = 0;
+        let firstError = null;
+        const downloadNext = async () => {{
+          while (!firstError) {{
+            const index = nextIndex++;
+            if (index >= PRECACHE.length) return;
+            const path = PRECACHE[index];
+            try {{
+              const request = new Request(path, {{ cache: 'reload' }});
+              const response = await fetch(request);
+              if (!response.ok) throw new Error(`No se pudo descargar ${{path}} (${{response.status}})`);
+              await cache.put(request, response);
+              completed += 1;
+              bytesCompleted += RESOURCE_BYTES[path] || 0;
+              await reportProgress(completed, bytesCompleted, path);
+            }} catch (error) {{ firstError = firstError || error; }}
+          }}
+        }};
+        await Promise.all(Array.from({{ length: Math.min(6, PRECACHE.length) }}, downloadNext));
+        if (firstError) throw firstError;
         await cache.put(CACHE_COMPLETE_KEY, new Response(JSON.stringify({{ cacheName: CACHE_NAME, completedAt: Date.now() }}), {{ headers: {{ 'content-type': 'application/json' }} }}));
         break;
       }} catch (error) {{
@@ -258,7 +277,18 @@ self.addEventListener('fetch', (event) => {{
       return await refresh(request, cache);
     }} catch (error) {{
       if (cached) return cached;
-      if (isNavigation) return cache.match(new URL('./index.html', self.registration.scope));
+      if (isNavigation) {{
+        const shell = await cache.match(new URL('./index.html', self.registration.scope));
+        if (!shell) return undefined;
+        const baseUrl = new URL('./', self.registration.scope).href;
+        let html = await shell.text();
+        if (/<base\b/i.test(html)) html = html.replace(/<base\b[^>]*>/i, `<base href="${{baseUrl}}">`);
+        else html = html.replace(/<head(?:\s[^>]*)?>/i, (head) => `${{head}}<base href="${{baseUrl}}">`);
+        const headers = new Headers(shell.headers);
+        headers.delete('content-length');
+        headers.delete('content-encoding');
+        return new Response(html, {{ status: shell.status, statusText: shell.statusText, headers }});
+      }}
       throw error;
     }}
   }})());

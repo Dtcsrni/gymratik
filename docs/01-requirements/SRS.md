@@ -118,6 +118,8 @@ Definir requisitos verificables para Gymratik: Rutinas y progreso. Este document
   - Aceptación: en error de cuota se eliminan cachés Gymratik obsoletas/incompletas y se reintenta una vez, preservando una caché previa completa; una instalación incompleta no activa ni elimina la versión anterior; sin versión offline completa, el splash reintenta al recuperar conectividad y cada 30 s.
 - **FUN-PWA-006 · P1:** el splash deberá animar a los personajes Gymratik en prensa de piernas y press de pecho sentado y respetar `prefers-reduced-motion`.
   - Aceptación: hay fases visibles distintas del movimiento; con movimiento reducido se presenta una pose estática accesible y el estado textual continúa visible.
+- **FUN-PWA-008 · P1:** durante actividad y descanso de una sesión, el resumen flotante mostrará una mascota Gymratik animada localmente según el sexo opcional del perfil instalado; para sexo no binario, no indicado o perfil inaccesible usará la variante neutral.
+  - Aceptación: el perfil se consulta solo en almacenamiento local; actividad muestra un GIF de ejercicio y descanso un GIF de reposo con al menos 24 fps; ambos se sirven offline desde el inventario esencial, son de 128×128 px, se ocultan y paran fuera de esos estados, y `prefers-reduced-motion` sustituye el GIF por la pose estática correspondiente.
 
 ### 4.8 Perfil local y administración de datos
 
@@ -146,6 +148,8 @@ Definir requisitos verificables para Gymratik: Rutinas y progreso. Este document
   - Aceptación: conserva una sesión activa iniciada hoy; si la última sesión fue ayer, propone el día siguiente y envuelve al día 1 después del día 4.
 - **FUN-PRO-013 · P1:** el valor numérico de carga deberá poder editarse directamente además del deslizador.
   - Aceptación: acepta decimales válidos en unidad seleccionada y sincroniza ambos controles; no afirma incrementos o rangos propios de una máquina no identificada.
+- **FUN-PRO-014 · P1:** el perfil inicial deberá pedir pocos datos, ofrecer el resto como personalización opcional y no volver a interrumpir a quien ya tenga datos guardados.
+  - Aceptación: con perfil vacío, la portada abre el formulario simple; con cualquier dato de perfil existente, no redirige ni lo expande. Los campos no esenciales quedan bajo una sección opcional y los datos no se borran ni migran.
 - **FUN-PWA-007 · P0:** una actualización local no deberá eliminar progreso de sesión ni almacenes IndexedDB existentes.
   - Aceptación: actualizaciones añaden únicamente stores/índices requeridos; si falta el registro central, la portada recupera los snapshots locales de las cuatro rutinas antes de consultar historial.
   - Aceptación: al abrirse en una pestaña del navegador se muestra una invitación descartable para instalar; se pueden consultar las rutinas, pero la portada no expone perfil, historial ni estadísticas y las rutinas no restauran ni guardan progreso. En modo instalado, perfil e historial vuelven a estar disponibles sin cambiar los datos guardados.

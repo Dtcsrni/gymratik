@@ -13,41 +13,170 @@ import re
 INTERACTION_FEEDBACK_STYLE = '''<style data-enhancement="interaction-feedback-v1">
 button:not(:disabled):active,[role="button"]:not([aria-disabled="true"]):active{transform:scale(.97);filter:brightness(.9)}
 .performanceRepsControl{display:grid;grid-template-columns:48px minmax(0,1fr) 48px;align-items:center;gap:.55rem;width:100%}
-.performanceRepsValue{display:grid;min-height:48px;place-items:center;padding:.4rem .55rem;border:1px solid rgba(101,242,221,.36);border-radius:.7rem;background:rgba(15,45,65,.72);color:#eaffff;font-size:clamp(1rem,3vw,1.3rem);font-weight:900;text-align:center;font-variant-numeric:tabular-nums}
+.performanceRepsValue{display:grid;min-height:48px;place-items:center;padding:.4rem .55rem;border:1px solid rgba(101,242,221,.36);border-radius:.7rem;background:rgba(15,45,65,.72);color:#eaffff;font-size:clamp(1rem,3vw,1.3rem);font-weight:900;text-align:center;font-variant-numeric:tabular-nums;transition:background-color .2s ease,border-color .2s ease,transform .2s ease}
+.performanceRepsValue[data-selected="true"]{border-color:rgba(101,242,221,.72);background:linear-gradient(110deg,rgba(18,91,83,.82),rgba(15,45,65,.86));transform:scale(1.02)}
 .performanceRepsNudge{display:grid;min-width:48px;min-height:48px;place-items:center;border:1px solid rgba(114,220,255,.48);border-radius:.7rem;background:rgba(38,104,137,.38);color:#f1ffff;font:inherit;font-size:1.45rem;font-weight:850;cursor:pointer;touch-action:manipulation;transition:transform .12s ease,filter .12s ease,background-color .12s ease}
-.performanceRepsNudge:disabled{opacity:.42;cursor:default}
-.performanceField .performanceReps{width:100%;min-height:28px;touch-action:pan-x}
+.performanceRepsNudge:disabled,.performanceClear:disabled{opacity:.42;cursor:default}
+.performanceField .performanceReps{width:100%;min-height:42px;touch-action:pan-x;accent-color:#42e1bf}
+.performanceEntry{grid-template-columns:minmax(0,1fr);gap:.55rem;padding:.65rem;border-color:rgba(105,215,255,.25);border-radius:1rem;background:linear-gradient(145deg,rgba(10,33,48,.94),rgba(5,22,34,.96));box-shadow:inset 0 1px rgba(255,255,255,.035)}
+.performanceField{gap:.42rem!important;min-width:0;padding:.55rem .65rem;border:1px solid rgba(105,215,255,.18);border-radius:.8rem;background:rgba(17,48,65,.58)}
+.performanceFieldTitleRow,.performanceLoadHead{display:flex;align-items:center;justify-content:space-between;gap:.5rem;min-height:34px;color:#d7eef4;font-size:.83rem;font-weight:850;line-height:1.2}
+.performanceFieldLabel{display:flex;align-items:center;gap:.45rem;min-width:0}
+.performanceFieldIcon{width:21px;height:21px;flex:0 0 21px;color:#70dcff}
+.performanceOptional{flex:none;padding:.19rem .42rem;border:1px solid rgba(156,190,205,.2);border-radius:999px;background:rgba(6,21,31,.56);color:#a9c4ce;font-size:.61rem;font-weight:750}
+.performanceClear{min-width:44px;min-height:34px;padding:.3rem .52rem;border:1px solid rgba(255,171,149,.32);border-radius:.55rem;background:rgba(83,37,42,.28);color:#ffc2ae;font:inherit;font-size:.68rem;font-weight:850;cursor:pointer;transition:color .18s ease,border-color .18s ease,background-color .18s ease}
+.performanceClear[hidden]{display:none!important}
+.performanceClear:hover:not(:disabled),.performanceClear:focus-visible{border-color:rgba(114,220,255,.72);background:rgba(22,67,88,.76);color:#effbff}
+.performanceLoadOutputRow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:.35rem}
+.performanceField input[type="range"]{--range-progress:0%;appearance:none;-webkit-appearance:none;width:100%;height:38px;min-height:38px;margin:0;padding:0;background:transparent;cursor:pointer;touch-action:pan-x}
+.performanceField input[type="range"]::-webkit-slider-runnable-track{height:8px;border:1px solid rgba(137,194,211,.3);border-radius:999px;background:linear-gradient(90deg,#43dcb9 0%,#70e8d3 var(--range-progress),rgba(103,147,164,.28) var(--range-progress),rgba(103,147,164,.28) 100%);box-shadow:inset 0 1px 2px rgba(0,0,0,.35)}
+.performanceField input[type="range"]::-moz-range-track{height:8px;border:1px solid rgba(137,194,211,.3);border-radius:999px;background:rgba(103,147,164,.28);box-shadow:inset 0 1px 2px rgba(0,0,0,.35)}
+.performanceField input[type="range"]::-moz-range-progress{height:8px;border-radius:999px;background:linear-gradient(90deg,#43dcb9,#70e8d3)}
+.performanceField input[type="range"]::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:24px;height:24px;margin-top:-9px;border:3px solid #d8fff4;border-radius:50%;background:#39d6b2;box-shadow:0 0 0 4px rgba(57,214,178,.17),0 2px 8px rgba(0,0,0,.4);transition:transform .18s ease,box-shadow .18s ease}
+.performanceField input[type="range"]::-moz-range-thumb{width:18px;height:18px;border:3px solid #d8fff4;border-radius:50%;background:#39d6b2;box-shadow:0 0 0 4px rgba(57,214,178,.17),0 2px 8px rgba(0,0,0,.4);transition:transform .18s ease,box-shadow .18s ease}
+.performanceField input[type="range"]:active::-webkit-slider-thumb{transform:scale(1.16);box-shadow:0 0 0 7px rgba(57,214,178,.22),0 2px 8px rgba(0,0,0,.4)}
+.performanceField input[type="range"]:focus-visible{outline:2px solid #d8fff4;outline-offset:3px;border-radius:999px}
+.performanceRepsValue{min-height:44px;border-color:transparent;background:transparent;color:#73f0d0;font-size:1.04rem}
+.performanceRepsValue[data-selected="false"]{color:#91aeb9;font-size:.78rem;font-weight:700}
+.performanceRepsNudge{min-width:44px;min-height:44px;border-radius:.72rem;background:linear-gradient(145deg,rgba(48,120,145,.48),rgba(24,75,96,.6));box-shadow:inset 0 1px rgba(255,255,255,.1),0 2px 8px rgba(0,0,0,.2)}
+.performanceLoadValue{min-height:44px;border-color:rgba(105,215,255,.28);border-radius:.68rem;background:rgba(7,28,42,.78);text-align:left;transition:border-color .18s ease,background .18s ease,transform .18s ease}
+.performanceLoadUnit{min-height:36px;padding:.25rem .45rem;border:1px solid rgba(164,223,231,.24);border-radius:.55rem;background:#081923;color:#dff5fa;font:inherit;font-size:.75rem;font-weight:800}
+.performanceEntry .progressionCue{margin:.05rem .2rem 0;color:#9dbac4;font-size:.68rem;line-height:1.35}
+.performanceEntry{grid-template-columns:minmax(0,1fr)!important;gap:.55rem!important;padding:.65rem!important;border-color:rgba(105,215,255,.25)!important;border-radius:1rem!important;background:linear-gradient(145deg,rgba(10,33,48,.94),rgba(5,22,34,.96))!important}
+.performanceField input[type="range"]{height:38px!important;min-height:38px!important;margin:0!important;touch-action:pan-x!important}
+.performanceLoadValue[data-selected="true"]{border-color:rgba(101,242,221,.56)!important;background:linear-gradient(110deg,rgba(18,91,83,.48),rgba(15,45,65,.8))!important;color:#8ef4d8!important}
+.performanceLoadValue[data-selected="false"]{color:#bbd0d7!important}
+.performanceLoadOutputRow .performanceClear{min-width:58px}
 button:not(:disabled):focus-visible{outline:2px solid #fff;outline-offset:3px}
-@media(max-width:640px){.performanceRepsControl{grid-template-columns:52px minmax(0,1fr) 52px;gap:.65rem}.performanceRepsValue{min-height:52px}.performanceRepsNudge{min-width:52px;min-height:52px}}
-@media(prefers-reduced-motion:reduce){.performanceRepsNudge{transition:none}button:not(:disabled):active,[role="button"]:not([aria-disabled="true"]):active{transform:none;filter:none}}
+@media(max-width:640px){.performanceEntry{gap:.45rem!important;padding:.55rem!important}.performanceField{padding:.5rem .58rem}.performanceRepsControl{grid-template-columns:48px minmax(0,1fr) 48px;gap:.35rem}.performanceRepsValue{min-height:48px}.performanceRepsNudge{min-width:48px;min-height:48px}.performanceClear{min-height:38px}}
+@media(prefers-reduced-motion:reduce){.performanceRepsNudge,.performanceRepsValue,.performanceClear,.performanceField input[type="range"]::-webkit-slider-thumb,.performanceField input[type="range"]::-moz-range-thumb{transition:none}button:not(:disabled):active,[role="button"]:not([aria-disabled="true"]):active{transform:none;filter:none}}
 </style>'''
 
 REST_COUNTDOWN_STYLE = '''<style data-fix="rest-countdown-activity-v1">
+.warmupHead p,.warmupCopy p,.warmupInstructions{font-size:clamp(13px,3.6vw,15px)!important;line-height:1.45!important}
+.warmupVisual[data-media-state="FALLBACK_STATIC"] .warmupGif,.gifFrame[data-media-state="FALLBACK_STATIC"] .gifMotion{display:none!important}
+.warmupVisual[data-media-state="FALLBACK_STATIC"] .warmupFallback,.gifFrame[data-media-state="FALLBACK_STATIC"] .gifFallback{display:block!important}
+.exerciseTracker{position:relative;z-index:2;pointer-events:auto}
+.exerciseTracker .completeSetButton{position:relative;z-index:4;pointer-events:auto}
+.exerciseTracker .skipExerciseButton{flex:0 0 auto;min-height:34px;margin-top:.1rem;padding:.35rem .55rem;border-color:rgba(255,179,132,.24);background:rgba(74,34,38,.22);color:rgba(255,213,197,.6);font-size:.64rem;opacity:.55;transition:opacity .18s ease,border-color .18s ease,background .18s ease,color .18s ease}
+.exerciseTracker .skipExerciseButton:hover,.exerciseTracker .skipExerciseButton:focus-visible,.exerciseTracker .skipExerciseButton.is-holding{border-color:rgba(255,179,132,.78);background:rgba(74,34,38,.82);color:#ffe0d3;opacity:1}
+.exerciseTracker .skipExerciseButton:disabled{opacity:.3}
+.exerciseTracker .holdFeedback{opacity:.5}
 .summaryExercise.isResting .summaryExerciseState{color:#ffd277}
 .summaryExercise.isResting .summaryExerciseState{animation:restSlowPulse 2.4s ease-in-out infinite}
 .summaryExercise.isSeriesActive .summaryExerciseState{color:#65f2dd;animation:activityFastPulse .68s ease-in-out infinite}
 .summaryExercise.isPreparing .summaryExerciseState{color:#72dcff}
-.summaryActivity{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:.3rem;margin:0 .3rem;padding:.34rem .42rem;border:1px solid rgba(114,220,255,.3);border-radius:.4rem;background:rgba(15,45,65,.76);color:#dff5fc;font-size:.58rem;font-weight:900;line-height:1.15}
-.summaryActivity[hidden]{display:none!important}
-.summaryActivity>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.summaryActivity>strong{color:inherit;font-size:.58rem;font-variant-numeric:tabular-nums;white-space:nowrap}
-.summaryActivity.isResting{border-color:rgba(255,210,119,.78);background:rgba(83,61,29,.5);color:#ffe4a4;animation:restSlowPulse 2.4s ease-in-out infinite}
-.summaryActivity.isActive{border-color:rgba(101,242,221,.78);background:rgba(19,73,72,.56);color:#b9fff1;animation:activityFastPulse .68s ease-in-out infinite}
-.summaryActivity.isPreparing{border-color:rgba(114,220,255,.65);background:rgba(24,75,101,.48);color:#bfeeff}
+.warmupProgressSegment.is-current,.seriesProgressSegment.is-current{border-color:#72dcff;animation:activityFillGlow .9s ease-in-out infinite alternate}
+.warmupProgressSegment.is-current::after,.seriesProgressSegment.is-current::after{transform:scaleX(.38);opacity:.9;background-image:linear-gradient(100deg,#159bb3 0%,#35d6a4 55%,#a0d95c 100%);background-size:100% 100%;animation:activityFillGlow .9s ease-in-out infinite alternate}
+.warmupProgressSegment.is-next,.seriesProgressSegment.is-next{border-color:rgba(114,220,255,.32);animation:none}
+.summaryToggle.isActive::before,.summaryToggle.isResting::before,.summaryToggle.isPreparing::before{content:"";width:.48rem;height:.48rem;flex:none;border-radius:50%;background:currentColor;box-shadow:0 0 .55rem currentColor;animation:activityFastPulse .68s ease-in-out infinite}
+.warmupTracker>.warmupProgressSegments{margin:.3rem 0 .45rem}
+.warmupInstructions{margin:.15rem 0 .4rem;color:#c5e3eb;font-size:.68rem;line-height:1.4}
+.exerciseWarmupHint{flex:1 1 100%;margin:.25rem 0;color:#c5e3eb;font-size:.62rem;line-height:1.35}
+.warmupTrackerActions button[data-phase="preparing"],.warmupTrackerActions button[data-phase="cardio"],.warmupTrackerActions button[data-phase="mobility"]{border-color:rgba(114,220,255,.7);background:rgba(24,75,101,.7);color:#d8f5ff}
+.warmupTrackerActions button[data-phase="done"]{border-color:rgba(101,242,221,.65);background:rgba(19,73,72,.65);color:#b9fff1}
+.summaryToggle.isResting{border:1px solid rgba(255,210,119,.78);background:linear-gradient(90deg,rgba(112,79,21,.96),rgba(83,61,29,.92));color:#ffe4a4;animation:restSlowPulse 2.4s ease-in-out infinite}
+.summaryToggle.isActive{border:1px solid rgba(101,242,221,.78);background:linear-gradient(90deg,rgba(19,105,91,.96),rgba(19,73,72,.92));color:#b9fff1;animation:activityFastPulse .68s ease-in-out infinite}
+.summaryToggle.isPreparing{border:1px solid rgba(114,220,255,.65);background:linear-gradient(90deg,rgba(24,75,101,.96),rgba(15,45,65,.92));color:#bfeeff}
 button.completeSetButton.is-resting{border-color:#ffd277;background:linear-gradient(135deg,#9a6b17,#725019);color:#fff0bd;box-shadow:0 0 0 1px rgba(255,210,119,.2)}
 button.completeSetButton.is-series-active{border-color:#65f2dd;background:linear-gradient(135deg,#159d83,#146d5e);color:#eafff8;box-shadow:0 0 0 1px rgba(101,242,221,.2)}
+button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gradient(135deg,#18506b,#17384c);color:#d8f5ff;animation:preparationPulse 1.3s ease-in-out infinite}
 .exerciseTracker:has(.completeSetButton.is-resting){border-color:rgba(255,210,119,.82);box-shadow:0 0 18px rgba(255,210,119,.14)}
 .exerciseTracker:has(.completeSetButton.is-series-active){border-color:rgba(101,242,221,.76);box-shadow:0 0 18px rgba(101,242,221,.14)}
 .exerciseTracker:has(.completeSetButton.is-resting) .exerciseRest{border-color:#ffd277;background:rgba(112,79,21,.44);color:#ffe4a4;animation:restSlowPulse 2.4s ease-in-out infinite}
 .exerciseTracker:has(.completeSetButton.is-series-active) .seriesProgressSegment.is-current{border-color:#65f2dd;animation:activityFastPulse .68s ease-in-out infinite}
 .summaryExercise.isResting{border-color:rgba(255,210,119,.78);background:rgba(83,61,29,.5);animation:restSlowPulse 2.4s ease-in-out infinite}
 .summaryExercise.isSeriesActive{border-color:rgba(101,242,221,.78);background:rgba(19,73,72,.56)}
-@keyframes restSlowPulse{50%{opacity:.72;filter:brightness(1.2);box-shadow:0 0 12px rgba(255,210,119,.32)}}
-@keyframes activityFastPulse{50%{opacity:.7;filter:brightness(1.35);box-shadow:0 0 12px rgba(101,242,221,.38)}}
-@media(prefers-reduced-motion:reduce){.summaryActivity.isResting,.summaryActivity.isActive,.summaryExercise.isResting,.summaryExercise.isSeriesActive,.summaryExercise.isResting .summaryExerciseState,.summaryExercise.isSeriesActive .summaryExerciseState,button.completeSetButton.is-resting,button.completeSetButton.is-series-active,.exerciseTracker:has(.completeSetButton.is-resting) .exerciseRest,.exerciseTracker:has(.completeSetButton.is-series-active) .seriesProgressSegment.is-current{animation:none}}
+.seriesProgressSegment.is-current.is-resting{border-color:#ffd277;animation:restSlowPulse 2.4s ease-in-out infinite}
+.seriesProgressSegment.is-current.is-resting::after{transform:scaleX(.38);background-image:linear-gradient(100deg,#b98221 0%,#ffd277 55%,#fff0bd 100%);animation:activityFillGlow 2.4s ease-in-out infinite alternate}
+.seriesProgressSegment.is-current.is-active{border-color:#65f2dd;animation:activityFastPulse .68s ease-in-out infinite}
+.summaryActivityStatus.isResting{border-color:rgba(255,210,119,.62);background:rgba(83,61,29,.38);color:#ffe4a4}
+.summaryActivityStatus.isActive{border-color:rgba(101,242,221,.58);background:rgba(19,73,72,.38);color:#b9fff1}
+.summaryActivityStatus.isPreparing{border-color:rgba(114,220,255,.56);background:rgba(24,75,101,.36);color:#d8f5ff}
+.summaryActivityStatus.isResting .summaryActivityIndicator{background:#ffd277;box-shadow:0 0 .55rem #ffd277;animation:restSlowPulse 2.4s ease-in-out infinite}
+.summaryActivityStatus.isActive .summaryActivityIndicator{background:#65f2dd;box-shadow:0 0 .55rem #65f2dd;animation:activityFastPulse .68s ease-in-out infinite}
+.summaryActivityStatus.isPreparing .summaryActivityIndicator{background:#72dcff;box-shadow:0 0 .55rem #72dcff;animation:preparationPulse 1.3s ease-in-out infinite}
+.summaryActivityMascot{display:block;width:64px;height:64px;flex:none;object-fit:contain;border-radius:.55rem;background:rgba(6,21,31,.34)}
+.summaryActivityMascot[hidden]{display:none!important}
+.summaryActivityStatus.isResting .summaryActivityMascot{filter:drop-shadow(0 0 8px rgba(255,210,119,.28))}
+.summaryActivityStatus.isActive .summaryActivityMascot{filter:drop-shadow(0 0 8px rgba(101,242,221,.24))}
+.summaryExercise{position:relative;overflow:hidden;min-height:52px;transition:background-color .2s ease,border-color .2s ease,transform .18s ease}
+.summaryExercise::before,.summaryExercise::after{position:absolute;right:.68rem;bottom:.38rem;left:.68rem;height:4px;border-radius:999px;content:"";pointer-events:none}
+.summaryExercise::before{background:rgba(30,61,75,.95);box-shadow:inset 0 0 0 1px rgba(114,220,255,.3)}
+.summaryExercise::after{transform:scaleX(var(--summary-progress,0));transform-origin:left;background:linear-gradient(90deg,#159bb3,#35d6a4,#a0d95c);transition:transform .48s cubic-bezier(.2,.75,.25,1),filter .2s ease}
+.summaryExercise.isDone::after{transform:scaleX(1);background:linear-gradient(90deg,#1ec89b,#88e56c)}
+.summaryExercise.isCurrent{border-color:rgba(101,242,221,.7);box-shadow:0 0 0 1px rgba(101,242,221,.16)}
+.summaryExercise.isCurrent:not(.isSeriesActive):not(.isResting){animation:none}
+.summaryExercise.isSeriesActive::after{filter:brightness(1.15);animation:activityFastPulse .68s ease-in-out infinite}
+.summaryExercise.isResting{box-shadow:0 0 0 1px rgba(255,210,119,.24),0 0 14px rgba(255,210,119,.12)}
+.summaryProgressTrack{height:7px;overflow:hidden;border:1px solid rgba(114,220,255,.18);border-radius:999px;background:rgba(4,20,31,.78)}
+.summaryProgressTrack>span{display:block;width:100%;height:100%;transform:scaleX(var(--summary-progress,0));transform-origin:left;border-radius:inherit;background:linear-gradient(90deg,#159bb3,#35d6a4,#a0d95c);transition:transform .5s cubic-bezier(.2,.75,.25,1)}
+#floatingSessionSummary{position:fixed!important;right:max(.65rem,env(safe-area-inset-right))!important;bottom:max(.65rem,env(safe-area-inset-bottom))!important;z-index:40;width:min(420px,calc(100vw - 1.3rem))!important;max-height:min(54dvh,480px)!important;border:1px solid rgba(114,220,255,.42)!important;border-radius:1rem!important;background:rgba(6,24,37,.97)!important;box-shadow:0 18px 54px rgba(0,0,0,.42),0 0 30px rgba(71,202,216,.14)!important;backdrop-filter:blur(18px)!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+#summaryToggle{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto!important;grid-template-rows:auto auto;flex:none!important;min-height:62px!important;gap:.22rem .68rem!important;padding:.64rem .84rem!important;background:linear-gradient(105deg,rgba(14,73,90,.98),rgba(37,42,75,.98))!important;font-size:.84rem!important;line-height:1.22!important}
+#summaryActivityIcon{grid-column:1;grid-row:1/3;align-self:center}
+#summaryToggle #summaryHeadline{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums}
+#summaryActivityHeadline{grid-column:2;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#bfdce5;font-size:.72rem;font-weight:750;line-height:1.2}
+#summaryActivityHeadline::before{content:"";display:inline-block;width:.4rem;height:.4rem;margin-right:.35rem;border-radius:50%;vertical-align:.03rem;background:#82aebb}
+#summaryToggle.isResting #summaryActivityHeadline::before{background:#ffd277;animation:restSlowPulse 2.4s ease-in-out infinite}
+#summaryToggle.isActive #summaryActivityHeadline::before{background:#65f2dd;animation:activityFastPulse .68s ease-in-out infinite}
+#summaryToggle.isPreparing #summaryActivityHeadline::before{background:#72dcff;animation:preparationPulse 1.3s ease-in-out infinite}
+#summaryToggle .summaryChevron{grid-column:3;grid-row:1/3;align-self:center;margin-left:0!important;font-size:1.1rem!important}
+#summaryToggle[aria-expanded="true"]{grid-template-rows:auto;min-height:50px!important}
+#summaryToggle[aria-expanded="true"] #summaryActivityHeadline{display:none}
+#summaryToggle[aria-expanded="true"] #summaryActivityIcon,#summaryToggle[aria-expanded="true"] .summaryChevron{grid-row:1}
+#summaryToggle.isResting{border:1px solid rgba(255,210,119,.82)!important;background:linear-gradient(105deg,rgba(112,79,21,.98),rgba(83,61,29,.96))!important;color:#ffe4a4!important}
+#summaryToggle.isActive{border:1px solid rgba(101,242,221,.82)!important;background:linear-gradient(105deg,rgba(19,105,91,.98),rgba(19,73,72,.96))!important;color:#b9fff1!important}
+#summaryToggle.isPreparing{border:1px solid rgba(114,220,255,.72)!important;background:linear-gradient(105deg,rgba(24,75,101,.98),rgba(15,45,65,.96))!important;color:#d8f5ff!important}
+#summaryToggle.isResting,#summaryToggle.isActive,#summaryToggle.isPreparing{animation:none!important}
+#summaryBody{min-height:0;padding:.55rem .65rem .68rem!important;overflow:hidden;display:flex!important;flex-direction:column!important;gap:.42rem}
+#summaryBody[hidden]{display:none!important}
+.summaryTotals{flex:none!important;min-height:28px;padding:.1rem .15rem!important;font-size:.72rem!important}
+.summaryTotals span{display:inline-flex;align-items:center;min-height:28px;padding:.18rem .58rem;border:1px solid rgba(255,210,119,.26);border-radius:999px;background:rgba(83,61,29,.22);font-size:.76rem!important;font-weight:850}
+.summaryActivityStatus{display:flex;align-items:center;gap:.55rem;flex:none;min-height:44px;padding:.48rem .62rem;border:1px solid rgba(114,220,255,.2);border-radius:.65rem;background:rgba(14,44,61,.66);color:#d5edf4;font-size:.76rem;font-weight:850;line-height:1.25}
+.summaryActivityIndicator{width:.52rem;height:.52rem;flex:none;border-radius:50%;background:#82aebb;box-shadow:0 0 .4rem rgba(130,174,187,.26)}
+.summaryActivityLabel{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.summaryActivityClock{flex:none;color:inherit;font-variant-numeric:tabular-nums;font-size:.76rem;font-weight:950}
+.summaryActivityStatus.isIdle .summaryActivityIndicator{background:#82aebb;animation:none}
+.summaryOverallProgress{flex:none}
+.summaryTime{flex:none!important;margin:0!important;font-size:.74rem!important;line-height:1.35!important}
+.sessionSummaryList{min-height:0;max-height:min(34dvh,320px)!important;gap:.34rem!important;padding:.04rem .12rem .1rem .02rem!important;overflow-y:auto!important;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(114,220,255,.42) transparent;-webkit-overflow-scrolling:touch}
+.summaryExercise{grid-template-columns:minmax(0,1fr) auto!important;gap:.2rem .55rem!important;min-height:48px!important;padding:.48rem .68rem .72rem!important;border-radius:.68rem!important}
+.summaryExerciseName{font-size:.78rem!important;line-height:1.25!important;white-space:nowrap!important;display:block!important;overflow:hidden;text-overflow:ellipsis}
+.summaryExerciseState{font-size:.78rem!important;line-height:1.2!important;font-variant-numeric:tabular-nums}
+.summaryExercise.isCurrent{scroll-margin-block:8px}
+.summaryActivityStatus:not(.isIdle){animation:summaryStatusIn .24s ease-out both}
+@keyframes summaryStatusIn{from{opacity:.5;transform:translateY(3px)}to{opacity:1;transform:none}}
+@media(max-width:640px){#floatingSessionSummary{right:max(.55rem,env(safe-area-inset-right))!important;bottom:max(.55rem,env(safe-area-inset-bottom))!important;width:min(420px,calc(100vw - 1.1rem))!important;max-height:min(52dvh,480px)!important}.sessionSummaryList{max-height:min(32dvh,300px)!important}.summaryExercise{min-height:44px!important;padding:.42rem .6rem .68rem!important}.summaryExercise::before,.summaryExercise::after{right:.6rem;bottom:.34rem;height:4px}.summaryExerciseName{font-size:.74rem!important}.summaryActivityMascot{width:56px;height:56px}}
+@media(max-height:620px){#floatingSessionSummary{max-height:43dvh!important}.sessionSummaryList{max-height:25dvh!important}}
+@media(max-height:420px) and (max-width:900px){#floatingSessionSummary{max-height:34dvh!important}.sessionSummaryList{max-height:12dvh!important}#summaryBody{gap:.22rem!important;padding:.3rem .5rem .42rem!important}.summaryTotals{min-height:22px!important}}
+@media(prefers-reduced-motion:reduce){.summaryActivityStatus:not(.isIdle),.summaryActivityStatus.isResting .summaryActivityIndicator,.summaryActivityStatus.isActive .summaryActivityIndicator,.summaryActivityStatus.isPreparing .summaryActivityIndicator,.summaryExercise::after,.summaryProgressTrack>span,.summaryExercise,.warmupProgressSegment.is-current,.seriesProgressSegment.is-current,.warmupProgressSegment.is-current::after,.seriesProgressSegment.is-current::after{animation:none!important;transition:none!important}#floatingSessionSummary,#summaryToggle{scroll-behavior:auto}}
+@keyframes activityFillGlow{from{opacity:.76}to{opacity:1}}
+@keyframes progressActivitySweep{from{opacity:.78}to{opacity:1}}
+@keyframes restSlowPulse{50%{opacity:.78}}
+@keyframes activityFastPulse{50%{opacity:.72}}
+@keyframes preparationPulse{50%{opacity:.78;filter:brightness(1.18);box-shadow:0 0 10px rgba(114,220,255,.25)}}
+@media(prefers-reduced-motion:reduce){.summaryToggle.isResting,.summaryToggle.isActive,.summaryToggle.isPreparing,.summaryToggle.isResting::before,.summaryToggle.isActive::before,.summaryToggle.isPreparing::before,.summaryExercise.isResting,.summaryExercise.isSeriesActive,.summaryExercise.isResting .summaryExerciseState,.summaryExercise.isSeriesActive .summaryExerciseState,.summaryExercise.isSeriesActive::after,button.completeSetButton.is-resting,button.completeSetButton.is-series-active,button.completeSetButton.is-preparing,.exerciseTracker:has(.completeSetButton.is-resting) .exerciseRest,.exerciseTracker:has(.completeSetButton.is-series-active) .seriesProgressSegment.is-current,.warmupProgressSegment.is-current,.seriesProgressSegment.is-current,.seriesProgressSegment.is-current.is-resting,.seriesProgressSegment.is-current.is-active,.seriesProgressSegment.is-current.is-resting::after,.warmupProgressSegment.is-current::after,.seriesProgressSegment.is-current::after{animation:none}}
 </style>'''
 
-FLOATING_ACTIVITY_MARKUP = '''<div class="summaryActivity" id="summaryActivity" role="status" aria-live="polite" hidden><span id="summaryActivityLabel"></span><strong id="summaryActivityClock" aria-hidden="true"></strong></div>'''
+WARMUP_PROGRESS_MARKUP = '''<div class="warmupProgressSegments" id="warmupProgress" role="progressbar" aria-label="Progreso del calentamiento" aria-valuemin="0" aria-valuemax="2" aria-valuenow="0" data-state="empty"><span class="warmupProgressSegment is-next" data-phase="cardio" aria-hidden="true"></span><span class="warmupProgressSegment is-next" data-phase="mobility" aria-hidden="true"></span></div>'''
+
+OFFLINE_OPTIONAL_MEDIA_FALLBACK_SCRIPT = '''<script data-fix="offline-optional-gif-fallback-v1">
+(() => {
+  const revealPoster = image => {
+    if (!(image instanceof HTMLImageElement) || !image.matches('.warmupGif,.gifMotion')) return;
+    const fallback = image.parentElement?.querySelector('.warmupFallback,.gifFallback');
+    if (!fallback) return;
+    image.hidden = true;
+    fallback.hidden = false;
+    const frame = image.closest('.warmupVisual,.gifFrame');
+    if (frame) frame.dataset.mediaState = 'FALLBACK_STATIC';
+  };
+  document.addEventListener('error', event => revealPoster(event.target), true);
+  document.querySelectorAll('img.warmupGif,img.gifMotion').forEach(image => {
+    if (image.complete && image.naturalWidth === 0) revealPoster(image);
+  });
+})();
+</script>'''
 
 REST_TIMING_DISPLAY_CONTRACT = '''  const renderTimingDisplays = () => {
     const root = state.__timing;
@@ -76,18 +205,18 @@ REST_TIMING_DISPLAY_CONTRACT = '''  const renderTimingDisplays = () => {
       const restElapsed = timing?.restStartedAt ? Math.max(0, now - timing.restStartedAt) : 0;
       const recommendation = getRestRecommendation(item);
       const restRemaining = Math.max(0, recommendation.minMs - restElapsed);
-      const restActive = Boolean(!row.complete && timing?.restStartedAt && restRemaining > 0);
+      const restActive = Boolean(!root?.sessionEndedAt && timing?.restStartedAt && restRemaining > 0);
       const seriesActive = Boolean(!row.complete && timing?.seriesStartedAt && !timing?.restStartedAt);
-      const restPending = Boolean(!row.complete && timing?.restStartedAt && !seriesActive);
+      const restPending = Boolean(!root?.sessionEndedAt && timing?.restStartedAt && !seriesActive);
       const activity = restPending
-        ? { kind: 'rest', label: restActive ? `Descanso · ${item.title}` : `Descanso listo · ${item.title}`, clock: restActive ? `${formatCountdown(restRemaining)} restantes` : 'Lista', startedAt: Number(timing.restStartedAt) || 0 }
+        ? { kind: restActive ? 'rest' : 'ready', label: restActive ? `Descanso · ${item.title}` : `Descanso listo · ${item.title}`, clock: restActive ? `${formatCountdown(restRemaining)} restantes` : 'Lista', startedAt: Number(timing.restStartedAt) || 0 }
         : preparing
           ? { kind: 'preparing', label: `Preparación · ${item.title}`, clock: formatCountdown((preparation?.endsAt || timing?.preparationEndsAt || now) - now), startedAt: Number(timing?.preparationEndsAt) || now }
           : seriesActive
             ? { kind: 'active', label: `Serie ${row.done + 1} activa · ${item.title}`, clock: formatElapsed(now - timing.seriesStartedAt), startedAt: Number(timing.seriesStartedAt) || 0 }
             : null;
       if (activity && (!currentActivity || activity.startedAt >= currentActivity.startedAt)) currentActivity = activity;
-      if (!row.complete && timing?.restStartedAt) notifyRestReady(item, timing, restElapsed);
+      if (!root?.sessionEndedAt && timing?.restStartedAt) notifyRestReady(item, timing, restElapsed);
       const summaryButton = summaryList.querySelector(`[data-exercise="${item.index + 1}"]`);
       const summaryState = summaryButton?.querySelector('.summaryExerciseState');
       if (summaryButton && summaryState) {
@@ -95,8 +224,8 @@ REST_TIMING_DISPLAY_CONTRACT = '''  const renderTimingDisplays = () => {
         summaryButton.classList.toggle('isSeriesActive', seriesActive);
         summaryButton.classList.toggle('isPreparing', preparing);
         if (row.skipped) summaryState.textContent = '↷ Omitido';
-        else if (row.complete) summaryState.textContent = '✓ Listo';
         else if (restActive) summaryState.textContent = `Descanso · ${formatCountdown(restRemaining)}`;
+        else if (row.complete) summaryState.textContent = '✓ Listo';
         else if (preparing) summaryState.textContent = `Preparación · ${formatCountdown(preparation ? preparation.endsAt - now : 0)}`;
         else if (seriesActive) summaryState.textContent = `● S${row.done + 1} activa · ${formatElapsed(now - timing.seriesStartedAt)}`;
         else summaryState.textContent = `${row.done}/${item.seriesKeys.length}`;
@@ -122,16 +251,72 @@ REST_TIMING_DISPLAY_CONTRACT = '''  const renderTimingDisplays = () => {
       display.textContent = '⏱ ' + (labels.length ? labels.join(' · ') : progressLabel) + ' · Ejercicio ' + exerciseElapsed;
       if (item.restDisplay) item.restDisplay.hidden = !restActive;
     });
-    const activityPanel = document.getElementById('summaryActivity');
+    const warmup = getWarmupTiming();
+    if (warmup.phase === 'preparing') {
+      const startedAt = Number(warmup.preparationEndsAt) - PREPARATION_MS;
+      const activity = { kind: 'preparing', label: 'Preparación · Calentamiento', clock: formatCountdown(warmupPreparationRemaining()), startedAt };
+      if (!currentActivity || activity.startedAt >= currentActivity.startedAt) currentActivity = activity;
+    } else if (warmup.phase === 'cardio' || warmup.phase === 'mobility') {
+      const startedAt = Number(warmup[`${warmup.phase}StartedAt`]) || 0;
+      const activity = { kind: 'active', label: `Calentamiento · ${warmup.phase === 'cardio' ? 'Cardio' : 'Movilidad'}`, clock: formatElapsed(now - startedAt), startedAt };
+      if (!currentActivity || activity.startedAt >= currentActivity.startedAt) currentActivity = activity;
+    }
+    const activityButton = document.getElementById('summaryToggle');
+    const activityIcon = document.getElementById('summaryActivityIcon');
+    const activityHeadline = document.getElementById('summaryHeadline');
+    const compactActivityHeadline = document.getElementById('summaryActivityHeadline');
+    const activityStatus = document.getElementById('summaryActivityStatus');
     const activityLabel = document.getElementById('summaryActivityLabel');
     const activityClock = document.getElementById('summaryActivityClock');
-    if (activityPanel && activityLabel && activityClock) {
-      activityPanel.hidden = !currentActivity;
-      activityPanel.classList.toggle('isResting', currentActivity?.kind === 'rest');
-      activityPanel.classList.toggle('isActive', currentActivity?.kind === 'active');
-      activityPanel.classList.toggle('isPreparing', currentActivity?.kind === 'preparing');
-      activityLabel.textContent = currentActivity?.label || '';
-      activityClock.textContent = currentActivity?.clock || '';
+    const overallProgress = document.getElementById('summaryOverallProgress');
+    const progressFill = document.getElementById('summaryProgressFill');
+    if (activityButton && activityHeadline) {
+      const doneExercises = exerciseItems.filter(item => snapshot(item).complete).length;
+      const doneSeries = exerciseItems.reduce((sum, item) => sum + snapshot(item).done, 0);
+      const totalSeries = exerciseItems.reduce((sum, item) => sum + item.seriesKeys.length, 0);
+      const progressText = `${doneExercises}/${exerciseItems.length} ejercicios · ${doneSeries}/${totalSeries} series`;
+      const activityText = currentActivity ? `${currentActivity.label} · ${currentActivity.clock}` : doneExercises === exerciseItems.length ? 'Rutina completada' : 'Sin actividad · listo para continuar';
+      activityHeadline.textContent = progressText;
+      if (compactActivityHeadline) compactActivityHeadline.textContent = activityText;
+      if (activityLabel) activityLabel.textContent = currentActivity?.label || activityText;
+      if (activityClock) activityClock.textContent = currentActivity?.clock || (doneExercises === exerciseItems.length ? '✓' : '—');
+      if (activityStatus) {
+        activityStatus.classList.toggle('isResting', currentActivity?.kind === 'rest');
+        activityStatus.classList.toggle('isActive', currentActivity?.kind === 'active');
+        activityStatus.classList.toggle('isPreparing', currentActivity?.kind === 'preparing');
+        activityStatus.classList.toggle('isIdle', !currentActivity || currentActivity.kind === 'ready');
+        activityStatus.dataset.activity = currentActivity?.kind || (doneExercises === exerciseItems.length ? 'complete' : 'idle');
+      }
+      const mascot = activityStatus?.querySelector('#summaryActivityMascot');
+      if (mascot) {
+        const mascotState = currentActivity?.kind === 'rest' ? 'rest' : currentActivity?.kind === 'active' ? 'exercise' : '';
+        const mascotVariant = window.gymratikMascotVariant || 'neutral';
+        const mascotReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+        const mascotAsset = mascotState ? `../../../data/profile/mascot-motion/${mascotVariant}-${mascotState}-${mascotReducedMotion ? 'still.webp' : '25fps.gif'}` : '';
+        if (mascotAsset) {
+          mascot.hidden = false;
+          if (mascot.getAttribute('src') !== mascotAsset) mascot.src = mascotAsset;
+          mascot.alt = mascotVariant === 'female' ? (mascotState === 'rest' ? 'Ratona descansando' : 'Ratona ejercitándose') : mascotVariant === 'male' ? (mascotState === 'rest' ? 'Ratón descansando' : 'Ratón ejercitándose') : (mascotState === 'rest' ? 'Mascotas Gymratik descansando' : 'Mascotas Gymratik ejercitándose');
+        } else {
+          mascot.hidden = true;
+          if (mascot.hasAttribute('src')) mascot.removeAttribute('src');
+          mascot.alt = '';
+        }
+      }
+      if (overallProgress) {
+        overallProgress.setAttribute('aria-valuemax', String(totalSeries));
+        overallProgress.setAttribute('aria-valuenow', String(doneSeries));
+        overallProgress.setAttribute('aria-valuetext', `${doneExercises} de ${exerciseItems.length} ejercicios; ${doneSeries} de ${totalSeries} series completadas`);
+        overallProgress.dataset.state = doneSeries === 0 ? 'empty' : doneSeries === totalSeries ? 'full' : 'filling';
+      }
+      if (progressFill) progressFill.style.setProperty('--summary-progress', String(totalSeries ? doneSeries / totalSeries : 0));
+      const buttonLabel = `${progressText}. ${activityText}. Activar para mostrar u ocultar el progreso`;
+      activityButton.title = buttonLabel;
+      activityButton.setAttribute('aria-label', buttonLabel);
+      activityButton.classList.toggle('isResting', currentActivity?.kind === 'rest');
+      activityButton.classList.toggle('isActive', currentActivity?.kind === 'active');
+      activityButton.classList.toggle('isPreparing', currentActivity?.kind === 'preparing');
+      if (activityIcon) activityIcon.textContent = currentActivity?.kind === 'rest' ? '⏳' : currentActivity?.kind === 'active' ? '🏋️' : currentActivity?.kind === 'preparing' ? '◷' : '📋';
     }
   };'''
 
@@ -361,12 +546,11 @@ PREPARATION_TIMING_CONTRACT = r'''  // El cronómetro empieza después de una pr
   const warmupCardioEl = document.getElementById('warmupCardioElapsed');
   const warmupMobilityEl = document.getElementById('warmupMobilityElapsed');
   const warmupTotalEl = document.getElementById('warmupTotalElapsed');
-  const warmupStartButton = document.getElementById('warmupStart');
-  const warmupAdvanceButton = document.getElementById('warmupAdvance');
-  const warmupFinishButton = document.getElementById('warmupFinish');
+  const warmupActionButton = document.getElementById('warmupAction');
+  const warmupProgress = document.getElementById('warmupProgress');
   const getWarmupTiming = () => {
     const root = getTimingState();
-    if (!root.warmup || typeof root.warmup !== 'object') root.warmup = { phase: 'idle', startedAt: 0, cardioStartedAt: 0, cardioEndedAt: 0, mobilityStartedAt: 0, mobilityEndedAt: 0, endedAt: 0 };
+    if (!root.warmup || typeof root.warmup !== 'object') root.warmup = { phase: 'idle', startedAt: 0, preparationEndsAt: 0, cardioStartedAt: 0, cardioEndedAt: 0, mobilityStartedAt: 0, mobilityEndedAt: 0, endedAt: 0 };
     return root.warmup;
   };
   const warmupPreparationRemaining = () => Math.max(0, warmupPreparationEndsAt - Date.now());
@@ -378,50 +562,75 @@ PREPARATION_TIMING_CONTRACT = r'''  // El cronómetro empieza después de una pr
     const segment = (start, end) => start ? formatElapsed((end || now) - start) : '—';
     const phaseLabels = { idle: 'Pendiente', preparing: 'Preparación', cardio: 'Cardio', mobility: 'Movilidad', done: 'Completado' };
     const phaseText = preparing ? `Preparación · ${formatElapsed(warmupPreparationRemaining())}` : phaseLabels[warmup.phase] || phaseLabels.idle;
+    if (warmupProgress) {
+      const completedPhases = warmup.phase === 'done' ? 2 : warmup.phase === 'mobility' ? 1 : 0;
+      const progressState = completedPhases === 2 ? 'full' : completedPhases > 0 ? 'filling' : 'empty';
+      warmupProgress.dataset.state = progressState;
+      warmupProgress.setAttribute('aria-valuenow', String(completedPhases));
+      warmupProgress.setAttribute('aria-valuetext', `${completedPhases} de 2 fases · ${phaseText}`);
+      warmupProgress.querySelectorAll('.warmupProgressSegment').forEach((segment, index) => {
+        segment.classList.toggle('is-complete', index < completedPhases);
+        segment.classList.toggle('is-current', index === completedPhases && ['preparing', 'cardio', 'mobility'].includes(warmup.phase));
+        segment.classList.toggle('is-next', index >= completedPhases && warmup.phase !== 'done');
+      });
+    }
     if (warmupCardioEl) warmupCardioEl.textContent = segment(warmup.cardioStartedAt, warmup.cardioEndedAt);
     if (warmupMobilityEl) warmupMobilityEl.textContent = segment(warmup.mobilityStartedAt, warmup.mobilityEndedAt);
     if (warmupTotalEl) warmupTotalEl.textContent = segment(warmup.startedAt, warmup.endedAt);
     if (warmupPhaseEl) warmupPhaseEl.textContent = phaseText;
-    if (warmupStartButton) {
-      warmupStartButton.disabled = warmup.phase !== 'idle';
-      warmupStartButton.textContent = warmup.phase === 'idle' ? '▶ Iniciar calentamiento' : preparing ? '⏳ Preparando…' : '✓ Calentamiento iniciado';
-    }
-    if (warmupAdvanceButton) {
-      warmupAdvanceButton.disabled = warmup.phase !== 'cardio';
-      warmupAdvanceButton.textContent = warmup.phase === 'cardio' ? '→ Pasar a movilidad' : '→ Movilidad';
-    }
-    if (warmupFinishButton) {
-      warmupFinishButton.disabled = warmup.phase !== 'mobility';
-      warmupFinishButton.textContent = warmup.phase === 'mobility' ? '✓ Finalizar calentamiento' : '✓ Calentamiento completo';
+    if (warmupActionButton) {
+      warmupActionButton.dataset.phase = warmup.phase;
+      warmupActionButton.disabled = preparing || warmup.phase === 'done';
+      warmupActionButton.textContent = preparing ? `⏳ Preparación · ${formatCountdown(warmupPreparationRemaining())}`
+        : warmup.phase === 'idle' ? '▶ Iniciar calentamiento'
+        : warmup.phase === 'cardio' ? '→ Pasar a movilidad'
+        : warmup.phase === 'mobility' ? '✓ Finalizar calentamiento'
+        : '✓ Calentamiento completo';
+      warmupActionButton.setAttribute('aria-label', warmupActionButton.textContent);
     }
     const warmupComplete = warmup.phase === 'done';
     if (warmupTracker) warmupTracker.dataset.warmupComplete = warmupComplete ? 'true' : 'false';
+  };
+  const finishWarmupPreparation = () => {
+    warmupPreparationTimer = 0;
+    const warmup = getWarmupTiming();
+    if (warmup.phase !== 'preparing') return;
+    const timestamp = Date.now();
+    warmup.phase = 'cardio';
+    warmup.preparationEndsAt = 0;
+    warmup.startedAt = timestamp;
+    warmup.cardioStartedAt = timestamp;
+    const root = getTimingState();
+    if (!root.sessionStartedAt) root.sessionStartedAt = timestamp;
+    save();
+    renderWarmupTiming();
+    renderTimingDisplays();
+    exerciseItems.forEach(updateCompleteButton);
   };
   const startWarmupPreparation = () => {
     const warmup = getWarmupTiming();
     if (warmup.phase !== 'idle') return;
     warmup.phase = 'preparing';
     warmupPreparationEndsAt = Date.now() + PREPARATION_MS;
+    warmup.preparationEndsAt = warmupPreparationEndsAt;
+    save();
     renderWarmupTiming();
-    warmupPreparationTimer = window.setTimeout(() => {
-      warmupPreparationTimer = 0;
-      if (getWarmupTiming().phase !== 'preparing') return;
-      const timestamp = Date.now();
-      warmup.phase = 'cardio';
-      warmup.startedAt = timestamp;
-      warmup.cardioStartedAt = timestamp;
-      const root = getTimingState();
-      if (!root.sessionStartedAt) root.sessionStartedAt = timestamp;
-      save();
-      renderWarmupTiming();
-      renderTimingDisplays();
-    }, PREPARATION_MS);
+    warmupPreparationTimer = window.setTimeout(finishWarmupPreparation, PREPARATION_MS);
   };
+  const restoredWarmup = getWarmupTiming();
+  if (restoredWarmup.phase === 'preparing') {
+    warmupPreparationEndsAt = Number(restoredWarmup.preparationEndsAt) || Date.now();
+    warmupPreparationTimer = window.setTimeout(finishWarmupPreparation, Math.max(0, warmupPreparationEndsAt - Date.now()));
+  }
   const startSeriesPreparation = (item) => {
     if (seriesPreparation.has(item.index)) return;
     const endsAt = Date.now() + PREPARATION_MS;
+    const timing = getExerciseTiming(item);
+    timing.preparationEndsAt = endsAt;
+    save();
     const timer = window.setTimeout(() => {
       seriesPreparation.delete(item.index);
+      getExerciseTiming(item).preparationEndsAt = 0;
       beginSeries(item, Date.now());
       updateTracker(item.tracker, false);
       renderTimingDisplays();
@@ -430,6 +639,20 @@ PREPARATION_TIMING_CONTRACT = r'''  // El cronómetro empieza después de una pr
     updateTracker(item.tracker, false);
     renderTimingDisplays();
   };
+  exerciseItems.forEach(item => {
+    const timing = getExerciseTiming(item);
+    const endsAt = Number(timing.preparationEndsAt) || 0;
+    if (endsAt <= 0) return;
+    if (endsAt <= Date.now()) { timing.preparationEndsAt = 0; save(); return; }
+    const timer = window.setTimeout(() => {
+      seriesPreparation.delete(item.index);
+      getExerciseTiming(item).preparationEndsAt = 0;
+      beginSeries(item, Date.now());
+      updateTracker(item.tracker, false);
+      renderTimingDisplays();
+    }, endsAt - Date.now());
+    seriesPreparation.set(item.index, { endsAt, timer });
+  });
   const isSeriesPreparing = item => seriesPreparation.has(item.index);
   const renderPreparationDisplay = item => {
     const preparation = seriesPreparation.get(item.index);
@@ -438,28 +661,41 @@ PREPARATION_TIMING_CONTRACT = r'''  // El cronómetro empieza después de una pr
     if (item.timingDisplay) item.timingDisplay.textContent = `⏳ Preparación · ${formatElapsed(remaining)}`;
     return true;
   };
-  warmupStartButton?.addEventListener('click', startWarmupPreparation);
-  warmupAdvanceButton?.addEventListener('click', () => {
+  warmupActionButton?.addEventListener('click', () => {
     const warmup = getWarmupTiming();
-    if (warmup.phase !== 'cardio') return;
-    const timestamp = Date.now();
-    warmup.phase = 'mobility';
-    warmup.cardioEndedAt = timestamp;
-    warmup.mobilityStartedAt = timestamp;
-    save();
-    renderWarmupTiming();
-  });
-  warmupFinishButton?.addEventListener('click', () => {
-    const warmup = getWarmupTiming();
-    if (warmup.phase !== 'mobility') return;
-    const timestamp = Date.now();
-    warmup.phase = 'done';
-    warmup.mobilityEndedAt = timestamp;
-    warmup.endedAt = timestamp;
-    save();
-    renderWarmupTiming();
+    if (warmup.phase === 'idle') { startWarmupPreparation(); return; }
+    if (warmup.phase === 'cardio') {
+      const timestamp = Date.now();
+      warmup.phase = 'mobility';
+      warmup.cardioEndedAt = timestamp;
+      warmup.mobilityStartedAt = timestamp;
+      save();
+      renderWarmupTiming();
+      renderTimingDisplays();
+      exerciseItems.forEach(updateCompleteButton);
+      return;
+    }
+    if (warmup.phase === 'mobility') {
+      const timestamp = Date.now();
+      warmup.phase = 'done';
+      warmup.mobilityEndedAt = timestamp;
+      warmup.endedAt = timestamp;
+      save();
+      renderWarmupTiming();
+      renderTimingDisplays();
+      exerciseItems.forEach(updateCompleteButton);
+    }
   });
   renderWarmupTiming();
+  window.gymratikMascotVariant = 'neutral';
+  const updateActivityMascotProfile = profile => {
+    const sex = profile?.sex;
+    window.gymratikMascotVariant = sex === 'female' ? 'female' : sex === 'male' ? 'male' : 'neutral';
+    renderTimingDisplays();
+  };
+  window.TrainingProgressStore?.getProfile?.().then(updateActivityMascotProfile).catch(() => updateActivityMascotProfile(null));
+  window.addEventListener('training-profile-updated', event => updateActivityMascotProfile(event.detail?.profile));
+  window.matchMedia?.('(prefers-reduced-motion: reduce)').addEventListener?.('change', () => renderTimingDisplays());
   const timingInterval = window.setInterval(() => { renderTimingDisplays(); renderWarmupTiming(); }, 1000);
 '''
 
@@ -513,6 +749,28 @@ def standardize_shared_session_contract(source: str) -> str:
         1,
     )
     source = source.replace(
+        "`${completedExercises}/6 ejercicios · ${doneSeries}/${totalSeries} series`",
+        "`${completedExercises}/${exerciseItems.length} ejercicios · ${doneSeries}/${totalSeries} series`",
+        1,
+    )
+    source = source.replace(
+        "button.setAttribute('aria-label', `Ir al ejercicio ${String(index + 1).padStart(2, '0')}: ${item.title}`);",
+        "button.setAttribute('aria-label', `Ir al ejercicio ${String(index + 1).padStart(2, '0')}: ${item.title} · ${row.done} de ${item.seriesKeys.length} series`); button.style.setProperty('--summary-progress', String(item.seriesKeys.length ? row.done / item.seriesKeys.length : 0));",
+        1,
+    )
+    if "const progressActivity = activeSet || activeRest;" not in source:
+        source = source.replace(
+            "const activeSet = isSeriesPreparing(item) || Boolean(exerciseTiming?.seriesStartedAt && !exerciseTiming?.restStartedAt);",
+            "const activeRest = Boolean(exerciseTiming?.restStartedAt && Date.now() - Number(exerciseTiming.restStartedAt) < getRestRecommendation(item).minMs); const activeSet = isSeriesPreparing(item) || Boolean(exerciseTiming?.seriesStartedAt && !exerciseTiming?.restStartedAt); const progressActivity = activeSet || activeRest;",
+            1,
+        )
+    if "segment.classList.toggle('is-active'" not in source:
+        source = source.replace(
+            "segment.classList.toggle('is-current', activeSet && index === done && seriesState !== 'full');",
+            "segment.classList.toggle('is-current', progressActivity && index === done && seriesState !== 'full'); segment.classList.toggle('is-active', activeSet && index === done && seriesState !== 'full'); segment.classList.toggle('is-resting', activeRest && index === done && seriesState !== 'full');",
+            1,
+        )
+    source = source.replace(
         "if (Number.isInteger(reps) && reps >= 1 && reps <= 40) {",
         "if (item.performanceReps?.dataset.selected === 'true' && Number.isInteger(reps) && reps >= item.repMinimum && reps <= item.repMaximum + 4) {",
         1,
@@ -527,6 +785,59 @@ def standardize_shared_session_contract(source: str) -> str:
         source,
         count=1,
     )
+    if "const repsClear = document.createElement('button')" not in source:
+        source = source.replace(
+            "const repsTitle = document.createElement('span'); repsTitle.textContent = 'Repeticiones realizadas';",
+            "const repsTitle = document.createElement('span'); repsTitle.textContent = 'Repeticiones realizadas · opcional'; const repsClear = document.createElement('button'); repsClear.type = 'button'; repsClear.className = 'performanceClear'; repsClear.textContent = 'Quitar'; repsClear.setAttribute('aria-label', `No registrar repeticiones de ${item.title}`); repsClear.hidden = true; const repsHeading = document.createElement('div'); repsHeading.className = 'performanceFieldTitleRow'; repsHeading.append(repsTitle, repsClear);",
+            1,
+        )
+    source = source.replace("repsLabel.append(repsTitle, repsControl, repsInput);", "repsLabel.append(repsHeading, repsControl, repsInput);", 1)
+    source = source.replace("const loadLabel = document.createElement('label');", "const loadLabel = document.createElement('div');", 1)
+    if "const loadClear = document.createElement('button')" not in source:
+        source = source.replace(
+            "loadHead.append(loadTitle, loadUnitSelect);",
+            "loadTitle.textContent = 'Carga utilizada · opcional'; const loadClear = document.createElement('button'); loadClear.type = 'button'; loadClear.className = 'performanceClear'; loadClear.textContent = 'Quitar'; loadClear.setAttribute('aria-label', `No registrar carga de ${item.title}`); loadClear.hidden = true; loadHead.append(loadTitle, loadUnitSelect);",
+            1,
+        )
+    source = source.replace(
+        "const loadOutput = document.createElement('button'); loadOutput.type = 'button'; loadOutput.className = 'performanceLoadValue'; loadOutput.textContent = 'Tocar para introducir carga'; loadOutput.setAttribute('aria-label', `Tocar para editar la carga de ${item.title}`);",
+        "const loadOutput = document.createElement('button'); loadOutput.type = 'button'; loadOutput.className = 'performanceLoadValue'; loadOutput.textContent = 'Sin registrar · tocar para añadir'; loadOutput.setAttribute('aria-label', `Tocar para editar la carga de ${item.title}`); const loadOutputRow = document.createElement('div'); loadOutputRow.className = 'performanceLoadOutputRow'; loadOutputRow.append(loadOutput, loadClear);",
+        1,
+    )
+    source = source.replace("loadLabel.append(loadHead, loadOutput, loadInput);", "loadLabel.append(loadHead, loadOutputRow, loadInput);", 1)
+    source = source.replace(
+        "progressionCue.textContent = 'Desliza para registrar las repeticiones. Puedes indicar la carga en kg o lb.';",
+        "progressionCue.textContent = 'Ambos datos son opcionales. Ajusta las repeticiones con −/+ o el deslizador; toca la carga para escribirla con precisión. La serie se completa aunque no registres datos.';",
+        1,
+    )
+    if "item.performanceLoadClear = loadClear" not in source:
+        source = source.replace(
+            "item.performanceLoadOutput = loadOutput;",
+            "item.performanceLoadOutput = loadOutput; item.performanceLoadClear = loadClear; item.performanceRepsClear = repsClear;",
+            1,
+        )
+    source = source.replace(
+        "loadOutput.textContent = item.performanceLoadSelected ? `${Number.isInteger(value) ? value : value.toFixed(1)} ${item.performanceLoadUnit}` : 'Sin registrar · tocar para introducir';",
+        "loadOutput.textContent = item.performanceLoadSelected ? `${Number.isInteger(value) ? value : value.toFixed(1)} ${item.performanceLoadUnit}` : 'Sin registrar · tocar para añadir'; loadClear.hidden = !item.performanceLoadSelected;",
+        1,
+    )
+    source = source.replace(
+        "item.performanceRepsOutput.textContent = selected ? `${value} ${value === 1 ? 'repetición' : 'repeticiones'}` : `Elige entre ${item.repMinimum} y ${item.repMaximum + 4}`; repsDown.disabled = selected && value <= item.repMinimum; repsUp.disabled = selected && value >= item.repMaximum + 4;",
+        "item.performanceRepsOutput.textContent = selected ? `${value} ${value === 1 ? 'repetición' : 'repeticiones'}` : `Sin registrar · ${item.repMinimum}–${item.repMaximum + 4} posibles`; item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden = !selected; repsDown.disabled = selected && value <= item.repMinimum; repsUp.disabled = selected && value >= item.repMaximum + 4;",
+        1,
+    )
+    if "repsClear.addEventListener('click'" not in source:
+        source = source.replace(
+            "repsUp.addEventListener('click', () => adjustPerformanceReps(1));",
+            "repsUp.addEventListener('click', () => adjustPerformanceReps(1));\n    repsClear.addEventListener('click', () => { item.performanceReps.dataset.selected = 'false'; item.performanceReps.value = String(item.repMinimum); renderPerformanceReps(); savePerformanceDraft(); });",
+            1,
+        )
+    if "loadClear.addEventListener('click'" not in source:
+        source = source.replace(
+            "item.performanceLoad.addEventListener('input', () => { item.performanceLoadExact = Number(item.performanceLoad.value) || 0; item.performanceLoadSelected = true; updateLoadControl(); savePerformanceDraft(); });",
+            "item.performanceLoad.addEventListener('input', () => { item.performanceLoadExact = Number(item.performanceLoad.value) || 0; item.performanceLoadSelected = true; updateLoadControl(); savePerformanceDraft(); });\n    loadClear.addEventListener('click', () => { item.performanceLoadSelected = false; item.performanceLoadExact = 0; item.performanceLoad.value = '0'; updateLoadControl(); savePerformanceDraft(); });",
+            1,
+        )
     card_index = 0
 
     def add_card_index(match: re.Match[str]) -> str:
@@ -580,8 +891,16 @@ def standardize_shared_session_contract(source: str) -> str:
     if 'data-fix="phase-media-clarity-v5"' not in source:
         source = source.replace(
             "</head>",
-            '<style data-fix="phase-media-clarity-v5">article.card .phaseRow .photo img.realphoto{background:transparent!important;mix-blend-mode:normal!important;object-fit:cover!important}</style>\n</head>',
+            '<style data-fix="phase-media-clarity-v5">article.card .phaseRow .photo img.realphoto{background:transparent!important;mix-blend-mode:normal!important;object-fit:contain!important}</style>\n</head>',
             1,
+        )
+    else:
+        source = re.sub(
+            r'<style data-fix="phase-media-clarity-v5">.*?</style>',
+            '<style data-fix="phase-media-clarity-v5">article.card .phaseRow .photo img.realphoto{background:transparent!important;mix-blend-mode:normal!important;object-fit:contain!important}</style>',
+            source,
+            count=1,
+            flags=re.S,
         )
     if 'data-fix="day1-rowing-phase-pair-v1"' not in source:
         source = source.replace(
@@ -653,11 +972,28 @@ def standardize_shared_session_contract(source: str) -> str:
         source,
     )
     source = re.sub(
-        r"  // El tiempo no comienza por visibilidad, enfoque o desplazamiento:.*?const timingInterval = window\.setInterval\(\(\) => \{ renderTimingDisplays\(\); renderWarmupTiming\(\); \}, 1000\);\r?\n",
-        PREPARATION_TIMING_CONTRACT,
+        r"(?m)^  (?://[^\r\n]*\r?\n)?const PREPARATION_MS = \d+;.*?^  const timingInterval = window\.setInterval\(\(\) => \{.*?\}, 1000\);\r?\n",
+        PREPARATION_TIMING_CONTRACT + "\n",
         source,
         count=1,
         flags=re.S,
+    )
+    source = re.sub(
+        r"  if \(getWarmupTiming\(\)\.phase === 'preparing'.*?warmupFinishButton\?\.addEventListener\('click', \(\) => \{\s*exerciseItems\.forEach\(item => updateTracker\(item\.tracker\)\);\s*\}\);\r?\n",
+        "",
+        source,
+        count=1,
+        flags=re.S,
+    )
+    source = source.replace(
+        "const PREPARATION_MS = 5000;",
+        "const PREPARATION_MS = 15000;",
+        1,
+    )
+    source = source.replace(
+        "preparación explícita de 5 segundos",
+        "preparación explícita de 15 segundos",
+        1,
     )
     source = re.sub(
         r"^\s*exerciseItems\.forEach\(item => updateTracker\(item\.tracker, false\)\);\r?\n(?=\s*\};)",
@@ -742,8 +1078,8 @@ def standardize_shared_session_contract(source: str) -> str:
         "    let longPressDetected = false;\n"
         "    let longPressTimer = 0;\n"
         "    startSeriesButton?.addEventListener('pointerdown', () => { longPressDetected = false; longPressTimer = window.setTimeout(() => { longPressDetected = true; }, 4000); });\n"
-        "    ['pointerup', 'pointercancel', 'pointerleave'].forEach(type => startSeriesButton?.addEventListener(type, () => { if (longPressTimer) window.clearTimeout(longPressTimer); longPressTimer = 0; }));\n"
-        "    startSeriesButton?.addEventListener('click', event => { if (!longPressDetected) return; event.preventDefault(); event.stopImmediatePropagation(); longPressDetected = false; }, true);\n"
+        "    ['pointerup', 'pointercancel', 'pointerleave'].forEach(type => startSeriesButton?.addEventListener(type, () => { if (longPressTimer) { window.clearTimeout(longPressTimer); longPressTimer = 0; longPressDetected = false; } }));\n"
+        "    startSeriesButton?.addEventListener('click', event => { if (!longPressDetected) return; event.preventDefault(); event.stopImmediatePropagation(); longPressDetected = false; });\n"
         "    item.startSeriesButton = startSeriesButton;",
         source,
         count=1,
@@ -760,23 +1096,25 @@ def standardize_shared_session_contract(source: str) -> str:
     const warmup = item.tracker.querySelector('.warmupSet');
     const exerciseWarmupComplete = !warmup || state[warmup.dataset.key] === true;
     const preparing = isSeriesPreparing(item);
-    const resting = Boolean(!complete && timing?.restStartedAt);
+    const resting = Boolean(!state.__timing?.sessionEndedAt && timing?.restStartedAt && Date.now() - timing.restStartedAt < getRestRecommendation(item).minMs);
     const restRemaining = resting ? Math.max(0, getRestRecommendation(item).minMs - (Date.now() - timing.restStartedAt)) : 0;
     const seriesActive = Boolean(!complete && timing?.seriesStartedAt && !timing?.restStartedAt);
     const preparation = seriesPreparation.get(item.index);
-    const label = complete ? state.__skippedExercises?.[String(item.index + 1)] === true ? '↷ Ejercicio omitido' : '✓ Ejercicio completado'
+    const label = resting && restRemaining > 0 ? `Descanso · ${formatElapsed(restRemaining)}`
+      : complete ? state.__skippedExercises?.[String(item.index + 1)] === true ? '↷ Ejercicio omitido' : '✓ Ejercicio completado'
       : !globalWarmupComplete ? 'Completa calentamiento'
-      : !exerciseWarmupComplete ? 'Completa calentamiento del ejercicio'
+      : !exerciseWarmupComplete ? 'Registrar 1 serie ligera de aproximación'
       : preparing ? `⏳ Preparación · ${formatElapsed(preparation ? Math.max(0, preparation.endsAt - Date.now()) : 0)}`
       : seriesActive ? `Completar serie ${nextIndex + 1} de ${item.seriesKeys.length}`
       : resting && restRemaining > 0 ? `Descanso · ${formatElapsed(restRemaining)} · mantén 5 s para continuar`
       : `Iniciar serie ${nextIndex + 1} de ${item.seriesKeys.length}`;
     button.hidden = false;
-    button.disabled = complete || !globalWarmupComplete || !exerciseWarmupComplete || preparing;
+    button.disabled = complete || !globalWarmupComplete || preparing;
     button.textContent = label;
     button.setAttribute('aria-label', label);
     button.classList.toggle('is-resting', resting && restRemaining > 0);
     button.classList.toggle('is-series-active', seriesActive && !preparing);
+    button.classList.toggle('is-preparing', preparing);
     if (item.skipExerciseButton) item.skipExerciseButton.disabled = !globalWarmupComplete || complete;
   };""",
         source,
@@ -792,12 +1130,22 @@ def standardize_shared_session_contract(source: str) -> str:
     source = re.sub(
         r"item\.startSeriesButton\?\.addEventListener\('click', \(\) => \{\s*"
         r"const timing = getExerciseTiming\(item\);\s*"
-        r"if \(!item \|\| snapshot\(item\)\.complete \|\| !isExerciseStarted\(item\) \|\| getWarmupTiming\(\)\.phase !== 'done' \|\| timing\.seriesStartedAt \|\| \(timing\.restStartedAt && Date\.now\(\) - timing\.restStartedAt < getRestRecommendation\(item\)\.minMs\)\) return;\s*"
+        r"const warmup = tracker\.querySelector\('\.warmupSet'\);\s*"
+        r"if \(!item \|\| snapshot\(item\)\.complete \|\| getWarmupTiming\(\)\.phase !== 'done' \|\| \(warmup && state\[warmup\.dataset\.key\] !== true\) \|\| timing\.seriesStartedAt \|\| \(timing\.restStartedAt && Date\.now\(\) - timing\.restStartedAt < getRestRecommendation\(item\)\.minMs\)\) return;\s*"
         r"startSeriesPreparation\(item\);\s*updateTracker\(tracker, false\);\s*\}\);",
         """item.startSeriesButton?.addEventListener('click', () => {
       const timing = getExerciseTiming(item);
       const warmup = tracker.querySelector('.warmupSet');
-      if (!item || snapshot(item).complete || getWarmupTiming().phase !== 'done' || (warmup && state[warmup.dataset.key] !== true) || timing.seriesStartedAt || (timing.restStartedAt && Date.now() - timing.restStartedAt < getRestRecommendation(item).minMs)) return;
+      if (!item || snapshot(item).complete || getWarmupTiming().phase !== 'done') return;
+      if (warmup && state[warmup.dataset.key] !== true) {
+        state[warmup.dataset.key] = true;
+        save();
+        pulse(item.startSeriesButton);
+        playMilestoneSound('series');
+        updateTracker(tracker, false);
+        return;
+      }
+      if (timing.seriesStartedAt || (timing.restStartedAt && Date.now() - timing.restStartedAt < getRestRecommendation(item).minMs)) return;
       startSeriesPreparation(item);
       updateTracker(tracker, false);
     });""",
@@ -871,6 +1219,16 @@ def standardize_shared_session_contract(source: str) -> str:
     )
     source = source.replace("}, 4000); }));", "}, 5000); }));", 1)
     source = source.replace(
+        "longPressDetected = true; startSeriesButton.style.setProperty('--hold-progress', '0%');",
+        "longPressDetected = false; startSeriesButton.style.setProperty('--hold-progress', '0%');",
+        1,
+    )
+    source = source.replace(
+        "longPressTimer = 0; if (!current.restStartedAt || Date.now() - current.restStartedAt >= getRestRecommendation(item).minMs || current.seriesStartedAt || snapshot(item).complete) return; startSeriesButton.classList.remove('is-holding');",
+        "longPressTimer = 0; if (!current.restStartedAt || Date.now() - current.restStartedAt >= getRestRecommendation(item).minMs || current.seriesStartedAt || snapshot(item).complete) return; longPressDetected = true; startSeriesButton.classList.remove('is-holding');",
+        1,
+    )
+    source = source.replace(
         "const timingInterval = window.setInterval(() => { renderTimingDisplays(); renderWarmupTiming(); }, 1000);",
         "const timingInterval = window.setInterval(() => { renderTimingDisplays(); renderWarmupTiming(); exerciseItems.forEach(updateCompleteButton); }, 1000);",
         1,
@@ -889,7 +1247,30 @@ def standardize_shared_session_contract(source: str) -> str:
         flags=re.S,
     )
     if timing_display_count != 1:
-        raise ValueError("No se pudo aplicar el contrato de contador y actividad de descanso")
+        timing_start = source.find("  const renderTimingDisplays = () => {")
+        timing_end_candidates = [
+            position for position in (
+                source.find("\n  // El cronómetro empieza", timing_start),
+                source.find("\n  const PREPARATION_MS", timing_start),
+            ) if position >= 0
+        ]
+        if timing_start < 0 or not timing_end_candidates:
+            raise ValueError("No se pudo localizar el bloque delimitado del contador de actividad")
+        timing_end = min(timing_end_candidates)
+        source = source[:timing_start] + REST_TIMING_DISPLAY_CONTRACT + source[timing_end:]
+        timing_display_count = 1
+    if "window.gymratikMascotVariant = 'neutral';" not in source:
+        profile_mascot_init = """  window.gymratikMascotVariant = 'neutral';
+  const updateActivityMascotProfile = profile => {
+    const sex = profile?.sex;
+    window.gymratikMascotVariant = sex === 'female' ? 'female' : sex === 'male' ? 'male' : 'neutral';
+    renderTimingDisplays();
+  };
+  window.TrainingProgressStore?.getProfile?.().then(updateActivityMascotProfile).catch(() => updateActivityMascotProfile(null));
+  window.addEventListener('training-profile-updated', event => updateActivityMascotProfile(event.detail?.profile));
+  window.matchMedia?.('(prefers-reduced-motion: reduce)').addEventListener?.('change', () => renderTimingDisplays());
+"""
+        source = source.replace("  const timingInterval = window.setInterval", profile_mascot_init + "  const timingInterval = window.setInterval", 1)
     return source
 
 
@@ -988,6 +1369,11 @@ def _image_markup(markup: str, name: str, focus: dict[str, str]) -> str:
 
 
 def standardize_muscle_visuals(source: str) -> str:
+    source = source.replace(
+        "if (seriesIndex + 1 < item.seriesKeys.length) timing.restStartedAt = timestamp; else timing.endedAt = timestamp;",
+        "if (seriesIndex + 1 < item.seriesKeys.length || exerciseItems.some(entry => !snapshot(entry).complete)) timing.restStartedAt = timestamp; else timing.endedAt = timestamp;",
+        1,
+    )
     grid_match = re.search(r'<div class="muscleDayGrid"[^>]*>.*?</div>\s*</div></div>', source, flags=re.S)
     if not grid_match:
         raise ValueError("No se encontró la cuadrícula de músculos del día")
@@ -1000,6 +1386,7 @@ def standardize_muscle_visuals(source: str) -> str:
     # Sustituir primero la cuadrícula: insertar CSS antes de ella cambia los
     # offsets de la cadena y no debe invalidar los índices del match.
     source = source[: grid_match.start()] + grid + source[grid_match.end() :]
+    source = standardize_offline_image_sources(source)
     source = source.replace(
         '<div class="muscleDayGrid">',
         '<div class="muscleDayGrid" data-enhancement="muscle-day-realistic-media-v1" data-fallback-contract="muscle-day-image-fallback-v1">',
@@ -1009,19 +1396,105 @@ def standardize_muscle_visuals(source: str) -> str:
         source = re.sub(r'<style data-fix="muscle-specific-focus-v1">.*?</style>', MUSCLE_VISUAL_STYLE, source, count=1, flags=re.S)
     else:
         source = source.replace('</head>', MUSCLE_VISUAL_STYLE + '\n</head>', 1)
+    source = close_unterminated_segmented_progress_style(source)
     if 'data-enhancement="interaction-feedback-v1"' not in source:
         source = source.replace('</head>', INTERACTION_FEEDBACK_STYLE + '\n</head>', 1)
+    else:
+        source = re.sub(r'<style data-enhancement="interaction-feedback-v1">.*?</style>', lambda _: INTERACTION_FEEDBACK_STYLE, source, count=1, flags=re.S)
     source = standardize_shared_session_contract(source)
-    if 'id="summaryActivity"' not in source:
-        source, activity_markup_count = re.subn(
-            r'(<button type="button" class="summaryToggle" id="summaryToggle"[^>]*>.*?</button>)',
-            lambda match: f"{match.group(1)}\n{FLOATING_ACTIVITY_MARKUP}",
+    source = standardize_series_entry_zone(source)
+    source = re.sub(
+        r'<div class="warmupTrackerActions">.*?</div>',
+        '<div class="warmupTrackerActions"><button type="button" id="warmupAction" aria-describedby="warmupInstructions">▶ Iniciar calentamiento</button></div>',
+        source,
+        count=1,
+        flags=re.S,
+    )
+    source = source.replace(
+        '<div class="warmupTrackerHead"><span>⏱ Seguimiento del calentamiento</span>',
+        '<div class="warmupTrackerHead"><span>⏱ Seguimiento del calentamiento</span>',
+        1,
+    )
+    source = re.sub(
+        r'(<p class="warmupInstructions" id="warmupInstructions">.*?</p>)(?:\s*<p class="warmupInstructions" id="warmupInstructions">.*?</p>)+',
+        r'\1',
+        source,
+        count=1,
+        flags=re.S,
+    )
+    if 'id="warmupInstructions"' not in source:
+        source = source.replace(
+            '<div class="warmupTracker" id="warmupTracker" aria-label="Seguimiento del calentamiento">',
+            '<div class="warmupTracker" id="warmupTracker" aria-label="Seguimiento del calentamiento"><p class="warmupInstructions" id="warmupInstructions">Sigue las actividades, tiempos y técnica indicados arriba para este día. Completa primero el bloque de cardio o activación y luego la movilidad; trabaja con control, sin llegar fatigado y sin dolor. El mismo botón inicia, avanza de fase y finaliza el calentamiento.</p>',
+            1,
+        )
+    if 'id="warmupProgress"' not in source:
+        source, warmup_progress_count = re.subn(
+            r'(<div class="warmupTrackerHead">.*?</div>)',
+            lambda match: f"{match.group(1)}\n{WARMUP_PROGRESS_MARKUP}",
             source,
             count=1,
             flags=re.S,
         )
-        if activity_markup_count != 1:
-            raise ValueError("No se pudo integrar la actividad en el resumen flotante existente")
+        if warmup_progress_count != 1:
+            raise ValueError("No se pudo integrar la barra de progreso del calentamiento")
+    source = re.sub(
+        r'<button type="button" class="setButton warmupSet"([^>]*)>Calentamiento</button>',
+        lambda match: match.group(0) if re.search(r'\shidden(?:\s|=|>)', match.group(1)) else f'<button type="button" class="setButton warmupSet"{match.group(1)} hidden aria-hidden="true" tabindex="-1">Calentamiento</button>',
+        source,
+    )
+    source = re.sub(
+        r'(<button type="button" class="completeSetButton"[^>]*>.*?</button>)',
+        lambda match: match.group(1) if 'aria-describedby="exerciseWarmupHint"' in match.group(1) else match.group(1).replace('>', ' aria-describedby="exerciseWarmupHint">', 1),
+        source,
+        count=1,
+        flags=re.S,
+    )
+    if 'id="exerciseWarmupHint"' not in source:
+        source = re.sub(
+            r'(<div class="exerciseSetButtons"[^>]*>)(<button type="button" class="setButton warmupSet"[^>]*>.*?</button>)',
+            r'\1<p class="exerciseWarmupHint" id="exerciseWarmupHint">Aproximación: antes de las series efectivas, haz 1 serie con carga ligera y recorrido completo; no cuenta como serie de trabajo.</p>\2',
+            source,
+            count=1,
+            flags=re.S,
+        )
+    source = re.sub(r'<div class="summaryActivity" id="summaryActivity"[^>]*>.*?</div>\s*', "", source, count=1, flags=re.S)
+    source = source.replace('<span aria-hidden="true">📋</span><span id="summaryHeadline">', '<span id="summaryActivityIcon" aria-hidden="true">📋</span><span id="summaryHeadline">', 1)
+    source = re.sub(
+        r'(?:<span id="summaryActivityHeadline">.*?</span>)+',
+        '<span id="summaryActivityHeadline">Sin actividad · listo para continuar</span>',
+        source,
+        count=1,
+        flags=re.S,
+    )
+    if 'id="summaryActivityHeadline"' not in source:
+        source = source.replace(
+            '</span><span class="summaryChevron" aria-hidden="true">⌃</span></button>',
+            '</span><span id="summaryActivityHeadline">Sin actividad · listo para continuar</span><span class="summaryChevron" aria-hidden="true">⌃</span></button>',
+            1,
+        )
+    if source.count('id="summaryActivityHeadline"') != 1:
+        raise ValueError("No se pudo integrar el estado resumido de actividad en la cabecera flotante")
+    if 'id="summaryActivityStatus"' not in source:
+        source = source.replace(
+            '<div class="summaryTotals"><span id="summaryPending">0 pendientes</span></div>',
+            '<div class="summaryTotals"><span id="summaryPending">0 pendientes</span></div><div class="summaryActivityStatus isIdle" id="summaryActivityStatus" data-activity="idle" aria-live="polite"><span class="summaryActivityIndicator" aria-hidden="true"></span><span class="summaryActivityLabel" id="summaryActivityLabel">Sin actividad · listo para continuar</span><span class="summaryActivityClock" id="summaryActivityClock">—</span><img id="summaryActivityMascot" class="summaryActivityMascot" alt="" hidden decoding="async"></div><div class="summaryProgressTrack" id="summaryOverallProgress" role="progressbar" aria-label="Progreso total de series" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="Sin series completadas" data-state="empty"><span id="summaryProgressFill"></span></div>',
+            1,
+        )
+    if 'id="summaryActivityMascot"' not in source:
+        source, mascot_count = re.subn(
+            r'(<span class="summaryActivityClock" id="summaryActivityClock">.*?</span>)',
+            r'\1<img id="summaryActivityMascot" class="summaryActivityMascot" alt="" hidden decoding="async">',
+            source,
+            count=1,
+            flags=re.S,
+        )
+        if mascot_count != 1:
+            raise ValueError("No se pudo integrar la mascota dentro del estado flotante existente")
+    if 'id="summaryOverallProgress"' not in source:
+        raise ValueError("No se pudo integrar la barra de progreso total en el resumen flotante")
+    if 'id="summaryActivityIcon"' not in source and 'id="summaryToggle"' in source:
+        raise ValueError("No se pudo integrar el estado dinámico en el botón flotante existente")
     next_index = 1
 
     def add_card_index(match: re.Match[str]) -> str:
@@ -1051,4 +1524,155 @@ def standardize_muscle_visuals(source: str) -> str:
         flags=re.S,
     )
     source = source.replace('</body>', REST_COUNTDOWN_STYLE + '\n</body>', 1)
+    source = standardize_optional_media_fallback(source)
+    return source
+
+
+def close_unterminated_segmented_progress_style(source: str) -> str:
+    """Close the progress stylesheet before a following style block.
+
+    HTML treats style contents as raw text, so a missing closing tag causes
+    every subsequent style tag up to the next closing tag to be ignored.
+    """
+    marker = '<style data-enhancement="segmented-progress-bars-v1">'
+    start = source.find(marker)
+    if start < 0:
+        return source
+
+    next_start = source.find("<style", start + len(marker))
+    head_end = source.find("</head>", start + len(marker))
+    boundary = min((index for index in (next_start, head_end) if index >= 0), default=-1)
+    if boundary < 0:
+        return source
+
+    close = source.find("</style>", start + len(marker))
+    if close >= 0 and close < boundary:
+        return source
+    return source[:boundary].rstrip() + "\n</style>\n" + source[boundary:]
+
+
+def standardize_series_entry_zone(source: str) -> str:
+    """Make optional per-set logging controls clear, compact, and touch friendly."""
+    source = source.replace(
+        "const repsTitle = document.createElement('span'); repsTitle.textContent = 'Repeticiones realizadas · opcional'; const repsClear = document.createElement('button');",
+        "const repsLabelText = document.createElement('span'); repsLabelText.textContent = 'Repeticiones'; const repsIcon = createPerformanceIcon('repeat-2'); const repsOptional = document.createElement('span'); repsOptional.className = 'performanceOptional'; repsOptional.textContent = 'Opcional'; const repsFieldLabel = document.createElement('span'); repsFieldLabel.className = 'performanceFieldLabel'; if (repsIcon) repsFieldLabel.append(repsIcon); repsFieldLabel.append(repsLabelText); const repsTitle = document.createElement('span'); repsTitle.className = 'performanceFieldTitleRow'; repsTitle.append(repsFieldLabel, repsOptional); const repsClear = document.createElement('button');",
+        1,
+    )
+    source = source.replace(
+        "const loadHead = document.createElement('span'); loadHead.className = 'performanceLoadHead';\n    const loadTitle = document.createElement('span'); loadTitle.textContent = 'Carga utilizada (opcional)';",
+        "const loadHead = document.createElement('div'); loadHead.className = 'performanceLoadHead';\n    const loadLabelText = document.createElement('span'); loadLabelText.textContent = 'Carga'; const loadIcon = item.tracker.closest('article.card')?.querySelector('.machinePill .pillIcon svg')?.cloneNode(true); if (loadIcon) { loadIcon.setAttribute('aria-hidden', 'true'); loadIcon.classList.add('performanceFieldIcon'); } const loadOptional = document.createElement('span'); loadOptional.className = 'performanceOptional'; loadOptional.textContent = 'Opcional'; const loadFieldLabel = document.createElement('span'); loadFieldLabel.className = 'performanceFieldLabel'; if (loadIcon) loadFieldLabel.append(loadIcon); loadFieldLabel.append(loadLabelText); const loadTitle = document.createElement('span'); loadTitle.className = 'performanceFieldLabel'; loadTitle.append(loadFieldLabel, loadOptional);",
+        1,
+    )
+    source = source.replace("loadTitle.textContent = 'Carga utilizada · opcional'; const loadClear = document.createElement('button');", "const loadClear = document.createElement('button');", 1)
+    source = source.replace(
+        "[['kg', 'kg · kilogramos'], ['lb', 'lb · libras']].forEach(([value, label]) => { const option = document.createElement('option'); option.value = value; option.textContent = label; loadUnitSelect.append(option); });",
+        "[['kg', 'kg'], ['lb', 'lb']].forEach(([value, label]) => { const option = document.createElement('option'); option.value = value; option.textContent = label; option.setAttribute('aria-label', value === 'kg' ? 'Kilogramos' : 'Libras'); loadUnitSelect.append(option); });",
+        1,
+    )
+    source = source.replace(
+        "progressionCue.textContent = 'Ambos datos son opcionales. Ajusta las repeticiones con −/+ o el deslizador; toca la carga para escribirla con precisión. La serie se completa aunque no registres datos.';",
+        "progressionCue.textContent = 'Opcional: desliza o usa −/+ para repeticiones; toca la carga para escribirla. Puedes completar la serie sin registrar.';",
+        1,
+    )
+    if "const updateRangeFill = input =>" not in source:
+        source = source.replace(
+            "const updateLoadControl = () => {",
+            "const updateRangeFill = input => { const min = Number(input.min) || 0; const max = Number(input.max) || 100; const value = Number(input.value) || 0; input.style.setProperty('--range-progress', `${Math.max(0, Math.min(100, (value - min) / Math.max(1, max - min) * 100))}%`); };\n    const updateLoadControl = () => {",
+            1,
+        )
+    if "item.performanceRangeFill = updateRangeFill;" not in source:
+        source = source.replace(
+            "const updateLoadControl = () => {",
+            "item.performanceRangeFill = updateRangeFill;\n    const updateLoadControl = () => {",
+            1,
+        )
+    source = source.replace(
+        "loadOutput.textContent = item.performanceLoadSelected ? `${Number.isInteger(value) ? value : value.toFixed(1)} ${item.performanceLoadUnit}` : 'Sin registrar · tocar para añadir'; loadClear.hidden = !item.performanceLoadSelected;",
+        "loadOutput.textContent = item.performanceLoadSelected ? `${Number.isInteger(value) ? value : value.toFixed(1)} ${item.performanceLoadUnit}` : 'Sin registrar · toca para añadir'; loadOutput.dataset.selected = String(item.performanceLoadSelected); loadClear.hidden = !item.performanceLoadSelected; updateRangeFill(loadInput);",
+        1,
+    )
+    source = source.replace(
+        "item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden = !selected; repsDown.disabled",
+        "item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden = !selected; updateRangeFill(item.performanceReps); repsDown.disabled",
+        1,
+    )
+    source = source.replace(
+        "item.performanceRepsOutput.textContent = `Elige entre ${item.repMinimum} y ${item.repMaximum + 4}`;",
+        "item.performanceRepsOutput.textContent = `Sin registrar · ${item.repMinimum}–${item.repMaximum + 4} posibles`; item.performanceRepsOutput.dataset.selected = 'false'; item.performanceRepsClear.hidden = true; item.performanceRangeFill?.(item.performanceReps);",
+        1,
+    )
+    source = source.replace(
+        "repsClear.hidden = true; updateRangeFill(item.performanceReps);",
+        "item.performanceRepsClear.hidden = true; item.performanceRangeFill?.(item.performanceReps);",
+        1,
+    )
+    source = source.replace(
+        "item.performanceRepsClear.hidden = true; updateRangeFill(item.performanceReps);",
+        "item.performanceRepsClear.hidden = true; item.performanceRangeFill?.(item.performanceReps);",
+        1,
+    )
+    # SVG path data is bundled from lucide-static v0.577.0 (ISC); see the
+    # repository third-party notice for the complete license text.
+    icon_factory = '''const createPerformanceIcon = name => {
+      const icons = {
+        'repeat-2': '<svg class="lucide lucide-repeat-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 9 3-3 3 3"/><path d="M13 18H7a2 2 0 0 1-2-2V6"/><path d="m22 15-3 3-3-3"/><path d="M11 6h6a2 2 0 0 1 2 2v10"/></svg>',
+        weight: '<svg class="lucide lucide-weight" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><path d="M6.5 8a2 2 0 0 0-1.905 1.46L2.1 18.5A2 2 0 0 0 4 21h16a2 2 0 0 0 1.925-2.54L19.4 9.5A2 2 0 0 0 17.48 8Z"/></svg>'
+      };
+      const template = document.createElement('template'); template.innerHTML = icons[name] || ''; const icon = template.content.firstElementChild;
+      if (icon) { icon.setAttribute('aria-hidden', 'true'); icon.classList.add('performanceFieldIcon'); }
+      return icon;
+    };
+'''
+    if 'const createPerformanceIcon = name =>' not in source:
+        source = source.replace("    const performancePanel = document.createElement('div');", '    ' + icon_factory + "    const performancePanel = document.createElement('div');", 1)
+    source = source.replace(
+        "const loadIcon = item.tracker.closest('article.card')?.querySelector('.machinePill .pillIcon svg')?.cloneNode(true); if (loadIcon) { loadIcon.setAttribute('aria-hidden', 'true'); loadIcon.classList.add('performanceFieldIcon'); }",
+        "const loadIcon = createPerformanceIcon('weight');",
+        1,
+    )
+    return source
+
+
+def standardize_offline_image_sources(source: str) -> str:
+    """Keep canonical image elements usable without a network connection.
+
+    The original URL remains in data-original-src (when present) as provenance;
+    only the runtime src is redirected to an existing, packaged local asset.
+    """
+    replacements = (
+        ("shop.lifefitness.com/", "../medios_publicados/ejercicios-compartido/images/0577-T0yTjgW-machine-only.webp"),
+        ("upload.wikimedia.org/wikipedia/commons/f/f6/Latissimus_dorsi_muscle_back.png", "../medios_publicados/rutinas_autocontenidas/musculos_generados/upper_posterior_anatomy_v1.webp"),
+        ("strengthlog.com/wp-content/uploads/2023/03/Lat-pulldown-starting-position.jpg", "../medios_publicados/ejercicios-compartido/images/0577-T0yTjgW-start.jpg"),
+        ("strengthlog.com/wp-content/uploads/2023/03/Lat-pulldown-bottom-position.jpg", "../medios_publicados/ejercicios-compartido/images/0577-T0yTjgW-final.jpg"),
+        ("images.squarespace-cdn.com/content/v1/63f2e1c2e165e046d1ae4fd7/", "../medios_publicados/ejercicios-compartido/images/panatta-super-high-row-unilateral-start.webp"),
+        ("upload.wikimedia.org/wikipedia/commons/8/87/Trapezius_back.png", "../medios_publicados/rutinas_autocontenidas/musculos_generados/upper_posterior_anatomy_v1.webp"),
+        ("cdn.imweb.me/thumbnail/20241129/4f340470ce4a3.png", "../medios_publicados/ejercicios-compartido/images/1350-7I6LNUG.jpg"),
+        ("upload.wikimedia.org/wikipedia/commons/f/fa/Rhomboid_muscles_back.png", "../medios_publicados/rutinas_autocontenidas/musculos_generados/upper_posterior_anatomy_v1.webp"),
+    )
+    for remote, local in replacements:
+        def replace_img_source(match: re.Match[str]) -> str:
+            tag = match.group(0)
+            pattern = rf'((?<![\w-])src=["\'])[^"\']*{re.escape(remote)}[^"\']*(["\'])'
+            return re.sub(pattern, rf'\g<1>{local}\g<2>', tag, count=1, flags=re.I)
+
+        source = re.sub(r'<img\b[^>]*>', replace_img_source, source, flags=re.I)
+    return source
+
+
+def standardize_optional_media_fallback(source: str) -> str:
+    """Show packaged poster images when optional exercise GIFs are unavailable."""
+    if 'data-fix="rest-countdown-activity-v1"' not in source:
+        raise ValueError("Falta el bloque compartido de estilos de actividad")
+    style_marker = '.warmupVisual[data-media-state="FALLBACK_STATIC"]'
+    if style_marker not in source:
+        prefix = '<style data-fix="rest-countdown-activity-v1">'
+        rules = (
+            '\n.warmupVisual[data-media-state="FALLBACK_STATIC"] .warmupGif,'
+            '.gifFrame[data-media-state="FALLBACK_STATIC"] .gifMotion{display:none!important}'
+            '\n.warmupVisual[data-media-state="FALLBACK_STATIC"] .warmupFallback,'
+            '.gifFrame[data-media-state="FALLBACK_STATIC"] .gifFallback{display:block!important}'
+        )
+        source = source.replace(prefix, prefix + rules, 1)
+    if 'data-fix="offline-optional-gif-fallback-v1"' not in source:
+        source = source.replace('</body>', OFFLINE_OPTIONAL_MEDIA_FALLBACK_SCRIPT + '\n</body>', 1)
     return source

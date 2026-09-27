@@ -47,7 +47,13 @@
       "thumbnail": "artifacts/ejercicios-compartido/images/0602-myfUsKf.jpg",
       "sha256_gif": "67982491ac142252217ee9157cef9c3ed558149157b7a07a99de2b94a2bef8cf",
       "dimensions": "180x180",
-      "frames": 12
+      "frames": 12,
+      "attribution": "© Gym visual — https://gymvisual.com/",
+      "derived_media": {
+        "final": "data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/images/0602-myfUsKf-final.png",
+        "source_frame": 6,
+        "source_frame_duration_ms": 1000
+      }
     },
     {
       "exercise_number": 5,

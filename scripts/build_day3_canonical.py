@@ -207,8 +207,8 @@ def build_card(item: dict[str, object], index: int) -> str:
     zone = str(item["zone"])
     equipment = str(item["equipment"])
     repo = str(item["repo"])
-    static_start = f"{repo}-start.jpg"
-    static_final = f"{repo}-final.jpg"
+    static_start = f"../medios_publicados/ejercicios-compartido/images/{repo}-start.jpg"
+    static_final = f"../medios_publicados/ejercicios-compartido/images/{repo}-final.jpg"
     series = int(item["series"])
     next_button = (
         f'<button type="button" class="nextExerciseCue" data-next="{index + 2}" hidden><span class="nextArrow" aria-hidden="true">↓</span> Siguiente: {EXERCISES[index + 1]["title"].title()}</button>'
@@ -236,11 +236,11 @@ def build_card(item: dict[str, object], index: int) -> str:
 </div>
 <div class="photoTitleRow"><b>POSICIÓN Y RECORRIDO</b></div>
 <div class="phaseRow">
-<div class="phaseCol"><div class="phaseLabel">Inicio · imagen estática</div><div class="photo techniqueVisual"><img class="realphoto day3StaticFrame" src="../medios_publicados/ejercicios-compartido/images/{static_start}" alt="{title} · posición inicial estática" loading="lazy"/><div class="brokenFallback">Imagen estática inicial no disponible.</div></div><div class="source">Inicio · posición de partida · sin rebotes</div></div>
+<div class="phaseCol"><div class="phaseLabel">Inicio · imagen estática</div><div class="photo techniqueVisual"><img class="realphoto day3StaticFrame" src="{static_start}" alt="{title} · posición inicial estática" loading="lazy"/><div class="brokenFallback">Imagen estática inicial no disponible.</div></div><div class="source">Inicio · posición de partida · sin rebotes</div></div>
 <div class="swap" aria-hidden="true">→</div>
-<div class="phaseCol"><div class="phaseLabel">Final · imagen estática</div><div class="photo techniqueVisual"><img class="realphoto day3StaticFrame" src="../medios_publicados/ejercicios-compartido/images/{static_final}" alt="{title} · posición final estática" loading="lazy"/><div class="brokenFallback">Imagen estática final no disponible.</div></div><div class="source">Final · contracción controlada · regreso lento</div></div>
+<div class="phaseCol"><div class="phaseLabel">Final · imagen estática</div><div class="photo techniqueVisual"><img class="realphoto day3StaticFrame" src="{static_final}" alt="{title} · posición final estática" loading="lazy"/><div class="brokenFallback">Imagen estática final no disponible.</div></div><div class="source">Final · contracción controlada · regreso lento</div></div>
 </div>
-<div class="gifProof"><div class="gifProofTitle">GIF · RECORRIDO COMPLETO</div><div class="photo techniqueVisual gifPreview"><img class="realphoto day3ExerciseGif" src="../medios_publicados/ejercicios-compartido/videos/{repo}.gif" data-static-src="../medios_publicados/ejercicios-compartido/images/{static_start}" alt="{title} · GIF local del recorrido completo" loading="lazy"/><div class="brokenFallback">GIF no disponible; se conserva la referencia estática.</div></div><div class="videoProof"><span>GIF local · {repo} · secuencia de referencia técnica</span></div></div>
+<div class="gifProof"><div class="gifProofTitle">GIF · RECORRIDO COMPLETO</div><div class="photo techniqueVisual gifPreview"><img class="realphoto day3ExerciseGif" src="../medios_publicados/ejercicios-compartido/videos/{repo}.gif" data-static-src="{static_start}" alt="{title} · GIF local del recorrido completo" loading="lazy"/><div class="brokenFallback">GIF no disponible; se conserva la referencia estática.</div></div><div class="videoProof"><span>GIF local · {repo} · secuencia de referencia técnica</span></div></div>
 </div>
 <div class="coach"><div class="coachRibbon"><span class="coachRibbonIcon" aria-hidden="true">✓</span><span>Checklist técnico</span></div><div class="coachHeader">Técnica clave</div><div class="exerciseQuickSummary" data-exercise-quick-summary aria-label="Resumen del ejercicio"></div>
 <div class="metrics"><div class="metric series"><div class="metricText"><div class="metricLabel">Series</div><div class="metricVal">{series} series</div></div></div><div class="metric reps"><div class="metricText"><div class="metricLabel">Repeticiones</div><div class="metricVal">{item["reps"]} repeticiones</div></div></div><div class="metric rest"><div class="metricText"><div class="metricLabel">Descanso</div><div class="metricVal"><strong class="timeCue">{item["rest"]}</strong></div></div></div><div class="metric duration"><div class="metricText"><div class="metricLabel">Duración aprox.</div><div class="metricVal"><strong class="timeCue">{item["duration"]}</strong></div></div></div></div>

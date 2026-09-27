@@ -13,7 +13,7 @@ progreso/perfil local, el ciclo de instalación/actualización y la preparación
 offline. No sustituye el SRS ni declara implementadas las funciones Android,
 Tezkatli, nutrición, IA, Zepp o Health Connect.
 
-El alcance verificable es `FUN-PWA-001..006`, `FUN-PRO-001..011` y las partes
+El alcance verificable es `FUN-PWA-001..008`, `FUN-PRO-001..014` y las partes
 de `FUN-TRN-*` que la PWA efectivamente ofrece: calentamiento, series, descanso,
 deshacer y captura de repeticiones/carga. Los contratos Android más amplios se
 mantienen fuera de esta especificación.

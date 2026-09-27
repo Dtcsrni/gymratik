@@ -7,7 +7,7 @@
   <meta name="application-name" content="Gymratik">
   <meta name="apple-mobile-web-app-title" content="Gymratik">
   <meta name="description" content="Rutinas visuales para entrenar en el gimnasio con calentamiento, técnica y registro de series.">
-  <meta name="gymratik-resource-estimate" content='{"applicationBytes":"000000004049139","imageBytes":"000000017412094","totalBytes":"000000021461233"}'>
+  <meta name="gymratik-resource-estimate" content='{"applicationBytes":"000000004201556","imageBytes":"000000038223785","totalBytes":"000000042425341"}'>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.png" type="image/png">
   <script src="./install-gate.js"></script>
@@ -127,8 +127,8 @@
     .profile-editor[open] > summary { margin-bottom:16px; }
     .profile-form { min-width:0; }
     .profile-identity { display:flex; align-items:center; gap:14px; margin-bottom:18px; padding-bottom:18px; border-bottom:1px solid var(--line); }
-    .profile-avatar { width:118px; height:118px; flex:0 0 118px; object-fit:contain; border:1px solid rgba(115,230,207,.28); border-radius:22px; background:rgba(9,16,24,.44); }
-    .profile-avatar-copy { max-width:38ch; color:var(--muted); font-size:.9rem; }
+    .profile-avatar { width:76px; height:76px; flex:0 0 76px; object-fit:contain; border:1px solid rgba(115,230,207,.28); border-radius:19px; background:rgba(9,16,24,.44); }
+    .profile-avatar-copy { max-width:42ch; color:var(--muted); font-size:.9rem; }
     .profile-avatar-copy p { margin:0; }
     .profile-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:13px; }
     .profile-field { display:grid; gap:6px; min-width:0; }
@@ -136,6 +136,9 @@
     .profile-field input,.profile-field select { width:100%; min-height:44px; padding:9px 11px; border:1px solid var(--line); border-radius:11px; color:var(--text); background:rgba(9,16,24,.55); font:inherit; }
     .profile-field input:focus,.profile-field select:focus { border-color:var(--accent); outline:3px solid rgba(158,223,255,.3); outline-offset:2px; }
     .profile-actions,.data-actions { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:15px; }
+    .profile-extra { margin-top:14px; padding:12px 14px; border:1px solid rgba(164,223,231,.17); border-radius:13px; background:rgba(4,16,25,.26); }
+    .profile-extra > summary { width:fit-content; color:#c7dce3; cursor:pointer; font-size:.8rem; font-weight:850; }
+    .profile-extra[open] > summary { margin-bottom:13px; }
     .data-actions { padding-top:15px; border-top:1px solid var(--line); }
     .profile-actions .button,.data-actions .button { min-height:42px; }
     .profile-history h3 { margin:0 0 11px; font-size:1.05rem; }
@@ -358,19 +361,24 @@
         <div class="section-head"><div><p class="eyebrow">Datos personales locales</p><h2 id="profileTitle">Mi perfil</h2></div></div>
         <div class="profile-panel">
           <details id="profileEditor" class="profile-editor">
-            <summary>Editar datos del perfil</summary>
+            <summary id="profileEditorSummary">Completar perfil</summary>
             <form id="profileForm" class="profile-form" novalidate>
-            <div class="profile-identity"><img id="profileAvatar" class="profile-avatar" src="./icon.png" alt="Pareja de mascotas de entrenamiento de Gymratik"><div class="profile-avatar-copy"><p>Estos datos permanecen en este dispositivo y ayudan a contextualizar tus rutinas.</p></div></div>
+            <div class="profile-identity"><img id="profileAvatar" class="profile-avatar" src="./icon.png" alt="Pareja de mascotas de entrenamiento de Gymratik"><div class="profile-avatar-copy"><p id="profileIntro">Un par de datos opcionales para personalizar tu experiencia. Se guardan solo en este dispositivo; puedes cambiarlos después.</p></div></div>
             <div class="profile-grid">
-              <div class="profile-field"><label for="profileDisplayName">Nombre visible</label><input id="profileDisplayName" name="displayName" type="text" maxlength="80" autocomplete="name" placeholder="Cómo quieres que te llamemos"></div>
+              <div class="profile-field"><label for="profileDisplayName">¿Cómo te llamamos? <span>(opcional)</span></label><input id="profileDisplayName" name="displayName" type="text" maxlength="80" autocomplete="name" placeholder="Tu nombre"></div>
+              <div class="profile-field"><label for="profileSex">Sexo, solo para elegir la mascota <span>(opcional)</span></label><select id="profileSex" name="sex"><option value="">Usar mascotas predeterminadas</option><option value="female">Mujer · ratona</option><option value="male">Hombre · ratón</option><option value="nonbinary">No binario · mascotas predeterminadas</option><option value="prefer-not-to-say">Prefiero no indicarlo</option></select></div>
+            </div>
+            <details class="profile-extra">
+              <summary>Personalizar más (opcional)</summary>
+              <div class="profile-grid">
               <div class="profile-field"><label for="profileBirthDate">Fecha de nacimiento</label><input id="profileBirthDate" name="birthDate" type="date" autocomplete="bday"></div>
-              <div class="profile-field"><label for="profileSex">Sexo</label><select id="profileSex" name="sex"><option value="">Prefiero no indicar</option><option value="female">Mujer</option><option value="male">Hombre</option><option value="nonbinary">No binario</option><option value="prefer-not-to-say">Prefiero no decirlo</option></select></div>
               <div class="profile-field"><label for="profileHeightCm">Altura (cm)</label><input id="profileHeightCm" name="heightCm" type="number" min="100" max="250" step="0.1" inputmode="decimal" placeholder="Ej. 175"></div>
               <div class="profile-field"><label for="profileGoal">Objetivo principal</label><select id="profileGoal" name="goal"><option value="general-fitness">Condición general</option><option value="strength">Fuerza</option><option value="hypertrophy">Hipertrofia</option><option value="mobility">Movilidad</option><option value="health">Salud y bienestar</option></select></div>
               <div class="profile-field"><label for="profileUnits">Unidades</label><select id="profileUnits" name="units"><option value="metric">Métricas (cm, kg)</option><option value="imperial">Imperiales (in, lb)</option></select></div>
-            </div>
-            <fieldset class="routine-days"><legend>Días habituales y avisos al abrir la PWA</legend><p id="routineDaySuggestion" class="profile-status">Al guardar sesiones, aquí aparecerán los días más frecuentes. Puedes elegir otros días.</p><div class="routine-day-options"><label><input type="checkbox" name="reminderDay" value="1"> Lun</label><label><input type="checkbox" name="reminderDay" value="2"> Mar</label><label><input type="checkbox" name="reminderDay" value="3"> Mié</label><label><input type="checkbox" name="reminderDay" value="4"> Jue</label><label><input type="checkbox" name="reminderDay" value="5"> Vie</label><label><input type="checkbox" name="reminderDay" value="6"> Sáb</label><label><input type="checkbox" name="reminderDay" value="0"> Dom</label></div><label class="reminder-enable"><input id="remindersEnabled" type="checkbox"> Mostrar un aviso dentro de la PWA en esos días</label><p class="profile-status">El aviso aparece al abrir o volver a la portada; no se ejecuta con la app cerrada. Puedes cambiar de día o descartarlo cada fecha.</p></fieldset>
-            <div class="profile-actions"><button class="button" type="submit">Guardar perfil</button><p id="profileStatus" class="profile-status" role="status" aria-live="polite"></p></div>
+              </div>
+              <fieldset class="routine-days"><legend>Días habituales y avisos</legend><p id="routineDaySuggestion" class="profile-status">Al guardar sesiones, aquí aparecerán tus días más frecuentes.</p><div class="routine-day-options"><label><input type="checkbox" name="reminderDay" value="1"> Lun</label><label><input type="checkbox" name="reminderDay" value="2"> Mar</label><label><input type="checkbox" name="reminderDay" value="3"> Mié</label><label><input type="checkbox" name="reminderDay" value="4"> Jue</label><label><input type="checkbox" name="reminderDay" value="5"> Vie</label><label><input type="checkbox" name="reminderDay" value="6"> Sáb</label><label><input type="checkbox" name="reminderDay" value="0"> Dom</label></div><label class="reminder-enable"><input id="remindersEnabled" type="checkbox"> Mostrar aviso al abrir la PWA</label><p class="profile-status">El aviso solo aparece al abrir o volver a la portada.</p></fieldset>
+            </details>
+            <div class="profile-actions"><button class="button" id="saveProfileButton" type="submit">Guardar y continuar</button><p id="profileStatus" class="profile-status" role="status" aria-live="polite"></p></div>
             <div class="data-actions"><button id="exportDataButton" class="button secondary" type="button">Exportar datos</button><label class="button secondary" for="importDataInput">Importar respaldo</label><input id="importDataInput" class="file-input" type="file" accept="application/json,.json"></div>
             </form>
             <fieldset class="routine-days"><legend>Datos móviles para actualizaciones</legend><label class="profile-field" for="networkPreference"><span>Uso de datos de la aplicación y recursos offline</span><select id="networkPreference"><option value="ask">Preguntar cada vez</option><option value="always">Permitir siempre</option><option value="wifi">Solo Wi‑Fi</option></select></label><p id="networkPreferenceStatus" class="profile-status" role="status">Por defecto preguntaremos antes de descargar una versión o recursos. El permiso dura esta apertura.</p></fieldset>
@@ -421,6 +429,8 @@
     const resetNote = document.querySelector('#resetNote');
     const profileForm = document.querySelector('#profileForm');
     const profileEditor = document.querySelector('#profileEditor');
+    const profileEditorSummary = document.querySelector('#profileEditorSummary');
+    const saveProfileButton = document.querySelector('#saveProfileButton');
     const profileDisplayName = document.querySelector('#profileDisplayName');
     const profileBirthDate = document.querySelector('#profileBirthDate');
     const profileSex = document.querySelector('#profileSex');
@@ -561,6 +571,9 @@
       reminderDaysInputs.forEach(input => { input.checked = (profile?.reminderDays || []).includes(Number(input.value)); });
       remindersEnabled.checked = profile?.remindersEnabled === true;
       renderProfileAvatar(profileSex.value);
+      const profileConfigured = hasUserProfileData(profile);
+      if (profileEditorSummary) profileEditorSummary.textContent = profileConfigured ? 'Editar datos del perfil' : 'Completar perfil';
+      if (saveProfileButton) saveProfileButton.textContent = profileConfigured ? 'Guardar cambios' : 'Guardar y continuar';
       if (latestDashboard) {
         const motivation = motivationFor(latestDashboard);
         updateHomeMotivation(activeProfile?.displayName ? `${activeProfile.displayName}, ${motivation.charAt(0).toLowerCase()}${motivation.slice(1)}` : motivation);
@@ -773,7 +786,11 @@
       profileStatus.textContent = 'Guardando perfil…';
       try {
         const selectedReminderDays = reminderDaysInputs.filter(input => input.checked).map(input => Number(input.value));
-        await window.TrainingProgressStore.saveProfile({ displayName: profileDisplayName.value, birthDate: profileBirthDate.value, sex: profileSex.value, heightCm: profileHeightCm.value, goal: profileGoal.value, units: profileUnits.value, reminderDays: selectedReminderDays, remindersEnabled: remindersEnabled.checked });
+        const result = await window.TrainingProgressStore.saveProfile({ displayName: profileDisplayName.value, birthDate: profileBirthDate.value, sex: profileSex.value, heightCm: profileHeightCm.value, goal: profileGoal.value, units: profileUnits.value, reminderDays: selectedReminderDays, remindersEnabled: remindersEnabled.checked });
+        if (!hasUserProfileData(result?.profile)) {
+          profileStatus.textContent = 'Aún no hay datos que guardar. Añade un nombre o elige una opción; puedes dejar el resto vacío.';
+          return;
+        }
         profileEditor.open = false;
         window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
         reloadPageOnce();
@@ -934,7 +951,7 @@
             const imageBytes = Number(estimate?.imageBytes);
             const totalBytes = Number(estimate?.totalBytes);
             const sizeNote = [applicationBytes, imageBytes, totalBytes].every(Number.isFinite) && totalBytes > 0
-              ? `Estimación del paquete conocido: ${formatResourceSize(totalBytes)} en total (${formatResourceSize(applicationBytes)} aplicación + ${formatResourceSize(imageBytes)} imágenes). El tamaño transferido puede variar; videos y GIF no están incluidos.`
+              ? `Estimación del paquete conocido: ${formatResourceSize(totalBytes)} en total (${formatResourceSize(applicationBytes)} aplicación + ${formatResourceSize(imageBytes)} imágenes). El tamaño transferido puede variar; los GIF de técnica están incluidos y los videos externos no.`
               : 'El tamaño no está disponible antes de iniciar; se mostrará el avance por recursos.';
             allowed = await requestNetworkPermission('Gymratik necesita descargar la aplicación y sus imágenes esenciales para actualizar o preparar el uso offline.', sizeNote);
           }
