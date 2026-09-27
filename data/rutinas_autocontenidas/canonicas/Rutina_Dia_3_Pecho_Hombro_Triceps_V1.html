@@ -2779,6 +2779,12 @@ button:not(:disabled):focus-visible{outline:2px solid #fff;outline-offset:3px}
 @media(max-width:640px){.performanceEntry{gap:.45rem!important;padding:.55rem!important}.performanceField{padding:.5rem .58rem}.performanceRepsControl{grid-template-columns:48px minmax(0,1fr) 48px;gap:.35rem}.performanceRepsValue{min-height:48px}.performanceRepsNudge{min-width:48px;min-height:48px}.performanceClear{min-height:38px}}
 @media(prefers-reduced-motion:reduce){.performanceRepsNudge,.performanceRepsValue,.performanceClear,.performanceField input[type="range"]::-webkit-slider-thumb,.performanceField input[type="range"]::-moz-range-thumb{transition:none}button:not(:disabled):active,[role="button"]:not([aria-disabled="true"]):active{transform:none;filter:none}}
 </style>
+<style data-enhancement="battery-aware-motion-v1">
+html.is-document-hidden *,html.is-document-hidden *::before,html.is-document-hidden *::after,
+[data-motion-paused="true"] *,[data-motion-paused="true"] *::before,[data-motion-paused="true"] *::after{
+  animation-play-state:paused!important
+}
+</style>
 <style data-fix="day3-static-and-gif-layout">
 .phaseRow .day3StaticFrame{object-fit:contain!important;background:#fff!important}
 .gifProof{margin-top:12px;padding:10px 12px;border:1px solid rgba(45,97,121,.55);border-radius:14px;background:rgba(12,24,34,.68)}
@@ -3876,6 +3882,7 @@ button:not(:disabled):focus-visible{outline:2px solid #fff;outline-offset:3px}
   // El cronómetro empieza después de una preparación explícita de 15 segundos.
   // El cronómetro empieza después de una preparación explícita de 15 segundos.
   // El cronómetro empieza después de una preparación explícita de 15 segundos.
+  // El cronómetro empieza después de una preparación explícita de 15 segundos.
   // El cronómetro empieza después de una preparación explícita de 5 segundos.
   const PREPARATION_MS = 15000;
   let warmupPreparationTimer = 0;
@@ -4044,6 +4051,7 @@ button:not(:disabled):focus-visible{outline:2px solid #fff;outline-offset:3px}
   window.addEventListener('training-profile-updated', event => updateActivityMascotProfile(event.detail?.profile));
   window.matchMedia?.('(prefers-reduced-motion: reduce)').addEventListener?.('change', () => renderTimingDisplays());
   const timingInterval = window.setInterval(() => { renderTimingDisplays(); renderWarmupTiming(); exerciseItems.forEach(updateCompleteButton); }, 1000);
+
 
 
 
@@ -4960,6 +4968,23 @@ body{height:auto!important;min-height:100%!important;overflow-x:hidden!important
   document.querySelectorAll('img.warmupGif,img.gifMotion').forEach(image => {
     if (image.complete && image.naturalWidth === 0) revealPoster(image);
   });
+})();
+</script>
+<script data-enhancement="battery-aware-motion-v1">
+(() => {
+  const root = document.documentElement;
+  const syncVisibility = () => root.classList.toggle('is-document-hidden', document.hidden);
+  document.addEventListener('visibilitychange', syncVisibility, { passive: true });
+  syncVisibility();
+
+  if (!('IntersectionObserver' in window)) return;
+  const sections = document.querySelectorAll('.hero,.quickRules,.prep,.routineSummary,.sessionGamification,.sessionDashboard,.notePanel,.cards>.card,.sessionFooter');
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      entry.target.toggleAttribute('data-motion-paused', !entry.isIntersecting);
+    }
+  }, { rootMargin: '96px 0px' });
+  sections.forEach((section) => observer.observe(section));
 })();
 </script>
 <script data-fix="day3-local-gif-fallback">

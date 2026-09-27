@@ -2779,6 +2779,12 @@ button:not(:disabled):focus-visible{outline:2px solid #fff;outline-offset:3px}
 @media(max-width:640px){.performanceEntry{gap:.45rem!important;padding:.55rem!important}.performanceField{padding:.5rem .58rem}.performanceRepsControl{grid-template-columns:48px minmax(0,1fr) 48px;gap:.35rem}.performanceRepsValue{min-height:48px}.performanceRepsNudge{min-width:48px;min-height:48px}.performanceClear{min-height:38px}}
 @media(prefers-reduced-motion:reduce){.performanceRepsNudge,.performanceRepsValue,.performanceClear,.performanceField input[type="range"]::-webkit-slider-thumb,.performanceField input[type="range"]::-moz-range-thumb{transition:none}button:not(:disabled):active,[role="button"]:not([aria-disabled="true"]):active{transform:none;filter:none}}
 </style>
+<style data-enhancement="battery-aware-motion-v1">
+html.is-document-hidden *,html.is-document-hidden *::before,html.is-document-hidden *::after,
+[data-motion-paused="true"] *,[data-motion-paused="true"] *::before,[data-motion-paused="true"] *::after{
+  animation-play-state:paused!important
+}
+</style>
 <style data-fix="day2-lower-body-visuals">
 .muscleDayIcon.lower{border-color:rgba(100,215,255,.55)!important;color:#64D7FF!important;background:rgba(100,215,255,.09)!important}
 .warmupStep.cardio,.warmupStep.mobility{grid-template-columns:1fr!important}
@@ -4092,6 +4098,7 @@ button:not(:disabled):focus-visible{outline:2px solid #fff;outline-offset:3px}
   // El cronómetro empieza después de una preparación explícita de 15 segundos.
   // El cronómetro empieza después de una preparación explícita de 15 segundos.
   // El cronómetro empieza después de una preparación explícita de 15 segundos.
+  // El cronómetro empieza después de una preparación explícita de 15 segundos.
   // El cronómetro empieza después de una preparación explícita de 5 segundos.
   const PREPARATION_MS = 15000;
   let warmupPreparationTimer = 0;
@@ -4260,6 +4267,7 @@ button:not(:disabled):focus-visible{outline:2px solid #fff;outline-offset:3px}
   window.addEventListener('training-profile-updated', event => updateActivityMascotProfile(event.detail?.profile));
   window.matchMedia?.('(prefers-reduced-motion: reduce)').addEventListener?.('change', () => renderTimingDisplays());
   const timingInterval = window.setInterval(() => { renderTimingDisplays(); renderWarmupTiming(); exerciseItems.forEach(updateCompleteButton); }, 1000);
+
 
 
 
@@ -5237,6 +5245,24 @@ body{height:auto!important;min-height:100%!important;overflow-x:hidden!important
   });
 })();
 </script>
+<script data-enhancement="battery-aware-motion-v1">
+(() => {
+  const root = document.documentElement;
+  const syncVisibility = () => root.classList.toggle('is-document-hidden', document.hidden);
+  document.addEventListener('visibilitychange', syncVisibility, { passive: true });
+  syncVisibility();
+
+  if (!('IntersectionObserver' in window)) return;
+  const sections = document.querySelectorAll('.hero,.quickRules,.prep,.routineSummary,.sessionGamification,.sessionDashboard,.notePanel,.cards>.card,.sessionFooter');
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      entry.target.toggleAttribute('data-motion-paused', !entry.isIntersecting);
+    }
+  }, { rootMargin: '96px 0px' });
+  sections.forEach((section) => observer.observe(section));
+})();
+</script>
+
 <!-- canonical media contract references: 1350-7I6LNUG.jpg · 1350-7I6LNUG-final.png -->
 <style data-fix="rest-countdown-activity-v1">
 .warmupHead p,.warmupCopy p,.warmupInstructions{font-size:clamp(13px,3.6vw,15px)!important;line-height:1.45!important}

@@ -65,6 +65,42 @@ DAY1_CARD6 = r'''<!-- 6 -->
 MUSCLE_PECTORAL = r'''<div class="muscleDayItem" data-muscle-focus="pectoralis-major" data-muscle-view="anterior" data-muscle-visual="upper-anterior" aria-label="Pectoral mayor; foco visual en tórax anterior"><span class="muscleDayVisual anterior" title="Foco visual: tórax anterior"><img class="muscleDayImage" src="../medios_publicados/rutinas_autocontenidas/musculos_generados/upper_anterior_anatomy_v1.webp" alt="Referencia anatómica ilustrativa anterior del músculo Pectoral mayor; foco visual aproximado en tórax anterior" decoding="async"><span class="muscleDayFallback" hidden>ANATOMÍA</span></span><span class="muscleDayCopy"><span class="muscleCode" style="color:#ff9da2">PECHO</span><span class="muscleName">Pectoral mayor</span></span></div>'''
 
 
+BATTERY_MOTION_STYLE = r'''<style data-enhancement="battery-aware-motion-v1">
+html.is-document-hidden *,html.is-document-hidden *::before,html.is-document-hidden *::after,
+[data-motion-paused="true"] *,[data-motion-paused="true"] *::before,[data-motion-paused="true"] *::after{
+  animation-play-state:paused!important
+}
+</style>'''
+
+BATTERY_MOTION_SCRIPT = r'''<script data-enhancement="battery-aware-motion-v1">
+(() => {
+  const root = document.documentElement;
+  const syncVisibility = () => root.classList.toggle('is-document-hidden', document.hidden);
+  document.addEventListener('visibilitychange', syncVisibility, { passive: true });
+  syncVisibility();
+
+  if (!('IntersectionObserver' in window)) return;
+  const sections = document.querySelectorAll('.hero,.quickRules,.prep,.routineSummary,.sessionGamification,.sessionDashboard,.notePanel,.cards>.card,.sessionFooter');
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      entry.target.toggleAttribute('data-motion-paused', !entry.isIntersecting);
+    }
+  }, { rootMargin: '96px 0px' });
+  sections.forEach((section) => observer.observe(section));
+})();
+</script>'''
+
+
+def apply_battery_motion(source: str, newline: str) -> str:
+    style_present = 'data-enhancement="battery-aware-motion-v1"' in source
+    if not style_present:
+        source = source.replace("</head>", BATTERY_MOTION_STYLE.replace("\n", newline) + newline + "</head>", 1)
+    script_tag = '<script data-enhancement="battery-aware-motion-v1">'
+    if script_tag not in source:
+        source = source.replace("</body>", BATTERY_MOTION_SCRIPT.replace("\n", newline) + newline + "</body>", 1)
+    return source
+
+
 def main() -> None:
     with HTML.open("r", encoding="utf-8", newline="") as handle:
         source = handle.read()
@@ -282,6 +318,7 @@ def main() -> None:
     source = source.replace(' rep.</div>', ' repeticiones</div>')
     source = standardize_muscle_visuals(source)
     source = sanitize_canonical_metadata(source)
+    source = apply_battery_motion(source, newline)
     with HTML.open("w", encoding="utf-8", newline="") as handle:
         handle.write(source)
 

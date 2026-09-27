@@ -2779,6 +2779,12 @@ button:not(:disabled):focus-visible{outline:2px solid #fff;outline-offset:3px}
 @media(max-width:640px){.performanceEntry{gap:.45rem!important;padding:.55rem!important}.performanceField{padding:.5rem .58rem}.performanceRepsControl{grid-template-columns:48px minmax(0,1fr) 48px;gap:.35rem}.performanceRepsValue{min-height:48px}.performanceRepsNudge{min-width:48px;min-height:48px}.performanceClear{min-height:38px}}
 @media(prefers-reduced-motion:reduce){.performanceRepsNudge,.performanceRepsValue,.performanceClear,.performanceField input[type="range"]::-webkit-slider-thumb,.performanceField input[type="range"]::-moz-range-thumb{transition:none}button:not(:disabled):active,[role="button"]:not([aria-disabled="true"]):active{transform:none;filter:none}}
 </style>
+<style data-enhancement="battery-aware-motion-v1">
+html.is-document-hidden *,html.is-document-hidden *::before,html.is-document-hidden *::after,
+[data-motion-paused="true"] *,[data-motion-paused="true"] *::before,[data-motion-paused="true"] *::after{
+  animation-play-state:paused!important
+}
+</style>
 </head>
 <body>
 <div class="page">
@@ -3013,6 +3019,7 @@ button:not(:disabled):focus-visible{outline:2px solid #fff;outline-offset:3px}
 
 
 
+
 <div class="techSteps"><div class="techStep setup"><div class="techStepTitle">1 · Ajuste</div><div class="techStepText">Ajusta el asiento y el apoyo para que los hombros queden cómodos y los codos alineados con el eje.</div></div><div class="techStep move"><div class="techStepTitle">2 · Ejecución</div><div class="techStepText">Abre los brazos hacia atrás en un arco controlado, sin encoger los hombros ni perder el apoyo del pecho.</div></div><div class="techStep control"><div class="techStepTitle">3 · Ritmo y respiración</div><div class="techStepText">Exhala al abrir y regresa en 2–3 s manteniendo tensión continua.</div></div><div class="techStep warning"><div class="techStepTitle">⚠ Evita</div><div class="techStepText">Impulsarte, extender de más el hombro o convertir el movimiento en un remo.</div></div></div>
 <div class="exerciseTracker" data-exercise="4" data-series-keys="e4s1 e4s2 e4s3"><div class="exerciseTrackerHead"><span>Contador de series</span><span class="exerciseTrackerMeta"><strong class="exerciseProgress">0/3</strong><span class="exerciseStatus" hidden>Completado</span></span></div><div class="exerciseSetButtons" role="group" aria-label="Contador de series de apertura inversa"><button type="button" class="completeSetButton" aria-label="Completar serie 1 de 3">Completar serie 1 de 3</button><button type="button" class="machinePendingToggle" data-pending-key="p4" aria-pressed="false">⚠ Máquina ocupada</button><div class="nextExerciseRow"><button type="button" class="nextExerciseCue" data-next="5" hidden><span class="nextArrow" aria-hidden="true">↓</span> Siguiente: 05 · Curl de bíceps en máquina</button></div></div></div>
 
@@ -3031,6 +3038,7 @@ button:not(:disabled):focus-visible{outline:2px solid #fff;outline-offset:3px}
 <div class="phaseCol"><div class="phaseLabel">Final</div><div class="photo techZoom"><img alt="Curl de bíceps en máquina, posición final" class="realphoto" loading="lazy" src="../medios_publicados/ejercicios-compartido/images/0592-b6hQYMb-final.png"/></div></div>
 </div></div>
 <div class="coach"><div class="coachHeader">Técnica clave</div><div class="exerciseQuickSummary" data-exercise-quick-summary aria-label="Resumen del ejercicio"></div><div class="metrics"><div class="metric series"><div class="metricText"><div class="metricLabel">Series</div><div class="metricVal">3 series</div></div></div><div class="metric reps"><div class="metricText"><div class="metricLabel">Repeticiones</div><div class="metricVal">10–15 repeticiones</div></div></div><div class="metric rest"><div class="metricText"><div class="metricLabel">Descanso</div><div class="metricVal"><strong class="timeCue">1.5–2 min</strong></div></div></div><div class="metric duration"><div class="metricText"><div class="metricLabel">Duración aprox.</div><div class="metricVal"><strong class="timeCue">5–7 min</strong></div></div></div></div></div>
+
 
 
 
@@ -3926,6 +3934,7 @@ button:not(:disabled):focus-visible{outline:2px solid #fff;outline-offset:3px}
   // El cronómetro empieza después de una preparación explícita de 15 segundos.
   // El cronómetro empieza después de una preparación explícita de 15 segundos.
   // El cronómetro empieza después de una preparación explícita de 15 segundos.
+  // El cronómetro empieza después de una preparación explícita de 15 segundos.
   // El cronómetro empieza después de una preparación explícita de 5 segundos.
   const PREPARATION_MS = 15000;
   let warmupPreparationTimer = 0;
@@ -4094,6 +4103,7 @@ button:not(:disabled):focus-visible{outline:2px solid #fff;outline-offset:3px}
   window.addEventListener('training-profile-updated', event => updateActivityMascotProfile(event.detail?.profile));
   window.matchMedia?.('(prefers-reduced-motion: reduce)').addEventListener?.('change', () => renderTimingDisplays());
   const timingInterval = window.setInterval(() => { renderTimingDisplays(); renderWarmupTiming(); exerciseItems.forEach(updateCompleteButton); }, 1000);
+
 
 
 
@@ -5175,5 +5185,22 @@ button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gra
 @keyframes preparationPulse{50%{opacity:.78;filter:brightness(1.18);box-shadow:0 0 10px rgba(114,220,255,.25)}}
 @media(prefers-reduced-motion:reduce){.summaryToggle.isResting,.summaryToggle.isActive,.summaryToggle.isPreparing,.summaryToggle.isResting::before,.summaryToggle.isActive::before,.summaryToggle.isPreparing::before,.summaryExercise.isResting,.summaryExercise.isSeriesActive,.summaryExercise.isResting .summaryExerciseState,.summaryExercise.isSeriesActive .summaryExerciseState,.summaryExercise.isSeriesActive::after,button.completeSetButton.is-resting,button.completeSetButton.is-series-active,button.completeSetButton.is-preparing,.exerciseTracker:has(.completeSetButton.is-resting) .exerciseRest,.exerciseTracker:has(.completeSetButton.is-series-active) .seriesProgressSegment.is-current,.warmupProgressSegment.is-current,.seriesProgressSegment.is-current,.seriesProgressSegment.is-current.is-resting,.seriesProgressSegment.is-current.is-active,.seriesProgressSegment.is-current.is-resting::after,.warmupProgressSegment.is-current::after,.seriesProgressSegment.is-current::after{animation:none}}
 </style>
+<script data-enhancement="battery-aware-motion-v1">
+(() => {
+  const root = document.documentElement;
+  const syncVisibility = () => root.classList.toggle('is-document-hidden', document.hidden);
+  document.addEventListener('visibilitychange', syncVisibility, { passive: true });
+  syncVisibility();
+
+  if (!('IntersectionObserver' in window)) return;
+  const sections = document.querySelectorAll('.hero,.quickRules,.prep,.routineSummary,.sessionGamification,.sessionDashboard,.notePanel,.cards>.card,.sessionFooter');
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      entry.target.toggleAttribute('data-motion-paused', !entry.isIntersecting);
+    }
+  }, { rootMargin: '96px 0px' });
+  sections.forEach((section) => observer.observe(section));
+})();
+</script>
 </body>
 </html>
