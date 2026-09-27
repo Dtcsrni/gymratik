@@ -83,7 +83,7 @@ BATTERY_MOTION_SCRIPT = r'''<script data-enhancement="battery-aware-motion-v1">
   const sections = document.querySelectorAll('.hero,.quickRules,.prep,.routineSummary,.sessionGamification,.sessionDashboard,.notePanel,.cards>.card,.sessionFooter');
   const observer = new IntersectionObserver((entries) => {
     for (const entry of entries) {
-      entry.target.toggleAttribute('data-motion-paused', !entry.isIntersecting);
+      entry.target.setAttribute('data-motion-paused', String(!entry.isIntersecting));
     }
   }, { rootMargin: '96px 0px' });
   sections.forEach((section) => observer.observe(section));
@@ -98,6 +98,12 @@ def apply_battery_motion(source: str, newline: str) -> str:
     script_tag = '<script data-enhancement="battery-aware-motion-v1">'
     if script_tag not in source:
         source = source.replace("</body>", BATTERY_MOTION_SCRIPT.replace("\n", newline) + newline + "</body>", 1)
+    else:
+        source = source.replace(
+            "entry.target.toggleAttribute('data-motion-paused', !entry.isIntersecting);",
+            "entry.target.setAttribute('data-motion-paused', String(!entry.isIntersecting));",
+            1,
+        )
     return source
 
 

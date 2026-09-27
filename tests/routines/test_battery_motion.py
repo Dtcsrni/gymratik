@@ -21,6 +21,7 @@ class BatteryAwareMotionTests(unittest.TestCase):
         self.assertEqual(once.count('data-enhancement="battery-aware-motion-v1"'), 2)
         self.assertIn("document.addEventListener('visibilitychange', syncVisibility", once)
         self.assertIn("new IntersectionObserver(", once)
+        self.assertIn("setAttribute('data-motion-paused', String(!entry.isIntersecting))", once)
         self.assertIn("animation-play-state:paused!important", once)
         self.assertIn("rootMargin: '96px 0px'", once)
 
@@ -33,6 +34,8 @@ class BatteryAwareMotionTests(unittest.TestCase):
                 self.assertEqual(source.count('data-enhancement="battery-aware-motion-v1"'), 2)
                 self.assertIn("document.addEventListener('visibilitychange', syncVisibility", source)
                 self.assertIn("new IntersectionObserver(", source)
+                self.assertIn("setAttribute('data-motion-paused', String(!entry.isIntersecting))", source)
+                self.assertNotIn("toggleAttribute('data-motion-paused'", source)
 
 
 if __name__ == "__main__":

@@ -3754,6 +3754,8 @@ html.is-document-hidden *,html.is-document-hidden *::before,html.is-document-hid
   // El cronómetro empieza después de una preparación explícita de 15 segundos.
   // El cronómetro empieza después de una preparación explícita de 15 segundos.
   // El cronómetro empieza después de una preparación explícita de 15 segundos.
+  // El cronómetro empieza después de una preparación explícita de 15 segundos.
+  // El cronómetro empieza después de una preparación explícita de 15 segundos.
   // El cronómetro empieza después de una preparación explícita de 5 segundos.
   const PREPARATION_MS = 15000;
   let warmupPreparationTimer = 0;
@@ -3922,6 +3924,8 @@ html.is-document-hidden *,html.is-document-hidden *::before,html.is-document-hid
   window.addEventListener('training-profile-updated', event => updateActivityMascotProfile(event.detail?.profile));
   window.matchMedia?.('(prefers-reduced-motion: reduce)').addEventListener?.('change', () => renderTimingDisplays());
   const timingInterval = window.setInterval(() => { renderTimingDisplays(); renderWarmupTiming(); exerciseItems.forEach(updateCompleteButton); }, 1000);
+
+
 
 
 
@@ -4852,7 +4856,7 @@ body{height:auto!important;min-height:100%!important;overflow-x:hidden!important
   const sections = document.querySelectorAll('.hero,.quickRules,.prep,.routineSummary,.sessionGamification,.sessionDashboard,.notePanel,.cards>.card,.sessionFooter');
   const observer = new IntersectionObserver((entries) => {
     for (const entry of entries) {
-      entry.target.toggleAttribute('data-motion-paused', !entry.isIntersecting);
+      entry.target.setAttribute('data-motion-paused', String(!entry.isIntersecting));
     }
   }, { rootMargin: '96px 0px' });
   sections.forEach((section) => observer.observe(section));
