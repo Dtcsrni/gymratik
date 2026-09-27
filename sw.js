@@ -1,5 +1,5 @@
-const CACHE_NAME = 'entrenamiento-pwa-8411b1845ce8';
-const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-e0120bc559f1';
+const CACHE_NAME = 'entrenamiento-pwa-ff7a2e809ce5';
+const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-63201a555024';
 const PRECACHE = [
   './',
   './index.html',
@@ -143,14 +143,14 @@ const PRECACHE = [
   './data/rutinas_autocontenidas/recursos_embebidos/b963bc266356a83bea4fe9909f0516c0c3a1543c06c8a17d24ca9d674fe3c759.png'
 ];
 const RESOURCE_BYTES = {
-  './': 8192,
-  './index.html': 94453,
+  './': 95424,
+  './index.html': 95424,
   './manifest.webmanifest': 456,
   './icon.png': 2204485,
-  './install-gate.js': 8558,
+  './install-gate.js': 8459,
   './data/profile/mascot-install-phone.webp': 1006568,
-  './progress-store.js': 37413,
-  './routine-liquid-glass-v13.css': 8304,
+  './progress-store.js': 36660,
+  './routine-liquid-glass-v13.css': 8250,
   './data/profile/mouse-female-effort.webp': 1212010,
   './data/profile/mouse-male-effort.webp': 1072538,
   './data/profile/gymratik-machine-sprite.webp': 1001880,
@@ -166,7 +166,7 @@ const RESOURCE_BYTES = {
   './data/profile/mascot-motion/male-rest-still.webp': 7480,
   './data/profile/mascot-motion/neutral-exercise-still.webp': 11634,
   './data/profile/mascot-motion/neutral-rest-still.webp': 10150,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html': 820294,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html': 815631,
   './data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html': 2415820,
   './data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html': 387294,
   './data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html': 390673,

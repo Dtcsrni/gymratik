@@ -7,7 +7,7 @@
   <meta name="application-name" content="Gymratik">
   <meta name="apple-mobile-web-app-title" content="Gymratik">
   <meta name="description" content="Rutinas visuales para entrenar en el gimnasio con calentamiento, técnica y registro de series.">
-  <meta name="gymratik-resource-estimate" content='{"applicationBytes":"000000004206368","imageBytes":"000000038223785","totalBytes":"000000042430153"}'>
+  <meta name="gymratik-resource-estimate" content='{"applicationBytes":"000000004289003","imageBytes":"000000038223785","totalBytes":"000000042512788"}'>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.png" type="image/png">
   <script src="./install-gate.js"></script>
@@ -117,6 +117,7 @@
     footer { display:grid; gap:14px; padding:56px 0 36px; color:var(--soft); font-size:.78rem; }
     footer p { max-width:70ch; margin-bottom:0; }
     footer .update-state { margin-top:10px; color:var(--muted); }
+    .app-version { justify-self:end; padding:4px 8px; border:1px solid var(--line); border-radius:999px; color:var(--muted); font-size:.68rem; font-variant-numeric:tabular-nums; letter-spacing:.04em; }
     .footer-actions { display:flex; align-items:center; justify-content:space-between; gap:16px; }
     .reset-button { color:#ffd3d3; border-color:rgba(255,157,162,.38); }
     .reset-button:hover { background:rgba(145,53,70,.28); border-color:rgba(255,157,162,.68); }
@@ -397,10 +398,11 @@
       </section>
       <section class="how-to" aria-labelledby="howToTitle"><div><p class="eyebrow">En el gimnasio</p><h2 id="howToTitle">Tres pasos y a entrenar.</h2></div><ol class="how-to-list"><li>Calienta siguiendo la guía de la sesión.</li><li>Registra cada serie al terminarla.</li><li>Revisa tu avance antes de irte.</li></ol></section>
     </main>
-      <footer><p>Material de entrenamiento general. Respeta el calentamiento indicado y ajusta la sesión a tu situación.</p><div class="footer-actions"><p id="resetNote" class="progress-note" role="status" aria-live="polite">Los registros se conservan en este dispositivo.</p><button id="resetAllButton" class="button secondary reset-button" type="button">Reiniciar registros</button></div><p id="updateState" class="update-state" role="status" aria-live="polite">Aplicación y recursos offline: comprobando actualización…</p></footer>
+      <footer><p>Material de entrenamiento general. Respeta el calentamiento indicado y ajusta la sesión a tu situación.</p><div class="footer-actions"><p id="resetNote" class="progress-note" role="status" aria-live="polite">Los registros se conservan en este dispositivo.</p><button id="resetAllButton" class="button secondary reset-button" type="button">Reiniciar registros</button></div><p id="updateState" class="update-state" role="status" aria-live="polite">Aplicación y recursos offline: comprobando actualización…</p><span id="appVersion" class="app-version" aria-label="Versión de la aplicación" hidden></span></footer>
   </div>
   <script>
     const updateState = document.querySelector('#updateState');
+    const appVersion = document.querySelector('#appVersion');
     const splashTitle = document.querySelector('#splashTitle');
     const splashDetail = document.querySelector('#splashDetail');
     const splashNetworkState = document.querySelector('#splashNetworkState');
@@ -920,7 +922,18 @@
     navigator.serviceWorker?.addEventListener('message', (event) => {
       showSyncProgress(event.data);
       if (event.data?.type === 'APP_UPDATED') rememberLastUpdate(event.data.updatedAt);
+      if (event.data?.type === 'VERSION_STATUS' && typeof event.data.cacheName === 'string') {
+        const version = event.data.cacheName.match(/entrenamiento-pwa-([a-f0-9]{12})/i)?.[1];
+        if (version && appVersion) {
+          appVersion.textContent = `v${version.slice(0, 8)}`;
+          appVersion.title = `Versión del Service Worker: ${version}`;
+          appVersion.hidden = false;
+        }
+      }
     });
+    navigator.serviceWorker?.ready.then((registration) => {
+      (navigator.serviceWorker.controller || registration.active)?.postMessage({ type: 'GET_VERSION_STATUS' });
+    }).catch(() => {});
     async function preparePwaResources() {
       if (!('serviceWorker' in navigator)) {
         activeWorkerAvailable = false;

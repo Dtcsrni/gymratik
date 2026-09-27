@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from scripts.build_pwa_service_worker import build_precache, fingerprint_content, render
+from scripts.build_pwa_service_worker import build_precache, fingerprint_content, render, resource_size
 
 
 ROOT = Path(__file__).parents[1]
@@ -16,6 +16,7 @@ class ServiceWorkerContractTests(unittest.TestCase):
     def setUpClass(cls):
         cls.service_worker = SW.read_text(encoding="utf-8")
         cls.generator = GENERATOR.read_text(encoding="utf-8")
+        cls.homepage = (ROOT / "index.html").read_text(encoding="utf-8")
 
     def test_local_resources_are_cache_first_with_offline_fallback(self):
         for source in (self.service_worker, self.generator):
@@ -37,6 +38,8 @@ class ServiceWorkerContractTests(unittest.TestCase):
 
             self.assertEqual(fingerprint_content(text_asset), b"a\nb\nc")
             self.assertEqual(fingerprint_content(binary_asset), b"a\r\nb\rc")
+            self.assertEqual(resource_size(text_asset), len(b"a\nb\nc"))
+            self.assertEqual(resource_size(binary_asset), len(b"a\r\nb\rc"))
 
     def test_generated_worker_cache_fingerprint_matches_current_precache(self):
         generated = render(build_precache())
@@ -89,6 +92,13 @@ class ServiceWorkerContractTests(unittest.TestCase):
             with self.subTest(source=source[:40]):
                 self.assertIn("__gymratik_complete__", source)
                 self.assertIn("PREVIOUS_CACHE_NAME", source)
+
+    def test_homepage_shows_the_active_service_worker_version(self):
+        self.assertIn('id="appVersion"', self.homepage)
+        self.assertIn("event.data?.type === 'VERSION_STATUS'", self.homepage)
+        self.assertIn("postMessage({ type: 'GET_VERSION_STATUS' })", self.homepage)
+        self.assertIn("cacheName: CACHE_NAME", self.service_worker)
+        self.assertIn("appVersion.textContent = `v${version.slice(0, 8)}`", self.homepage)
 
     def test_deep_offline_navigation_fallback_anchors_shell_to_registration_scope(self):
         for source in (self.service_worker, self.generator):

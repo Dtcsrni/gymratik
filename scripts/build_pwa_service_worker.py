@@ -109,13 +109,20 @@ def fingerprint_content(target: Path) -> bytes:
     return content
 
 
+def resource_size(target: Path) -> int:
+    """Calcula el tamaño estable del archivo tal como se versiona en Git."""
+    if target.is_dir():
+        target = target / "index.html"
+    return len(fingerprint_content(target))
+
+
 def update_resource_estimate(resources: list[str]) -> None:
     sizes = {
-        resource: (ROOT / Path(resource.removeprefix("./"))).stat().st_size
+        resource: resource_size(ROOT / Path(resource.removeprefix("./")))
         for resource in resources
     }
     if OUTPUT.is_file():
-        sizes["./sw.js"] = OUTPUT.stat().st_size
+        sizes["./sw.js"] = resource_size(OUTPUT)
     image_bytes = sum(size for resource, size in sizes.items() if Path(resource).suffix.lower() in IMAGE_SUFFIXES)
     total_bytes = sum(sizes.values())
     estimate = {
@@ -150,7 +157,7 @@ def render(resources: list[str]) -> str:
         previous_cache = stored_previous_match.group(1)
     precache = ",\n  ".join(f"{resource!r}" for resource in resources)
     sizes = {
-        resource: (ROOT / Path(resource.removeprefix("./"))).stat().st_size
+        resource: resource_size(ROOT / Path(resource.removeprefix("./")))
         for resource in resources
     }
     size_map = ",\n  ".join(f"{resource!r}: {size}" for resource, size in sizes.items())
