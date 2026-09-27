@@ -31,7 +31,7 @@ class ResourceParser(HTMLParser):
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         for name, value in attrs:
-            if value and name in {"src", "data-static-src"}:
+            if value and name in {"src", "data-static-src", "data-gif-src", "data-poster-src"}:
                 self.references.add(value)
 
 

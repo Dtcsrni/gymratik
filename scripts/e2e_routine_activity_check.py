@@ -119,6 +119,61 @@ def assert_image_inventory(page, routine_name: str) -> dict:
     }
 
 
+def assert_warmup_single_viewers(page, routine_name: str) -> dict:
+    """Each warm-up block exposes all choices but mounts and loads one GIF at a time."""
+    groups = page.locator(".warmupSingleViewer")
+    if not groups.count():
+        raise AssertionError(f"{routine_name}: no se generaron visores únicos de calentamiento")
+    before_keys = page.evaluate("() => Object.keys(localStorage).sort()")
+    checked = []
+    for group_index in range(groups.count()):
+        group = groups.nth(group_index)
+        images = group.locator(":scope > .warmupVisual .warmupGif")
+        choices = group.locator(".warmupMediaChoice")
+        if images.count() != 1 or choices.count() < 2:
+            raise AssertionError(
+                f"{routine_name}: bloque {group_index + 1} debe tener un solo GIF y opciones: "
+                f"gifs={images.count()} opciones={choices.count()}"
+            )
+        for choice_index in range(choices.count()):
+            choice = choices.nth(choice_index)
+            expected_src = choice.get_attribute("data-gif-src") or ""
+            expected_poster = choice.get_attribute("data-poster-src") or ""
+            expected_label = choice.get_attribute("data-label") or ""
+            if not expected_src or not expected_poster or not expected_label:
+                raise AssertionError(f"{routine_name}: alternativa sin GIF, poster o rótulo")
+            choice.click()
+            image = images.first
+            image.evaluate("image => image.decode()")
+            rendered = image.evaluate(
+                "image => ({src:new URL(image.getAttribute('src'),location.href).pathname,"
+                "naturalWidth:image.naturalWidth,naturalHeight:image.naturalHeight,hidden:image.hidden,"
+                "alt:image.alt,posterHidden:image.parentElement.querySelector('.warmupFallback').hidden})"
+            )
+            expected_path = page.evaluate("src => new URL(src,location.href).pathname", expected_src)
+            if (
+                rendered["src"] != expected_path
+                or not rendered["naturalWidth"]
+                or not rendered["naturalHeight"]
+                or rendered["hidden"]
+                or not rendered["posterHidden"]
+                or not rendered["alt"].strip()
+                or choice.get_attribute("aria-pressed") != "true"
+            ):
+                raise AssertionError(f"{routine_name}: alternativa no se mostró correctamente: {rendered}")
+            selected = group.locator('.warmupMediaChoice[aria-pressed="true"]').count()
+            if selected != 1 or images.count() != 1:
+                raise AssertionError(f"{routine_name}: hay más de una alternativa activa en el calentamiento")
+            checked.append(expected_label)
+        first = group.locator(".warmupMediaChoice").first
+        first.click()
+        group.evaluate("element => element.scrollIntoView({block:'center',behavior:'instant'})")
+    after_keys = page.evaluate("() => Object.keys(localStorage).sort()")
+    if before_keys != after_keys:
+        raise AssertionError(f"{routine_name}: elegir una animación alteró claves de progreso local")
+    return {"groups": groups.count(), "choicesChecked": checked, "oneGifMountedPerGroup": True, "progressKeysUnchanged": True}
+
+
 def assert_visual_resource_quality(page, routine_name: str) -> dict:
     """Valida tamaño, proporción, ajuste y legibilidad de recursos instructivos."""
     audit = page.evaluate("""() => {
@@ -130,7 +185,8 @@ def assert_visual_resource_quality(page, routine_name: str) -> dict:
       const captions=[...document.querySelectorAll('.phaseRow .phaseLabel,.phaseRow .source,.warmupHead p,.warmupCopy p,.warmupInstructions')].map(element=>({tag:element.tagName,className:String(element.className),text:element.textContent.trim().slice(0,90),fontSize:parseFloat(getComputedStyle(element).fontSize),width:rect(element).width})).filter(item=>item.width>0);
       const instructional=images.filter(image=>image.group==='exercise'&&!image.hidden&&image.display!=='none');
       const cropFractions=instructional.filter(image=>image.fit==='cover'&&image.naturalWidth&&image.naturalHeight&&image.width&&image.height).map(image=>{const source=image.naturalWidth/image.naturalHeight,box=image.width/image.height;return 1-Math.min(source,box)/Math.max(source,box)});
-      return {images,captions,exerciseImages:instructional.length,minExerciseWidth:instructional.length?Math.min(...instructional.map(image=>image.width)):0,minExerciseHeight:instructional.length?Math.min(...instructional.map(image=>image.height)):0,maxExerciseCoverCrop:cropFractions.length?Math.max(...cropFractions):0,minCaptionFont:captions.length?Math.min(...captions.map(caption=>caption.fontSize)):0,fitModes:[...new Set(images.map(image=>image.fit))]};
+      const warmupViewers=[...document.querySelectorAll('.warmupSingleViewer')].map(group=>{const frame=group.querySelector(':scope > .warmupVisual'),g=group.getBoundingClientRect(),f=frame?.getBoundingClientRect(),style=getComputedStyle(group),buttons=[...group.querySelectorAll('.warmupMediaChoice')].map(button=>{const r=button.getBoundingClientRect();return {width:r.width,height:r.height,left:r.left,right:r.right}});return {viewport:innerWidth,groupWidth:g.width,frameWidth:f?.width||0,frameHeight:f?.height||0,paddingLeft:parseFloat(style.paddingLeft),paddingRight:parseFloat(style.paddingRight),widthRatio:g.width&&f?f.width/g.width:0,buttons}});
+      return {images,captions,exerciseImages:instructional.length,minExerciseWidth:instructional.length?Math.min(...instructional.map(image=>image.width)):0,minExerciseHeight:instructional.length?Math.min(...instructional.map(image=>image.height)):0,maxExerciseCoverCrop:cropFractions.length?Math.max(...cropFractions):0,minCaptionFont:captions.length?Math.min(...captions.map(caption=>caption.fontSize)):0,fitModes:[...new Set(images.map(image=>image.fit))],warmupViewers};
     }""")
     visible_images = [item for item in audit["images"] if not item["hidden"] and item["display"] != "none"]
     invalid = [item for item in visible_images if item["naturalWidth"] and (item["width"] <= 0 or item["height"] <= 0)]
@@ -147,6 +203,14 @@ def assert_visual_resource_quality(page, routine_name: str) -> dict:
     if audit["maxExerciseCoverCrop"] > 0.48:
         worst = [item for item in audit["images"] if item["group"] == "exercise" and item["fit"] == "cover"]
         raise AssertionError(f"{routine_name}: recorte potencialmente excesivo (>48% de un eje): {audit['maxExerciseCoverCrop']:.2%}; recursos={worst}")
+    invalid_warmup_viewers = [
+        item for item in audit["warmupViewers"]
+        if item["widthRatio"] < 0.9
+        or not (4 <= item["paddingLeft"] <= 7.1 and 4 <= item["paddingRight"] <= 7.1)
+        or any(button["height"] < 44 or button["left"] < -1 or button["right"] > item["viewport"] + 1 for button in item["buttons"])
+    ]
+    if invalid_warmup_viewers:
+        raise AssertionError(f"{routine_name}: visor de calentamiento estrecho o controles difíciles de tocar: {invalid_warmup_viewers}")
     return {key:value for key,value in audit.items() if key != "images"} | {"imageGroups":{group:sum(item["group"]==group for item in audit["images"]) for group in ("exercise","warmup","gif","anatomy")}}
 
 
@@ -794,6 +858,7 @@ def validate_resource_pages(browser) -> list[dict]:
         page = context.new_page()
         page.goto(f"http://127.0.0.1:{PORT}/data/rutinas_autocontenidas/canonicas/{quote(name)}", wait_until="networkidle")
         inventory = assert_image_inventory(page, name)
+        warmup_viewers = assert_warmup_single_viewers(page, name)
         quality = assert_visual_resource_quality(page, name)
         if SCREENSHOT_DIR is not None:
             SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
@@ -813,7 +878,7 @@ def validate_resource_pages(browser) -> list[dict]:
             if warmup.count():
                 warmup.scroll_into_view_if_needed()
                 warmup.screenshot(path=str(SCREENSHOT_DIR / f"resource-day-{day}-warmup.png"))
-        result = {"routine": name, **inventory, "quality": quality}
+        result = {"routine": name, **inventory, "warmupViewers": warmup_viewers, "quality": quality}
         results.append(result)
         context.close()
     return results

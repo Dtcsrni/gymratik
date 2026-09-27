@@ -17,6 +17,7 @@ from standardize_muscle_visuals import (  # noqa: E402
     close_unterminated_segmented_progress_style,
     standardize_offline_image_sources,
     standardize_series_entry_zone,
+    standardize_warmup_single_viewers,
 )
 
 
@@ -24,6 +25,75 @@ CANONICAL = ROOT / "data" / "rutinas_autocontenidas" / "canonicas"
 
 
 class CanonicalRoutineValidationTests(unittest.TestCase):
+    def test_warmup_media_groups_become_single_active_viewers_with_accessible_choices(self) -> None:
+        source = '''<html><head></head><body><article class="warmupStep cardio">
+          <div class="warmupMedia warmupMediaStrip" role="list" aria-label="Opciones">
+            <div class="warmupVisual"><img class="warmupGif" src="videos/elliptical.gif" alt="Elíptica"><img class="warmupFallback" src="images/elliptical.jpg" hidden><span class="warmupMediaLabel">ELÍPTICA</span></div>
+            <div class="warmupVisual"><img class="warmupGif" src="videos/treadmill.gif" alt="Caminadora"><img class="warmupFallback" src="images/treadmill.jpg" hidden><span class="warmupMediaLabel">CAMINADORA</span></div>
+          </div>
+        </article></body></html>'''
+
+        standardized = standardize_warmup_single_viewers(source)
+
+        self.assertIn('data-enhancement="warmup-single-active-viewer-v1"', standardized)
+        self.assertEqual(standardized.count('class="warmupVisual"'), 1)
+        self.assertEqual(standardized.count('class="warmupGif"'), 1)
+        self.assertEqual(standardized.count('class="warmupMediaChoice"'), 2)
+        self.assertIn('aria-pressed="true"', standardized)
+        self.assertIn('data-gif-src="videos/treadmill.gif"', standardized)
+        self.assertIn('data-poster-src="images/treadmill.jpg"', standardized)
+        self.assertEqual(standardize_warmup_single_viewers(standardized), standardized)
+
+    def test_all_canonical_warmup_viewers_keep_one_active_gif_and_local_choices(self) -> None:
+        class ViewerInventory(HTMLParser):
+            def __init__(self) -> None:
+                super().__init__()
+                self.groups: list[dict[str, list[dict[str, str]]]] = []
+                self.current: dict[str, list[dict[str, str]]] | None = None
+                self.depth = 0
+
+            def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+                values = {key: value or "" for key, value in attrs}
+                classes = values.get("class", "").split()
+                if tag == "div" and "warmupSingleViewer" in classes:
+                    self.current = {"gifs": [], "choices": []}
+                    self.groups.append(self.current)
+                    self.depth = 1
+                    return
+                if self.current is None:
+                    return
+                if tag == "div":
+                    self.depth += 1
+                if tag == "img" and "warmupGif" in classes:
+                    self.current["gifs"].append(values)
+                elif tag == "button" and "warmupMediaChoice" in classes:
+                    self.current["choices"].append(values)
+
+            def handle_endtag(self, tag: str) -> None:
+                if self.current is not None and tag == "div":
+                    self.depth -= 1
+                    if self.depth == 0:
+                        self.current = None
+
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            source = path.read_text(encoding="utf-8")
+            inventory = ViewerInventory()
+            inventory.feed(source)
+            with self.subTest(routine=path.name):
+                self.assertEqual(source.count('data-fix="warmup-single-active-viewer-script-v1"'), 1)
+                self.assertIn("document.querySelectorAll('.warmupSingleViewer')", source, path.name)
+                self.assertNotIn("document.querySelectorAll('.warmupMediaSingleViewer')", source, path.name)
+                self.assertTrue(inventory.groups)
+                for group in inventory.groups:
+                    self.assertEqual(len(group["gifs"]), 1)
+                    self.assertGreaterEqual(len(group["choices"]), 2)
+                    for choice in group["choices"]:
+                        for attr in ("data-gif-src", "data-poster-src"):
+                            asset = (path.parent / unquote(choice[attr].split("?", 1)[0])).resolve()
+                            self.assertTrue(asset.is_relative_to(ROOT.resolve()))
+                            self.assertTrue(asset.is_file(), f"{path.name}: falta el recurso {choice[attr]}")
+                        self.assertTrue(choice["data-label"])
+
     def test_unterminated_progress_style_is_closed_before_the_next_stylesheet(self) -> None:
         malformed = (
             '<head><style data-enhancement="segmented-progress-bars-v1">.progress{color:red}'

@@ -8,6 +8,7 @@ muscular ni superioridad fisiológica.
 from __future__ import annotations
 
 import re
+from html import escape, unescape
 
 
 INTERACTION_FEEDBACK_STYLE = '''<style data-enhancement="interaction-feedback-v1">
@@ -174,6 +175,82 @@ OFFLINE_OPTIONAL_MEDIA_FALLBACK_SCRIPT = '''<script data-fix="offline-optional-g
   document.addEventListener('error', event => revealPoster(event.target), true);
   document.querySelectorAll('img.warmupGif,img.gifMotion').forEach(image => {
     if (image.complete && image.naturalWidth === 0) revealPoster(image);
+  });
+})();
+</script>'''
+
+WARMUP_SINGLE_VIEWER_STYLE = '''<style data-enhancement="warmup-single-active-viewer-style-v1">
+.warmupStep .warmupMedia.warmupSingleViewer{display:grid!important;grid-template-columns:minmax(0,1fr)!important;align-items:stretch!important;gap:.65rem!important;width:100%!important;max-width:none!important;min-width:0!important;height:auto!important;min-height:0!important;margin:0!important;padding-inline:clamp(4px,1.4vw,7px)!important;border-inline:1px solid rgba(114,220,255,.2)!important;border-radius:18px!important;overflow:visible!important;background:linear-gradient(90deg,rgba(83,231,207,.055),transparent 12%,transparent 88%,rgba(114,220,255,.055))!important}
+.warmupStep .warmupMedia.warmupSingleViewer>.warmupVisual{position:relative!important;display:grid!important;place-items:center!important;width:100%!important;max-width:none!important;height:clamp(190px,56vw,330px)!important;min-height:0!important;aspect-ratio:16/9!important;overflow:hidden!important;border:1px solid rgba(133,224,246,.28)!important;border-radius:16px!important;background:#f1f5f7!important}
+.warmupStep .warmupMedia.warmupSingleViewer>.warmupVisual[data-orientation="square"]{height:clamp(220px,68vw,300px)!important;aspect-ratio:4/3!important}
+.warmupStep .warmupMedia.warmupSingleViewer>.warmupVisual[data-orientation="portrait"]{height:clamp(240px,70vw,330px)!important;aspect-ratio:4/5!important;background:#0c1f2b!important}
+.warmupStep .warmupMedia.warmupSingleViewer>.warmupVisual>.warmupGif,.warmupStep .warmupMedia.warmupSingleViewer>.warmupVisual>.warmupFallback{position:absolute!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;margin:auto!important;object-fit:contain!important;object-position:center!important;background:transparent!important}
+.warmupStep .warmupMedia.warmupSingleViewer>.warmupVisual>.warmupGif[hidden],.warmupStep .warmupMedia.warmupSingleViewer>.warmupVisual>.warmupFallback[hidden]{display:none!important}
+.warmupStep .warmupMedia.warmupSingleViewer>.warmupVisual>.warmupMediaLabel{position:absolute!important;z-index:2;left:.65rem!important;right:.65rem!important;bottom:.6rem!important;width:max-content!important;max-width:calc(100% - 1.3rem)!important;margin:0 auto!important;padding:.35rem .65rem!important;border:1px solid rgba(255,255,255,.3)!important;border-radius:999px!important;background:rgba(5,22,32,.88)!important;color:#fff!important;font-size:.78rem!important;font-weight:900!important;letter-spacing:.035em!important;line-height:1.2!important;text-align:center!important}
+.warmupMediaChoiceRow{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(min(100%,6.8rem),1fr))!important;gap:.5rem!important;width:100%!important;min-width:0!important}
+.warmupMediaChoice{display:grid!important;place-items:center!important;min-width:0!important;min-height:46px!important;padding:.55rem .65rem!important;border:1px solid rgba(120,208,231,.3)!important;border-radius:12px!important;background:rgba(18,48,64,.9)!important;color:#d8edf4!important;font:inherit!important;font-size:clamp(.72rem,3.2vw,.88rem)!important;font-weight:850!important;line-height:1.2!important;text-align:center!important;white-space:normal!important;overflow-wrap:anywhere!important;cursor:pointer!important;touch-action:manipulation}
+.warmupMediaChoice[aria-pressed="true"]{border-color:#53e7cf!important;background:linear-gradient(120deg,rgba(17,125,117,.78),rgba(19,69,91,.95))!important;color:#f4fffd!important;box-shadow:0 0 0 2px rgba(83,231,207,.13)!important}
+.warmupMediaChoice:focus-visible{outline:3px solid #79ddff!important;outline-offset:2px!important}
+.warmupMediaStatus{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+@media(max-width:640px){.warmupStep.cardio,.warmupStep.mobility{grid-template-columns:minmax(0,1fr)!important;gap:.7rem!important}.warmupStep .warmupMedia.warmupSingleViewer{grid-column:1/-1!important}.warmupStep .warmupMedia.warmupSingleViewer>.warmupVisual{height:clamp(190px,56vw,260px)!important}.warmupStep .warmupMedia.warmupSingleViewer>.warmupVisual[data-orientation="square"]{height:clamp(220px,68vw,290px)!important}.warmupStep .warmupMedia.warmupSingleViewer>.warmupVisual[data-orientation="portrait"]{height:clamp(240px,70vw,320px)!important}.warmupMediaChoiceRow{gap:.4rem!important}.warmupMediaChoice{min-height:46px!important;padding:.5rem .42rem!important}}
+@media(prefers-reduced-motion:reduce){.warmupMediaChoice{transition:none!important}}
+</style>'''
+
+WARMUP_SINGLE_VIEWER_SCRIPT = '''<script data-fix="warmup-single-active-viewer-script-v1">
+(() => {
+  document.querySelectorAll('.warmupSingleViewer').forEach(group => {
+    const frame = group.querySelector('.warmupVisual');
+    const image = frame?.querySelector('.warmupGif');
+    const poster = frame?.querySelector('.warmupFallback');
+    const label = frame?.querySelector('.warmupMediaLabel');
+    const buttons = [...group.querySelectorAll('.warmupMediaChoice')];
+    if (!frame || !image || !poster || !buttons.length) return;
+    let revision = 0;
+    const showLoadedImage = expectedSrc => {
+      if (image.getAttribute('src') !== expectedSrc || !image.complete || !image.naturalWidth) return;
+      frame.removeAttribute('data-media-state');
+      frame.dataset.orientation = image.naturalHeight > image.naturalWidth * 1.2 ? 'portrait' : image.naturalHeight > image.naturalWidth * .8 ? 'square' : 'landscape';
+      image.hidden = false;
+      poster.hidden = true;
+    };
+    image.addEventListener('load', () => showLoadedImage(image.getAttribute('src')));
+    const select = button => {
+      const currentRevision = ++revision;
+      const gifSrc = button.dataset.gifSrc;
+      buttons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+      if (!gifSrc) return;
+      frame.removeAttribute('data-media-state');
+      image.hidden = true;
+      poster.hidden = !button.dataset.posterSrc;
+      if (button.dataset.posterSrc) {
+        poster.loading = 'eager';
+        poster.src = button.dataset.posterSrc;
+      }
+      image.alt = button.dataset.alt || button.dataset.label || '';
+      image.loading = 'eager';
+      image.dataset.expectedSrc = gifSrc;
+      if (label) label.textContent = button.dataset.label || '';
+      image.addEventListener('load', () => {
+        if (revision === currentRevision) showLoadedImage(gifSrc);
+      }, { once: true });
+      image.src = gifSrc;
+      if (image.complete) queueMicrotask(() => {
+        if (revision === currentRevision) showLoadedImage(gifSrc);
+      });
+      const status = group.querySelector('.warmupMediaStatus');
+      if (status) status.textContent = `Mostrando ${button.dataset.label || 'animación'} del calentamiento.`;
+    };
+    buttons.forEach(button => button.addEventListener('click', () => select(button)));
+    const initial = buttons.find(button => button.getAttribute('aria-pressed') === 'true') || buttons[0];
+    if (image.complete && image.naturalWidth) showLoadedImage(image.getAttribute('src'));
+    else {
+      image.hidden = true;
+      poster.hidden = false;
+    }
+    if (initial) {
+      const status = group.querySelector('.warmupMediaStatus');
+      if (status) status.textContent = `Mostrando ${initial.dataset.label || 'animación'} del calentamiento.`;
+    }
   });
 })();
 </script>'''
@@ -1525,6 +1602,7 @@ def standardize_muscle_visuals(source: str) -> str:
     )
     source = source.replace('</body>', REST_COUNTDOWN_STYLE + '\n</body>', 1)
     source = standardize_optional_media_fallback(source)
+    source = standardize_warmup_single_viewers(source)
     return source
 
 
@@ -1675,4 +1753,145 @@ def standardize_optional_media_fallback(source: str) -> str:
         source = source.replace(prefix, prefix + rules, 1)
     if 'data-fix="offline-optional-gif-fallback-v1"' not in source:
         source = source.replace('</body>', OFFLINE_OPTIONAL_MEDIA_FALLBACK_SCRIPT + '\n</body>', 1)
+    return source
+
+
+def _warmup_attr(tag: str, name: str) -> str:
+    match = re.search(rf'\b{re.escape(name)}\s*=\s*(["\'])(.*?)\1', tag, flags=re.I | re.S)
+    return unescape(match.group(2)) if match else ""
+
+
+def _warmup_div_block_end(source: str, start: int, opening_end: int) -> int:
+    depth = 1
+    for match in re.finditer(r'</?div\b[^>]*>', source[opening_end:], flags=re.I | re.S):
+        token = match.group(0)
+        if token[:2] == "</":
+            depth -= 1
+        elif not token.rstrip().endswith("/>"):
+            depth += 1
+        if depth == 0:
+            return opening_end + match.end()
+    raise ValueError(f"No se encontró el cierre del bloque de calentamiento en el offset {start}")
+
+
+def standardize_warmup_single_viewers(source: str) -> str:
+    """Use one responsive animation at a time while keeping every warm-up option selectable."""
+    open_tags = [
+        match
+        for match in re.finditer(r'<div\b[^>]*\bclass=(?:"[^"]*"|\'[^\']*\')[^>]*>', source, flags=re.I | re.S)
+        if re.search(r'\bwarmupMedia\b', _warmup_attr(match.group(0), "class"))
+    ]
+    replacements: list[tuple[int, int, str]] = []
+    for group_number, opening in enumerate(open_tags, start=1):
+        group_end = _warmup_div_block_end(source, opening.start(), opening.end())
+        block = source[opening.start() : group_end]
+        visuals = list(
+            re.finditer(
+                r'<div\b(?=[^>]*\bclass=(?:"[^"]*\bwarmupVisual\b[^"]*"|\'[^\']*\bwarmupVisual\b[^\']*\'))[^>]*>.*?</div\s*>',
+                block,
+                flags=re.I | re.S,
+            )
+        )
+        if len(visuals) < 2:
+            continue
+
+        options: list[dict[str, str]] = []
+        for visual_match in visuals:
+            visual = visual_match.group(0)
+            gif_tag = next(
+                (
+                    match.group(0)
+                    for match in re.finditer(r'<img\b[^>]*>', visual, flags=re.I | re.S)
+                    if re.search(r'\bwarmupGif\b', _warmup_attr(match.group(0), "class"))
+                ),
+                "",
+            )
+            poster_tag = next(
+                (
+                    match.group(0)
+                    for match in re.finditer(r'<img\b[^>]*>', visual, flags=re.I | re.S)
+                    if re.search(r'\bwarmupFallback\b', _warmup_attr(match.group(0), "class"))
+                ),
+                "",
+            )
+            label_match = re.search(
+                r'<span\b[^>]*\bclass=(?:"[^"]*\bwarmupMediaLabel\b[^"]*"|\'[^\']*\bwarmupMediaLabel\b[^\']*\')[^>]*>(.*?)</span\s*>',
+                visual,
+                flags=re.I | re.S,
+            )
+            label = unescape(re.sub(r'<[^>]+>', '', label_match.group(1))).strip() if label_match else ""
+            if not gif_tag or not poster_tag or not label:
+                raise ValueError("Cada alternativa de calentamiento debe tener GIF, poster local y rótulo")
+            options.append(
+                {
+                    "gif": _warmup_attr(gif_tag, "src"),
+                    "poster": _warmup_attr(poster_tag, "src"),
+                    "alt": _warmup_attr(gif_tag, "alt"),
+                    "label": label,
+                }
+            )
+
+        visual = visuals[0].group(0)
+        visual_open = re.match(r'<div\b[^>]*>', visual, flags=re.I | re.S)
+        if not visual_open:
+            raise ValueError("No se pudo identificar el visor inicial del calentamiento")
+        visual_tag = visual_open.group(0)
+        if not re.search(r'\bid=', visual_tag, flags=re.I):
+            visual_tag = visual_tag[:-1] + f' id="warmup-media-viewer-{group_number}">'
+        visual_tag = re.sub(r'\srole=(?:"[^"]*"|\'[^\']*\')', "", visual_tag, flags=re.I)
+        visual = visual_tag + visual[visual_open.end() :]
+
+        group_tag = opening.group(0)
+        classes = _warmup_attr(group_tag, "class").split()
+        if "warmupSingleViewer" not in classes:
+            classes.append("warmupSingleViewer")
+        group_tag = re.sub(
+            r'\bclass=(?:"[^"]*"|\'[^\']*\')',
+            f'class="{escape(" ".join(classes), quote=True)}"',
+            group_tag,
+            count=1,
+            flags=re.I,
+        )
+        group_tag = re.sub(r'\s(?:role|aria-label|data-enhancement)=(?:"[^"]*"|\'[^\']*\')', "", group_tag, flags=re.I)
+        group_tag = group_tag[:-1] + ' role="group" aria-label="Una animación a la vez: referencias del calentamiento" data-enhancement="warmup-single-active-viewer-v1">'
+
+        choices = [
+            '<div class="warmupMediaChoiceRow" role="group" aria-label="Elige qué movimiento animado mostrar">'
+        ]
+        for index, option in enumerate(options):
+            label = escape(option["label"], quote=True)
+            choices.append(
+                '<button type="button" class="warmupMediaChoice" '
+                f'aria-label="Mostrar animación: {label}" aria-controls="warmup-media-viewer-{group_number}" '
+                f'aria-pressed="{str(index == 0).lower()}" data-gif-src="{escape(option["gif"], quote=True)}" '
+                f'data-poster-src="{escape(option["poster"], quote=True)}" data-alt="{escape(option["alt"], quote=True)}" '
+                f'data-label="{label}">{label}</button>'
+            )
+        choices.append('</div><span class="warmupMediaStatus" role="status" aria-live="polite"></span>')
+        replacement = group_tag + visual + "".join(choices) + "</div>"
+        replacements.append((opening.start(), group_end, replacement))
+
+    for start, end, replacement in reversed(replacements):
+        source = source[:start] + replacement + source[end:]
+    if replacements or 'data-enhancement="warmup-single-active-viewer-v1"' in source:
+        if re.search(r'<style\b[^>]*data-enhancement="warmup-single-active-viewer-style-v1"[^>]*>.*?</style\s*>', source, flags=re.I | re.S):
+            source = re.sub(
+                r'<style\b[^>]*data-enhancement="warmup-single-active-viewer-style-v1"[^>]*>.*?</style\s*>',
+                WARMUP_SINGLE_VIEWER_STYLE,
+                source,
+                count=1,
+                flags=re.I | re.S,
+            )
+        else:
+            source = source.replace('</body>', WARMUP_SINGLE_VIEWER_STYLE + '\n</body>', 1)
+        if re.search(r'<script\b[^>]*data-fix="warmup-single-active-viewer-script-v1"[^>]*>.*?</script\s*>', source, flags=re.I | re.S):
+            source = re.sub(
+                r'<script\b[^>]*data-fix="warmup-single-active-viewer-script-v1"[^>]*>.*?</script\s*>',
+                WARMUP_SINGLE_VIEWER_SCRIPT,
+                source,
+                count=1,
+                flags=re.I | re.S,
+            )
+        else:
+            source = source.replace('</body>', WARMUP_SINGLE_VIEWER_SCRIPT + '\n</body>', 1)
     return source

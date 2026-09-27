@@ -3,7 +3,15 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from scripts.build_pwa_service_worker import build_precache, fingerprint_content, render, resource_size
+from scripts.build_pwa_service_worker import (
+    CANONICAL_DIR,
+    ROUTINE_FILES,
+    build_precache,
+    fingerprint_content,
+    render,
+    resource_size,
+    routine_resources,
+)
 
 
 ROOT = Path(__file__).parents[1]
@@ -86,6 +94,22 @@ class ServiceWorkerContractTests(unittest.TestCase):
                 with self.subTest(variant=variant, state=state):
                     self.assertIn(f"{variant}-{state}-25fps.gif", self.service_worker)
                     self.assertIn(f"{variant}-{state}-still.webp", self.service_worker)
+
+    def test_every_warmup_choice_gif_and_poster_is_in_the_offline_precache(self):
+        resources = set(build_precache())
+        for routine_name in ROUTINE_FILES:
+            routine = CANONICAL_DIR / routine_name
+            with self.subTest(routine=routine_name):
+                html = routine.read_text(encoding="utf-8")
+                self.assertIn("data-gif-src=", html)
+                self.assertIn("data-poster-src=", html)
+                referenced = routine_resources(routine)
+                alternatives = {
+                    resource for resource in referenced
+                    if "/videos/" in resource and resource.lower().endswith((".gif", ".webp"))
+                }
+                self.assertTrue(alternatives)
+                self.assertTrue(alternatives <= resources, sorted(alternatives - resources))
 
     def test_complete_cache_marker_is_written_after_download(self):
         for source in (self.service_worker, self.generator):
