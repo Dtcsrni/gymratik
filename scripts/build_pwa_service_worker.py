@@ -22,6 +22,15 @@ HTML_ATTR_PATTERN = re.compile(r"(?:src|data-static-src|gif|thumbnail)\s*[:=]\s*
 TEXT_RESOURCE_SUFFIXES = {".css", ".html", ".js", ".json", ".svg", ".txt", ".webmanifest", ".xml"}
 IMAGE_SUFFIXES = {".avif", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp"}
 ESTIMATE_META = re.compile(r"<meta name=\"gymratik-resource-estimate\" content='[^']*'>")
+MOTION_RESOURCE_RE = re.compile(r'/mascot_exercise_motion/(day[1-4]-exercise\d{2})[^"]*\.(?:gif|webp|png)$', re.I)
+MOTION_REVIEW = ROOT / "data" / "rutinas_autocontenidas" / "medios_publicados" / "rutinas_autocontenidas" / "mascot_exercise_motion" / "visual-review.json"
+MOTION_REVIEW_FIELDS = (
+    "bodyOrientationVerified",
+    "supportsVerified",
+    "gripAndContactVerified",
+    "machinePartsAndPathVerified",
+    "fourPosesAndLoopVerified",
+)
 
 
 class ResourceParser(HTMLParser):
@@ -70,19 +79,78 @@ def routine_resources(canonical: Path) -> set[str]:
     return resources
 
 
+def manifest_icon_resources(manifest: dict, root: Path = ROOT) -> list[str]:
+    """Valida que todos los iconos instalables sean archivos locales del paquete."""
+    icons = manifest.get("icons")
+    if not isinstance(icons, list) or not icons:
+        raise SystemExit("El manifiesto PWA debe declarar al menos un icono local")
+    resources = []
+    for icon in icons:
+        source = icon.get("src") if isinstance(icon, dict) else None
+        if (
+            not isinstance(source, str)
+            or not source
+            or "\\" in source
+            or source.startswith(("http://", "https://", "data:", "/"))
+            or "?" in source
+            or "#" in source
+        ):
+            raise SystemExit(f"Icono del manifiesto debe ser un recurso local relativo: {source!r}")
+        normalized = PurePosixPath(source)
+        if ".." in normalized.parts:
+            raise SystemExit(f"Icono del manifiesto sale de la raíz del paquete: {source}")
+        target = root.joinpath(*normalized.parts)
+        if not target.is_file():
+            raise SystemExit(f"Icono del manifiesto no encontrado: {source}")
+        resources.append(f"./{normalized.as_posix().removeprefix('./')}")
+    return resources
+
+
+def validate_mascot_motion_reviews(resources: set[str] | list[str]) -> None:
+    """Block offline publication of custom exercise media without explicit visual approval."""
+    motion_resources = [resource for resource in resources if "/mascot_exercise_motion/" in resource]
+    if not motion_resources:
+        return
+    if not MOTION_REVIEW.is_file():
+        raise SystemExit("Falta visual-review.json; no se publican animaciones de técnica sin revisión")
+    review = json.loads(MOTION_REVIEW.read_text(encoding="utf-8"))
+    records = review.get("reviews", {})
+    blocked = []
+    for resource in motion_resources:
+        match = MOTION_RESOURCE_RE.search(resource)
+        entry = records.get(match.group(1)) if match else None
+        approved = bool(
+            entry
+            and entry.get("status") == "approved"
+            and isinstance(entry.get("angle"), str)
+            and entry["angle"].strip()
+            and isinstance(entry.get("machineReference"), str)
+            and entry["machineReference"].strip()
+            and all(entry.get(field) is True for field in MOTION_REVIEW_FIELDS)
+        )
+        if not approved:
+            blocked.append(resource)
+    if blocked:
+        raise SystemExit("Animación personalizada sin aprobación visual estricta: " + ", ".join(sorted(blocked)))
+
+
 def build_precache() -> list[str]:
+    manifest = json.loads((ROOT / "manifest.webmanifest").read_text(encoding="utf-8"))
+    manifest_icons = manifest_icon_resources(manifest)
     base = [
         "./",
         "./index.html",
         "./manifest.webmanifest",
-        "./icon.png",
+        *manifest_icons,
+        "./assets/branding/gymratik-cover-seated-breath-30fps.webp",
+        "./assets/branding/gymratik-cover-seated-v1-poster.webp",
+        *[f"./assets/branding/routine-covers/day{day}.webp" for day in range(1, 5)],
         "./install-gate.js",
         "./data/profile/mascot-install-phone.webp",
         "./progress-store.js",
         "./routine-liquid-glass-v13.css",
         "./data/profile/mouse-female-effort.webp",
         "./data/profile/mouse-male-effort.webp",
-        "./data/profile/gymratik-machine-sprite.webp",
         *[
             f"./data/profile/mascot-motion/{variant}-{state}-25fps.gif"
             for variant in ("female", "male", "neutral")
@@ -93,11 +161,20 @@ def build_precache() -> list[str]:
             for variant in ("female", "male", "neutral")
             for state in ("exercise", "rest")
         ],
+        *[
+            f"./data/profile/mascot-motion/states-v1/{variant}-{state}.png"
+            for variant in ("female", "male")
+            for state in (
+                "idle", "ready", "preparing", "warmup", "strength",
+                "cardio", "mobility", "rest", "approval",
+            )
+        ],
     ]
     routines = [f"./data/rutinas_autocontenidas/canonicas/{name}" for name in ROUTINE_FILES]
     resources = set(base + routines)
     for name in ROUTINE_FILES:
         resources.update(routine_resources(CANONICAL_DIR / name))
+    validate_mascot_motion_reviews(resources)
     # Incluir GIF didácticos para que la técnica también funcione sin conexión.
     return base + routines + sorted(resources - set(base + routines))
 
@@ -166,6 +243,7 @@ const PREVIOUS_CACHE_NAME = '{previous_cache}';
 const PRECACHE = [
   {precache}
 ];
+const PRECACHE_URLS = new Set(PRECACHE.map((path) => new URL(path, self.registration.scope).href));
 const RESOURCE_BYTES = {{
   {size_map}
 }};
@@ -181,8 +259,13 @@ async function reportProgress(completed, bytesCompleted, current = '') {{
 }}
 
 async function refresh(request, cache) {{
-  const response = await fetch(request, {{ cache: 'no-store' }});
-  if (response.ok) await cache.put(request, response.clone());
+  const response = await fetch(new Request(request, {{ cache: 'no-cache' }}));
+  const cacheKey = new URL(request.url);
+  cacheKey.search = '';
+  cacheKey.hash = '';
+  if (response.ok && !new URL(request.url).search && PRECACHE_URLS.has(cacheKey.href)) {{
+    await cache.put(cacheKey.href, response.clone());
+  }}
   return response;
 }}
 
@@ -246,14 +329,16 @@ self.addEventListener('install', (event) => {{
         await preserveOneCompleteCache();
       }}
     }}
-    // Activar solo después de descargar y marcar completo todo el paquete.
-    // El progreso de entrenamiento vive en IndexedDB/localStorage, fuera de Cache API.
-    await self.skipWaiting();
+    // La primera instalación toma control al completar el paquete. Una versión
+    // posterior espera la autorización de la portada y se activa en otra apertura.
+    // El progreso permanece en IndexedDB/localStorage, fuera de Cache API.
+    if (!self.registration.active) await self.skipWaiting();
   }})());
 }});
 
 self.addEventListener('message', (event) => {{
-  if (event.data?.type === 'ACTIVATE_UPDATE' && self.registration.waiting === self) self.skipWaiting();
+  // El mensaje se envía directamente al worker en espera; `self` aquí es el global, no un objeto ServiceWorker.
+  if (event.data?.type === 'ACTIVATE_UPDATE') event.waitUntil(self.skipWaiting());
   if (event.data?.type === 'GET_VERSION_STATUS') {{
     event.source?.postMessage({{ type: 'VERSION_STATUS', cacheName: CACHE_NAME, total: PRECACHE.length }});
   }}
@@ -271,11 +356,12 @@ self.addEventListener('activate', (event) => {{
 self.addEventListener('fetch', (event) => {{
   const request = event.request;
   const url = new URL(request.url);
-  if (request.method !== 'GET' || url.origin !== self.location.origin) return;
+  const scopeUrl = new URL(self.registration.scope);
+  if (request.method !== 'GET' || url.origin !== scopeUrl.origin || !url.pathname.startsWith(scopeUrl.pathname)) return;
 
   event.respondWith((async () => {{
     const cache = await caches.open(CACHE_NAME);
-    const cached = await cache.match(request);
+    const cached = await cache.match(request, {{ ignoreSearch: true }});
     const isNavigation = request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html');
     const bypassCache = ['no-cache', 'no-store', 'reload'].includes(request.cache);
 

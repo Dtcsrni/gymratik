@@ -153,7 +153,7 @@ def main() -> None:
     records = [build_one(variant, state) for variant in VARIANTS for state in STATES]
     manifest = {
         "schemaVersion": 1,
-        "description": "Mascotas Gymratik locales: ciclo GIF solo durante ejercicio/descanso; WebP estático con movimiento reducido.",
+        "description": "Mascotas Gymratik locales: GIF para fuerza y descanso; cardio/movilidad usan WebP con cadencia CSS específica; se usan WebP estáticos con movimiento reducido o pestaña oculta.",
         "defaultVariant": "neutral",
         "minimumFps": FPS,
         "records": records,

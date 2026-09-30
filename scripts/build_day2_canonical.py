@@ -27,7 +27,7 @@ def replace_once(text: str, old: str, new: str) -> str:
 def build_header(day1_header: str) -> str:
     header = day1_header
     replacements = {
-        "DÍA 1 · ESPALDA + BÍCEPS": "DÍA 2 · PIERNA + GLÚTEO",
+        "DÍA 1 · TIRÓN: ESPALDA Y BÍCEPS": "DÍA 2 · PIERNA: CUÁDRICEPS Y GLÚTEOS",
         "Tirones verticales y remos · deltoides posterior · bíceps · pecho complementario":
             "Patrón de sentadilla · extensión de cadera · flexión y extensión de rodilla · pantorrilla",
         "Tren superior": "Tren inferior",
@@ -149,7 +149,7 @@ def build_dashboard(day1_dashboard: str) -> str:
     dashboard = day1_dashboard
     replacements = {
         "75–95 min": "65–85 min",
-        "Espalda + bíceps": "Cuádriceps + glúteo",
+        "Tirón · espalda y bíceps": "Pierna · cuádriceps y glúteos",
         "Con trabajo complementario de deltoides posterior y pecho": "Con trabajo específico de isquiosurales y pantorrilla",
         "4 + 4 + 3 + 3 + 3 + 3 series": "3 + 3 + 3 + 4 + 3 + 4 series",
         "De 60 s a 2.5 min según el ejercicio": "De 90 s a 3 min según el ejercicio",
@@ -188,15 +188,6 @@ def build_gif_script(template: str) -> str:
     return '''<script data-fix="day2-exercise-gifs">
 (function(){
   const media = [
-    {
-      gif:"../medios_publicados/rutinas_autocontenidas/dia2_media_generated/hip_thrust_machine_booty_builder_correct_form.gif",
-      thumbnail:"../medios_publicados/rutinas_autocontenidas/dia2_media_generated/hip_thrust_machine_booty_builder_correct_form.jpg",
-      key:"HIP THRUST",
-      kind:"video",
-      label:"VIDEO · DEMOSTRACIÓN REAL",
-      alt:"Video del hip thrust en máquina Booty Builder con ejecución correcta: espalda apoyada, pies firmes, extensión completa de cadera y regreso controlado",
-      note:"Recorte del panel CORRECT FORM de la demostración oficial: muestra repeticiones completas en máquina, con espalda apoyada, pies estables y extensión de cadera sin compensar con la zona lumbar."
-    },
     {
       gif:"../medios_publicados/ejercicios-compartido/videos/0743-Qa55kX1.gif",
       thumbnail:"../medios_publicados/ejercicios-compartido/images/0743-Qa55kX1.jpg",
@@ -291,6 +282,14 @@ def preserve_machine_hip_thrust_card(card: str) -> str:
     missing = [marker for marker in required if marker not in card]
     if missing:
         raise ValueError(f"La tarjeta de hip thrust no conserva la referencia de máquina: {missing}")
+    card, count = re.subn(
+        r'(<span class="pillText">).*?(</span>)',
+        r'\1máquina hip thrust con carga de discos y respaldo basculante\2',
+        card,
+        count=1,
+    )
+    if count != 1:
+        raise ValueError("No se pudo normalizar la descripción del equipo de hip thrust")
     return card
 
 
@@ -312,10 +311,11 @@ def extract_div_block(text: str, marker: str) -> tuple[str, int, int]:
 def enforce_machine_hip_thrust_visuals(card: str) -> str:
     card = preserve_machine_hip_thrust_card(card)
     phase, phase_start, phase_end = extract_div_block(card, '<div class="phaseRow">')
-    replacement = '''<div class="phaseRow machinePhaseImages" aria-label="Guía estática del recorrido del hip thrust en máquina">
-<div class="phaseCol"><div class="phaseLabel">Inicio · abajo</div><div class="machinePhasePanel"><div class="machinePhaseVisual"><img src="../medios_publicados/rutinas_autocontenidas/dia2_media_generated/hip_thrust_machine_booty_builder_correct_form_inicio.jpg" alt="Inicio abajo del hip thrust en máquina Booty Builder: espalda alta apoyada, cadera flexionada, pelvis abajo y pies firmes" loading="lazy"/><span class="phasePositionCue">PELVIS ABAJO</span></div><strong>Inicio · cadera flexionada</strong><small>Espalda alta apoyada, pelvis abajo, pies firmes y almohadilla o cinturón estable sobre la cadera.</small></div></div>
-<div class="swap" aria-hidden="true">↕</div>
-<div class="phaseCol"><div class="phaseLabel">Final · arriba</div><div class="machinePhasePanel"><div class="machinePhaseVisual"><img src="../medios_publicados/rutinas_autocontenidas/dia2_media_generated/hip_thrust_machine_booty_builder_correct_form_final.jpg" alt="Final arriba del hip thrust en máquina Booty Builder: cadera extendida con tronco y muslos alineados" loading="lazy"/><span class="phasePositionCue">CADERA EXTENDIDA</span></div><strong>Final · tronco y muslos alineados</strong><small>Sube hasta extender la cadera, aprieta glúteos sin arquear la zona lumbar y regresa con control.</small></div></div>
+    replacement = '''<div class="phaseRow hipThrustGuide" aria-label="Puntos de colocación y recorrido del hip thrust en máquina">
+<div class="hipThrustGuideTitle"><span aria-hidden="true">01</span><strong>Colócate</strong><p>Espalda y cabeza apoyadas; ambos pies firmes en la plataforma. Ajusta el rodillo acolchado sobre el abdomen bajo.</p></div>
+<div class="hipThrustGuideTitle"><span aria-hidden="true">02</span><strong>Desciende</strong><p>Flexiona la cadera con control, manteniendo el tronco apoyado y la zona lumbar estable.</p></div>
+<div class="hipThrustGuideTitle"><span aria-hidden="true">03</span><strong>Extiende</strong><p>Empuja la plataforma y eleva la cadera junto con el respaldo; termina sin arquear la zona lumbar.</p></div>
+<a class="hipThrustOfficialLink" href="https://www.youtube.com/watch?v=lMk6ZFXbY00" target="_blank" rel="noopener noreferrer">Ver demostración oficial · Panatta Fit Evo <span aria-hidden="true">↗</span></a>
 </div>'''
     return card[:phase_start] + replacement + card[phase_end:]
 
@@ -373,8 +373,8 @@ def main() -> None:
     source = SOURCE.read_text(encoding="utf-8")
 
     head = template[: template.index("</head>") + len("</head>")]
-    head = head.replace("data-label=\"Día 1 · Espalda + Bíceps · v1 responsive\"", "data-label=\"Día 2 · Pierna + Glúteo · v1 responsive\"")
-    head = head.replace("<title>Día 1 · Espalda + Bíceps · v1 responsive</title>", "<title>Día 2 · Pierna + Glúteo · v1 responsive</title>")
+    head = head.replace("data-label=\"Día 1 · Tirón: espalda y bíceps · v1 responsive\"", "data-label=\"Día 2 · Pierna: cuádriceps y glúteos · v1 responsive\"")
+    head = head.replace("<title>Día 1 · Tirón: espalda y bíceps · v1 responsive</title>", "<title>Día 2 · Pierna: cuádriceps y glúteos · v1 responsive</title>")
     head = head.replace("</head>", '''<style data-fix="day2-lower-body-visuals">
 .muscleDayIcon.lower{border-color:rgba(100,215,255,.55)!important;color:#64D7FF!important;background:rgba(100,215,255,.09)!important}
 .warmupStep.cardio,.warmupStep.mobility{grid-template-columns:1fr!important}
@@ -397,13 +397,13 @@ def main() -> None:
 .equipmentRefBox .refTag{position:static!important}
 .equipmentRefBox strong{font-size:15px!important;color:#f4fbff!important}
 .equipmentRefBox small{font-size:11px!important;line-height:1.25!important;color:#a9d7e5!important}
-.machinePhaseImages .machinePhasePanel{min-height:170px!important;padding:0!important;border:1px solid rgba(114,220,255,.26)!important;border-radius:14px!important;background:linear-gradient(145deg,#102d3d,#0b1b29)!important;display:flex!important;flex-direction:column!important;justify-content:flex-start!important;gap:7px!important;color:#e9fbff!important;overflow:hidden!important}
-.machinePhaseImages .machinePhasePanel .machinePhaseVisual{position:relative!important;height:160px!important;min-height:160px!important;background:#fff!important;overflow:hidden!important}
-.machinePhaseImages .machinePhasePanel .machinePhaseVisual img{width:100%!important;height:100%!important;object-fit:cover!important;object-position:25% center!important;display:block!important;background:#fff!important}
-.machinePhaseImages .machinePhasePanel .phasePositionCue{position:absolute!important;left:10px!important;bottom:10px!important;max-width:calc(100% - 20px)!important;padding:5px 8px!important;border:1px solid rgba(255,255,255,.7)!important;border-radius:999px!important;background:rgba(4,24,35,.92)!important;color:#8eeeff!important;font-size:10px!important;font-weight:950!important;letter-spacing:.04em!important;line-height:1!important;text-align:center!important}
-.machinePhaseImages .machinePhasePanel strong{font-size:15px!important;line-height:1.2!important;color:#f4fbff!important;padding:0 14px!important}
-.machinePhaseImages .machinePhasePanel small{font-size:12px!important;line-height:1.35!important;color:#a9d7e5!important;padding:0 14px 12px!important}
-@media(max-width:700px){.machinePhaseImages .machinePhasePanel{min-height:130px!important}.machinePhaseImages .machinePhasePanel .machinePhaseVisual{height:128px!important;min-height:128px!important}.machinePhaseImages .machinePhasePanel strong{font-size:13px!important;padding:0 11px!important}.machinePhaseImages .machinePhasePanel small{font-size:11px!important;padding:0 11px 10px!important}.machinePhaseImages .machinePhasePanel .phasePositionCue{left:7px!important;bottom:7px!important;font-size:9px!important}}
+.hipThrustGuide{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:9px!important;margin-top:10px!important}
+.hipThrustGuideTitle{min-width:0!important;padding:11px!important;border:1px solid rgba(114,220,255,.22)!important;border-radius:13px!important;background:linear-gradient(145deg,#102d3d,#0b1b29)!important;color:#cde5ec!important}
+.hipThrustGuideTitle>span{display:inline-grid!important;place-items:center!important;width:25px!important;height:25px!important;margin-right:7px!important;border-radius:8px!important;background:rgba(83,217,204,.14)!important;color:#53d9cc!important;font-size:12px!important;font-weight:900!important}
+.hipThrustGuideTitle strong{font-size:13px!important;color:#f4fbff!important}
+.hipThrustGuideTitle p{margin:7px 0 0!important;font-size:12px!important;line-height:1.35!important;color:#b9d4de!important}
+.hipThrustOfficialLink{grid-column:1/-1!important;justify-self:start!important;color:#72dcff!important;font-size:12px!important;font-weight:800!important;text-decoration-thickness:1px!important;text-underline-offset:3px!important}
+@media(max-width:700px){.hipThrustGuide{grid-template-columns:1fr!important;gap:7px!important}.hipThrustGuideTitle{padding:9px 11px!important}.hipThrustGuideTitle p{margin-left:33px!important;font-size:11.5px!important}}
 .gifProof .gifMotion{width:180px!important;height:180px!important;max-width:100%!important;object-fit:contain!important;margin:auto!important}
 .page .card .visual .gifProof{grid-template-columns:1fr!important;align-items:center!important}
 .page .card .visual .gifProof .gifFrame{width:180px!important;height:180px!important;aspect-ratio:auto!important;margin:0 auto!important}
@@ -488,8 +488,8 @@ def main() -> None:
         raise ValueError("El HTML canónico debe conservar el inyector de GIFs de ejercicios")
     if "HIP THRUST CON BARRA" in body or "Banco + barra" in body:
         raise ValueError("El hip thrust del Día 2 debe conservarse como máquina")
-    if "hip_thrust_machine_booty_builder_correct_form_inicio.jpg" not in card_payloads[1] or "hip_thrust_machine_booty_builder_correct_form_final.jpg" not in card_payloads[1]:
-        raise ValueError("La tarjeta de hip thrust debe mostrar fases fotográficas de la máquina")
+    if "hipThrustGuide" not in card_payloads[1] or "hip_thrust_panatta_" in card_payloads[1]:
+        raise ValueError("La tarjeta de hip thrust debe evitar las ilustraciones imprecisas y conservar la guía técnica textual")
     forbidden_media_metadata = (
         '"license":',
         "portraitLicense",

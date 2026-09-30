@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 import threading
 import time
@@ -17,6 +18,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import quote
 
+from PIL import Image
 from playwright.sync_api import sync_playwright
 
 
@@ -50,6 +52,106 @@ def capture_visual(page, filename: str) -> None:
     page.screenshot(path=str(SCREENSHOT_DIR / filename), full_page=False)
 
 
+def validate_home_cover_animation(browser) -> dict:
+    """Verify poster artwork with subtle drift and the slow animated loading/update splash."""
+    context = browser.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2, is_mobile=True, has_touch=True)
+    context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1','true');localStorage.setItem('gymratik-network-preference-v1','always')")
+    page = context.new_page()
+    page.goto(f"http://127.0.0.1:{PORT}/", wait_until="domcontentloaded")
+    page.wait_for_function("!document.documentElement.classList.contains('gymratik-loading') && getComputedStyle(document.querySelector('#appSplash')).visibility === 'hidden'", timeout=15_000)
+    page.evaluate("window.scrollTo({top:0,behavior:'instant'})")
+    page.wait_for_function("(() => { const hero=document.querySelector('.hero')?.getBoundingClientRect(); return hero && hero.top < innerHeight && hero.bottom > 0; })()", timeout=10_000)
+    image = page.locator("#heroStrengthArt")
+    page.wait_for_function("document.querySelector('#heroStrengthArt')?.currentSrc.endsWith('gymratik-cover-seated-v1-poster.webp')")
+    visible = image.evaluate("element => ({complete:element.complete, size:[element.naturalWidth,element.naturalHeight], src:element.currentSrc, stage:(() => { const stage=element.parentElement.getBoundingClientRect(); const box=element.getBoundingClientRect(); return {stage:[stage.left,stage.top,stage.right,stage.bottom], image:[box.left,box.top,box.right,box.bottom]} })()})")
+    if not visible["complete"] or visible["size"] != [372, 332]:
+        context.close()
+        raise AssertionError(f"El arte estático sentado de bienvenida no carga como WebP apaisado: {visible}")
+    stage = visible["stage"]["stage"]
+    bounds = visible["stage"]["image"]
+    if bounds[0] < stage[0] - 1 or bounds[1] < stage[1] - 1 or bounds[2] > stage[2] + 1 or bounds[3] > stage[3] + 1:
+        context.close()
+        raise AssertionError(f"El arte de bienvenida se recorta en el escenario: {visible}")
+    first_source = image.evaluate("element => element.currentSrc")
+    first_transform = image.evaluate("element => getComputedStyle(element).transform")
+    capture_visual(page, "home-welcome-subtle-motion-mobile.png")
+    page.wait_for_timeout(650)
+    second_source = image.evaluate("element => element.currentSrc")
+    second_transform = image.evaluate("element => getComputedStyle(element).transform")
+    if first_source != second_source or not second_source.endswith("gymratik-cover-seated-v1-poster.webp"):
+        context.close()
+        raise AssertionError("La portada debe conservar el mismo póster fijo")
+    if first_transform == second_transform:
+        context.close()
+        raise AssertionError("El movimiento sutil y lento de la portada no avanza")
+    cover_viewports = []
+    for width, height in RESPONSIVE_VIEWPORTS:
+        page.set_viewport_size({"width": width, "height": height})
+        page.evaluate("window.scrollTo({top:0,behavior:'instant'})")
+        page.wait_for_timeout(80)
+        geometry = image.evaluate("element => { const stage=element.parentElement.getBoundingClientRect(), box=element.getBoundingClientRect(), actions=document.querySelector('.hero-actions').getBoundingClientRect(); return {stage:[stage.left,stage.top,stage.right,stage.bottom],image:[box.left,box.top,box.right,box.bottom],actionsTop:actions.top} }")
+        stage, bounds = geometry["stage"], geometry["image"]
+        center_delta = [abs((bounds[0] + bounds[2] - stage[0] - stage[2]) / 2), abs((bounds[1] + bounds[3] - stage[1] - stage[3]) / 2)]
+        uncropped = bounds[0] >= stage[0] - 1 and bounds[1] >= stage[1] - 1 and bounds[2] <= stage[2] + 1 and bounds[3] <= stage[3] + 1
+        centered = max(center_delta) <= 1.5
+        buttons_clear = geometry["stage"][3] <= geometry["actionsTop"] + 1
+        if not uncropped or not centered or not buttons_clear:
+            context.close()
+            raise AssertionError(f"El arte sentado se recorta o queda debajo de los botones a {width}x{height}: {geometry}; delta={center_delta}")
+        cover_viewports.append({"viewport": [width, height], "centerDeltaPx": center_delta, "centered": centered, "uncropped": uncropped, "buttonsClear": buttons_clear})
+    page.evaluate("window.scrollTo({top:document.body.scrollHeight,behavior:'instant'})")
+    if not image.evaluate("element => element.currentSrc.endsWith('gymratik-cover-seated-v1-poster.webp')"):
+        context.close()
+        raise AssertionError("La portada no conserva el poster estático al salir del viewport")
+    page.evaluate("document.querySelector('#appSplash').setAttribute('aria-hidden','false');document.documentElement.classList.add('gymratik-loading')")
+    page.wait_for_function("element => element.complete && element.naturalWidth === 352 && element.currentSrc.endsWith('gymratik-cover-seated-breath-30fps.webp')", arg=page.locator("#splashPoseArt").element_handle())
+    splash_art = page.locator("#splashPoseArt")
+    splash_first = splash_art.screenshot()
+    capture_visual(page, "home-loading-slow-animation-mobile.png")
+    page.wait_for_timeout(800)
+    splash_second = splash_art.screenshot()
+    if splash_first == splash_second:
+        context.close()
+        raise AssertionError("La animación lenta de carga no avanzó en pantalla")
+    page.evaluate("document.documentElement.classList.remove('gymratik-loading');document.querySelector('#appSplash').setAttribute('aria-hidden','true')")
+    context.close()
+
+    reduced_context = browser.new_context(viewport={"width": 412, "height": 915}, reduced_motion="reduce", is_mobile=True, has_touch=True)
+    reduced_context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1','true');localStorage.setItem('gymratik-network-preference-v1','always')")
+    reduced_page = reduced_context.new_page()
+    reduced_page.goto(f"http://127.0.0.1:{PORT}/", wait_until="domcontentloaded")
+    reduced_page.wait_for_function("!document.documentElement.classList.contains('gymratik-loading') && getComputedStyle(document.querySelector('#appSplash')).visibility === 'hidden'", timeout=15_000)
+    reduced_page.evaluate("window.scrollTo({top:0,behavior:'instant'})")
+    reduced_page.wait_for_function("window.scrollY === 0 && (() => { const hero=document.querySelector('.hero')?.getBoundingClientRect(); return hero && hero.top < innerHeight && hero.bottom > 0; })()")
+    reduced_page.wait_for_function("document.querySelector('#heroStrengthArt')?.currentSrc.endsWith('gymratik-cover-seated-v1-poster.webp')")
+    reduced = reduced_page.locator("#heroStrengthArt").evaluate("element => ({src:element.currentSrc,complete:element.complete,naturalWidth:element.naturalWidth,animation:getComputedStyle(element).animationName})")
+    capture_visual(reduced_page, "home-cover-reduced-motion-mobile.png")
+    reduced_context.close()
+    if not reduced["complete"] or reduced["naturalWidth"] != 372 or not reduced["src"].endswith("gymratik-cover-seated-v1-poster.webp") or reduced["animation"] != "none":
+        raise AssertionError(f"prefers-reduced-motion no usa el poster estático: {reduced}")
+    animation_path = ROOT / "assets/branding/gymratik-cover-seated-breath-30fps.webp"
+    with Image.open(animation_path) as animation:
+        frame_count = animation.n_frames
+        animation.seek(0)
+        animation.convert("RGBA")
+        animation.seek(1)
+        frame_duration_ms = animation.info.get("duration")
+    return {
+        "viewport": [412, 915],
+        "frames": frame_count,
+        "nominalFps": round(1000 / frame_duration_ms) if frame_duration_ms else None,
+        "cycleDurationMs": frame_count * frame_duration_ms if frame_duration_ms else None,
+        "welcomeMotion": "mascotas-sentadas-con-deriva-css-sutil",
+        "splashBreathing": "respiracion-local-suave-en-ciclo-cerrado",
+        "loop": "closed",
+        "welcomeImageStatic": True,
+        "splashFramesAdvance": True,
+        "offscreenWelcomeRemainsStatic": True,
+        "reducedMotionPoster": True,
+        "responsiveViewports": cover_viewports,
+    }
+
+
 class QuietHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
@@ -58,26 +160,66 @@ class QuietHandler(SimpleHTTPRequestHandler):
         pass
 
 
+def create_isolated_server() -> ThreadingHTTPServer:
+    """Serve synthetic tests on an OS-assigned port, separate from ADB's 8768."""
+    return ThreadingHTTPServer(("127.0.0.1", 0), QuietHandler)
+
+
 def assert_image_inventory(page, routine_name: str) -> dict:
-    page.evaluate("() => [...document.images].forEach(image => { image.loading = 'eager'; })")
-    page.wait_for_function(
-        "() => [...document.images].every(image => image.complete && "
-        "(image.naturalWidth > 0 || (!image.getAttribute('src') && image.hidden) || (image.currentSrc.includes('/videos/') && image.hidden)))",
-        timeout=20_000,
-    )
+    images = page.locator("img")
+    for index in range(images.count()):
+        image = images.nth(index)
+        source = image.get_attribute("src") or ""
+        state = image.evaluate("""image => {const box=image.getBoundingClientRect(),style=getComputedStyle(image);return {visible:box.width>0&&box.height>0&&style.display!=='none'&&style.visibility!=='hidden'&&Number(style.opacity)!==0,hidden:image.hidden,complete:image.complete,naturalWidth:image.naturalWidth}}""")
+        if not source or state["hidden"] or not state["visible"] or not image.is_visible():
+            continue
+        # A continuously breathing cover is never considered geometrically
+        # stable by Playwright's auto-scroll action. An instant DOM scroll is
+        # deterministic and still triggers lazy loading at the target image.
+        image.evaluate("image => image.scrollIntoView({block:'center',behavior:'instant'})")
+        refreshed = image.evaluate("image => {const box=image.getBoundingClientRect(),style=getComputedStyle(image);return {visible:box.width>0&&box.height>0&&style.display!=='none'&&style.visibility!=='hidden'&&Number(style.opacity)!==0,hidden:image.hidden,connected:image.isConnected}}")
+        if not refreshed["connected"] or refreshed["hidden"] or not refreshed["visible"] or not image.is_visible():
+            continue
+        try:
+            page.wait_for_function(
+                "image => image.complete && image.naturalWidth > 0 && image.naturalHeight > 0",
+                arg=image.element_handle(),
+                timeout=20_000,
+            )
+            image.evaluate("image => image.decode()")
+        except Exception as error:
+            raise AssertionError(f"{routine_name}: recurso no decodifica al mostrarse: {source[:140]}") from error
+    page.evaluate("window.scrollTo({top:0,behavior:'instant'})")
     inventory = page.evaluate(
         """async () => {
           const images = [...document.images];
           return await Promise.all(images.map(async image => {
-            let decodeError = '';
-            try { await image.decode(); } catch (error) { decodeError = String(error); }
             const rect = image.getBoundingClientRect();
             const style = getComputedStyle(image);
+            const rendered = !image.hidden && rect.width > 0 && rect.height > 0
+              && style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) !== 0;
+            let decodeError = '';
+            const sourceBeforeDecode = image.currentSrc || image.src;
+            if (!image.complete || image.naturalWidth <= 0 || image.naturalHeight <= 0) {
+              if (rendered) decodeError = 'visible image is incomplete or has no decoded dimensions';
+            } else {
+              try { await image.decode(); } catch (error) {
+                // Battery-aware GIFs can swap to their poster while decode() is
+                // pending. Retry the current source before calling it broken.
+                const sourceAfterFailure = image.currentSrc || image.src;
+                if (sourceAfterFailure !== sourceBeforeDecode) {
+                  try { await image.decode(); } catch (retryError) { decodeError = String(retryError); }
+                } else {
+                  decodeError = String(error);
+                }
+              }
+            }
             const frame = image.closest('.warmupVisual,.gifFrame');
             const fallback = image.parentElement?.querySelector('.warmupFallback,.gifFallback');
             const fallbackRect = fallback?.getBoundingClientRect();
             return {
-              src: image.currentSrc || image.src,
+              src: image.currentSrc?.startsWith('data:') ? `data:${image.currentSrc.slice(5, image.currentSrc.indexOf(';') > 0 ? image.currentSrc.indexOf(';') : image.currentSrc.indexOf(','))}` : image.currentSrc || image.src,
+              motionSource: image.dataset.batteryMotionSrc || '',
               className: image.className,
               complete: image.complete,
               naturalWidth: image.naturalWidth,
@@ -85,7 +227,7 @@ def assert_image_inventory(page, routine_name: str) -> dict:
               renderedWidth: Math.round(rect.width),
               renderedHeight: Math.round(rect.height),
               display: style.display,
-              visible: rect.width > 0 && rect.height > 0 && style.display !== 'none',
+              visible: !image.hidden && rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) !== 0,
               mediaState: frame?.dataset.mediaState || '',
               fallback: fallback ? {
                 complete: fallback.complete,
@@ -102,20 +244,20 @@ def assert_image_inventory(page, routine_name: str) -> dict:
         }"""
     )
     intentional_empty = lambda item: not item["src"] and not item["visible"]
-    broken = [item for item in inventory if not intentional_empty(item) and (not item["complete"] or not item["naturalWidth"] or not item["naturalHeight"] or item["decodeError"] or ("/videos/" in item["src"] and not item["visible"]))]
+    broken = [item for item in inventory if item["src"] and item["visible"] and (not item["complete"] or not item["naturalWidth"] or not item["naturalHeight"] or item["decodeError"])]
     if broken:
         raise AssertionError(f"{routine_name}: imágenes que no decodifican: {json.dumps(broken, ensure_ascii=False)}")
     invalid_layout = [item for item in inventory if item["visible"] and (item["renderedWidth"] <= 0 or item["renderedHeight"] <= 0)]
     if invalid_layout:
         raise AssertionError(f"{routine_name}: imágenes sin tamaño renderizado: {invalid_layout}")
-    remote = [item["src"] for item in inventory if not intentional_empty(item) and not item["src"].startswith(("http://127.0.0.1:", "http://localhost:", "data:image/"))]
+    remote = [item["src"] for item in inventory if item["src"] and not item["src"].startswith(("http://127.0.0.1:", "http://localhost:", "data:image/"))]
     if remote:
         raise AssertionError(f"{routine_name}: recursos visuales inesperados fuera del servidor local: {remote}")
     return {
         "images": len(inventory),
         "rendered": sum(item["visible"] for item in inventory),
         "offlineStaticFallbacks": 0,
-        "animatedGifs": sum("/videos/" in item["src"] and item["visible"] for item in inventory),
+        "animatedGifs": sum("/videos/" in item["motionSource"] for item in inventory),
     }
 
 
@@ -135,6 +277,7 @@ def assert_warmup_single_viewers(page, routine_name: str) -> dict:
                 f"{routine_name}: bloque {group_index + 1} debe tener un solo GIF y opciones: "
                 f"gifs={images.count()} opciones={choices.count()}"
             )
+        group.scroll_into_view_if_needed()
         for choice_index in range(choices.count()):
             choice = choices.nth(choice_index)
             expected_src = choice.get_attribute("data-gif-src") or ""
@@ -142,8 +285,12 @@ def assert_warmup_single_viewers(page, routine_name: str) -> dict:
             expected_label = choice.get_attribute("data-label") or ""
             if not expected_src or not expected_poster or not expected_label:
                 raise AssertionError(f"{routine_name}: alternativa sin GIF, poster o rótulo")
-            choice.click()
+            click_control(choice)
             image = images.first
+            page.wait_for_function(
+                "({image, source}) => image.getAttribute('src') === source && !image.hidden && image.naturalWidth > 0",
+                arg={"image": image.element_handle(), "source": expected_src},
+            )
             image.evaluate("image => image.decode()")
             rendered = image.evaluate(
                 "image => ({src:new URL(image.getAttribute('src'),location.href).pathname,"
@@ -164,9 +311,14 @@ def assert_warmup_single_viewers(page, routine_name: str) -> dict:
             selected = group.locator('.warmupMediaChoice[aria-pressed="true"]').count()
             if selected != 1 or images.count() != 1:
                 raise AssertionError(f"{routine_name}: hay más de una alternativa activa en el calentamiento")
+            if SCREENSHOT_DIR:
+                routine_id = routine_name.split("_")[2]
+                screenshot_path = SCREENSHOT_DIR / f"day-{routine_id}-warmup-{group_index + 1:02}-{choice_index + 1:02}.png"
+                screenshot_path.parent.mkdir(parents=True, exist_ok=True)
+                group.screenshot(path=str(screenshot_path))
             checked.append(expected_label)
         first = group.locator(".warmupMediaChoice").first
-        first.click()
+        click_control(first)
         group.evaluate("element => element.scrollIntoView({block:'center',behavior:'instant'})")
     after_keys = page.evaluate("() => Object.keys(localStorage).sort()")
     if before_keys != after_keys:
@@ -180,7 +332,7 @@ def assert_visual_resource_quality(page, routine_name: str) -> dict:
       const rect = element => { const r=element.getBoundingClientRect(); return {width:r.width,height:r.height}; };
       const images = [...document.querySelectorAll('.phaseRow .photo img.realphoto,.warmupVisual img,.gifFrame img,.muscleDayVisual img')].map(image => {
         const box=rect(image), parent=rect(image.parentElement), style=getComputedStyle(image);
-        return {group:image.matches('.phaseRow .photo img.realphoto')?'exercise':image.matches('.warmupVisual img')?'warmup':image.matches('.gifFrame img')?'gif':'anatomy',src:image.currentSrc||image.src,alt:image.alt,ariaHidden:image.getAttribute('aria-hidden')==='true',naturalWidth:image.naturalWidth,naturalHeight:image.naturalHeight,width:box.width,height:box.height,parentWidth:parent.width,parentHeight:parent.height,fit:style.objectFit,position:style.objectPosition,hidden:image.hidden,display:style.display};
+        return {group:image.matches('.phaseRow .photo img.realphoto')?'exercise':image.matches('.warmupVisual img')?'warmup':image.matches('.gifFrame img')?'gif':'anatomy',src:image.currentSrc||image.src,motionSource:image.dataset.batteryMotionSrc||'',alt:image.alt,ariaHidden:image.getAttribute('aria-hidden')==='true',naturalWidth:image.naturalWidth,naturalHeight:image.naturalHeight,width:box.width,height:box.height,parentWidth:parent.width,parentHeight:parent.height,fit:style.objectFit,position:style.objectPosition,hidden:image.hidden,display:style.display};
       });
       const captions=[...document.querySelectorAll('.phaseRow .phaseLabel,.phaseRow .source,.warmupHead p,.warmupCopy p,.warmupInstructions')].map(element=>({tag:element.tagName,className:String(element.className),text:element.textContent.trim().slice(0,90),fontSize:parseFloat(getComputedStyle(element).fontSize),width:rect(element).width})).filter(item=>item.width>0);
       const instructional=images.filter(image=>image.group==='exercise'&&!image.hidden&&image.display!=='none');
@@ -211,17 +363,66 @@ def assert_visual_resource_quality(page, routine_name: str) -> dict:
     ]
     if invalid_warmup_viewers:
         raise AssertionError(f"{routine_name}: visor de calentamiento estrecho o controles difíciles de tocar: {invalid_warmup_viewers}")
-    return {key:value for key,value in audit.items() if key != "images"} | {"imageGroups":{group:sum(item["group"]==group for item in audit["images"]) for group in ("exercise","warmup","gif","anatomy")}}
+    return {key:value for key,value in audit.items() if key != "images"} | {"imageGroups":{group:sum(item["group"]==group or (group=="gif" and "/videos/" in item["motionSource"]) for item in audit["images"]) for group in ("exercise","warmup","gif","anatomy")}}
 
 
 def assert_animation_changes(page, image) -> None:
-    first = image.screenshot()
-    for _ in range(10):
-        time.sleep(0.22)
-        second = image.screenshot()
-        if first != second:
-            return
-    raise AssertionError("El GIF se decodifica, pero el fotograma visible no avanzó en 2.2 s")
+    has_css_motion = image.evaluate("element => getComputedStyle(element).animationName !== 'none'")
+    diagnostic = """element => {
+      const style = getComputedStyle(element);
+      const rect = element.getBoundingClientRect();
+      const parent = element.parentElement;
+      const parentStyle = parent ? getComputedStyle(parent) : null;
+      return {
+        src: element.currentSrc,
+        loaded: element.complete,
+        naturalSize: [element.naturalWidth, element.naturalHeight],
+        motion: element.dataset.motion || null,
+        animation: style.animationName,
+        duration: style.animationDuration,
+        playState: style.animationPlayState,
+        transform: style.transform,
+        rect: [rect.x, rect.y, rect.width, rect.height],
+        parentAnimation: parentStyle?.animationName || null,
+        visibility: document.visibilityState,
+        reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches
+      };
+    }"""
+    if not has_css_motion:
+        first_frame = image.screenshot()
+        for _ in range(10):
+            time.sleep(0.22)
+            if first_frame != image.screenshot():
+                return
+        raise AssertionError(f"No avanzó el elemento visual; GIF o fallback inmóvil: {image.evaluate(diagnostic)}")
+    snapshot = """element => {
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = 128;
+      const context = canvas.getContext('2d', {willReadFrequently:true});
+      let pixels = 2166136261;
+      try {
+        context.drawImage(element, 0, 0, 128, 128);
+        const data = context.getImageData(0, 0, 128, 128).data;
+        for (let index = 0; index < data.length; index += 20) pixels = Math.imul(pixels ^ data[index], 16777619);
+      } catch (_) { pixels = 0; }
+      return `${getComputedStyle(element).transform}:${pixels}:${element.currentSrc}`;
+    }"""
+    motion_samples = image.evaluate("""async element => {
+      const samples = [];
+      for (let index = 0; index < 12; index += 1) {
+        await new Promise(requestAnimationFrame);
+        const animation = element.getAnimations()[0];
+        samples.push({
+          transform: getComputedStyle(element).transform,
+          animationTime: animation?.currentTime ?? null,
+          timelineTime: document.timeline.currentTime
+        });
+      }
+      return samples;
+    }""")
+    if len({sample["transform"] for sample in motion_samples}) > 1:
+        return
+    raise AssertionError(f"La animación CSS no cambia de pose entre fotogramas: {image.evaluate(diagnostic)}; muestras={motion_samples}")
 
 
 def assert_series_segment_fill_stable(page, routine_name: str) -> str:
@@ -234,19 +435,74 @@ def assert_series_segment_fill_stable(page, routine_name: str) -> str:
     return transform
 
 
-def assert_mascot(page, variant: str, state: str, reduced: bool = False) -> str:
+def assert_mascot(page, variant: str, state: str, reduced: bool = False, static_fallback: bool = False) -> str:
+    reduced = reduced or page.evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches")
     image = page.locator("#summaryActivityMascot")
-    expected_suffix = f"{variant}-{state}-{'still.webp' if reduced else '25fps.gif'}"
+    pose_state = {
+        "start": "idle", "ready": "ready", "preparing": "preparing",
+        "approximation": "warmup", "strength": "strength", "cardio": "cardio",
+        "mobility": "mobility", "rest": "rest", "celebration": "approval",
+    }[state]
+    expected_suffix = (
+        f"states-v1/{variant}-{pose_state}.png"
+        if variant in ("male", "female")
+        else f"{variant}-{'rest' if pose_state in ('rest', 'idle', 'ready') else 'exercise'}-still.webp"
+    )
+    try:
+        page.wait_for_function(
+            "suffix => document.querySelector('#summaryActivityMascot')?.getAttribute('src')?.endsWith(suffix)",
+            arg=expected_suffix,
+            timeout=10_000,
+        )
+    except Exception as error:
+        actual = page.locator("#summaryActivityMascot").evaluate("element => ({src:element.getAttribute('src'),requestedSrc:element.dataset.requestedSrc,loadedSrc:element.dataset.loadedSrc,motion:element.dataset.motion,hidden:element.hidden,documentHidden:document.hidden,activity:document.querySelector('#summaryActivityStatus')?.dataset.activity,variant:window.gymratikMascotVariant,complete:element.complete,naturalWidth:element.naturalWidth})")
+        raise AssertionError(
+            f"La mascota no cargó el recurso esperado *{expected_suffix}; actual={actual}"
+        ) from error
     src = image.get_attribute("src") or ""
     if not src.endswith(expected_suffix):
         raise AssertionError(f"Mascota inesperada: src={src!r}; se esperaba *{expected_suffix}")
-    if image.is_hidden():
-        state = page.locator("#summaryActivityStatus").evaluate("element => ({activity: element.dataset.activity, label: element.querySelector('#summaryActivityLabel')?.textContent, hidden: element.querySelector('#summaryActivityMascot')?.hidden})")
-        raise AssertionError(f"La mascota debe verse durante actividad o descanso: {state}")
+    if image.is_hidden() or image.get_attribute("data-motion") != state or image.get_attribute("data-pose-state") != pose_state:
+        status = page.locator("#summaryActivityStatus").evaluate("element => ({activity: element.dataset.activity, label: element.querySelector('#summaryActivityLabel')?.textContent, mascotHidden: document.querySelector('#summaryActivityMascot')?.hidden, motion: document.querySelector('#summaryActivityMascot')?.dataset.motion})")
+        raise AssertionError(f"La mascota debe seguir visible y reflejar el modo {state}/{pose_state}: {status}")
     dimensions = image.evaluate("async image => { await image.decode(); const box = image.getBoundingClientRect(); return [image.naturalWidth, image.naturalHeight, box.width, box.height]; }")
     if dimensions[0:2] != [128, 128] or min(dimensions[2:]) <= 0:
         raise AssertionError(f"La mascota no se renderiza a tamaño válido: {dimensions}")
+    if not reduced and not static_fallback and dimensions[2] < 50:
+        raise AssertionError(f"La mascota de estado debe aprovechar mejor el espacio de la cabecera: {dimensions}")
+    expected_animation = {
+        "cardio": "mascotCardioCadence", "strength": "mascotStrengthEffort",
+        "mobility": "mascotMobilityFlow", "start": "mascotIdleBreath",
+        "ready": "mascotReadyShift", "preparing": "mascotPreparationBrace",
+        "approximation": "mascotWarmupFlow", "rest": "mascotRecoveryBreath",
+        "celebration": "mascotApprovalCelebrate",
+    }.get(state)
+    if expected_animation:
+        animation = image.evaluate("element => getComputedStyle(element).animationName")
+        if not reduced and animation != expected_animation:
+            raise AssertionError(f"La mascota no tiene la animación específica de {state}: {animation!r}")
+    if not reduced and not static_fallback:
+        assert_animation_changes(page, image)
     return src
+
+
+def assert_approval_toast(page, variant: str) -> dict:
+    toast = page.locator("#gymratikEncouragement")
+    page.wait_for_function("() => document.querySelector('#gymratikEncouragement')?.classList.contains('is-visible')", timeout=5_000)
+    mascot = toast.locator(".toastMascot")
+    source_suffix = f"states-v1/{variant}-approval.png" if variant in ("male", "female") else "neutral-exercise-still.webp"
+    page.wait_for_function(
+        "suffix => document.querySelector('#gymratikEncouragement .toastMascot')?.getAttribute('src')?.endsWith(suffix) && document.querySelector('#gymratikEncouragement .toastMascot')?.complete && document.querySelector('#gymratikEncouragement .toastMascot')?.naturalWidth > 0",
+        arg=source_suffix,
+        timeout=5_000,
+    )
+    if not toast.is_visible() or not mascot.is_visible():
+        raise AssertionError("El toast de aprobación o su mascota no son visibles")
+    dimensions = mascot.evaluate("image => {const r=image.getBoundingClientRect();return [image.naturalWidth,image.naturalHeight,r.width,r.height]}")
+    animation = mascot.evaluate("image => getComputedStyle(image).animationName")
+    if dimensions[:2] != [128, 128] or min(dimensions[2:]) < 40 or animation != "mascotToastApproval":
+        raise AssertionError(f"La mascota de aprobación no se renderiza/animada correctamente: {dimensions}, {animation}")
+    return {"visible": True, "srcSuffix": source_suffix, "dimensions": dimensions, "animation": animation}
 
 
 def assert_activity_feedback(page, activity: str) -> dict:
@@ -272,9 +528,9 @@ def assert_activity_feedback(page, activity: str) -> dict:
         segmentDuration:segmentStyle?.animationDuration
       };
     }""")
-    if activity == "active":
+    if activity in {"active", "strength"}:
         checks = (
-            styles["activity"] == "active",
+            styles["activity"] == ("strength" if activity == "strength" else "active"),
             "isActive" in styles["toggleClass"],
             "19, 105, 91" in styles["toggleBackground"],
             styles["indicatorColor"] == "rgb(101, 242, 221)",
@@ -305,19 +561,213 @@ def assert_activity_feedback(page, activity: str) -> dict:
     return styles
 
 
-def dispatch_touch_hold(page, button, duration_ms: int, release_click: bool = True) -> None:
+def dispatch_touch_hold(page, button, duration_ms: int, release_click: bool = True, virtual_clock: bool = True) -> None:
+    physical_hold = getattr(page, "_gt6_physical_hold", None)
+    if physical_hold:
+        physical_hold(page, button, duration_ms, release_click=release_click, virtual_clock=virtual_clock)
+        return
     pointer = {"pointerId": 7, "pointerType": "touch", "isPrimary": True, "button": 0, "buttons": 1}
     button.evaluate("element => element.setAttribute('data-e2e-hold-target', 'true')")
+    button.evaluate("element => { delete element.dataset.e2ePointerDownReceived; element.addEventListener('pointerdown', () => { element.dataset.e2ePointerDownReceived = 'true'; }, { capture: true, once: true }); }")
     button.dispatch_event("pointerdown", pointer)
-    selector = "[data-e2e-hold-target='true'].is-holding"
     try:
-        page.wait_for_function("selector => document.querySelector(selector)", arg=selector)
-        page.clock.run_for(duration_ms)
+        # La clase se agrega sincrónicamente en pointerdown. Consultarla por
+        # requestAnimationFrame con page.clock congelado introduce falsos timeouts.
+        holding_started = button.evaluate("element => element.classList.contains('is-holding')")
+        if not holding_started:
+            diagnostic = button.evaluate("""element => ({
+              buttonClass:element.className,disabled:element.disabled,connected:element.isConnected,
+              pointerDownReceived:element.dataset.e2ePointerDownReceived === 'true',ariaLabel:element.getAttribute('aria-label'),
+              now:Date.now(),restCue:element.closest('article.card')?.querySelector('.metric.rest .timeCue')?.textContent || '',
+              activity:document.querySelector('#summaryActivityStatus')?.dataset.activity || '',
+              activityText:document.querySelector('#summaryActivityStatus')?.innerText || '',
+              trackerIndex:element.closest('.exerciseTracker')?.dataset.exerciseIndex || '',
+              seriesKeys:element.closest('.exerciseTracker')?.dataset.seriesKeys || '',
+              persistedTiming:Object.entries(localStorage).filter(([key]) => /timing|series-v1/i.test(key)).map(([key,value]) => {
+                try { const state=JSON.parse(value), exercises=state.__timing?.exercises || {}; return {key,exercises}; }
+                catch (_) { return {key,unparsed:true}; }
+              })
+            })""")
+            raise AssertionError(f"pointerdown no activó el feedback is-holding del botón: {diagnostic}")
+        if virtual_clock:
+            page.clock.run_for(duration_ms)
+        else:
+            page.wait_for_timeout(duration_ms)
         button.dispatch_event("pointerup", {**pointer, "buttons": 0})
         if release_click:
             button.dispatch_event("click", {})
     finally:
         button.evaluate("element => element.removeAttribute('data-e2e-hold-target')")
+
+
+def dispatch_browser_hold(page, button, duration_ms: int) -> None:
+    """Sostiene con eventos trusted para E2E sintético de botones en layout móvil."""
+    box = button.bounding_box()
+    if not box:
+        raise AssertionError("El botón no tiene geometría visible para el gesto sostenido")
+    x, y = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
+    page.mouse.move(x, y)
+    page.mouse.down()
+    try:
+        page.wait_for_timeout(duration_ms)
+    finally:
+        page.mouse.up()
+
+
+def select_valid_performance(card) -> None:
+    """Selecciona ambos datos con el incremento inicial disponible del equipo."""
+    physical_select = getattr(card.page, "_gt6_physical_select_performance", None)
+    if physical_select:
+        physical_select(card)
+        return
+    reps = card.locator("input.performanceReps")
+    load = card.locator("input.performanceLoad")
+    reps.focus()
+    reps.press("ArrowRight")
+    load.focus()
+    load.press("ArrowRight")
+    if reps.get_attribute("data-selected") != "true" or card.locator(".performanceLoadValue").get_attribute("data-selected") != "true":
+        raise AssertionError("No se pudo seleccionar una repetición y carga válidas para la serie")
+
+
+def click_control(locator) -> None:
+    """Usa gesto táctil CDP cuando el locator pertenece al WebAPK físico."""
+    physical_tap = getattr(locator.page, "_gt6_physical_tap", None)
+    if physical_tap:
+        physical_tap(locator)
+    else:
+        locator.click()
+
+
+def install_test_clock(page) -> None:
+    """Install deterministic time in Chromium, including CDP-connected Android."""
+    physical_install = getattr(page, "_gt6_test_clock_install", None)
+    if physical_install:
+        physical_install()
+    else:
+        page.clock.install()
+
+
+def advance_test_clock(page, duration_ms: int) -> None:
+    """Advance test timers without waiting for wall time on supported targets."""
+    physical_advance = getattr(page, "_gt6_test_clock_advance", None)
+    if physical_advance:
+        physical_advance(duration_ms)
+    else:
+        page.clock.run_for(duration_ms)
+
+
+def validate_missing_performance_confirmation(browser, name: str) -> dict[str, bool]:
+    """Verifica cancelar y aceptar el registro explícito sin repeticiones ni carga."""
+    context = browser.new_context(viewport={"width": 412, "height": 915}, is_mobile=True, has_touch=True)
+    context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1', 'true')")
+    page = context.new_page()
+    install_test_clock(page)
+    page.goto(f"http://127.0.0.1:{PORT}/data/rutinas_autocontenidas/canonicas/{quote(name)}", wait_until="domcontentloaded")
+    page.wait_for_selector("article.card[data-exercise-index] .completeSetButton")
+    if page.locator("#summaryToggle").get_attribute("aria-expanded") != "false" or not page.locator("#summaryBody").evaluate("element => element.hidden"):
+        context.close()
+        raise AssertionError(f"{name}: el resumen flotante debe iniciar compacto para no cubrir los controles")
+    required_labels = [label.strip() for label in page.locator("article.card[data-exercise-index]").first.locator(".performanceRequired").all_text_contents()]
+    if required_labels != ["Requerido", "Requerida"]:
+        context.close()
+        raise AssertionError(f"{name}: repeticiones y carga deben presentarse como requeridas; etiquetas={required_labels}")
+    warmup = page.locator("#warmupAction")
+    click_control(warmup)
+    advance_test_clock(page, 15_000)
+    click_control(warmup)
+    click_control(warmup)
+    card = page.locator("article.card[data-exercise-index]").first
+    button = card.locator(".completeSetButton")
+    select_valid_performance(card)
+    click_control(button)  # inicia aproximación
+    advance_test_clock(page, 20_000)
+    click_control(button)  # registra aproximación y entra en descanso
+    if getattr(page, "_gt6_physical_hold", None):
+        dispatch_touch_hold(page, button, 5_150)
+    else:
+        advance_test_clock(page, 180_000)
+        click_control(button)  # preparación de la primera serie efectiva
+    advance_test_clock(page, 15_000)
+    if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "strength":
+        context.close()
+        raise AssertionError(f"{name}: no se pudo iniciar la serie para probar el diálogo de omisión")
+    click_control(card.locator(".performanceFieldTitleRow .performanceClear"))
+    click_control(card.locator(".performanceLoadOutputRow .performanceClear"))
+    click_control(button)
+    dialog = page.locator("#performanceMissingDialog")
+    if not dialog.is_visible() or "repeticiones" not in dialog.inner_text().lower() or "carga" not in dialog.inner_text().lower():
+        context.close()
+        raise AssertionError(f"{name}: no advirtió los dos datos omitidos en un diálogo accesible")
+    click_control(dialog.locator("button[value='cancel']"))
+    if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "strength" or card.locator(".exerciseProgress").inner_text().strip() != "0/" + str(card.locator(".seriesProgressSegment").count()):
+        context.close()
+        raise AssertionError(f"{name}: cancelar el diálogo alteró la serie")
+    click_control(button)
+    click_control(dialog.locator("button[value='continue']"))
+    page.wait_for_function("document.querySelector('#summaryActivityStatus')?.dataset.activity === 'rest'")
+    if page.locator("#summaryToggle").get_attribute("aria-expanded") != "false" or not page.locator("#summaryBody").evaluate("element => element.hidden"):
+        context.close()
+        raise AssertionError(f"{name}: el resumen flotante se expandió automáticamente y cubrió el registro durante el descanso")
+    progress_state = page.evaluate("""() => Object.keys(localStorage).map(key => { try { return JSON.parse(localStorage.getItem(key)); } catch (_) { return null; } }).find(value => value && value.__performance)?.__performance""")
+    record = (progress_state or {}).get("1", {}).get("e1s1")
+    if not record or record.get("reps") is not None or record.get("load") is not None:
+        context.close()
+        raise AssertionError(f"{name}: aceptar no guardó explícitamente los campos omitidos como nulos: {record}")
+    context.close()
+    return {"cancelKeepsSetActive": True, "acceptSavesNullRepsAndLoad": True}
+
+
+def assert_background_timing_pauses(page, routine_name: str) -> dict:
+    result = page.evaluate("""() => {
+      const metrics = {cleared: 0, restarted: 0};
+      const nativeSetInterval = window.setInterval.bind(window);
+      const nativeClearInterval = window.clearInterval.bind(window);
+      let hidden = false;
+      Object.defineProperty(document, 'hidden', {configurable: true, get: () => hidden});
+      window.clearInterval = id => { metrics.cleared += 1; return nativeClearInterval(id); };
+      window.setInterval = (callback, delay, ...args) => {
+        if (delay === 1000) metrics.restarted += 1;
+        return nativeSetInterval(callback, delay, ...args);
+      };
+      hidden = true;
+      document.dispatchEvent(new Event('visibilitychange'));
+      const paused = metrics.cleared === 1;
+      hidden = false;
+      document.dispatchEvent(new Event('visibilitychange'));
+      return {paused, resumed: metrics.restarted === 1, metrics};
+    }""")
+    if not result["paused"] or not result["resumed"]:
+        raise AssertionError(f"{routine_name}: el cronómetro de segundo plano no se detiene y reanuda correctamente: {result}")
+    return result
+
+
+def assert_battery_motion_pauses(page, image, routine_name: str, media_name: str) -> dict:
+    """Verify an animated asset swaps to its poster offscreen and resumes onscreen."""
+    image.scroll_into_view_if_needed()
+    page.wait_for_function(
+        "image => image.dataset.batteryMotionSrc && image.getAttribute('src') === image.dataset.batteryMotionSrc && image.dataset.batteryPaused !== 'true'",
+        arg=image.element_handle(),
+    )
+    animated_source = image.get_attribute("src")
+    if not animated_source or not re.search(r"\.gif(?:$|[?#])", animated_source, re.I):
+        raise AssertionError(f"{routine_name}: recurso animado {media_name} no usa un GIF cargado: {animated_source!r}")
+    assert_animation_changes(page, image)
+    page.evaluate("window.scrollTo(0, document.documentElement.scrollHeight)")
+    page.wait_for_function("image => image.dataset.batteryPaused === 'true'", arg=image.element_handle())
+    poster_source = image.evaluate("image => image.parentElement?.querySelector('.gifFallback,.warmupFallback')?.getAttribute('src') || image.dataset.staticSrc || image.getAttribute('data-static-src')")
+    paused_source = image.get_attribute("src")
+    if not poster_source or paused_source != poster_source:
+        raise AssertionError(f"{routine_name}: {media_name} no cambió a su póster al salir de pantalla: actual={paused_source!r}, póster={poster_source!r}")
+    image.scroll_into_view_if_needed()
+    page.wait_for_function(
+        "image => image.dataset.batteryPaused !== 'true' && image.getAttribute('src') === image.dataset.batteryMotionSrc",
+        arg=image.element_handle(),
+    )
+    if image.get_attribute("src") != animated_source:
+        raise AssertionError(f"{routine_name}: {media_name} no restauró el GIF al volver a pantalla")
+    assert_animation_changes(page, image)
+    return {"pausedOffscreen": True, "posterShown": True, "resumedOnscreen": True, "animatedSource": animated_source, "posterSource": poster_source}
 
 
 def validate_day(browser, name: str, sex: str, variant: str) -> dict:
@@ -327,16 +777,42 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
         is_mobile=True,
         has_touch=True,
         reduced_motion="no-preference",
+        service_workers="block",
     )
     context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1', 'true')")
     page = context.new_page()
-    page.clock.install()
+    if getattr(page, "_gt6_physical_tap", None):
+        page.add_init_script("""(() => {
+          const original = EventTarget.prototype.addEventListener;
+          EventTarget.prototype.addEventListener = function(type, listener, options) {
+            if (type !== 'click' || !this.matches?.('.completeSetButton') || typeof listener !== 'function')
+              return original.call(this, type, listener, options);
+            const button = this;
+            const wrapped = function(event) {
+              const sample = phase => {
+                const key = Object.keys(localStorage).find(value => /^fitlovers-day\\d+-series-v1$/.test(value));
+                const saved = key ? JSON.parse(localStorage.getItem(key) || '{}') : {};
+                (window.__gt6SeriesClickTrace ||= []).push({phase, trusted:event.isTrusted, target:event.target?.tagName, time:Date.now(), activity:document.querySelector('#summaryActivityStatus')?.dataset.activity, button:button.textContent.trim(), selectedReps:button.closest('.exerciseTracker')?.querySelector('.performanceReps')?.dataset.selected, selectedLoad:button.closest('.exerciseTracker')?.querySelector('.performanceLoadValue')?.dataset.selected, timing:saved.__timing?.exercises?.[button.closest('.exerciseTracker')?.dataset.exercise]});
+              };
+              sample('before');
+              let result;
+              try { result = listener.call(this, event); }
+              catch (error) { sample('sync-error:' + String(error)); throw error; }
+              if (result && typeof result.then === 'function') result.then(() => sample('resolved'), error => sample('rejected:' + String(error)));
+              else sample('returned');
+              return result;
+            };
+            return original.call(this, type, wrapped, options);
+          };
+        })()""")
     errors = []
     page.on("pageerror", lambda error: errors.append(str(error)))
     page.goto(f"http://127.0.0.1:{PORT}/data/rutinas_autocontenidas/canonicas/{quote(name)}", wait_until="networkidle")
+    page.bring_to_front()
 
     if page.locator("#installGate").count() and page.locator("#installGate").is_visible():
         raise AssertionError(f"{name}: el gate instalado no se aplicó al contexto E2E")
+    background_timing = assert_background_timing_pauses(page, name)
     if sex:
         page.evaluate("sex => window.TrainingProgressStore.saveProfile({sex})", sex)
     else:
@@ -344,20 +820,55 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
         if empty_profile.get("sex"):
             raise AssertionError(f"{name}: el caso default ya tiene sexo persistido: {empty_profile}")
     page.wait_for_function("expected => window.gymratikMascotVariant === expected", arg=variant)
+    page.wait_for_function("document.querySelector('#summaryActivityStatus')?.dataset.activity === 'start'")
+    start_asset = assert_mascot(page, variant, "start")
+    routine_id = name.split("_")[2]
+    if SCREENSHOT_DIR:
+        page.evaluate("window.scrollTo({top:0,behavior:'instant'})")
+        capture_visual(page, f"day-{routine_id}-start-mobile.png")
+    if page.locator("#summaryToggle").get_attribute("aria-expanded") == "true":
+        click_control(page.locator("#summaryToggle"))
+    if page.locator("#summaryBody").is_visible() or not page.locator(".summaryMascotWrap").is_visible():
+        raise AssertionError(f"{name}: la mascota de inicio debe permanecer visible con el resumen plegado")
+    assert_animation_changes(page, page.locator("#summaryActivityMascot"))
 
     images = assert_image_inventory(page, name)
     resource_quality = assert_visual_resource_quality(page, name)
-    exercise_gif_locator = page.locator(".day3ExerciseGif,.day4ExerciseGif").first
+    exercise_gif_locator = page.locator(".day3ExerciseGif:visible,.day4ExerciseGif:visible").first
     if exercise_gif_locator.count() == 0:
-        exercise_gif_locator = page.locator('img[src*="/videos/"]').first
+        exercise_gif_locator = page.locator('img[src*="/videos/"]:visible,img[data-battery-motion-src*="/videos/"]:visible').first
+    if exercise_gif_locator.count() == 0:
+        context.close()
+        raise AssertionError(f"{name}: no se encontró una animación de ejercicio visible para validar")
     exercise_gif_locator.scroll_into_view_if_needed()
     assert_animation_changes(page, exercise_gif_locator)
+    # Reactiva el visor en pantalla: fuera de ella el ahorro de batería oculta
+    # el GIF y deja visible el póster estático.
+    warmup_viewer = page.locator(".warmupSingleViewer").first
+    warmup_viewer.scroll_into_view_if_needed()
+    click_control(warmup_viewer.locator('.warmupMediaChoice[aria-pressed="true"]'))
+    battery_gif = warmup_viewer.locator("img.warmupGif").first
+    if battery_gif.count() == 0:
+        context.close()
+        raise AssertionError(f"{name}: no hay GIF visible para validar pausa/reanudación de ahorro de batería")
+    battery_motion = {"warmup": assert_battery_motion_pauses(page, battery_gif, name, "calentamiento")}
+    exercise_motion = page.locator("img.day3ExerciseGif:visible,img.day4ExerciseGif:visible").first
+    if exercise_motion.count():
+        battery_motion["exercise"] = assert_battery_motion_pauses(page, exercise_motion, name, "GIF de técnica")
     cards = page.locator("article.card[data-exercise-index]")
     exercise_count = cards.count()
     reps_inputs = page.locator("input.performanceReps")
     load_inputs = page.locator("input.performanceLoad")
     if exercise_count != reps_inputs.count() or exercise_count != load_inputs.count():
         raise AssertionError(f"{name}: selectores de rendimiento incompletos: exercises={exercise_count}, reps={reps_inputs.count()}, loads={load_inputs.count()}")
+
+    # Physical audits retain one accepted screenshot per complete exercise card.
+    if SCREENSHOT_DIR:
+        for index in range(exercise_count):
+            card = cards.nth(index)
+            card.scroll_into_view_if_needed()
+            page.wait_for_timeout(100)
+            card.screenshot(path=str(SCREENSHOT_DIR / f"day-{routine_id}-exercise-{index + 1:02}.png"))
 
     # Comprueba controles de repeticiones y carga en todos los ejercicios con gestos de teclado.
     for index in range(exercise_count):
@@ -380,7 +891,7 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
         touch_targets = card.locator(".performanceRepsNudge").evaluate_all("buttons => buttons.map(button => { const box = button.getBoundingClientRect(); return [box.width, box.height]; })")
         if any(width < 42 or height < 42 for width, height in touch_targets):
             raise AssertionError(f"{name}: botones +/- pequeños para toque en el ejercicio {index + 1}: {touch_targets}")
-        rep_clear.click()
+        click_control(rep_clear)
         if reps.get_attribute("data-selected") != "false":
             raise AssertionError(f"{name}: no se pudo limpiar repeticiones del ejercicio {index + 1}")
         load.focus()
@@ -388,7 +899,7 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
         if not card.locator(".performanceLoadValue").inner_text().strip():
             raise AssertionError(f"{name}: el deslizador de carga no actualiza su lectura en el ejercicio {index + 1}")
         load_clear = card.locator(".performanceLoadOutputRow .performanceClear")
-        load_clear.click()
+        click_control(load_clear)
         if load.get_attribute("aria-valuenow") not in (None, "0"):
             raise AssertionError(f"{name}: no se pudo limpiar la carga del ejercicio {index + 1}")
         machine_pending = card.locator(".machinePendingToggle")
@@ -397,10 +908,10 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
         machine_pending.scroll_into_view_if_needed()
         if machine_pending.get_attribute("aria-pressed") != "false":
             raise AssertionError(f"{name}: el estado inicial de máquina ocupada es incorrecto en el ejercicio {index + 1}")
-        machine_pending.click()
+        click_control(machine_pending)
         if machine_pending.get_attribute("aria-pressed") != "true":
             raise AssertionError(f"{name}: no se pudo marcar la máquina ocupada en el ejercicio {index + 1}")
-        machine_pending.click()
+        click_control(machine_pending)
         if machine_pending.get_attribute("aria-pressed") != "false":
             raise AssertionError(f"{name}: no se pudo liberar la máquina en el ejercicio {index + 1}")
         if card.locator(".completeSetButton").count() != 1 or card.locator(".skipExerciseButton").count() != 1:
@@ -413,7 +924,7 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
     if SCREENSHOT_DIR is not None:
         SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
         entry_zone.screenshot(path=str(SCREENSHOT_DIR / f"{name.split('_')[2]}-series-entry-mobile.png"))
-    first.locator(".performanceLoadValue").click()
+    click_control(first.locator(".performanceLoadValue"))
     direct = first.locator("input.performanceLoadDirect")
     direct.fill("17.5")
     direct.press("Enter")
@@ -424,7 +935,7 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
         raise AssertionError(f"{name}: el selector kg/lb no actualizó la carga")
 
     # Barra de progreso flotante: una sola tarjeta y una fila por ejercicio.
-    page.locator("#summaryToggle").click()
+    click_control(page.locator("#summaryToggle"))
     if page.locator("#floatingSessionSummary").count() != 1 or page.locator(".summaryExercise").count() != exercise_count:
         raise AssertionError(f"{name}: resumen flotante duplicado o incompleto")
     if not page.locator(".sessionSummaryList").evaluate("element => element.scrollHeight >= element.clientHeight"):
@@ -432,47 +943,74 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
 
     # Calentamiento completo, con su mínimo de preparación de 15 s.
     warmup = page.locator("#warmupAction")
-    warmup.click()
-    page.clock.run_for(15_000)
+    click_control(warmup)
+    page.wait_for_timeout(15_000)
     if warmup.get_attribute("data-phase") != "cardio":
         raise AssertionError(f"{name}: el calentamiento no terminó la preparación de 15 s")
-    exercise_gif = assert_mascot(page, variant, "exercise")
+    exercise_gif = assert_mascot(page, variant, "cardio")
     assert_animation_changes(page, page.locator("#summaryActivityMascot"))
-    warmup.click()
+    click_control(warmup)
     if warmup.get_attribute("data-phase") != "mobility":
         raise AssertionError(f"{name}: el botón no avanzó de cardio a movilidad")
-    warmup.click()
+    assert_mascot(page, variant, "mobility")
+    assert_animation_changes(page, page.locator("#summaryActivityMascot"))
+    click_control(warmup)
     if warmup.get_attribute("data-phase") != "done":
         raise AssertionError(f"{name}: el botón no finalizó el calentamiento")
-    if not page.locator("#summaryActivityMascot").is_hidden() or page.locator("#summaryActivityMascot").get_attribute("src"):
-        raise AssertionError(f"{name}: la animación no se detuvo al volver a idle")
+    page.wait_for_function("document.querySelector('#summaryActivityStatus')?.dataset.activity === 'ready'", timeout=5_000)
+    assert_mascot(page, variant, "ready")
 
-    # Completa la aproximación, espera 15 s de preparación, registra una serie y verifica descanso.
+    # Registra la aproximación por separado y comprueba que su estado sobrevive a una recarga.
     button = first.locator(".completeSetButton")
-    button.click()  # serie ligera de aproximación
-    button.click()  # inicia la preparación de la serie efectiva
-    page.clock.run_for(5_000)
+    select_valid_performance(first)
+    click_control(button)
+    if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "approximation":
+        raise AssertionError(f"{name}: el inicio de aproximación no refleja actividad en la portada flotante")
+    page.wait_for_timeout(5_000)
     page.reload(wait_until="networkidle")
+    page.wait_for_function("document.querySelector('#summaryActivityStatus')?.dataset.activity === 'approximation'")
+    page.wait_for_timeout(15_000)
+    select_valid_performance(first)
+    click_control(button)
+    if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "rest":
+        raise AssertionError(f"{name}: completar aproximación no inició descanso")
+    if first.locator(".exerciseProgress").inner_text().strip() != f"0/{first.locator('.seriesProgressSegment').count()}":
+        raise AssertionError(f"{name}: aproximación sumada incorrectamente a series efectivas")
+    # Mantener 5 s omite solo el descanso; siguen siendo obligatorios 15 s de preparación.
+    dispatch_touch_hold(page, button, 5_150, virtual_clock=False)
     page.wait_for_function("document.querySelector('#summaryActivityStatus')?.dataset.activity === 'preparing'")
-    page.clock.run_for(10_000)
+    page.wait_for_timeout(15_000)
     activity = page.locator("#summaryActivityStatus")
-    if activity.get_attribute("data-activity") != "active":
+    if activity.get_attribute("data-activity") != "strength":
         raise AssertionError(f"{name}: la serie efectiva no aparece activa tras la preparación")
     if "isActive" not in page.locator("#summaryToggle").get_attribute("class"):
         raise AssertionError(f"{name}: se perdió el indicador de actividad del botón flotante tras recargar")
     if page.locator("#summaryToggle").get_attribute("aria-expanded") != "true":
-        page.locator("#summaryToggle").click()
-    assert_mascot(page, variant, "exercise")
-    active_feedback = assert_activity_feedback(page, "active")
+        click_control(page.locator("#summaryToggle"))
+    strength_asset = assert_mascot(page, variant, "strength")
+    assert_animation_changes(page, page.locator("#summaryActivityMascot"))
+    click_control(page.locator("#summaryToggle"))
+    if page.locator("#summaryBody").is_visible() or not page.locator(".summaryMascotWrap").is_visible():
+        raise AssertionError(f"{name}: la mascota activa desaparece al plegar el resumen")
+    if page.locator("#summaryActivityMascot").evaluate("element => getComputedStyle(element).animationName") != "mascotStrengthEffort":
+        raise AssertionError(f"{name}: la mascota dejó de animarse cuando el resumen está plegado")
+    click_control(page.locator("#summaryToggle"))
+    active_feedback = assert_activity_feedback(page, "strength")
     stable_fill = assert_series_segment_fill_stable(page, name)
     if "isActive" not in page.locator("#summaryToggle").get_attribute("class"):
         raise AssertionError(f"{name}: cabecera flotante no refleja actividad verde")
-    routine_id = name.split("_")[2]
     capture_visual(page, f"day-{routine_id}-active-mobile.png")
-    button.click()
+    select_valid_performance(first)
+    click_control(button)
+    try:
+        activity.wait_for_function("element => element.dataset.activity === 'rest'", timeout=2_000)
+    except Exception:
+        pass
     if activity.get_attribute("data-activity") != "rest":
-        state = button.evaluate("element => ({disabled: element.disabled, text: element.textContent, className: element.className, ariaLabel: element.getAttribute('aria-label')})")
-        raise AssertionError(f"{name}: completar serie no inició el descanso; actividad={activity.get_attribute('data-activity')!r}, botón={state}, errores={errors}")
+        state = button.evaluate("element => { const key=Object.keys(localStorage).find(value=>/^fitlovers-day\\d+-series-v1$/.test(value)); const saved=key?JSON.parse(localStorage.getItem(key)||'{}'):{}; return {disabled:element.disabled,text:element.textContent,className:element.className,ariaLabel:element.getAttribute('aria-label'),reps:element.closest('.exerciseTracker')?.querySelector('.performanceReps')?.getAttribute('data-selected'),repsValue:element.closest('.exerciseTracker')?.querySelector('.performanceReps')?.value,load:element.closest('.exerciseTracker')?.querySelector('.performanceLoadValue')?.getAttribute('data-selected'),loadValue:element.closest('.exerciseTracker')?.querySelector('.performanceLoadOutput')?.textContent,dialogOpen:document.querySelector('#performanceMissingDialog')?.open,dialogText:document.querySelector('#performanceMissingDialog')?.innerText,timing:saved.__timing?.exercises?.['1'],clickReceived:window.__gt6TouchClickReceived}; }")
+        click_trace = page.evaluate("() => window.__gt6SeriesClickTrace || []")
+        raise AssertionError(f"{name}: completar serie no inició el descanso; actividad={activity.get_attribute('data-activity')!r}, botón/estado={state}, clickTrace={click_trace}, errores={errors}")
+    toast_feedback = assert_approval_toast(page, variant)
     rest_gif = assert_mascot(page, variant, "rest")
     rest_feedback = assert_activity_feedback(page, "rest")
     assert_animation_changes(page, page.locator("#summaryActivityMascot"))
@@ -489,16 +1027,17 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
     if not page.locator("#summaryToggle").evaluate("element => element.classList.contains('isResting')"):
         raise AssertionError(f"{name}: la recarga perdió el estado visual de descanso")
     if page.locator("#summaryToggle").get_attribute("aria-expanded") != "true":
-        page.locator("#summaryToggle").click()
-    if not page.locator("#summaryActivityMascot").get_attribute("src").endswith(f"{variant}-rest-25fps.gif"):
+        click_control(page.locator("#summaryToggle"))
+    expected_rest_asset = f"states-v1/{variant}-rest.png" if variant in ("male", "female") else "neutral-rest-still.webp"
+    if not page.locator("#summaryActivityMascot").get_attribute("src").endswith(expected_rest_asset):
         raise AssertionError(f"{name}: la recarga perdió la mascota de descanso")
     restored_progress = page.locator(".summaryExercise").first.evaluate("element => Number(element.style.getPropertyValue('--summary-progress'))")
     if restored_progress != progress:
         raise AssertionError(f"{name}: la recarga alteró el progreso de la serie ({progress} -> {restored_progress})")
 
-    # El descanso conserva el GIF salvo que el usuario solicite movimiento reducido.
+    # La pose de descanso permanece; reduced-motion detiene solo la animación.
     page.emulate_media(reduced_motion="reduce")
-    page.wait_for_function("document.querySelector('#summaryActivityMascot')?.currentSrc.endsWith('still.webp')")
+    page.wait_for_function("getComputedStyle(document.querySelector('#summaryActivityMascot')).animationName === 'none'")
     still = assert_mascot(page, variant, "rest", reduced=True)
     if page.locator("#summaryActivityStatus .summaryActivityIndicator").evaluate("element => getComputedStyle(element).animationName") != "none":
         raise AssertionError(f"{name}: el pulso no respeta prefers-reduced-motion")
@@ -506,13 +1045,18 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
     # Gestos largos reales de puntero táctil: cancelar temprano y luego omitir el descanso.
     page.emulate_media(reduced_motion="no-preference")
     rest_button = first.locator(".completeSetButton")
-    dispatch_touch_hold(page, rest_button, 4_000)
+    dispatch_touch_hold(page, rest_button, 4_000, virtual_clock=False)
     if activity.get_attribute("data-activity") != "rest" or "is-holding" in (rest_button.get_attribute("class") or ""):
         raise AssertionError(f"{name}: soltar antes de 5 s no canceló el gesto de descanso")
-    dispatch_touch_hold(page, rest_button, 5_000)
-    if activity.get_attribute("data-activity") != "active":
-        raise AssertionError(f"{name}: mantener 5 s no omitió el descanso y reanudó la serie")
-    assert_activity_feedback(page, "active")
+    # Margen de 150 ms sobre el umbral: el motor de reloj del navegador
+    # puede entregar pointerup antes que el timeout al coincidir ambos en 5 s.
+    dispatch_touch_hold(page, rest_button, 5_150, virtual_clock=False)
+    if activity.get_attribute("data-activity") != "preparing":
+        raise AssertionError(f"{name}: mantener 5 s no omitió el descanso e inició preparación")
+    page.wait_for_timeout(15_000)
+    if activity.get_attribute("data-activity") != "strength":
+        raise AssertionError(f"{name}: la preparación de 15 s no inició la serie después del descanso omitido")
+    assert_activity_feedback(page, "strength")
 
     if errors:
         raise AssertionError(f"{name}: errores JavaScript: {errors}")
@@ -524,10 +1068,15 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
         "exercises": exercise_count,
         "images": images,
         "resourceQuality": resource_quality,
-        "activityGif": exercise_gif,
+        "cardioMascotAsset": exercise_gif,
+        "strengthMascotAsset": strength_asset,
         "restGif": rest_gif,
+        "batteryGifPauseResume": battery_motion,
+        "backgroundTimer": background_timing,
         "reducedMotionAsset": still,
+        "startMascotAsset": start_asset,
         "activityVisuals": {"active": active_feedback, "rest": rest_feedback},
+        "approvalToast": toast_feedback,
         "stableActiveFillTransform": stable_fill,
         "skipGestures": {"rest": "cancelled <5 s; continued at 5 s", "exercise": "cancelled <10 s; skip+undo at 10 s"},
         "progress": progress,
@@ -536,7 +1085,7 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
     return result
 
 
-def validate_primary_set_buttons(browser, name: str, sex: str) -> dict[str, int]:
+def validate_primary_set_buttons(browser, name: str, sex: str, exercise_limit: int | None = None) -> dict[str, int]:
     """Exercise each card's dynamic and skip controls in a clean session."""
     context_settings = {
         "viewport": {"width": 412, "height": 915},
@@ -544,6 +1093,7 @@ def validate_primary_set_buttons(browser, name: str, sex: str) -> dict[str, int]
         "is_mobile": True,
         "has_touch": True,
     }
+    confirmation = validate_missing_performance_confirmation(browser, name)
     checked = 0
     skipped = 0
     initial_context = browser.new_context(**context_settings)
@@ -553,50 +1103,110 @@ def validate_primary_set_buttons(browser, name: str, sex: str) -> dict[str, int]
     initial_page.wait_for_function("() => [...document.querySelectorAll('link[rel=stylesheet]')].every(link => link.sheet)")
     initial_page.wait_for_selector("article.card[data-exercise-index] .completeSetButton")
     exercise_count = initial_page.locator("article.card[data-exercise-index]").count()
-    initial_context.close()
-
-    for index in range(exercise_count):
-        context = browser.new_context(**context_settings)
-        context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1', 'true')")
-        page = context.new_page()
-        page.clock.install()
+    context = initial_context
+    page = initial_page
+    install_test_clock(page)
+    exercised_count = exercise_count if exercise_limit is None else max(1, min(exercise_count, exercise_limit))
+    for index in range(exercised_count):
         page.goto(f"http://127.0.0.1:{PORT}/data/rutinas_autocontenidas/canonicas/{quote(name)}", wait_until="domcontentloaded")
         page.wait_for_function("() => [...document.querySelectorAll('link[rel=stylesheet]')].every(link => link.sheet)")
         page.wait_for_selector("article.card[data-exercise-index] .completeSetButton")
         if sex:
             page.evaluate("sex => window.TrainingProgressStore.saveProfile({sex})", sex)
+        mascot_variant = sex if sex in {"male", "female"} else "neutral"
+        assert_mascot(page, mascot_variant, "start")
 
         warmup = page.locator("#warmupAction")
-        warmup.click()
-        page.clock.run_for(15_000)
+        click_control(warmup)
+        assert_mascot(page, mascot_variant, "preparing")
+        advance_test_clock(page, 15_000)
         if warmup.get_attribute("data-phase") != "cardio":
             context.close()
             raise AssertionError(f"{name}: no se pudo completar el calentamiento antes del botón del ejercicio {index + 1}")
-        warmup.click()
-        warmup.click()
+        assert_mascot(page, mascot_variant, "cardio")
+        click_control(warmup)
+        assert_mascot(page, mascot_variant, "mobility")
+        click_control(warmup)
         if warmup.get_attribute("data-phase") != "done":
             context.close()
             raise AssertionError(f"{name}: el calentamiento no finalizó antes del ejercicio {index + 1}")
+        # The synthetic clock does not advance while the three warm-up controls
+        # are tapped; let the short "session just started" banner expire.
+        advance_test_clock(page, 2_600)
+        assert_mascot(page, mascot_variant, "ready")
 
         card = page.locator("article.card[data-exercise-index]").nth(index)
         button = card.locator(".completeSetButton")
         segments = card.locator(".seriesProgressSegment").count()
         button.scroll_into_view_if_needed()
-        button.click()
-        # El primer ejercicio incluye una serie de aproximación tras el calentamiento general.
-        if index == 0:
-            button.click()
+        select_valid_performance(card)
+        if card.locator(".warmupSet").count():
+            click_control(button)
+            warmup_progress = card.locator(".approximationProgress")
+            if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "approximation" or not warmup_progress.is_visible():
+                context.close()
+                raise AssertionError(f"{name}: la aproximación no inició actividad ni mostró su progreso separado en el ejercicio {index + 1}")
+            assert_mascot(page, mascot_variant, "approximation")
+            if warmup_progress.get_attribute("aria-valuenow") != "0" or card.locator(".exerciseProgress").inner_text().strip() != f"0/{segments}":
+                context.close()
+                raise AssertionError(f"{name}: la aproximación se mezcló con el contador de series efectivas en el ejercicio {index + 1}")
+            hint = card.locator(".exerciseWarmupHint")
+            if not hint.is_visible() or "carga ligera" not in hint.inner_text().lower():
+                context.close()
+                raise AssertionError(f"{name}: faltó el consejo visual de aproximación cuando correspondía en el ejercicio {index + 1}")
+            advance_test_clock(page, 20_000)
+            click_control(button)
+            warmup_record = page.evaluate(f"""() => Object.values(localStorage).map(raw => {{ try {{ return JSON.parse(raw); }} catch (_) {{ return null; }} }}).find(value => value?.__warmupPerformance)?.__warmupPerformance?.['{index + 1}']""")
+            if not warmup_record or not warmup_record.get("durationMs") or warmup_progress.get_attribute("aria-valuenow") != "1":
+                context.close()
+                raise AssertionError(f"{name}: no guardó por separado repeticiones/carga/duración de la aproximación: {warmup_record}")
+            if card.locator(".exerciseProgress").inner_text().strip() != f"0/{segments}" or hint.is_visible():
+                context.close()
+                raise AssertionError(f"{name}: la aproximación cambió el volumen efectivo o dejó su ayuda visible fuera de turno")
+            if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "rest":
+                context.close()
+                raise AssertionError(f"{name}: al completar la aproximación no comenzó el descanso antes de las series efectivas")
+            assert_mascot(page, mascot_variant, "rest")
+            if getattr(page, "_gt6_physical_hold", None):
+                dispatch_touch_hold(page, button, 5_150)
+            else:
+                advance_test_clock(page, 600_000)
+                click_control(button)
+            assert_mascot(page, mascot_variant, "preparing")
+        else:
+            if card.locator(".exerciseWarmupHint:visible,.approximationProgress:visible").count():
+                context.close()
+                raise AssertionError(f"{name}: mostró contenido de aproximación donde no corresponde, ejercicio {index + 1}")
+            click_control(button)
+            assert_mascot(page, mascot_variant, "preparing")
         if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "preparing":
-            context.close()
-            raise AssertionError(f"{name}: el botón principal del ejercicio {index + 1} no inició preparación")
-        page.clock.run_for(15_000)
-        if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "active":
+            status = page.evaluate("() => ({activity:document.querySelector('#summaryActivityStatus')?.dataset.activity, button:document.querySelector('article.card[data-exercise-index] .completeSetButton')?.outerHTML, rest:document.querySelector('article.card[data-exercise-index] .metric.rest .timeCue')?.textContent, timing:Object.values(localStorage).map(raw=>{try{return JSON.parse(raw)}catch{return null}}).find(value=>value?.__timing)?.__timing})")
+            raise AssertionError(f"{name}: el botón principal del ejercicio {index + 1} no inició preparación: {status}")
+        advance_test_clock(page, 15_000)
+        if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "strength":
             context.close()
             raise AssertionError(f"{name}: el botón principal del ejercicio {index + 1} no pasó de preparación a actividad")
-        button.click()
+        assert_mascot(page, mascot_variant, "strength")
+        active_set_chip = card.locator('.exerciseTimerChip[data-kind="active-set"]')
+        if active_set_chip.count() != 1 or not active_set_chip.is_visible() or "en curso" not in active_set_chip.get_attribute("aria-label").lower():
+            context.close()
+            raise AssertionError(f"{name}: el cronómetro de la serie no tiene una ficha visible de actividad")
+        if active_set_chip.evaluate("element => getComputedStyle(element, '::before').animationName") != "timerActivityPulse":
+            context.close()
+            raise AssertionError(f"{name}: la ficha del cronómetro no anima durante la serie activa")
+        select_valid_performance(card)
+        click_control(button)
         if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "rest":
             context.close()
             raise AssertionError(f"{name}: el botón principal del ejercicio {index + 1} no completó la serie ni inició descanso")
+        assert_mascot(page, mascot_variant, "rest")
+        active_rest_chip = card.locator('.exerciseTimerChip[data-kind="active-rest"]')
+        if active_rest_chip.count() != 1 or not active_rest_chip.is_visible():
+            context.close()
+            raise AssertionError(f"{name}: el cronómetro no cambió a ficha de descanso después de la serie")
+        if active_rest_chip.evaluate("element => getComputedStyle(element, '::before').animationName") != "timerActivityPulse":
+            context.close()
+            raise AssertionError(f"{name}: la ficha del cronómetro no anima durante el descanso")
         expected_progress = f"1/{segments}"
         if card.locator(".exerciseProgress").inner_text().strip() != expected_progress:
             context.close()
@@ -622,52 +1232,134 @@ def validate_primary_set_buttons(browser, name: str, sex: str) -> dict[str, int]
             raise AssertionError(f"{name}: la omisión del ejercicio {index + 1} fabricó series o no confirmó el resultado")
         undo = card.locator(".exerciseUndoButton[aria-label^='Deshacer el ejercicio']")
         page.once("dialog", lambda dialog: dialog.accept())
-        undo.click()
+        click_control(undo)
         if "exerciseSkipped" in (tracker.get_attribute("class") or "") or card.locator(".exerciseProgress").inner_text().strip() != f"0/{exercise_series_total}":
             context.close()
             raise AssertionError(f"{name}: deshacer omisión no restauró el progreso del ejercicio {index + 1}")
         checked += 1
         skipped += 1
-        context.close()
+        page.evaluate("async () => { await window.TrainingProgressStore.clearAll(); Object.keys(localStorage).filter(key => /series-v1$/.test(key)).forEach(key => localStorage.removeItem(key)); }")
+    # Reutiliza la misma pestaña/contexto en Android: Chromium puede cerrar el
+    # target remoto al descartar y recrear contextos repetidamente.
     # El descanso también debe comenzar tras la última serie de un ejercicio
     # cuando quedan ejercicios en la rutina.
-    context = browser.new_context(**context_settings)
-    context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1', 'true')")
-    page = context.new_page()
-    page.clock.install()
+    install_test_clock(page)
     page.goto(f"http://127.0.0.1:{PORT}/data/rutinas_autocontenidas/canonicas/{quote(name)}", wait_until="domcontentloaded")
     page.wait_for_selector("article.card[data-exercise-index] .completeSetButton")
     warmup = page.locator("#warmupAction")
-    warmup.click()
-    page.clock.run_for(15_000)
-    warmup.click()
-    warmup.click()
+    click_control(warmup)
+    advance_test_clock(page, 15_000)
+    click_control(warmup)
+    click_control(warmup)
     card = page.locator("article.card[data-exercise-index]").first
     button = card.locator(".completeSetButton")
-    button.click()  # aproximación
+    select_valid_performance(card)
+    click_control(button)  # inicia aproximación
+    advance_test_clock(page, 20_000)
+    click_control(button)  # completa aproximación, con contador aparte
+    if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "rest":
+        context.close()
+        raise AssertionError(f"{name}: la aproximación no inició descanso antes del ciclo de series")
+    dispatch_touch_hold(page, button, 5_150)
+    if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "preparing":
+        context.close()
+        raise AssertionError(f"{name}: omitir el descanso de aproximación no inició preparación")
     for series_index in range(card.locator(".seriesProgressSegment").count()):
         activity_state = page.locator("#summaryActivityStatus").get_attribute("data-activity")
-        if activity_state not in ("preparing", "active"):
-            button.click()
+        if activity_state not in ("preparing", "strength"):
+            click_control(button)
             activity_state = page.locator("#summaryActivityStatus").get_attribute("data-activity")
         if activity_state == "preparing":
-            page.clock.run_for(15_000)
-        if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "active":
+            advance_test_clock(page, 15_000)
+        if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "strength":
+            diagnostic = page.evaluate("""() => ({activity: document.querySelector('#summaryActivityStatus')?.dataset.activity,
+              label: document.querySelector('#summaryActivityStatus')?.innerText,
+              button: document.querySelector('article.card[data-exercise-index] .completeSetButton')?.getAttribute('aria-label'),
+              timingKeys: Object.keys(localStorage).filter(key => key.includes('series-v1'))})""")
             context.close()
-            raise AssertionError(f"{name}: preparación incorrecta antes de serie {series_index + 1}")
-        button.click()
+            raise AssertionError(f"{name}: preparación incorrecta antes de serie {series_index + 1}: {diagnostic}")
+        select_valid_performance(card)
+        click_control(button)
         expected = "rest" if series_index < card.locator(".seriesProgressSegment").count() - 1 or page.locator("article.card").count() > 1 else "complete"
         actual = page.locator("#summaryActivityStatus").get_attribute("data-activity")
         if actual != expected:
             context.close()
             raise AssertionError(f"{name}: resultado tras serie {series_index + 1}: esperado={expected}, actual={actual}")
         if series_index < card.locator(".seriesProgressSegment").count() - 1:
-            dispatch_touch_hold(page, button, 5_000)
+            # Mantener >5 s evita una carrera del simulador justo en el límite.
+            dispatch_touch_hold(page, button, 5_150)
+            if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "preparing":
+                diagnostic = page.evaluate("""() => ({
+                  activity:document.querySelector('#summaryActivityStatus')?.dataset.activity || '',
+                  label:document.querySelector('#summaryActivityStatus')?.innerText || '',
+                  button:document.querySelector('article.card[data-exercise-index] .completeSetButton')?.getAttribute('aria-label') || '',
+                  timing:Object.entries(localStorage).filter(([key]) => /timing|series-v1/i.test(key)).map(([key,value]) => ({key,value}))
+                })""")
+                context.close()
+                raise AssertionError(f"{name}: omitir el descanso debe iniciar preparación, no una serie inmediata: {diagnostic}")
+            advance_test_clock(page, 15_000)
+            if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "strength":
+                diagnostic = page.evaluate("""() => ({
+                  activity:document.querySelector('#summaryActivityStatus')?.dataset.activity || '',
+                  label:document.querySelector('#summaryActivityStatus')?.innerText || '',
+                  button:document.querySelector('article.card[data-exercise-index] .completeSetButton')?.getAttribute('aria-label') || '',
+                  timing:Object.entries(localStorage).filter(([key]) => /timing|series-v1/i.test(key)).map(([key,value]) => ({key,value}))
+                })""")
+                context.close()
+                raise AssertionError(f"{name}: completar preparación de 15 s tras omitir descanso falló después de serie {series_index + 1}: {diagnostic}")
     if page.locator("#summaryActivityStatus").get_attribute("data-activity") == "rest" and not card.locator(".completeSetButton").get_attribute("aria-label").startswith("Descanso"):
         context.close()
         raise AssertionError(f"{name}: el botón no indica descanso al terminar la última serie del ejercicio")
     context.close()
-    return {"primarySetButtonsTested": checked, "exerciseSkipButtonsTested": skipped, "exerciseCompletionRestTested": True}
+    return {"primarySetButtonsTested": checked, "exerciseSkipButtonsTested": skipped, "exerciseCompletionRestTested": True, **confirmation}
+
+
+def validate_completed_session_celebration(browser, name: str, sex: str, variant: str) -> dict[str, str | bool]:
+    """Rehidrata una sesión completada aislada y comprueba su celebración persistente."""
+    context = browser.new_context(
+        viewport={"width": 412, "height": 915}, device_scale_factor=2,
+        is_mobile=True, has_touch=True, reduced_motion="no-preference", service_workers="block",
+    )
+    context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1', 'true')")
+    page = context.new_page()
+    install_test_clock(page)
+    page.goto(f"http://127.0.0.1:{PORT}/data/rutinas_autocontenidas/canonicas/{quote(name)}", wait_until="networkidle")
+    if sex:
+        page.evaluate("sex => window.TrainingProgressStore.saveProfile({sex})", sex)
+    counter_script = page.locator('script[data-enhancement="series-counter-v6"]').text_content() or ""
+    match = re.search(r"const storageKey = '([^']+)'", counter_script)
+    if not match:
+        context.close()
+        raise AssertionError(f"{name}: no se pudo leer la clave aislada del progreso para validar la celebración")
+    page.evaluate("""key => {
+      const state = {};
+      document.querySelectorAll('.exerciseTracker').forEach(tracker => {
+        (tracker.dataset.seriesKeys || '').trim().split(/\\s+/).filter(Boolean).forEach(seriesKey => { state[seriesKey] = true; });
+      });
+      const now = Date.now();
+      state.__timing = { sessionStartedAt: now - 60000, sessionEndedAt: now, exercises: {} };
+      localStorage.setItem(key, JSON.stringify(state));
+    }""", match.group(1))
+    page.reload(wait_until="networkidle")
+    page.wait_for_function("document.querySelector('#summaryActivityStatus')?.dataset.activity === 'complete'")
+    page.wait_for_function("expected => window.gymratikMascotVariant === expected", arg=variant)
+    assert_mascot(page, variant, "celebration")
+    if page.locator(".exerciseTimerChip[data-kind^='active-']").count() != 0:
+        context.close()
+        raise AssertionError(f"{name}: quedó animado un cronómetro de serie/descanso tras completar la rutina")
+    effects = page.locator(".summaryMascotWrap").evaluate("element => ({before: getComputedStyle(element, '::before').content, after: getComputedStyle(element, '::after').content, motion: getComputedStyle(element.querySelector('#summaryActivityMascot')).animationName, label: document.querySelector('#summaryActivityLabel')?.textContent})")
+    if effects["motion"] != "mascotApprovalCelebrate" or effects["before"] in ("none", "normal") or effects["after"] in ("none", "normal") or effects["label"] != "Rutina completada":
+        context.close()
+        raise AssertionError(f"{name}: no se mostró la celebración completa: {effects}")
+    if not page.locator("#summaryActivityMascot").is_visible():
+        context.close()
+        raise AssertionError(f"{name}: la mascota de celebración desapareció del resumen")
+    assert_animation_changes(page, page.locator("#summaryActivityMascot"))
+    page.evaluate("() => window.scrollTo({top:0,behavior:'instant'})")
+    page.wait_for_timeout(250)
+    capture_visual(page, f"day-{name.split('_')[2]}-celebration-mobile.png")
+    context.close()
+    return {"completedSessionCelebration": True, "mascotAnimation": effects["motion"]}
 
 
 def validate_installed_offline_package(browser) -> dict:
@@ -686,13 +1378,19 @@ def validate_installed_offline_package(browser) -> dict:
     page = context.new_page()
     offline_page_errors = []
     offline_failed_requests = []
+    offline_cancelled_requests = []
     offline_bad_responses = []
     origin = f"http://127.0.0.1:{PORT}/"
     page.on("pageerror", lambda error: offline_page_errors.append(str(error)))
 
     def record_failed_request(request) -> None:
         if request.url.startswith(origin):
-            offline_failed_requests.append(request.url)
+            failure = request.failure or "fallo sin detalle"
+            record = {"url": request.url, "failure": failure}
+            if "ERR_ABORTED" in failure:
+                offline_cancelled_requests.append(record)
+            else:
+                offline_failed_requests.append(record)
 
     def record_bad_response(response) -> None:
         if response.status >= 400 and response.url.startswith(origin):
@@ -723,6 +1421,25 @@ def validate_installed_offline_package(browser) -> dict:
         raise AssertionError(f"El paquete instalado no contiene todo el precache: {cache_summary}")
 
     context.set_offline(True)
+    page.goto(origin, wait_until="domcontentloaded")
+    manifest_icons = page.evaluate(
+        """async () => {
+          const response = await fetch('./manifest.webmanifest');
+          if (!response.ok) throw new Error(`manifest offline HTTP ${response.status}`);
+          const manifest = await response.json();
+          return await Promise.all(manifest.icons.map(async icon => {
+            const image = new Image();
+            image.src = new URL(icon.src, location.href).href;
+            await image.decode();
+            return {src: icon.src, declared: icon.sizes, width: image.naturalWidth, height: image.naturalHeight};
+          }));
+        }"""
+    )
+    for icon in manifest_icons:
+        if icon["declared"] != f'{icon["width"]}x{icon["height"]}' or icon["width"] != icon["height"]:
+            raise AssertionError(f"Icono PWA incorrecto o no decodificable sin conexión: {icon}")
+    if {icon["width"] for icon in manifest_icons} != {192, 512}:
+        raise AssertionError(f"Se esperan iconos instalables de 192 y 512 px: {manifest_icons}")
     offline_results = []
     for name, _sex, _variant in ROUTINES:
         page.goto(f"{origin}data/rutinas_autocontenidas/canonicas/{quote(name)}", wait_until="domcontentloaded")
@@ -732,19 +1449,23 @@ def validate_installed_offline_package(browser) -> dict:
         inventory = assert_image_inventory(page, name)
         resource_quality = assert_visual_resource_quality(page, name)
         offline_results.append({"routine": name, **inventory, "resourceQuality": resource_quality})
-        offline_gif = page.locator(".day3ExerciseGif,.day4ExerciseGif").first
+        offline_gif = page.locator(".day3ExerciseGif:visible,.day4ExerciseGif:visible").first
         if offline_gif.count() == 0:
-            offline_gif = page.locator('img[src*="/videos/"]').first
+            offline_gif = page.locator('img[src*="/videos/"]:visible,img[data-battery-motion-src*="/videos/"]:visible').first
+        if offline_gif.count() == 0:
+            raise AssertionError(f"{name}: no se encontró un GIF visible para validar sin conexión")
         offline_gif.scroll_into_view_if_needed()
         assert_animation_changes(page, offline_gif)
-    deep_link = f"{origin}data/rutinas_autocontenidas/canonicas/{quote(ROUTINES[1][0])}?e2e=offline-fallback"
+    # Usa una ruta profunda no precacheada: las rutas canónicas sí existen en
+    # Cache API y deben continuar abriendo su rutina, no sustituirse por portada.
+    deep_link = f"{origin}offline/deep-link.html?e2e=offline-fallback"
     page.goto(deep_link, wait_until="domcontentloaded")
     page.wait_for_load_state("networkidle")
     page.wait_for_function("!document.documentElement.classList.contains('gymratik-loading')", timeout=10_000)
     fallback_heading = page.locator("#pageTitle").inner_text().strip()
     base_href = page.locator("base").get_attribute("href")
     fallback_inventory = assert_image_inventory(page, "respaldo offline desde ruta profunda")
-    if fallback_heading != "Una serie a la vez." or base_href != origin:
+    if fallback_heading != "Empieza a tu ritmo." or base_href != origin:
         raise AssertionError(f"El respaldo offline no fija la raíz de la PWA: heading={fallback_heading!r}, base={base_href!r}")
     capture_visual(page, "offline-deep-link-fallback-home.png")
     offline_results.append({"routine": "respaldo offline desde ruta profunda", **fallback_inventory, "base": base_href})
@@ -756,7 +1477,7 @@ def validate_installed_offline_package(browser) -> dict:
     if any(runtime_failures.values()):
         raise AssertionError(f"Fallos de recursos/runtime en el paquete offline: {runtime_failures}")
     context.close()
-    return {"cache": cache_summary, "offlineRoutines": offline_results, "runtime": runtime_failures}
+    return {"cache": cache_summary, "manifestIcons": manifest_icons, "offlineRoutines": offline_results, "runtime": {**runtime_failures, "cancelledSupersededRequests": offline_cancelled_requests}}
 
 
 def validate_responsive_layout(browser) -> dict:
@@ -772,12 +1493,12 @@ def validate_responsive_layout(browser) -> dict:
             )
             context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1', 'true')")
             page = context.new_page()
-            page.clock.install()
+            install_test_clock(page)
             page.goto(f"http://127.0.0.1:{PORT}/data/rutinas_autocontenidas/canonicas/{quote(name)}", wait_until="networkidle")
             page.wait_for_function("() => [...document.querySelectorAll('link[rel=stylesheet]')].every(link => link.sheet)")
             page.locator(".performanceEntry").first.wait_for(state="visible")
             page.evaluate("async () => { await document.fonts.ready; }")
-            page.clock.run_for(100)
+            advance_test_clock(page, 100)
             layout = page.evaluate("""() => {
               const rect = element => { const r = element.getBoundingClientRect(); return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height}; };
               const entry = document.querySelector('.performanceEntry');
@@ -786,7 +1507,8 @@ def validate_responsive_layout(browser) -> dict:
               const edgeOverflow=[...document.body.querySelectorAll('*')].map(element=>({element,box:rect(element)})).filter(item=>item.box.right>innerWidth+1||item.box.left < -1).slice(0,30).map(item=>({tag:item.element.tagName,id:item.element.id,className:String(item.element.className).slice(0,100),box:item.box}));
               const card=entry.closest('.card');
               const ancestry=[]; for(let node=entry;node&&node!==card;node=node.parentElement){const s=getComputedStyle(node);ancestry.push({tag:node.tagName,className:String(node.className),box:rect(node),display:s.display,gridColumns:s.gridTemplateColumns,overflow:s.overflow});}
-              return {viewport:{width:innerWidth,height:innerHeight},documentWidth:document.documentElement.scrollWidth,bodyWidth:document.body.scrollWidth,entry:rect(entry),card:rect(card),cardGrid:getComputedStyle(card).gridTemplateColumns,cardChildren:[...card.children].map(child=>({className:String(child.className),box:rect(child),gridColumn:getComputedStyle(child).gridColumn})),ancestry,controls,offenders,edgeOverflow};
+              const responsiveElements=[...document.querySelectorAll('.page,.hero,.hero>div,.heroMeta,.heroDetails,.muscleDayGrid,.muscleDayItem,.muscleDayVisual,.performanceFieldTitleRow,.performanceFieldLabel')].slice(0,22).map(element=>{const s=getComputedStyle(element);return {className:String(element.className).slice(0,60),box:rect(element),scrollWidth:element.scrollWidth,clientWidth:element.clientWidth,display:s.display,gridColumns:s.gridTemplateColumns,minWidth:s.minWidth,overflow:s.overflow,text:(element.innerText||'').trim().replace(/\\s+/g,' ').slice(0,70)}});
+              return {viewport:{width:innerWidth,height:innerHeight},documentWidth:document.documentElement.scrollWidth,bodyWidth:document.body.scrollWidth,entry:rect(entry),card:rect(card),cardGrid:getComputedStyle(card).gridTemplateColumns,cardChildren:[...card.children].map(child=>({className:String(child.className),box:rect(child),gridColumn:getComputedStyle(child).gridColumn})),ancestry,controls,offenders,edgeOverflow,responsiveElements};
             }""")
             visual_audit = page.evaluate("""() => {
               const visible = element => { const box=element.getBoundingClientRect(), style=getComputedStyle(element); return box.width>0&&box.height>0&&style.display!=='none'&&style.visibility!=='hidden'&&Number(style.opacity)!==0; };
@@ -817,18 +1539,30 @@ def validate_responsive_layout(browser) -> dict:
             if width <= 640:
                 warmup = page.locator("#warmupAction")
                 warmup.scroll_into_view_if_needed()
-                warmup.click()
-                page.clock.run_for(15_000)
-                warmup.click()
-                warmup.click()
+                click_control(warmup)
+                advance_test_clock(page, 15_000)
+                click_control(warmup)
+                click_control(warmup)
                 button = page.locator("article.card[data-exercise-index]").first.locator(".completeSetButton")
                 button.scroll_into_view_if_needed()
-                button.click()  # aproximación
-                button.click()  # preparación de serie efectiva
-                page.clock.run_for(15_000)
+                first_card = page.locator("article.card[data-exercise-index]").first
+                select_valid_performance(first_card)
+                click_control(button)  # inicia aproximación
+                advance_test_clock(page, 20_000)
+                click_control(button)  # registra aproximación
+                dispatch_browser_hold(page, button, 5_150)
+                if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "preparing":
+                    state = page.evaluate("""() => ({activity:document.querySelector('#summaryActivityStatus')?.dataset.activity,
+                      activityText:document.querySelector('#summaryActivityStatus')?.innerText,
+                      button:[...document.querySelectorAll('.completeSetButton')].slice(0,2).map(element=>({text:element.innerText,
+                        className:element.className,connected:element.isConnected,hidden:element.hidden,disabled:element.disabled})),
+                      warmup:document.querySelector('#warmupAction')?.innerText,
+                      timers:Object.entries(localStorage).filter(([key])=>/timing|series-v1/i.test(key)).map(([key,value])=>({key,value:value.slice(0,500)}))})""")
+                    raise AssertionError(f"{name} {width}x{height}: omitir descanso de aproximación no inició la preparación: {state}")
+                advance_test_clock(page, 15_000)
                 summary = page.locator("#floatingSessionSummary")
                 if page.locator("#summaryToggle").get_attribute("aria-expanded") != "true":
-                    page.locator("#summaryToggle").click()
+                    click_control(page.locator("#summaryToggle"))
                 button.scroll_into_view_if_needed()
                 overlap = page.evaluate("""() => {
                   const button = document.querySelector('.completeSetButton');
@@ -841,6 +1575,66 @@ def validate_responsive_layout(browser) -> dict:
             results.append({"routine": name, "viewport": f"{width}x{height}", "horizontalOverflow": False, "visualGeometry": visual_audit, "actionPanelOverlap": overlap})
             context.close()
     return {"viewports": len(RESPONSIVE_VIEWPORTS), "routineViewportChecks": results}
+
+
+def validate_motivation_card(browser) -> dict:
+    """Render an Arnold quote and portrait in isolated phone-sized contexts."""
+    results = []
+    for width in (320, 360, 412, 530):
+        context = browser.new_context(
+            viewport={"width": width, "height": 915},
+            device_scale_factor=2,
+            is_mobile=True,
+            has_touch=True,
+        )
+        context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1', 'true');")
+        page = context.new_page()
+        page.goto(f"http://127.0.0.1:{PORT}/data/rutinas_autocontenidas/canonicas/{quote(ROUTINES[0][0])}", wait_until="domcontentloaded")
+        page.wait_for_function("window.fitnessQuotesData?.quotes?.length === 120")
+        page.locator("#sessionCompletionPanel").evaluate("element => { element.hidden = false; }")
+        page.locator("#summaryToggle").evaluate("element => element.setAttribute('aria-expanded', 'false')")
+        page.locator("#summaryBody").evaluate("element => { element.hidden = true; }")
+        page.evaluate("""() => {
+          const button=document.getElementById('newMotivation'), author=document.getElementById('motivationNote');
+          const quotes=window.fitnessQuotesData.quotes, target=quotes.findIndex(item=>item.author==='Arnold Schwarzenegger');
+          if(target<0)throw new Error('Falta Arnold en el banco de citas');
+          Math.random=()=>((target+.5)/quotes.length);
+          button.click();
+          if(!author.textContent.includes('Arnold Schwarzenegger'))throw new Error('La selección aleatoria controlada no eligió la cita esperada');
+        }""")
+        page.evaluate("() => { const panel=document.getElementById('sessionCompletionPanel'); window.scrollTo(0, Math.max(0, panel.getBoundingClientRect().top + window.scrollY - 16)); }")
+        page.wait_for_function("document.getElementById('motivationPortrait')?.complete && document.getElementById('motivationPortrait')?.naturalWidth > 0")
+        layout = page.evaluate("""() => {
+          const panel=document.querySelector('#sessionCompletionPanel'), message=document.querySelector('#motivationMessage'), image=document.querySelector('#motivationPortrait'), credit=document.querySelector('#motivationPhotoCredit'), source=document.querySelector('#motivationNote');
+          const box=node=>{const r=node.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height}};
+          const style=getComputedStyle(message);
+          const overflowingDescendants=[...panel.querySelectorAll('*')].map(node=>({tag:node.tagName,id:node.id,className:typeof node.className==='string'?node.className:'',box:box(node),scrollWidth:node.scrollWidth,clientWidth:node.clientWidth})).filter(node=>node.box.left<box(panel).left-1||node.box.right>box(panel).right+1||node.scrollWidth>node.clientWidth+3);
+          return {viewport:innerWidth,panel:box(panel),panelClientWidth:panel.clientWidth,panelScrollWidth:panel.scrollWidth,overflowingDescendants,children:[...panel.children].map(node=>({className:node.className,visible:getComputedStyle(node).display!=='none',box:box(node),scrollWidth:node.scrollWidth,clientWidth:node.clientWidth})),message:box(message),messageScrollWidth:message.scrollWidth,messageClientWidth:message.clientWidth,messageScrollHeight:message.scrollHeight,messageClientHeight:message.clientHeight,messageOverflow:style.overflow,quote:message.textContent,author:source.textContent,source:source.href,portrait:box(image),portraitNaturalWidth:image.naturalWidth,portraitAlt:image.alt,photoCredit:credit.textContent,photoCreditHref:credit.href};
+        }""")
+        if SCREENSHOT_DIR is not None:
+            SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
+            page.screenshot(path=str(SCREENSHOT_DIR / f"quote-card-{width}px.png"), full_page=False)
+        page.evaluate("""() => { Math.random=()=>0; document.getElementById('newMotivation').click(); }""")
+        next_author = page.locator("#motivationNote").text_content() or ""
+        if "Arnold Schwarzenegger" in next_author:
+            context.close()
+            raise AssertionError(f"La rotación repitió consecutivamente la cita de Arnold a {width}px")
+        layout["nextAuthor"] = next_author
+        if layout["author"].find("Arnold Schwarzenegger") < 0 or layout["portraitNaturalWidth"] < 500 or layout["portrait"]["width"] < 80 or layout["portrait"]["height"] < 100:
+            context.close()
+            raise AssertionError(f"Cita de Arnold/retrato no se presentó en tamaño grande a {width}px: {layout}")
+        if layout["panel"]["left"] < -1 or layout["panel"]["right"] > width + 1 or any(child["visible"] and (child["box"]["left"] < layout["panel"]["left"] or child["box"]["right"] > layout["panel"]["right"] or child["scrollWidth"] > child["clientWidth"] + 3) for child in layout["children"]):
+            context.close()
+            raise AssertionError(f"La tarjeta o alguno de sus bloques visibles se recorta/desborda a {width}px: {layout}")
+        if layout["messageScrollWidth"] > layout["messageClientWidth"] + 1 or layout["messageScrollHeight"] > layout["messageClientHeight"] + 1 or layout["messageOverflow"] in ("hidden", "clip"):
+            context.close()
+            raise AssertionError(f"El texto de la cita se recorta a {width}px: {layout}")
+        if "CC BY 4.0" not in layout["photoCredit"] or "schwarzenegger.com/fitness/post" not in layout["source"]:
+            context.close()
+            raise AssertionError(f"Falta la atribución enlazada de la cita o fotografía: {layout}")
+        results.append(layout)
+        context.close()
+    return {"viewports": results, "quotePortraitAndTextVerified": True}
 
 
 def validate_resource_pages(browser) -> list[dict]:
@@ -885,32 +1679,60 @@ def validate_resource_pages(browser) -> list[dict]:
 
 
 def main() -> None:
-    global SCREENSHOT_DIR
+    global SCREENSHOT_DIR, PORT
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--screenshot-dir", type=Path, default=SCREENSHOT_DIR, help="opcional: guarda capturas de actividad y fallbacks en viewport móvil")
     parser.add_argument("--responsive-only", action="store_true", help="ejecuta solo la matriz de tamaños móviles")
     parser.add_argument("--resources-only", action="store_true", help="valida imágenes, proporciones y legibilidad de las cuatro rutinas")
     parser.add_argument("--functional-only", action="store_true", help="ejecuta los flujos funcionales táctiles de las cuatro rutinas")
+    parser.add_argument("--celebration-only", action="store_true", help="valida la mascota persistente de una sesión completada en las cuatro rutinas")
+    parser.add_argument("--cover-only", action="store_true", help="valida y captura la animación de portada en movimiento y con movimiento reducido")
+    parser.add_argument("--day", type=int, choices=range(1, 5), help="limita el E2E funcional a un día para diagnóstico reproducible")
+    parser.add_argument("--offline-only", action="store_true", help="ejecuta solo la validación offline del precache y rutas profundas")
     args = parser.parse_args()
     SCREENSHOT_DIR = args.screenshot_dir
-    server = ThreadingHTTPServer(("127.0.0.1", PORT), QuietHandler)
+    server = create_isolated_server()
+    PORT = server.server_address[1]
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     results = []
     try:
         with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(headless=True)
+            browser = playwright.chromium.launch(channel="msedge", headless=True)
+            if args.offline_only:
+                result = validate_installed_offline_package(browser)
+                browser.close()
+                print(json.dumps({"status": "E2E_OFFLINE_OK", "result": result}, ensure_ascii=False, indent=2))
+                return
+            if args.celebration_only:
+                results = [validate_completed_session_celebration(browser, name, sex, variant) for name, sex, variant in ROUTINES]
+                browser.close()
+                print(json.dumps({"status": "E2E_CELEBRATION_OK", "days": len(results), "results": results}, ensure_ascii=False, indent=2))
+                return
+            print("Sintético: portada y animación de bienvenida", flush=True)
+            cover_animation = validate_home_cover_animation(browser)
+            if args.cover_only:
+                browser.close()
+                print(json.dumps({"status": "E2E_COVER_OK", "coverAnimation": cover_animation}, ensure_ascii=False, indent=2))
+                return
             if args.resources_only:
+                print("Sintético: recursos visuales de las cuatro rutinas", flush=True)
                 results = validate_resource_pages(browser)
+                quote_card = validate_motivation_card(browser)
                 responsive = None
                 offline = None
             else:
+                quote_card = None
                 responsive = None if args.functional_only else validate_responsive_layout(browser)
             if not args.responsive_only and not args.resources_only:
-                for name, sex, variant in ROUTINES:
+                routines = ROUTINES if args.day is None else [ROUTINES[args.day - 1]]
+                for name, sex, variant in routines:
+                    print(f"Sintético: E2E funcional {name}", flush=True)
                     day_result = validate_day(browser, name, sex, variant)
                     day_result.update(validate_primary_set_buttons(browser, name, sex))
+                    day_result.update(validate_completed_session_celebration(browser, name, sex, variant))
                     results.append(day_result)
+                    print(f"Sintético: día validado {name}", flush=True)
                 offline = None if args.functional_only else validate_installed_offline_package(browser)
             else:
                 offline = None
@@ -919,7 +1741,7 @@ def main() -> None:
         server.shutdown()
         server.server_close()
         thread.join(timeout=3)
-    print(json.dumps({"status": "E2E_ROUTINES_OK", "days": len(results), "results": results, "responsive": responsive, "offlinePackage": offline}, ensure_ascii=False, indent=2))
+    print(json.dumps({"status": "E2E_ROUTINES_OK", "days": len(results), "results": results, "coverAnimation": cover_animation, "quoteCard": quote_card, "responsive": responsive, "offlinePackage": offline}, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

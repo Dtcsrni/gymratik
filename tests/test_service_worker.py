@@ -8,6 +8,7 @@ from scripts.build_pwa_service_worker import (
     ROUTINE_FILES,
     build_precache,
     fingerprint_content,
+    manifest_icon_resources,
     render,
     resource_size,
     routine_resources,
@@ -32,10 +33,46 @@ class ServiceWorkerContractTests(unittest.TestCase):
             self.assertIn("if (cached && !bypassCache) return cached", source)
             self.assertIn("if (cached) return cached", source)
 
+    def test_manifest_icon_inventory_rejects_nonlocal_missing_and_traversal_paths(self):
+        with TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "icon-192.png").write_bytes(b"png")
+            self.assertEqual(manifest_icon_resources({"icons": [{"src": "./icon-192.png"}]}, root), ["./icon-192.png"])
+            for source in ("https://example.test/icon.png", "../outside.png", "..\\outside.png", "./missing.png"):
+                with self.subTest(source=source), self.assertRaises(SystemExit):
+                    manifest_icon_resources({"icons": [{"src": source}]}, root)
+        with self.assertRaises(SystemExit):
+            manifest_icon_resources({"icons": []})
+
     def test_profile_mascots_are_part_of_the_offline_precache(self):
         for asset in ("mouse-female-effort.webp", "mouse-male-effort.webp", "mascot-install-phone.webp"):
             self.assertIn(f"data/profile/{asset}", self.service_worker)
             self.assertIn(f"data/profile/{asset}", self.generator)
+
+    def test_shared_brand_mark_is_part_of_the_offline_precache(self):
+        asset = "assets/branding/gymratik-mascots-mark-v2.png"
+        self.assertIn(asset, self.service_worker)
+        self.assertIn("manifest_icon_resources(manifest)", self.generator)
+        self.assertIn(asset, (ROOT / "manifest.webmanifest").read_text(encoding="utf-8"))
+        self.assertIn(f'src="./{asset}"', self.homepage)
+
+    def test_pose_loop_and_static_fallback_are_precached_offline(self):
+        resources = set(build_precache())
+        for asset in (
+            "./assets/branding/gymratik-cover-seated-breath-30fps.webp",
+            "./assets/branding/gymratik-cover-seated-v1-poster.webp",
+        ):
+            with self.subTest(asset=asset):
+                self.assertIn(asset, resources)
+                self.assertIn(asset.removeprefix("./"), self.service_worker)
+
+    def test_all_routine_covers_are_offline_precached(self):
+        resources = set(build_precache())
+        for day in range(1, 5):
+            asset = f"./assets/branding/routine-covers/day{day}.webp"
+            with self.subTest(day=day):
+                self.assertIn(asset, resources)
+                self.assertTrue((ROOT / asset.removeprefix("./")).is_file())
 
     def test_worker_fingerprint_normalizes_text_line_endings_only(self):
         with TemporaryDirectory() as temp_dir:
@@ -73,14 +110,37 @@ class ServiceWorkerContractTests(unittest.TestCase):
                 self.assertIn("Math.min(6, PRECACHE.length)", source)
                 self.assertIn("await Promise.all(Array.from", source)
                 self.assertIn("if (firstError) throw firstError", source)
-                self.assertIn("await self.skipWaiting()", source)
-                self.assertLess(source.index("await cache.put(CACHE_COMPLETE_KEY"), source.index("await self.skipWaiting()"))
-                self.assertIn("ACTIVATE_UPDATE", source)
+                self.assertIn("if (!self.registration.active) await self.skipWaiting()", source)
+                self.assertLess(source.index("await cache.put(CACHE_COMPLETE_KEY"), source.index("if (!self.registration.active) await self.skipWaiting()"))
+                self.assertIn("event.waitUntil(self.skipWaiting())", source)
                 self.assertIn("self.clients.claim()", source)
                 self.assertIn("notifyClientsAppUpdated()", source)
                 self.assertIn("QuotaExceededError", source)
                 self.assertIn("key.startsWith('entrenamiento-pwa-')", source)
                 self.assertNotIn("cache.addAll(PRECACHE)", source)
+
+    def test_updates_are_staged_until_the_application_authorizes_activation(self):
+        for source in (self.service_worker, self.generator):
+            with self.subTest(source=source[:40]):
+                install = source.split("self.addEventListener('install'", 1)[1].split("self.addEventListener('message'", 1)[0]
+                message = source.split("self.addEventListener('message'", 1)[1].split("self.addEventListener('activate'", 1)[0]
+                self.assertIn("if (!self.registration.active) await self.skipWaiting()", install)
+                self.assertNotIn("await self.skipWaiting()", install.replace("if (!self.registration.active) await self.skipWaiting()", ""))
+                self.assertIn("event.data?.type === 'ACTIVATE_UPDATE'", message)
+                self.assertIn("event.waitUntil(self.skipWaiting())", message)
+                self.assertNotIn("self.registration.waiting === self", message)
+                self.assertRegex(
+                    message,
+                    r"if \(event\.data\?\.type === 'ACTIVATE_UPDATE'\) event\.waitUntil\(self\.skipWaiting\(\)\)",
+                )
+
+    def test_runtime_cache_is_bounded_to_precache_resources_and_revalidates_http_cache(self):
+        for source in (self.service_worker, self.generator):
+            with self.subTest(source=source[:40]):
+                self.assertIn("new Set(PRECACHE.map", source)
+                self.assertIn("PRECACHE_URLS.has", source)
+                self.assertIn("cache: 'no-cache'", source)
+                self.assertIn("ignoreSearch: true", source)
 
     def test_exercise_gifs_and_session_mascots_are_precached(self):
         resources = build_precache()
@@ -119,6 +179,7 @@ class ServiceWorkerContractTests(unittest.TestCase):
 
     def test_homepage_shows_the_active_service_worker_version(self):
         self.assertIn('id="appVersion"', self.homepage)
+        self.assertIn('class="brand-version" aria-label="Versión 0.4.3">v0.4.3', self.homepage)
         self.assertIn("event.data?.type === 'VERSION_STATUS'", self.homepage)
         self.assertIn("postMessage({ type: 'GET_VERSION_STATUS' })", self.homepage)
         self.assertIn("cacheName: CACHE_NAME", self.service_worker)

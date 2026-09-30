@@ -9,6 +9,103 @@ STORE = ROOT / "progress-store.js"
 
 
 class ProgressStoreRuntimeTests(unittest.TestCase):
+    def test_legacy_activity_without_start_uses_linked_session_date(self):
+        script = r"""
+const fs = require('fs');
+const vm = require('vm');
+const assert = require('assert');
+const source = fs.readFileSync(process.argv[1], 'utf8');
+const startedAt = Date.now() - 48 * 60 * 60 * 1000;
+const today = new Date();
+const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+const sessionId = `day1:${startedAt}`;
+const fallback = JSON.stringify({
+  progress: { day1: { routineId: 'day1', sessionId, doneSeries: 22, warmupCompleted: true, sessionStartedAt: startedAt, sessionEndedAt: startedAt + 3600000, updatedAt: Date.now() } },
+  sessions: { [sessionId]: { sessionId, routineId: 'day1', startedAt, endedAt: startedAt + 3600000, completedSeries: 22, warmupCompleted: true, status: 'completed', updatedAt: Date.now() } },
+  activity: { legacy: { activityKey: 'day1:legacy', routineId: 'day1', sessionId, dayKey: todayKey, capturedAt: Date.now(), completedSeries: 22, warmupCompleted: true, updatedAt: Date.now() } }
+});
+const window = { GymratikInstallGate: { isInstalled() { return true; } },
+  CustomEvent: class CustomEvent { constructor(name, init) { this.name = name; this.detail = init?.detail; } },
+  dispatchEvent() {}, localStorage: { getItem() { return fallback; }, setItem() {} }
+};
+const context = { window, CustomEvent: window.CustomEvent, localStorage: window.localStorage, navigator: {}, console, Date, setTimeout, clearTimeout };
+vm.runInNewContext(source, context);
+window.TrainingProgressStore.getDashboard().then((dashboard) => {
+  assert.strictEqual(dashboard.todaySeries, 0, 'legacy activity must inherit the linked historical session date');
+  assert.strictEqual(dashboard.routines[0].doneSeries, 22, 'historical progress must remain intact');
+  assert.strictEqual(dashboard.temporal.otherDay, true, 'latest activity must use its linked session timestamp');
+  assert.strictEqual(dashboard.lastActivity, startedAt + 3600000, 'legacy rows must retain the linked session end timestamp');
+  console.log(JSON.stringify({ ok: true }));
+}).catch((error) => { console.error(error); process.exit(1); });
+"""
+        result = subprocess.run(
+            ["node", "-e", script, str(STORE)], cwd=ROOT, check=False, capture_output=True, text=True
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), {"ok": True})
+
+    def test_old_session_recaptured_today_does_not_count_as_training_today(self):
+        script = r"""
+const fs = require('fs');
+const vm = require('vm');
+const assert = require('assert');
+const source = fs.readFileSync(process.argv[1], 'utf8');
+const startedAt = Date.now() - 48 * 60 * 60 * 1000;
+const today = new Date();
+const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+const fallback = JSON.stringify({
+  progress: { day1: { routineId: 'day1', doneSeries: 22, warmupCompleted: true, sessionStartedAt: startedAt, sessionEndedAt: startedAt + 3600000, updatedAt: Date.now() } },
+  sessions: {},
+  activity: { old: { activityKey: 'day1:old', routineId: 'day1', sessionId: `day1:${startedAt}`, dayKey: todayKey, startedAt, capturedAt: Date.now(), completedSeries: 22, warmupCompleted: true, updatedAt: Date.now() } }
+});
+const window = { GymratikInstallGate: { isInstalled() { return true; } },
+  CustomEvent: class CustomEvent { constructor(name, init) { this.name = name; this.detail = init?.detail; } },
+  dispatchEvent() {}, localStorage: { getItem() { return fallback; }, setItem() {} }
+};
+const context = { window, CustomEvent: window.CustomEvent, localStorage: window.localStorage, navigator: {}, console, Date, setTimeout, clearTimeout };
+vm.runInNewContext(source, context);
+window.TrainingProgressStore.getDashboard().then((dashboard) => {
+  assert.strictEqual(dashboard.todaySeries, 0, 'a session started two days ago must not be attributed to today');
+  assert.strictEqual(dashboard.routines[0].doneSeries, 22, 'historical progress must remain intact');
+  assert.strictEqual(dashboard.temporal.otherDay, true, 'the last-session label must use the workout date, not its recapture date');
+  assert.strictEqual(dashboard.lastActivity, startedAt + 3600000, 'recapturing old progress must retain the original session end timestamp');
+  console.log(JSON.stringify({ ok: true }));
+}).catch((error) => { console.error(error); process.exit(1); });
+"""
+        result = subprocess.run(
+            ["node", "-e", script, str(STORE)], cwd=ROOT, check=False, capture_output=True, text=True
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), {"ok": True})
+
+    def test_capture_of_historical_session_keeps_its_original_activity_day(self):
+        script = r"""
+const fs = require('fs'), vm = require('vm'), assert = require('assert');
+const source = fs.readFileSync(process.argv[1], 'utf8');
+let persisted = null;
+const window = { GymratikInstallGate: { isInstalled() { return true; } },
+  CustomEvent: class CustomEvent { constructor(name, init) { this.name = name; this.detail = init?.detail; } },
+  dispatchEvent() {}, localStorage: { getItem() { return persisted; }, setItem(_key, value) { persisted = value; } }
+};
+const context = { window, CustomEvent: window.CustomEvent, localStorage: window.localStorage, navigator: {}, console, Date, setTimeout, clearTimeout };
+vm.runInNewContext(source, context);
+(async () => {
+  const startedAt = Date.now() - 48 * 60 * 60 * 1000;
+  const day = new Date(startedAt);
+  const expectedDay = `${day.getFullYear()}-${String(day.getMonth()+1).padStart(2,'0')}-${String(day.getDate()).padStart(2,'0')}`;
+  await window.TrainingProgressStore.capture({ routineId: 'day2', state: { e1s1: true, __timing: { sessionStartedAt: startedAt, warmup: { phase: 'done' } } } });
+  const backup = await window.TrainingProgressStore.exportData();
+  assert.strictEqual(backup.data.activity[0].dayKey, expectedDay);
+  assert.strictEqual((await window.TrainingProgressStore.getDashboard()).todaySeries, 0);
+  console.log(JSON.stringify({ ok: true }));
+})().catch((error) => { console.error(error); process.exit(1); });
+"""
+        result = subprocess.run(
+            ["node", "-e", script, str(STORE)], cwd=ROOT, check=False, capture_output=True, text=True
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), {"ok": True})
+
     def test_activity_requires_completed_warmup_and_at_least_one_work_set_for_all_routines(self):
         script = r"""
 const fs = require('fs');
@@ -391,7 +488,7 @@ const state = {
   e1s1: true, e1s2: true, e1s3: true,
   __timing: { sessionStartedAt: 123, sessionEndedAt: 0 },
   __performance: { '1': {
-    e1s1: { title: 'Jalón al pecho', reps: 12, load: '88.1849049', loadUnit: 'lb', updatedAt: 124 },
+    e1s1: { title: 'Jalón al pecho', reps: 12, load: '88.1849049', loadUnit: 'lb', durationMs: 24000, updatedAt: 124 },
     e1s2: { title: 'Jalón al pecho', reps: 9, load: null, loadUnit: 'kg', updatedAt: 125 },
     e1s3: { title: 'Jalón al pecho', reps: 10, load: 0, loadUnit: 'kg', updatedAt: 126 }
   } }
@@ -403,6 +500,7 @@ window.TrainingProgressStore.capture({ routineId: 'day1', state }).then(() => wi
   assert.strictEqual(history[0].performance[0].reps, 12);
   assert.strictEqual(history[0].performance[0].load, 88.1849049);
   assert.strictEqual(history[0].performance[0].loadUnit, 'lb');
+  assert.strictEqual(history[0].performance[0].durationMs, 24000);
   assert.ok(Math.abs(history[0].performance[0].loadKg - 40) < 1e-7);
   assert.strictEqual(history[0].performance.find(row => row.setKey === 'e1s2').load, null);
   assert.strictEqual(history[0].performance.find(row => row.setKey === 'e1s3').load, 0);

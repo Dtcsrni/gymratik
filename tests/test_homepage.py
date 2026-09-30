@@ -1,6 +1,10 @@
 import json
+import re
 import unittest
 from pathlib import Path
+
+from PIL import Image, ImageChops, ImageStat
+from scripts.build_pwa_service_worker import IMAGE_SUFFIXES, build_precache, resource_size
 
 
 ROOT = Path(__file__).parents[1]
@@ -20,11 +24,12 @@ class HomepageContractTests(unittest.TestCase):
         self.assertEqual(self.manifest["name"], "Gymratik: Rutinas y progreso")
         self.assertEqual(self.manifest["short_name"], "Gymratik")
         self.assertIn("Gymratik: Rutinas y progreso", self.html)
-        self.assertIn('aria-label="Gymratik, inicio"', self.html)
-        self.assertIn('<span class="brand-mark" aria-hidden="true"><img src="./icon.png" alt=""></span>', self.html)
+        self.assertIn('aria-label="Gymratik v0.4.3, inicio"', self.html)
+        self.assertIn('class="brand-version" aria-label="Versión 0.4.3">v0.4.3', self.html)
+        self.assertIn('<span class="brand-mark" aria-hidden="true"><img src="./assets/branding/gymratik-mascots-mark-v2.png" alt=""></span>', self.html)
         self.assertIn("background:rgba(11,16,23,.72)", self.html)
-        self.assertIn(".hero-mascot-bg", self.html)
-        self.assertIn('class="hero-mascot-bg" src="./icon.png"', self.html)
+        self.assertIn(".hero-strength-stage", self.html)
+        self.assertNotIn("levantamientos de halterofilia", self.html)
         self.assertNotIn("Gymratic", self.html)
         self.assertNotIn("<title>Entrenamiento", self.html)
 
@@ -38,6 +43,17 @@ class HomepageContractTests(unittest.TestCase):
         for path in routine_paths:
             self.assertIn(path, self.html)
 
+    def test_routine_names_describe_the_programmed_focus(self):
+        for title in (
+            "Tirón · espalda y bíceps",
+            "Pierna · cuádriceps y glúteos",
+            "Empuje · pecho, hombros y tríceps",
+            "Pierna y core · cadera y estabilidad",
+        ):
+            self.assertIn(title, self.html)
+        self.assertIn("routineId: 'day1'", self.html)
+        self.assertIn("routineId: 'day4'", self.html)
+
     def test_homepage_summary_matches_all_four_routines(self):
         self.assertIn("Calienta, entrena con técnica y registra cada serie.", self.html)
         self.assertIn('<span class="plan-pill">4 días · 82 series</span>', self.html)
@@ -47,25 +63,69 @@ class HomepageContractTests(unittest.TestCase):
         self.assertIn('href="#routines">Ver plan completo</a>', self.html)
 
     def test_homepage_uses_four_local_visual_references(self):
-        image_paths = (
-            "1350-7I6LNUG.jpg",
-            "0739-10Z2DXU.jpg",
-            "0577-T0yTjgW.jpg",
-            "2287-V07qpXy.jpg",
-        )
-        for path in image_paths:
-            self.assertIn(path, self.html)
+        image_paths = tuple(f"./assets/branding/routine-covers/day{day}.webp" for day in range(1, 5))
+        for day, path in enumerate(image_paths, start=1):
+            with self.subTest(path=path):
+                self.assertEqual(self.html.count(path), 3 if day == 1 else 2)
+                self.assertTrue((ROOT / path.removeprefix("./")).is_file())
         self.assertEqual(self.html.count('class="routine-card"'), 4)
+        self.assertIn(".routine-visual img.routine-cover-art { box-sizing:border-box; object-fit:contain", self.html)
+        self.assertIn(".routine-card:hover .routine-visual img:not(.routine-cover-art)", self.html)
+        self.assertNotIn(".routine-card:hover .routine-visual img { transform:scale", self.html)
+        self.assertIn("rgba(10,15,21,.24)", self.html)
+        self.assertNotIn("Gymrats en pose", self.html)
+        self.assertEqual(self.html.count("alt=\"Lámina anatómica:"), 5)
+        self.assertIn(".next-session-image { display:block; width:100%; height:100%; min-height:264px; object-fit:contain", self.html)
+        self.assertIn(".next-session-image { width:100%; height:clamp(142px,42vw,176px); min-height:0", self.html)
+        self.assertIn("músculos trabajados en ${catalog.title}, destacados en rojo", self.html)
 
-    def test_pwa_icon_is_the_mascot_png_and_maskable_manifest_entry(self):
-        icon = (ROOT / "icon.png").read_bytes()
-        self.assertEqual(icon[:8], b"\x89PNG\r\n\x1a\n")
-        self.assertNotIn(b"Gymratic", icon)
-        self.assertNotIn(b"Entrenamiento Local", icon)
-        self.assertEqual(self.manifest["icons"][0]["src"], "./icon.png")
-        self.assertEqual(self.manifest["icons"][0]["type"], "image/png")
-        self.assertEqual(self.manifest["icons"][0]["purpose"], "any maskable")
-        self.assertTrue((ROOT / "icon.png").is_file())
+    def test_routine_cover_assets_keep_full_transparent_art_within_budget(self):
+        for day in range(1, 5):
+            path = ROOT / "assets" / "branding" / "routine-covers" / f"day{day}.webp"
+            with self.subTest(day=day):
+                self.assertLessEqual(path.stat().st_size, 450_000)
+                with Image.open(path) as cover:
+                    self.assertEqual(cover.size, (1536, 1024))
+                    self.assertEqual(cover.mode, "RGBA")
+                    self.assertLessEqual(cover.getchannel("A").getextrema()[0], 1)
+                    red, green, blue = cover.convert("RGB").split()
+                    red_emphasis = ImageChops.darker(
+                        ImageChops.subtract(red, green),
+                        ImageChops.subtract(red, blue),
+                    ).point(lambda value: 255 if value > 32 else 0)
+                    cyan_emphasis = ImageChops.darker(
+                        ImageChops.subtract(green, red),
+                        ImageChops.subtract(blue, red),
+                    ).point(lambda value: 255 if value > 32 else 0)
+                    self.assertGreater(sum(red_emphasis.histogram()[1:]), 20_000)
+                    self.assertLess(sum(cyan_emphasis.histogram()[1:]), 500)
+
+    def test_pwa_icon_is_the_shared_mascot_mark(self):
+        declared_sizes = set()
+        for icon in self.manifest["icons"]:
+            with self.subTest(icon=icon):
+                icon_path = ROOT / icon["src"].removeprefix("./")
+                data = icon_path.read_bytes()
+                self.assertEqual(data[:8], b"\x89PNG\r\n\x1a\n")
+                self.assertEqual(icon["type"], "image/png")
+                self.assertEqual(icon["purpose"], "any")
+                self.assertLess(icon_path.stat().st_size, 500_000)
+                with Image.open(icon_path) as mark:
+                    self.assertEqual(mark.mode, "RGBA")
+                    self.assertEqual(icon["sizes"], f"{mark.width}x{mark.height}")
+                    self.assertEqual(mark.width, mark.height)
+                    declared_sizes.add(mark.size)
+        self.assertEqual(declared_sizes, {(192, 192), (512, 512)})
+
+    def test_pwa_precache_derives_installed_icons_from_manifest(self):
+        from scripts.build_pwa_service_worker import build_precache
+
+        resources = set(build_precache())
+        worker = (ROOT / "sw.js").read_text(encoding="utf-8")
+        for icon in self.manifest["icons"]:
+            with self.subTest(icon=icon["src"]):
+                self.assertIn(icon["src"], resources)
+                self.assertIn(icon["src"].removeprefix("./"), worker)
 
     def test_homepage_checks_for_service_worker_updates_on_open(self):
         self.assertIn("updateViaCache: 'none'", self.html)
@@ -79,6 +139,45 @@ class HomepageContractTests(unittest.TestCase):
         self.assertIn('name="gymratik-resource-estimate"', self.html)
         self.assertIn("applicationBytes", self.html)
         self.assertIn("imageBytes", self.html)
+
+    def test_network_defer_reason_distinguishes_cellular_from_data_saver(self):
+        self.assertIn("const isCellular = connectionType === 'cellular';", self.html)
+        self.assertIn("const isDataSaver = navigator.connection?.saveData === true;", self.html)
+        self.assertIn(": isDataSaver\n              ? 'está activado el ahorro de datos'", self.html)
+
+    def test_install_size_estimate_matches_the_generated_offline_package(self):
+        match = re.search(r'<meta name="gymratik-resource-estimate" content=\'([^\']+)\'>', self.html)
+        self.assertIsNotNone(match)
+        estimate = json.loads(match.group(1))
+        package = {
+            resource: resource_size(ROOT / Path(resource.removeprefix("./")))
+            for resource in build_precache()
+        }
+        package["./sw.js"] = resource_size(ROOT / "sw.js")
+        actual_images = sum(size for resource, size in package.items() if Path(resource).suffix.lower() in IMAGE_SUFFIXES)
+        actual_total = sum(package.values())
+        self.assertEqual(int(estimate["totalBytes"]), actual_total)
+        self.assertEqual(int(estimate["imageBytes"]), actual_images)
+        self.assertEqual(int(estimate["applicationBytes"]), actual_total - actual_images)
+
+    def test_cellular_update_is_manual_and_detected_version_uses_the_mascot_animation(self):
+        self.assertIn('id="updateNotice" class="update-notice"', self.html)
+        self.assertIn('id="updateNoticeArt"', self.html)
+        self.assertIn('id="manualUpdateButton"', self.html)
+        self.assertIn('data-motion-src="./assets/branding/gymratik-cover-seated-breath-30fps.webp"', self.html)
+        self.assertIn("connectionType === 'cellular'", self.html)
+        self.assertIn("preference === 'always' || isWifi", self.html)
+        self.assertNotIn("preference === 'ask' && !isCellular", self.html)
+        self.assertIn("(!firstInstall && isManualReload)", self.html)
+        self.assertIn("consumeManualUpdateRequest()", self.html)
+        self.assertIn("MANUAL_UPDATE_REQUEST_TTL_MS", self.html)
+        self.assertIn("showDeferredUpdateNotice(waitingAtOpen || installInProgress, waitingAtOpen, deferredNetworkReason)", self.html)
+        self.assertIn("showUpdateDetectedAnimation()", self.html)
+        self.assertIn("if (!document.documentElement.classList.contains('gymratik-loading'))", self.html)
+        self.assertIn("updateNotice.dataset.detected = 'true'", self.html)
+        self.assertIn("arrastrando hacia abajo desde el borde superior", self.html)
+        self.assertIn(".app-splash.update-detected .splash-mascot-poses", self.html)
+        self.assertIn("prefers-reduced-motion:reduce", self.html)
 
     def test_browser_context_invites_installation_and_hides_profile_and_history(self):
         self.assertTrue((ROOT / "install-gate.js").is_file())
@@ -110,15 +209,19 @@ class HomepageContractTests(unittest.TestCase):
     def test_homepage_keeps_mobile_hero_content_inside_the_viewport(self):
         self.assertIn('.hero > * { min-width:0; }', self.html)
         self.assertIn('overflow-wrap:anywhere', self.html)
-        self.assertIn('grid-template-columns:96px minmax(0,1fr)', self.html)
+        self.assertIn('.next-session-card { grid-template-columns:minmax(0,1fr); gap:10px; }', self.html)
         self.assertIn('h1 { max-width:100%; font-size:clamp(2.8rem,14vw,5.2rem); }', self.html)
 
     def test_homepage_shows_a_brief_splash_until_local_data_initialization_settles(self):
         self.assertIn("document.documentElement.classList.add('gymratik-loading')", self.html)
         self.assertIn('id="appSplash" class="app-splash" role="status"', self.html)
-        self.assertIn('class="splash-mascots" role="img"', self.html)
+        self.assertIn('class="splash-mascot-poses" aria-hidden="true"', self.html)
+        self.assertIn('id="splashPoseArt" class="splash-pose"', self.html)
+        self.assertIn('data-motion-src="./assets/branding/gymratik-cover-seated-breath-30fps.webp"', self.html)
+        self.assertIn('src="./assets/branding/gymratik-cover-seated-v1-poster.webp"', self.html)
         self.assertIn("Leyendo el avance guardado", self.html)
         self.assertIn('html.gymratik-loading .app-splash', self.html)
+        self.assertIn('.app-splash[aria-hidden="true"] { opacity:0!important; visibility:hidden!important; pointer-events:none!important; transition:none!important; }', self.html)
         self.assertIn("document.documentElement.classList.remove('gymratik-loading')", self.html)
         self.assertIn("await networkDecisionPhase", self.html)
         self.assertIn("if (!navigator.serviceWorker?.controller) await syncTask", self.html)
@@ -129,6 +232,15 @@ class HomepageContractTests(unittest.TestCase):
         self.assertIn("setAttribute('aria-hidden', 'true')", self.html)
         self.assertIn("@media (prefers-reduced-motion:reduce)", self.html)
 
+    def test_loading_states_have_motion_and_do_not_stick_when_history_is_unavailable(self):
+        self.assertIn('class="session-history-empty" data-loading="true" aria-busy="true">Cargando historial…', self.html)
+        self.assertIn(".session-history-empty[data-loading=\"true\"]::after", self.html)
+        self.assertIn("animation:historyLoadingRhythm 1.15s ease-in-out infinite", self.html)
+        self.assertIn("@keyframes historyLoadingRhythm", self.html)
+        refresh = self.html.split("async function refreshProfile()", 1)[1].split("async function refreshProgress()", 1)[0]
+        self.assertIn("Instala Gymratik para guardar y consultar tus sesiones.", refresh)
+        self.assertNotIn("Cargando historial…", refresh)
+
     def test_network_permission_is_explained_and_chosen_inside_the_splash(self):
         self.assertIn('id="splashNetworkActions"', self.html)
         self.assertIn('id="splashAllowNetwork"', self.html)
@@ -136,27 +248,115 @@ class HomepageContractTests(unittest.TestCase):
         self.assertIn("function requestNetworkPermission(message, sizeNote)", self.html)
         self.assertIn("No se descargará nada hasta que elijas una opción.", self.html)
         self.assertIn("allowed = await requestNetworkPermission(", self.html)
-        self.assertIn("if (!firstInstall || preference === 'ask') { syncFinished = true; return; }", self.html)
+        self.assertIn("if (!allowed) {", self.html)
+        self.assertIn("primera vez.", self.html)
+
+    def test_detected_pwa_updates_activate_automatically_on_allowed_networks(self):
+        self.assertIn("preference === 'always' || isWifi", self.html)
+        self.assertNotIn("preference === 'ask' && !isCellular", self.html)
+        self.assertIn("networkUpdateDeferred", self.html)
+        self.assertIn("no se pudo confirmar Wi‑Fi", self.html)
+        self.assertIn("preference === 'always'", self.html)
+        self.assertIn("registration.waiting.postMessage({ type: 'ACTIVATE_UPDATE' })", self.html)
+        self.assertIn("Actualización completa detectada; se está aplicando automáticamente.", self.html)
+        self.assertNotIn("if (waitingAtOpen || isManualReload)", self.html)
+        self.assertLess(self.html.index("if (!allowed) {"), self.html.index("if (registration.waiting) {", self.html.index("const updateResult")))
+        self.assertNotIn("se aplicará al abrir Gymratik de nuevo", self.html)
+        self.assertIn("se instalará automáticamente al tener Wi‑Fi", self.html)
+        self.assertIn("arrastra hacia abajo desde el borde superior", self.html)
 
     def test_homepage_prioritizes_next_session_and_gym_flow(self):
-        self.assertIn("Una serie a la vez.", self.html)
+        self.assertIn('id="pageTitle">Empieza a tu ritmo.', self.html)
         self.assertIn('id="nextSessionCta"', self.html)
         self.assertIn('id="nextSessionLink"', self.html)
         self.assertIn('function renderNextSession', self.html)
+        self.assertIn("pageTitle.textContent = continuing", self.html)
+        self.assertIn("? 'Retoma tu sesión.'", self.html)
+        self.assertIn("? 'Hoy ya avanzaste.'", self.html)
+        self.assertIn("`Sigue con ${catalog.day}.`", self.html)
         self.assertIn('Continúa donde te quedaste', self.html)
         self.assertIn('Calentamiento incluido', self.html)
         self.assertIn('Tres pasos y a entrenar.', self.html)
         self.assertIn('Mi avance', self.html)
         self.assertIn('Proteger avance', self.html)
 
-    def test_homepage_uses_animated_original_pair_outside_install_invitation(self):
-        self.assertIn('<img class="hero-mascot-bg" src="./icon.png"', self.html)
-        self.assertIn("background-image:url('./data/profile/gymratik-machine-sprite.webp')", self.html)
-        self.assertTrue((ROOT / "data/profile/gymratik-machine-sprite.webp").is_file())
-        self.assertIn("legPressCycle", self.html)
-        self.assertIn("chestPressCycle", self.html)
-        self.assertIn("prefers-reduced-motion:reduce", self.html)
-        self.assertIn('animation:mascotDrift 9s ease-in-out infinite alternate', self.html)
+    def test_homepage_has_subtle_poster_drift_and_splash_uses_a_slow_closed_30fps_loop(self):
+        self.assertIn('class="hero-strength-stage" aria-hidden="true"', self.html)
+        self.assertIn('id="heroStrengthArt" class="hero-strength-art"', self.html)
+        self.assertIn('id="splashPoseArt"', self.html)
+        self.assertIn('src="./assets/branding/gymratik-cover-seated-v1-poster.webp" alt="" width="372" height="332" fetchpriority="high"', self.html)
+        self.assertEqual(self.html.count('data-motion-src="./assets/branding/gymratik-cover-seated-breath-30fps.webp"'), 2)
+        self.assertIn("setCoverArtPlayback(splashPoseArt, pageVisible && splashVisible)", self.html)
+        self.assertNotIn("setCoverArtPlayback(heroStrengthArt", self.html)
+        self.assertNotIn("new IntersectionObserver", self.html)
+        self.assertIn("animation:coverArtDrift 24s ease-in-out infinite alternate", self.html)
+        self.assertIn("@keyframes coverArtDrift", self.html)
+        self.assertIn("setCoverArtPlayback", self.html)
+        self.assertIn("reducedMotionQuery.matches", self.html)
+        self.assertIn("document.visibilityState === 'visible'", self.html)
+        self.assertIn("new MutationObserver(syncCoverArtMotion)", self.html)
+        self.assertIn("@media (prefers-reduced-motion:reduce)", self.html)
+        self.assertIn(".hero-strength-stage { position:absolute; z-index:0; inset:0 0 auto; height:min(100%,430px);", self.html)
+        self.assertIn("opacity:.88;", self.html)
+        self.assertIn("height:clamp(220px,44vw,300px); opacity:.78", self.html)
+        self.assertIn("height:clamp(215px,64vw,290px); opacity:.72", self.html)
+        self.assertIn("height:clamp(215px,64vw,290px)", self.html)
+        self.assertIn("margin:auto; aspect-ratio:3/2; object-fit:contain; object-position:center", self.html)
+        source = ROOT / "assets/branding/gymratik-cover-seated-v1-source.png"
+        self.assertTrue(source.is_file(), "La fuente original debe seguir disponible para edición en Krita")
+        animation = ROOT / "assets/branding/gymratik-cover-seated-breath-30fps.webp"
+        poster = ROOT / "assets/branding/gymratik-cover-seated-v1-poster.webp"
+        self.assertTrue(animation.is_file())
+        self.assertTrue(poster.is_file())
+        self.assertLess(animation.stat().st_size, 3_000_000, "La animación de carga debe seguir comprimida para red móvil")
+        with Image.open(poster) as cover:
+            self.assertEqual(cover.n_frames, 1, "La portada debe ser una imagen estática")
+            self.assertEqual(cover.size, (372, 332))
+            self.assertEqual(cover.mode, "RGBA")
+            self.assertEqual(cover.getchannel("A").getextrema()[0], 0)
+        with Image.open(animation) as image:
+            self.assertEqual(image.format, "WEBP")
+            self.assertGreaterEqual(image.n_frames, 180, "El ciclo lento debe mantener suficientes fotogramas")
+            self.assertEqual(image.info.get("loop"), 0, "El loop debe repetirse sin límite")
+            image.seek(0)
+            start = image.convert("RGBA")
+            self.assertEqual(start.size, (352, 314))
+            self.assertEqual(start.getpixel((0, 0))[3], 0)
+            image.seek(1)
+            self.assertEqual(image.info.get("duration"), 33, "La reproducción debe codificarse a 30 fps")
+            frame_durations = []
+            for index in range(image.n_frames):
+                image.seek(index)
+                frame_durations.append(image.info.get("duration", 0))
+            cycle_ms = sum(frame_durations)
+            self.assertGreaterEqual(cycle_ms, 6_000, "La bienvenida animada debe moverse despacio")
+            self.assertLessEqual(cycle_ms / image.n_frames, 34, "El movimiento debe conservar al menos 29 fps")
+            image.seek(image.n_frames - 1)
+            end = image.convert("RGBA")
+            loop_error = ImageStat.Stat(ImageChops.difference(start.convert("RGB"), end.convert("RGB"))).mean
+            self.assertLess(sum(loop_error) / len(loop_error), 2.0, "El cierre del bucle no debe producir un salto visible")
+            for index in range(image.n_frames):
+                image.seek(index)
+                alpha = image.convert("RGBA").getchannel("A")
+                bounds = alpha.getbbox()
+                self.assertIsNotNone(bounds)
+                safe_x = round(image.width * 0.05)
+                safe_y = round(image.height * 0.05)
+                self.assertGreaterEqual(bounds[0], safe_x)
+                self.assertGreaterEqual(bounds[1], safe_y)
+                self.assertLessEqual(bounds[2], image.width - safe_x)
+                self.assertLessEqual(bounds[3], image.height - safe_y)
+            image.seek(image.n_frames // 2)
+            middle = image.convert("RGBA")
+            breathing_change = ImageChops.difference(start, middle)
+            self.assertIsNotNone(breathing_change.crop((65, 65, 282, 236)).getbbox(), "La deformación local debe mover el torso al respirar")
+        self.assertNotIn("gymratik-machine-sprite.webp", self.html)
+        self.assertNotIn("@keyframes coverPoseOne", self.html)
+        self.assertNotIn("@keyframes coverPoseTwo", self.html)
+        self.assertNotIn("weightlifting-v2.webp", self.html)
+        self.assertIn("elapsedDays === 2 ? 'antier'", self.html)
+        self.assertIn('`el ${weekday} pasado`', self.html)
+        self.assertIn('activityWeekStart < currentWeekStart', self.html)
         self.assertIn('width:62px; height:62px; flex:0 0 62px', self.html)
         self.assertIn('font-size:1.25rem', self.html)
         self.assertIn('font-size:1.15rem', self.html)
@@ -363,9 +563,14 @@ class HomepageContractTests(unittest.TestCase):
                 self.assertIn("Calentamiento listo.", source)
                 self.assertIn("celebrate(completionPanel, 38)", source)
                 self.assertIn("prefers-reduced-motion:reduce", source)
+                self.assertIn("toastMascot.className = 'toastMascot'", source)
+                self.assertIn("toastCopy.textContent = message", source)
+                self.assertIn("${variant}-approval.png", source)
+                self.assertIn("}, 5200);", source)
+                self.assertIn("animation:mascotToastApproval 1.4s", source)
 
     def test_profile_and_progress_reads_are_gated_by_installation(self):
-        self.assertIn("if (!window.GymratikInstallGate?.isInstalled()) return;", self.html.split("async function refreshProfile()", 1)[1])
+        self.assertIn("if (!window.GymratikInstallGate?.isInstalled() || !window.TrainingProgressStore)", self.html.split("async function refreshProfile()", 1)[1])
         self.assertIn("async function refreshProgress() {\n      if (!window.GymratikInstallGate?.isInstalled()) return;", self.html)
 
     def test_day1_replaces_cross_day_duplicate_media_id(self):

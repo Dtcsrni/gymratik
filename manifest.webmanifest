@@ -11,10 +11,16 @@
   "theme_color": "#10161f",
   "icons": [
     {
-      "src": "./icon.png",
-      "sizes": "any",
+      "src": "./assets/branding/gymratik-mascots-mark-192.png",
+      "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/branding/gymratik-mascots-mark-v2.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

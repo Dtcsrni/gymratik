@@ -7,9 +7,9 @@
   <meta name="application-name" content="Gymratik">
   <meta name="apple-mobile-web-app-title" content="Gymratik">
   <meta name="description" content="Rutinas visuales para entrenar en el gimnasio con calentamiento, técnica y registro de series.">
-  <meta name="gymratik-resource-estimate" content='{"applicationBytes":"000000004327266","imageBytes":"000000038223785","totalBytes":"000000042551051"}'>
+  <meta name="gymratik-resource-estimate" content='{"applicationBytes":"000000004926569","imageBytes":"000000035070968","totalBytes":"000000039997537"}'>
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="icon" href="./icon.png" type="image/png">
+  <link rel="icon" href="./assets/branding/gymratik-mascots-mark-v2.png" type="image/png">
   <script src="./install-gate.js"></script>
   <script src="./progress-store.js"></script>
   <script>document.documentElement.classList.add('gymratik-loading');</script>
@@ -36,6 +36,8 @@
     .brand { display:inline-flex; align-items:center; gap:12px; color:var(--text); font-size:1.25rem; font-weight:900; letter-spacing:.08em; text-decoration:none; text-transform:uppercase; }
     .brand-mark { display:block; width:62px; height:62px; flex:0 0 62px; border:1px solid rgba(115,230,207,.34); border-radius:16px; background:rgba(11,16,23,.72); box-shadow:0 8px 20px rgba(0,0,0,.2); }
     .brand-mark img { display:block; width:100%; height:100%; object-fit:contain; }
+    .brand-name { display:inline-flex; align-items:center; gap:8px; }
+    .brand-version { padding:3px 6px; border:1px solid rgba(246,197,107,.42); border-radius:6px; color:var(--warm); font-size:.56rem; font-weight:850; letter-spacing:.07em; line-height:1; }
     .topbar-meta { display:flex; align-items:center; gap:10px; }
     .profile-chip { display:inline-flex; align-items:center; gap:7px; min-height:34px; padding:4px 10px 4px 5px; border:1px solid rgba(115,230,207,.28); border-radius:999px; color:var(--text); background:rgba(16,22,31,.65); font-size:.75rem; font-weight:850; text-decoration:none; }
     .profile-chip:hover { border-color:rgba(115,230,207,.6); background:rgba(115,230,207,.08); }
@@ -60,9 +62,9 @@
     .button:disabled { cursor:wait; opacity:.58; transform:none; }
     .hero-trust { display:flex; align-items:center; gap:8px; margin:16px 0 0; color:var(--soft); font-size:.78rem; }
     .status-dot { width:8px; height:8px; flex:0 0 8px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 4px rgba(115,230,207,.1); }
-    .next-session-card { position:relative; display:grid; grid-template-columns:135px minmax(0,1fr); gap:20px; overflow:hidden; min-height:300px; padding:18px; border:1px solid rgba(115,230,207,.28); border-radius:25px; background:linear-gradient(145deg,rgba(39,67,76,.96),rgba(20,31,42,.98) 70%),var(--panel); box-shadow:var(--shadow); }
+    .next-session-card { position:relative; display:grid; grid-template-columns:minmax(200px,.9fr) minmax(0,1.3fr); gap:20px; overflow:hidden; min-height:300px; padding:18px; border:1px solid rgba(115,230,207,.28); border-radius:25px; background:linear-gradient(145deg,rgba(39,67,76,.96),rgba(20,31,42,.98) 70%),var(--panel); box-shadow:var(--shadow); }
     .next-session-card::after { position:absolute; right:-62px; bottom:-84px; width:240px; height:240px; border:1px solid rgba(115,230,207,.2); border-radius:50%; box-shadow:0 0 0 25px rgba(115,230,207,.04),0 0 0 50px rgba(115,230,207,.025); content:""; pointer-events:none; }
-    .next-session-image { width:135px; height:100%; min-height:264px; object-fit:cover; border-radius:17px; background:#d9dde0; }
+    .next-session-image { display:block; width:100%; height:100%; min-height:264px; object-fit:contain; object-position:center; border-radius:17px; background:radial-gradient(ellipse,rgba(24,74,82,.45),rgba(6,22,34,0) 74%); }
     .next-session-content { position:relative; z-index:1; display:flex; min-width:0; flex-direction:column; padding:8px 3px 6px 0; }
     .card-kicker { margin:0 0 15px; color:var(--warm); font-size:.7rem; font-weight:950; letter-spacing:.14em; text-transform:uppercase; }
     .next-session-content h2 { max-width:10ch; margin-bottom:10px; overflow-wrap:anywhere; font-size:clamp(2rem,4vw,3rem); line-height:.98; letter-spacing:-.06em; }
@@ -97,11 +99,12 @@
     .routine-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
     .routine-card { display:flex; min-width:0; flex-direction:column; overflow:hidden; border:1px solid var(--line); border-radius:20px; background:linear-gradient(160deg,var(--panel-strong),var(--panel)); box-shadow:0 14px 34px rgba(0,0,0,.15); text-decoration:none; transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease; }
     .routine-card:hover { transform:translateY(-5px); border-color:rgba(115,230,207,.55); box-shadow:0 20px 44px rgba(0,0,0,.23); }
-    .routine-visual { position:relative; aspect-ratio:1.55; overflow:hidden; background:#d9dde0; }
-    .routine-visual::after { position:absolute; inset:0; background:linear-gradient(180deg,rgba(10,15,21,.03),rgba(10,15,21,.74)); content:""; }
+    .routine-visual { position:relative; aspect-ratio:1.55; overflow:hidden; background:radial-gradient(ellipse at 50% 65%,rgba(34,128,137,.28),transparent 68%),linear-gradient(145deg,#0c2734,#111c2c); }
+    .routine-visual::after { position:absolute; inset:0; background:linear-gradient(180deg,rgba(10,15,21,.02),rgba(10,15,21,.24)); content:""; pointer-events:none; }
     .routine-visual img { display:block; width:100%; height:100%; object-fit:cover; transition:transform .4s ease; }
-    .routine-card:hover .routine-visual img { transform:scale(1.045); }
-    .routine-day { position:absolute; z-index:1; top:15px; left:16px; color:#fff; font-size:.72rem; font-weight:950; letter-spacing:.14em; text-transform:uppercase; }
+    .routine-visual img.routine-cover-art { box-sizing:border-box; object-fit:contain; object-position:center; padding:5px; filter:drop-shadow(0 8px 16px rgba(0,0,0,.3)); }
+    .routine-card:hover .routine-visual img:not(.routine-cover-art) { transform:scale(1.045); }
+    .routine-day { position:absolute; z-index:1; top:15px; left:16px; color:#fff; font-size:.72rem; font-weight:950; letter-spacing:.14em; text-shadow:0 1px 8px rgba(3,12,18,.8); text-transform:uppercase; }
     .routine-status { position:absolute; z-index:1; right:14px; bottom:14px; padding:5px 8px; border:1px solid rgba(255,255,255,.27); border-radius:999px; color:#fff; background:rgba(10,15,21,.45); font-size:.68rem; font-weight:850; }
     .routine-body { display:flex; flex:1; flex-direction:column; padding:19px 19px 17px; }
     .routine-body h3 { margin-bottom:7px; font-size:1.22rem; letter-spacing:-.025em; }
@@ -153,6 +156,8 @@
     .routine-reminder[hidden] { display:none; }
     .session-history { display:grid; gap:8px; }
     .session-history-empty { margin:0; color:var(--muted); font-size:.82rem; }
+    .session-history-empty[data-loading="true"] { display:flex; align-items:center; gap:9px; }
+    .session-history-empty[data-loading="true"]::after { width:24px; height:6px; border-radius:999px; background:linear-gradient(90deg,var(--accent) 0 25%,rgba(115,230,207,.2) 25% 50%,var(--warm) 50% 75%,rgba(246,197,107,.2) 75%); background-size:200% 100%; content:""; animation:historyLoadingRhythm 1.15s ease-in-out infinite; }
     .history-item { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 12px; padding:11px 12px; border:1px solid var(--line); border-radius:13px; background:rgba(9,16,24,.3); }
     .history-item strong { min-width:0; overflow:hidden; color:var(--text); font-size:.8rem; text-overflow:ellipsis; white-space:nowrap; }
     .history-item span { color:var(--muted); font-size:.72rem; }
@@ -234,7 +239,8 @@
   <style data-home-splash="v3">
     .app-splash { position:fixed; z-index:10000; inset:0; display:grid; place-items:center; padding:24px; overflow:hidden; background:radial-gradient(ellipse at 50% 34%,rgba(92,232,200,.2),transparent 38%),linear-gradient(145deg,#061019,#0a1a27 58%,#07131d); opacity:0; visibility:hidden; pointer-events:none; transition:opacity .22s ease,visibility .22s ease; }
     html.gymratik-loading .app-splash { opacity:1; visibility:visible; pointer-events:auto; }
-    .splash-card { position:relative; display:grid; grid-template-columns:minmax(0,1fr) 160px; align-items:center; gap:20px; width:min(100%,460px); min-height:190px; padding:23px 22px 22px 27px; overflow:hidden; border:1px solid rgba(164,223,231,.28); border-radius:28px; background:linear-gradient(145deg,rgba(23,56,69,.92),rgba(7,24,36,.96)); box-shadow:0 28px 90px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.1); }
+    .app-splash[aria-hidden="true"] { opacity:0!important; visibility:hidden!important; pointer-events:none!important; transition:none!important; }
+    .splash-card { position:relative; display:grid; grid-template-columns:minmax(0,1fr); align-items:center; gap:20px; width:min(100%,460px); min-height:190px; padding:23px 22px 22px 27px; overflow:hidden; border:1px solid rgba(164,223,231,.28); border-radius:28px; background:linear-gradient(145deg,rgba(23,56,69,.92),rgba(7,24,36,.96)); box-shadow:0 28px 90px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.1); }
     .splash-copy { position:relative; z-index:1; }
     .splash-brand { display:block; margin-bottom:8px; color:#72f0d2; font-size:.72rem; font-weight:950; letter-spacing:.2em; text-transform:uppercase; }
     .splash-copy p { margin:0 0 19px; color:#f4fbff; font-size:clamp(1.3rem,5vw,1.8rem); font-weight:850; line-height:1.08; letter-spacing:-.045em; }
@@ -246,12 +252,21 @@
     .splash-network-actions .button { min-height:38px; padding:7px 10px; font-size:.78rem; }
     .splash-progress { position:relative; display:block; width:min(100%,190px); height:5px; overflow:hidden; border-radius:999px; background:rgba(164,223,231,.17); }
     .splash-progress::after { position:absolute; inset:0 auto 0 0; width:42%; border-radius:inherit; background:linear-gradient(90deg,#20c6ad,#78dcff); box-shadow:0 0 16px rgba(92,232,200,.65); content:""; animation:splashProgress 1.15s ease-in-out infinite alternate; }
-    .splash-mascots { position:relative; z-index:1; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:160px; height:100px; filter:drop-shadow(0 12px 22px rgba(0,0,0,.35)); }
-    .splash-mascot { display:block; width:80px; height:100px; background-image:url('./data/profile/gymratik-machine-sprite.webp'); background-repeat:no-repeat; background-size:200% 300%; }
-    .splash-mascot-female { animation:legPressCycle 4.8s steps(1,end) infinite; }
-    .splash-mascot-male { animation:chestPressCycle 4.8s steps(1,end) infinite; }
-    @keyframes legPressCycle { 0%,19% { background-position:0 0; } 20%,39% { background-position:0 50%; } 40%,59% { background-position:0 100%; } 60%,79% { background-position:0 50%; } 80%,100% { background-position:0 0; } }
-    @keyframes chestPressCycle { 0%,19% { background-position:100% 0; } 20%,39% { background-position:100% 50%; } 40%,59% { background-position:100% 100%; } 60%,79% { background-position:100% 50%; } 80%,100% { background-position:100% 0; } }
+    .splash-copy { position:relative; z-index:1; }
+    .splash-mascot-poses { position:absolute; z-index:0; inset:0; display:grid; place-items:center; overflow:hidden; opacity:.2; pointer-events:none; }
+    .splash-pose { position:absolute; inset:0; display:block; width:min(100%,320px); height:auto; max-height:100%; margin:auto; object-fit:contain; object-position:center; }
+    .app-splash.update-detected .splash-card { border-color:rgba(92,232,200,.72); box-shadow:0 0 0 1px rgba(92,232,200,.18),0 28px 90px rgba(0,0,0,.48),0 0 42px rgba(92,232,200,.18); animation:updateDetectedGlow 1.8s ease-in-out infinite alternate; }
+    .app-splash.update-detected .splash-mascot-poses { opacity:.38; }
+    .update-notice { display:grid; grid-template-columns:72px minmax(0,1fr); align-items:center; gap:14px; margin:12px 0 0; padding:10px 14px; border:1px solid rgba(92,232,200,.5); border-radius:16px; background:linear-gradient(110deg,rgba(15,55,62,.96),rgba(12,29,43,.96)); box-shadow:0 8px 24px rgba(0,0,0,.18); color:var(--text); }
+    .update-notice[hidden] { display:none; }
+    .update-notice[data-detected="true"] { animation:updateDetectedGlow 1.8s ease-in-out infinite alternate; }
+    .update-notice img { display:block; width:72px; height:64px; object-fit:contain; }
+    .update-notice strong { display:block; margin-bottom:3px; color:#72f0d2; font-size:.88rem; }
+    .update-notice p { margin:0; color:#d5e6ec; font-size:.78rem; line-height:1.4; }
+    .update-notice .button { min-height:34px; margin-top:8px; padding:6px 10px; font-size:.72rem; }
+    @keyframes updateDetectedGlow { from { box-shadow:0 0 0 1px rgba(92,232,200,.12),0 8px 24px rgba(0,0,0,.18); } to { box-shadow:0 0 0 3px rgba(92,232,200,.2),0 10px 28px rgba(0,0,0,.22),0 0 24px rgba(92,232,200,.2); } }
+    @keyframes splashProgress { from { transform:translateX(-4%); } to { transform:translateX(145%); } }
+    @keyframes historyLoadingRhythm { 0% { background-position:100% 0; opacity:.62; } 55% { opacity:1; } 100% { background-position:0 0; opacity:.72; } }
     @keyframes splashProgress { from { transform:translateX(-4%); } to { transform:translateX(145%); } }
     .hero { min-height:590px; padding-top:64px; padding-bottom:72px; }
     .hero-mascot-bg { right:-1%; top:-3%; width:min(66vw,720px); height:111%; object-position:right center; opacity:.48; filter:saturate(1.04) contrast(1.04) drop-shadow(0 28px 50px rgba(0,0,0,.32)); mask-image:linear-gradient(180deg,#000 0%,#000 72%,transparent 100%); }
@@ -282,22 +297,28 @@
     .next-session-card { z-index:2; align-self:center; border-radius:29px; background:linear-gradient(145deg,rgba(15,43,55,.97),rgba(6,22,34,.97))!important; box-shadow:0 30px 78px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.1)!important; }
     .next-session-image { box-shadow:0 0 0 1px rgba(255,255,255,.16); }
     .next-session-content h2 { max-width:11ch; }
+    .hero-strength-stage { position:absolute; z-index:0; inset:0 0 auto; height:min(100%,430px); display:grid; place-items:center; overflow:hidden; pointer-events:none; opacity:.88; }
+    .hero-strength-stage::after { position:absolute; inset:0; content:""; background:radial-gradient(ellipse at center,rgba(13,20,29,.025),rgba(13,20,29,.16) 72%); pointer-events:none; }
+    .hero-strength-art { position:absolute; inset:0; display:block; width:min(78vw,620px); height:auto; max-height:100%; margin:auto; aspect-ratio:3/2; object-fit:contain; object-position:center; transform-origin:center; animation:coverArtDrift 24s ease-in-out infinite alternate; }
+    @keyframes coverArtDrift { from { transform:translate3d(0,0,0) scale(1); } to { transform:translate3d(0,-1.5px,0) scale(1.003); } }
     @media (max-width:900px) {
       .hero { min-height:0; padding-top:42px; }
       .hero-mascot-bg { right:0; top:0; width:min(58vw,550px); height:67%; opacity:.42; }
+      .hero-strength-stage { height:clamp(220px,44vw,300px); opacity:.78; }
+      .hero-strength-art { width:min(88vw,560px); }
       .hero-copy-block { max-width:620px; }
       .next-session-card { width:min(100%,700px); }
     }
     @media (max-width:560px) {
       .app-splash { padding:18px; }
-      .splash-card { grid-template-columns:minmax(0,1fr) 112px; gap:7px; min-height:158px; padding:20px 16px 20px 20px; border-radius:23px; }
+      .splash-card { grid-template-columns:minmax(0,1fr); gap:7px; min-height:158px; padding:20px 16px 20px 20px; border-radius:23px; }
       .splash-copy p { margin-bottom:15px; }
-      .splash-mascots { width:118px; height:74px; }
-      .splash-mascot { width:59px; height:74px; }
       .brand { gap:9px; font-size:1.15rem; }
       .brand-mark { width:54px; height:54px; flex-basis:54px; border-radius:14px; }
       .hero { gap:25px; padding:32px 0 42px; }
       .hero-mascot-bg { top:8px; right:-4%; width:70vw; height:330px; object-position:right top; opacity:.34; mask-image:linear-gradient(180deg,#000 0%,#000 68%,transparent 100%); }
+      .hero-strength-stage { top:-14px; height:clamp(215px,64vw,290px); opacity:.72; }
+      .hero-strength-art { width:min(100%,440px); }
       .hero-copy-block { max-width:100%; }
       .hero .eyebrow { max-width:70%; font-size:.65rem; }
       .hero h1 { max-width:7ch; margin-bottom:15px; font-size:clamp(3.15rem,14vw,4.6rem); }
@@ -305,32 +326,35 @@
       .hero-motivation { margin-bottom:18px; padding:11px 13px; font-size:.87rem; }
       .hero-actions { align-items:stretch; flex-direction:column; gap:8px; }
       .hero-actions .button { width:100%; min-height:47px; }
-      .next-session-card { grid-template-columns:96px minmax(0,1fr); gap:13px; }
+      .next-session-card { grid-template-columns:minmax(0,1fr); gap:10px; }
+      .next-session-image { width:100%; height:clamp(142px,42vw,176px); min-height:0; border-radius:14px; }
     }
     @media (prefers-reduced-motion:reduce) {
-      .app-splash,.splash-progress::after,.splash-mascot { transition:none; animation:none; }
+      .app-splash,.splash-progress::after { transition:none; animation:none; }
+      .app-splash.update-detected .splash-card,.update-notice[data-detected="true"] { animation:none; }
       .splash-progress::after { width:42%; }
-      .splash-mascot-female { background-position:0 0; }
-      .splash-mascot-male { background-position:100% 0; }
+      .splash-pose,.hero-strength-art { animation:none!important; }
       .button:active { transform:none!important; }
     }
+    html:not(.gymratik-loading) .splash-mascot-poses { visibility:hidden; }
   </style>
 </head>
 <body>
   <div id="appSplash" class="app-splash" role="status" aria-label="Cargando Gymratik">
-    <div class="splash-card"><div class="splash-copy"><span class="splash-brand">Gymratik</span><p id="splashTitle">Preparando tu entrenamiento</p><p id="splashDetail" class="splash-detail" aria-live="polite">Leyendo el avance guardado en este dispositivo…</p><p id="splashNetworkState" class="splash-network-state" aria-live="polite">Actualización: pendiente de comprobar.</p><span class="splash-progress" aria-hidden="true"></span><div id="splashNetworkActions" class="splash-network-actions" role="group" aria-label="Permiso de descarga" hidden><button id="splashAllowNetwork" class="button primary" type="button">Permitir en esta apertura</button><button id="splashSkipNetwork" class="button secondary" type="button">Continuar sin descargar</button></div><button id="splashRetry" class="button secondary splash-retry" type="button" hidden>Reintentar lectura local</button></div><div class="splash-mascots" role="img" aria-label="Gymratik: prensa de piernas y press de pecho sentado"><span class="splash-mascot splash-mascot-female" aria-hidden="true"></span><span class="splash-mascot splash-mascot-male" aria-hidden="true"></span></div></div>
+    <div class="splash-card"><div class="splash-mascot-poses" aria-hidden="true"><img id="splashPoseArt" class="splash-pose" src="./assets/branding/gymratik-cover-seated-v1-poster.webp" data-motion-src="./assets/branding/gymratik-cover-seated-breath-30fps.webp" alt="" width="372" height="332"></div><div class="splash-copy"><span class="splash-brand">Gymratik</span><p id="splashTitle">Preparando tu entrenamiento</p><p id="splashDetail" class="splash-detail" aria-live="polite">Leyendo el avance guardado en este dispositivo…</p><p id="splashNetworkState" class="splash-network-state" aria-live="polite">Actualización: pendiente de comprobar.</p><span class="splash-progress" aria-hidden="true"></span><div id="splashNetworkActions" class="splash-network-actions" role="group" aria-label="Permiso de descarga" hidden><button id="splashAllowNetwork" class="button primary" type="button">Permitir en esta apertura</button><button id="splashSkipNetwork" class="button secondary" type="button">Continuar sin descargar</button></div><button id="splashRetry" class="button secondary splash-retry" type="button" hidden>Reintentar lectura local</button></div></div>
   </div>
   <div class="shell">
     <header class="topbar">
-      <a class="brand" href="./" aria-label="Gymratik, inicio"><span class="brand-mark" aria-hidden="true"><img src="./icon.png" alt=""></span><span>Gymratik</span></a>
-      <div class="topbar-meta"><span class="plan-pill">4 días · 82 series</span><a class="topbar-link" href="#progress">Mi avance</a><a class="profile-chip" href="#profile"><img id="profileAvatarCompact" src="./icon.png" alt="Pareja de mascotas de entrenamiento de Gymratik"><span>Perfil</span></a></div>
+      <a class="brand" href="./" aria-label="Gymratik v0.4.3, inicio"><span class="brand-mark" aria-hidden="true"><img src="./assets/branding/gymratik-mascots-mark-v2.png" alt=""></span><span class="brand-name">Gymratik <span class="brand-version" aria-label="Versión 0.4.3">v0.4.3</span></span></a>
+      <div class="topbar-meta"><span class="plan-pill">4 días · 82 series</span><a class="topbar-link" href="#progress">Mi avance</a><a class="profile-chip" href="#profile"><img id="profileAvatarCompact" src="./assets/branding/gymratik-mascots-mark-v2.png" alt="Pareja de mascotas de entrenamiento de Gymratik"><span>Perfil</span></a></div>
     </header>
+    <div id="updateNotice" class="update-notice" role="status" aria-live="polite" hidden><img id="updateNoticeArt" src="./assets/branding/gymratik-cover-seated-v1-poster.webp" data-motion-src="./assets/branding/gymratik-cover-seated-breath-30fps.webp" alt="" width="72" height="64"><div><strong id="updateNoticeTitle"></strong><p id="updateNoticeText"></p><button id="manualUpdateButton" class="button secondary" type="button" hidden>Buscar actualización ahora</button></div></div>
     <main>
       <section class="hero" aria-labelledby="pageTitle">
-        <img class="hero-mascot-bg" src="./icon.png" alt="" aria-hidden="true" fetchpriority="high">
+        <div class="hero-strength-stage" aria-hidden="true"><img id="heroStrengthArt" class="hero-strength-art" src="./assets/branding/gymratik-cover-seated-v1-poster.webp" alt="" width="372" height="332" fetchpriority="high"></div>
         <div class="hero-copy-block">
           <p class="eyebrow">Gymratik · Entrena a tu ritmo</p>
-          <h1 id="pageTitle">Una serie a la vez.</h1>
+          <h1 id="pageTitle">Empieza a tu ritmo.</h1>
           <p class="hero-copy">Calienta, entrena con técnica y registra cada serie.</p>
           <p id="motivationMessage" class="hero-motivation" role="status" aria-live="polite">Cuida la técnica y registra cada serie: el progreso se construye paso a paso.</p>
           <div id="routineReminder" class="routine-reminder" role="status" hidden><span id="routineReminderText"></span><button id="dismissRoutineReminder" class="button secondary" type="button">Hoy no</button></div>
@@ -338,10 +362,10 @@
           <p class="hero-trust"><span class="status-dot" aria-hidden="true"></span>Tu avance se guarda en este dispositivo.</p>
         </div>
         <aside class="next-session-card" aria-labelledby="nextSessionTitle">
-          <img id="nextSessionImage" class="next-session-image" src="./data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/images/1350-7I6LNUG.jpg" alt="Remo horizontal en máquina, referencia visual del Día 1">
+          <img id="nextSessionImage" class="next-session-image" src="./assets/branding/routine-covers/day1.webp" alt="Lámina anatómica: espalda y bíceps destacados para el Día 1">
           <div class="next-session-content">
             <p id="nextSessionKicker" class="card-kicker">Siguiente en tu rotación</p>
-            <h2 id="nextSessionTitle">Día 1 · Espalda + Bíceps</h2>
+            <h2 id="nextSessionTitle">Día 1 · Tirón: espalda y bíceps</h2>
             <p id="nextSessionSummary" class="next-session-summary">Tracción, remo y trabajo de brazos con instrucciones visuales y registro por ejercicio.</p>
             <div class="session-meta"><span id="nextSessionMeta">6 ejercicios · 20 series</span><span>Calentamiento incluido</span></div>
             <a id="nextSessionLink" class="session-link" href="./data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html">Abrir sesión →</a>
@@ -364,7 +388,7 @@
           <details id="profileEditor" class="profile-editor">
             <summary id="profileEditorSummary">Completar perfil</summary>
             <form id="profileForm" class="profile-form" novalidate>
-            <div class="profile-identity"><img id="profileAvatar" class="profile-avatar" src="./icon.png" alt="Pareja de mascotas de entrenamiento de Gymratik"><div class="profile-avatar-copy"><p id="profileIntro">Un par de datos opcionales para personalizar tu experiencia. Se guardan solo en este dispositivo; puedes cambiarlos después.</p></div></div>
+            <div class="profile-identity"><img id="profileAvatar" class="profile-avatar" src="./assets/branding/gymratik-mascots-mark-v2.png" alt="Pareja de mascotas de entrenamiento de Gymratik"><div class="profile-avatar-copy"><p id="profileIntro">Un par de datos opcionales para personalizar tu experiencia. Se guardan solo en este dispositivo; puedes cambiarlos después.</p></div></div>
             <div class="profile-grid">
               <div class="profile-field"><label for="profileDisplayName">¿Cómo te llamamos? <span>(opcional)</span></label><input id="profileDisplayName" name="displayName" type="text" maxlength="80" autocomplete="name" placeholder="Tu nombre"></div>
               <div class="profile-field"><label for="profileSex">Sexo, solo para elegir la mascota <span>(opcional)</span></label><select id="profileSex" name="sex"><option value="">Usar mascotas predeterminadas</option><option value="female">Mujer · ratona</option><option value="male">Hombre · ratón</option><option value="nonbinary">No binario · mascotas predeterminadas</option><option value="prefer-not-to-say">Prefiero no indicarlo</option></select></div>
@@ -382,18 +406,18 @@
             <div class="profile-actions"><button class="button" id="saveProfileButton" type="submit">Guardar y continuar</button><p id="profileStatus" class="profile-status" role="status" aria-live="polite"></p></div>
             <div class="data-actions"><button id="exportDataButton" class="button secondary" type="button">Exportar datos</button><label class="button secondary" for="importDataInput">Importar respaldo</label><input id="importDataInput" class="file-input" type="file" accept="application/json,.json"></div>
             </form>
-            <fieldset class="routine-days"><legend>Datos móviles para actualizaciones</legend><label class="profile-field" for="networkPreference"><span>Uso de datos de la aplicación y recursos offline</span><select id="networkPreference"><option value="ask">Preguntar cada vez</option><option value="always">Permitir siempre</option><option value="wifi">Solo Wi‑Fi</option></select></label><p id="networkPreferenceStatus" class="profile-status" role="status">Por defecto preguntaremos antes de descargar una versión o recursos. El permiso dura esta apertura.</p></fieldset>
+            <fieldset class="routine-days"><legend>Red para actualizaciones</legend><label class="profile-field" for="networkPreference"><span>Descarga automática de versiones y recursos offline</span><select id="networkPreference"><option value="ask">Automática en Wi‑Fi; manual en datos</option><option value="always">Siempre, incluso datos móviles</option><option value="wifi">Solo Wi‑Fi</option></select></label><p id="networkPreferenceStatus" class="profile-status" role="status">Las versiones nuevas se actualizan automáticamente en Wi‑Fi. En datos móviles, puedes buscarlas arrastrando hacia abajo desde el borde superior.</p></fieldset>
           </details>
-          <aside class="profile-history" aria-labelledby="historyTitle"><h3 id="historyTitle">Sesiones recientes</h3><div id="sessionHistory" class="session-history" aria-live="polite"><p class="session-history-empty">Cargando historial…</p></div><p class="profile-status">Para borrar sesiones, utiliza «Reiniciar registros» al final de la portada.</p></aside>
+      <aside class="profile-history" aria-labelledby="historyTitle"><h3 id="historyTitle">Sesiones recientes</h3><div id="sessionHistory" class="session-history" aria-live="polite"><p class="session-history-empty" data-loading="true" aria-busy="true">Cargando historial…</p></div><p class="profile-status">Para borrar sesiones, utiliza «Reiniciar registros» al final de la portada.</p></aside>
         </div>
       </section>
       <section id="routines" aria-labelledby="routinesTitle">
         <div class="section-head"><div><p class="eyebrow">Plan completo</p><h2 id="routinesTitle">Tus sesiones</h2></div></div>
         <div class="routine-grid">
-          <a class="routine-card" href="./data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html"><div class="routine-visual"><img src="./data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/images/1350-7I6LNUG.jpg" alt="Remo horizontal en máquina, referencia visual del Día 1" loading="eager"><span class="routine-day">Día 1</span><span class="routine-status">6 ejercicios · 20 series</span></div><div class="routine-body"><h3>Espalda + Bíceps</h3><p>Tracción, remo y trabajo de brazos con instrucciones visuales y registro por ejercicio.</p><span class="routine-link"><span>Abrir sesión</span><span>→</span></span></div></a>
-          <a class="routine-card" href="./data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html"><div class="routine-visual"><img src="./data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/images/0739-10Z2DXU.jpg" alt="Prensa de piernas, referencia visual del Día 2" loading="lazy"><span class="routine-day">Día 2</span><span class="routine-status">6 ejercicios · 20 series</span></div><div class="routine-body"><h3>Pierna + Glúteo</h3><p>Tren inferior con énfasis en máquinas, progresión reproducible y fases técnicas visibles.</p><span class="routine-link"><span>Abrir sesión</span><span>→</span></span></div></a>
-          <a class="routine-card" href="./data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html"><div class="routine-visual"><img src="./data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/images/0577-T0yTjgW.jpg" alt="Press de pecho sentado en máquina, referencia visual del Día 3" loading="lazy"><span class="routine-day">Día 3</span><span class="routine-status">7 ejercicios · 22 series</span></div><div class="routine-body"><h3>Pecho + Hombro + Tríceps</h3><p>Sesión de empuje con recorrido completo, referencias de posición y seguimiento visual.</p><span class="routine-link"><span>Abrir sesión</span><span>→</span></span></div></a>
-          <a class="routine-card" href="./data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html"><div class="routine-visual"><img src="./data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/images/2287-V07qpXy.jpg" alt="Prensa unilateral alterna, referencia visual del Día 4" loading="lazy"><span class="routine-day">Día 4</span><span class="routine-status">7 ejercicios · 20 series</span></div><div class="routine-body"><h3>Pierna equilibrada</h3><p>Rodilla, cadera, isquiosurales, pantorrilla y core con volumen trazable y apoyo visual.</p><span class="routine-link"><span>Abrir sesión</span><span>→</span></span></div></a>
+          <a class="routine-card" href="./data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html"><div class="routine-visual"><img class="routine-cover-art" src="./assets/branding/routine-covers/day1.webp" alt="Lámina anatómica: espalda y bíceps destacados para el Día 1" loading="eager"><span class="routine-day">Día 1</span><span class="routine-status">6 ejercicios · 20 series</span></div><div class="routine-body"><h3>Tirón · espalda y bíceps</h3><p>Jalones y remos para espalda, con trabajo directo de bíceps y deltoides posterior.</p><span class="routine-link"><span>Abrir sesión</span><span>→</span></span></div></a>
+          <a class="routine-card" href="./data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html"><div class="routine-visual"><img class="routine-cover-art" src="./assets/branding/routine-covers/day2.webp" alt="Lámina anatómica: cuádriceps, glúteos, isquiosurales y pantorrillas destacados para el Día 2" loading="lazy"><span class="routine-day">Día 2</span><span class="routine-status">6 ejercicios · 20 series</span></div><div class="routine-body"><h3>Pierna · cuádriceps y glúteos</h3><p>Sentadilla en máquina, empuje de cadera y trabajo específico de isquiosurales y pantorrilla.</p><span class="routine-link"><span>Abrir sesión</span><span>→</span></span></div></a>
+          <a class="routine-card" href="./data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html"><div class="routine-visual"><img class="routine-cover-art" src="./assets/branding/routine-covers/day3.webp" alt="Lámina anatómica: pectorales, hombros y tríceps destacados para el Día 3" loading="lazy"><span class="routine-day">Día 3</span><span class="routine-status">7 ejercicios · 22 series</span></div><div class="routine-body"><h3>Empuje · pecho, hombros y tríceps</h3><p>Presses horizontales y verticales, aperturas y trabajo directo de hombros y tríceps.</p><span class="routine-link"><span>Abrir sesión</span><span>→</span></span></div></a>
+          <a class="routine-card" href="./data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html"><div class="routine-visual"><img class="routine-cover-art" src="./assets/branding/routine-covers/day4.webp" alt="Lámina anatómica: cuádriceps, glúteos, isquiosurales, pantorrillas y abdomen destacados para el Día 4" loading="lazy"><span class="routine-day">Día 4</span><span class="routine-status">7 ejercicios · 20 series</span></div><div class="routine-body"><h3>Pierna y core · cadera y estabilidad</h3><p>Trabajo unilateral, bisagra de cadera, flexión de rodilla, pantorrillas y abdomen.</p><span class="routine-link"><span>Abrir sesión</span><span>→</span></span></div></a>
         </div>
       </section>
       <section class="how-to" aria-labelledby="howToTitle"><div><p class="eyebrow">En el gimnasio</p><h2 id="howToTitle">Tres pasos y a entrenar.</h2></div><ol class="how-to-list"><li>Calienta siguiendo la guía de la sesión.</li><li>Registra cada serie al terminarla.</li><li>Revisa tu avance antes de irte.</li></ol></section>
@@ -401,7 +425,31 @@
       <footer><p>Material de entrenamiento general. Respeta el calentamiento indicado y ajusta la sesión a tu situación.</p><div class="footer-actions"><p id="resetNote" class="progress-note" role="status" aria-live="polite">Los registros se conservan en este dispositivo.</p><button id="resetAllButton" class="button secondary reset-button" type="button">Reiniciar registros</button></div><p id="updateState" class="update-state" role="status" aria-live="polite">Aplicación y recursos offline: comprobando actualización…</p><span id="appVersion" class="app-version" aria-label="Versión de la aplicación" hidden></span></footer>
   </div>
   <script>
+    const splashPoseArt = document.querySelector('#splashPoseArt');
+    const updateNotice = document.querySelector('#updateNotice');
+    const updateNoticeArt = document.querySelector('#updateNoticeArt');
+    const manualUpdateButton = document.querySelector('#manualUpdateButton');
+    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const setCoverArtPlayback = (image, shouldAnimate) => {
+      if (!image) return;
+      const desiredSrc = shouldAnimate ? image.dataset.motionSrc : image.getAttribute('src').replace(/[^/]+$/, 'gymratik-cover-seated-v1-poster.webp');
+      if (image.getAttribute('src') !== desiredSrc) image.setAttribute('src', desiredSrc);
+    };
+    const syncCoverArtMotion = () => {
+      const pageVisible = document.visibilityState === 'visible' && !reducedMotionQuery.matches;
+      const splashVisible = document.documentElement.classList.contains('gymratik-loading');
+      setCoverArtPlayback(splashPoseArt, pageVisible && splashVisible);
+      setCoverArtPlayback(updateNoticeArt, pageVisible && !updateNotice.hidden && updateNotice.dataset.detected === 'true');
+    };
+    new MutationObserver(syncCoverArtMotion).observe(document.documentElement, { attributes:true, attributeFilter:['class'] });
+    document.addEventListener('visibilitychange', syncCoverArtMotion);
+    if (reducedMotionQuery.addEventListener) reducedMotionQuery.addEventListener('change', syncCoverArtMotion);
+    else if (reducedMotionQuery.addListener) reducedMotionQuery.addListener(syncCoverArtMotion);
+    syncCoverArtMotion();
     const updateState = document.querySelector('#updateState');
+    const updateNoticeTitle = document.querySelector('#updateNoticeTitle');
+    const updateNoticeText = document.querySelector('#updateNoticeText');
+    const appSplash = document.querySelector('#appSplash');
     const appVersion = document.querySelector('#appVersion');
     const splashTitle = document.querySelector('#splashTitle');
     const splashDetail = document.querySelector('#splashDetail');
@@ -412,6 +460,7 @@
     const splashRetry = document.querySelector('#splashRetry');
     const networkPreference = document.querySelector('#networkPreference');
     const networkPreferenceStatus = document.querySelector('#networkPreferenceStatus');
+    const pageTitle = document.querySelector('#pageTitle');
     const nextSessionCta = document.querySelector('#nextSessionCta');
     const nextSessionLink = document.querySelector('#nextSessionLink');
     const nextSessionImage = document.querySelector('#nextSessionImage');
@@ -454,16 +503,18 @@
     const LAST_UPDATE_KEY = 'gymratik-last-update-v1';
     const NETWORK_PREFERENCE_KEY = 'gymratik-network-preference-v1';
     const NETWORK_PERMISSION_KEY = 'gymratik-network-permission-v1';
+    const MANUAL_UPDATE_REQUEST_KEY = 'gymratik-manual-update-request-at-v1';
+    const MANUAL_UPDATE_REQUEST_TTL_MS = 5 * 60 * 1000;
     const PAGE_RELOAD_GUARD_KEY = 'gymratik-page-reload-at-v1';
     const PAGE_RELOAD_GUARD_MS = 4000;
     const SYNC_TIMEOUT_MS = 20000;
     const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
     const MOTIVATION_RECENT_WINDOW_MS = 7 * MILLISECONDS_PER_DAY;
     const routineCatalog = [
-      { routineId: 'day1', day: 'Día 1', title: 'Espalda + Bíceps', summary: 'Tracción, remo y trabajo de brazos con instrucciones visuales y registro por ejercicio.', totalExercises: 6, totalSeries: 20, image: './data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/images/1350-7I6LNUG.jpg', href: './data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html' },
-      { routineId: 'day2', day: 'Día 2', title: 'Pierna + Glúteo', summary: 'Tren inferior con énfasis en máquinas, progresión reproducible y fases técnicas visibles.', totalExercises: 6, totalSeries: 20, image: './data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/images/0739-10Z2DXU.jpg', href: './data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html' },
-      { routineId: 'day3', day: 'Día 3', title: 'Pecho + Hombro + Tríceps', summary: 'Sesión de empuje con recorrido completo, referencias de posición y seguimiento visual.', totalExercises: 7, totalSeries: 22, image: './data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/images/0577-T0yTjgW.jpg', href: './data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html' },
-      { routineId: 'day4', day: 'Día 4', title: 'Pierna equilibrada', summary: 'Rodilla, cadera, isquiosurales, pantorrilla y core con volumen trazable y apoyo visual.', totalExercises: 7, totalSeries: 20, image: './data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/images/2287-V07qpXy.jpg', href: './data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html' },
+      { routineId: 'day1', day: 'Día 1', title: 'Tirón · espalda y bíceps', summary: 'Jalones y remos para espalda, con trabajo directo de bíceps y deltoides posterior.', totalExercises: 6, totalSeries: 20, image: './assets/branding/routine-covers/day1.webp', href: './data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html' },
+      { routineId: 'day2', day: 'Día 2', title: 'Pierna · cuádriceps y glúteos', summary: 'Sentadilla en máquina, empuje de cadera y trabajo específico de isquiosurales y pantorrilla.', totalExercises: 6, totalSeries: 20, image: './assets/branding/routine-covers/day2.webp', href: './data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html' },
+      { routineId: 'day3', day: 'Día 3', title: 'Empuje · pecho, hombros y tríceps', summary: 'Presses horizontales y verticales, aperturas y trabajo directo de hombros y tríceps.', totalExercises: 7, totalSeries: 22, image: './assets/branding/routine-covers/day3.webp', href: './data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html' },
+      { routineId: 'day4', day: 'Día 4', title: 'Pierna y core · cadera y estabilidad', summary: 'Trabajo unilateral, bisagra de cadera, flexión de rodilla, pantorrillas y abdomen.', totalExercises: 7, totalSeries: 20, image: './assets/branding/routine-covers/day4.webp', href: './data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html' },
     ];
     const fallbackRoutineProgress = routineCatalog.map(({ routineId, day, title, totalExercises, totalSeries }) => ({ routineId, label: `${day} · ${title}`, totalExercises, totalSeries }));
     let activeProfile = null;
@@ -524,7 +575,16 @@
         const activityDay = Date.UTC(activityDate.getFullYear(), activityDate.getMonth(), activityDate.getDate());
         const currentDay = Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
         const elapsedDays = Math.floor((currentDay - activityDay) / MILLISECONDS_PER_DAY);
-        const relativeDate = elapsedDays <= 0 ? 'hoy' : elapsedDays === 1 ? 'ayer' : `hace ${elapsedDays} días`;
+        const activityWeekStart = new Date(activityDate.getFullYear(), activityDate.getMonth(), activityDate.getDate());
+        activityWeekStart.setDate(activityWeekStart.getDate() - ((activityWeekStart.getDay() + 6) % 7));
+        const currentWeekStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+        currentWeekStart.setDate(currentWeekStart.getDate() - ((currentWeekStart.getDay() + 6) % 7));
+        const weekday = new Intl.DateTimeFormat('es-MX', { weekday: 'long' }).format(activityDate);
+        const relativeDate = elapsedDays <= 0 ? 'hoy'
+          : elapsedDays === 1 ? 'ayer'
+            : elapsedDays === 2 ? 'antier'
+              : activityWeekStart < currentWeekStart ? `el ${weekday} pasado`
+                : `el ${weekday}`;
         return `Tu última actividad fue ${relativeDate}. El plan sigue listo para cuando quieras retomarlo.`;
       }
 
@@ -546,7 +606,7 @@
     const profileAvatars = {
       female: { src: './data/profile/mouse-female-effort.webp', alt: 'Ratona haciendo press con mancuerna, con expresión de esfuerzo' },
       male: { src: './data/profile/mouse-male-effort.webp', alt: 'Ratón haciendo press con mancuerna, con expresión de esfuerzo' },
-      neutral: { src: './icon.png', alt: 'Ilustración de perfil para entrenamiento' },
+      neutral: { src: './assets/branding/gymratik-mascots-mark-v2.png', alt: 'Ilustración de perfil para entrenamiento' },
     };
 
     function profileAvatarForSex(sex) {
@@ -647,8 +707,14 @@
     }
 
     async function refreshProfile() {
-      if (!window.GymratikInstallGate?.isInstalled()) return;
-      if (!window.TrainingProgressStore) return;
+      if (!window.GymratikInstallGate?.isInstalled() || !window.TrainingProgressStore) {
+        sessionHistory.replaceChildren();
+        const unavailable = document.createElement('p');
+        unavailable.className = 'session-history-empty';
+        unavailable.textContent = 'Instala Gymratik para guardar y consultar tus sesiones.';
+        sessionHistory.append(unavailable);
+        return;
+      }
       const [profile, history] = await Promise.all([window.TrainingProgressStore.getProfile(), window.TrainingProgressStore.getHistory(100)]);
       renderProfile(profile);
       recentSessions = history;
@@ -717,12 +783,19 @@
         selectedIndex = 0;
       }
       const catalog = routineCatalog[selectedIndex] || routineCatalog[0];
+      pageTitle.textContent = continuing
+        ? 'Retoma tu sesión.'
+        : dashboard.todaySeries > 0
+          ? 'Hoy ya avanzaste.'
+          : latestRoutineId
+            ? `Sigue con ${catalog.day}.`
+            : 'Empieza a tu ritmo.';
       nextSessionKicker.textContent = continuing ? 'Continúa donde te quedaste' : 'Siguiente en tu rotación';
       nextSessionTitle.textContent = `${catalog.day} · ${catalog.title}`;
       nextSessionSummary.textContent = catalog.summary;
       nextSessionMeta.textContent = `${catalog.totalExercises} ejercicios · ${catalog.totalSeries} series`;
       nextSessionImage.src = catalog.image;
-      nextSessionImage.alt = `${catalog.title}, referencia visual de ${catalog.day}`;
+      nextSessionImage.alt = `Lámina anatómica: músculos trabajados en ${catalog.title}, destacados en rojo para ${catalog.day}`;
       nextSessionCta.href = catalog.href;
       nextSessionCta.textContent = continuing ? `Continuar ${catalog.day}` : `Empezar ${catalog.day}`;
       nextSessionLink.href = catalog.href;
@@ -779,7 +852,11 @@
     try { networkPreference.value = localStorage.getItem(NETWORK_PREFERENCE_KEY) || 'ask'; } catch (_) { networkPreference.value = 'ask'; }
     networkPreference.addEventListener('change', () => {
       try { localStorage.setItem(NETWORK_PREFERENCE_KEY, networkPreference.value); } catch (_) {}
-      networkPreferenceStatus.textContent = 'Preferencia guardada en este dispositivo. El permiso de red se solicita por apertura.';
+      networkPreferenceStatus.textContent = networkPreference.value === 'wifi'
+        ? 'Preferencia guardada. La versión nueva se instalará automáticamente al tener Wi‑Fi; en otra red, arrastra hacia abajo o usa el botón de actualización manual cuando aparezca.'
+        : networkPreference.value === 'always'
+          ? 'Preferencia guardada. Las versiones nuevas se instalarán automáticamente con cualquier conexión.'
+          : 'Preferencia guardada. Se actualizará automáticamente en Wi‑Fi; en datos móviles, arrastra hacia abajo desde el borde superior o usa el botón manual cuando aparezca.';
     });
     persistButton.addEventListener('click', async () => { if (!window.GymratikInstallGate?.isInstalled()) return; persistButton.disabled = true; const granted = await window.TrainingProgressStore?.requestPersistence(); progressNote.textContent = granted ? 'El navegador protegió este almacenamiento contra limpieza automática.' : 'El navegador no concedió protección adicional; conserva una copia del dispositivo.'; persistButton.disabled = false; });
     profileForm.addEventListener('submit', async (event) => {
@@ -909,8 +986,52 @@
       try { sessionStorage.setItem(`${NETWORK_PERMISSION_KEY}-answer`, allowed ? 'allowed' : 'denied'); } catch (_) {}
       resolve(allowed);
     }
+    function showDeferredUpdateNotice(versionDetected, versionReady = false, networkReason = 'la conexión usa datos móviles') {
+      updateNotice.dataset.detected = String(versionDetected);
+      updateNoticeTitle.textContent = versionReady ? 'Nueva versión lista' : versionDetected ? 'Nueva versión detectada' : 'Actualización automática pausada';
+      updateNoticeText.textContent = versionReady
+        ? `No se aplicará automáticamente porque ${networkReason}. Arrastra hacia abajo desde el borde superior o pulsa el botón para aplicarla.`
+        : versionDetected
+          ? `La nueva versión se está preparando. Como ${networkReason}, arrastra hacia abajo desde el borde superior o pulsa el botón para aplicarla.`
+          : `La actualización automática está pausada porque ${networkReason}. Arrastra hacia abajo desde el borde superior o pulsa el botón para comprobarla.`;
+      manualUpdateButton.hidden = false;
+      updateNotice.hidden = false;
+      syncCoverArtMotion();
+    }
+    function showUpdateDetectedAnimation() {
+      if (!document.documentElement.classList.contains('gymratik-loading')) {
+        updateNotice.dataset.detected = 'true';
+        updateNoticeTitle.textContent = 'Nueva versión detectada';
+        updateNoticeText.textContent = 'Estamos preparando la actualización. Tu avance permanece guardado en este dispositivo.';
+        manualUpdateButton.hidden = true;
+        updateNotice.hidden = false;
+        syncCoverArtMotion();
+        return;
+      }
+      appSplash.classList.add('update-detected');
+      splashTitle.textContent = 'Nueva versión detectada';
+      splashDetail.textContent = 'Estamos preparando la actualización; tu avance permanece guardado en este dispositivo.';
+      splashNetworkState.textContent = 'La mascota animada indica que la nueva versión está en preparación.';
+    }
     splashAllowNetwork.addEventListener('click', () => finishNetworkDecision(true));
     splashSkipNetwork.addEventListener('click', () => finishNetworkDecision(false));
+    manualUpdateButton.addEventListener('click', () => {
+      if (!navigator.onLine) {
+        updateNoticeText.textContent = 'No hay conexión. Al recuperarla, arrastra hacia abajo desde el borde superior o vuelve a pulsar para buscar la actualización.';
+        return;
+      }
+      try { sessionStorage.setItem(MANUAL_UPDATE_REQUEST_KEY, String(Date.now())); } catch (_) {}
+      window.location.reload();
+    });
+    function consumeManualUpdateRequest() {
+      let requestedAt = 0;
+      try {
+        requestedAt = Number(sessionStorage.getItem(MANUAL_UPDATE_REQUEST_KEY)) || 0;
+        sessionStorage.removeItem(MANUAL_UPDATE_REQUEST_KEY);
+      } catch (_) {}
+      const age = Date.now() - requestedAt;
+      return requestedAt > 0 && age >= 0 && age <= MANUAL_UPDATE_REQUEST_TTL_MS;
+    }
     function showSyncProgress(data) {
       if (!data || data.type !== 'PRECACHE_PROGRESS') return;
       const percent = data.total ? Math.floor(data.completed * 100 / data.total) : 0;
@@ -949,9 +1070,13 @@
         const waitingAtOpen = Boolean(registration?.waiting);
         const preference = networkPreference.value;
         const connectionType = navigator.connection?.type;
-        const isWifi = connectionType === 'wifi';
-        let allowed = navigator.onLine && (preference === 'always' || isWifi);
-        if (navigator.onLine && !allowed && preference === 'ask') {
+        const isWifi = connectionType === 'wifi' && navigator.connection?.saveData !== true;
+        const isCellular = connectionType === 'cellular';
+        const isDataSaver = navigator.connection?.saveData === true;
+        const navigationEntry = performance.getEntriesByType?.('navigation')?.[0];
+        const isManualReload = consumeManualUpdateRequest() || navigationEntry?.type === 'reload' || (!navigationEntry && performance.navigation?.type === 1);
+        let allowed = navigator.onLine && (preference === 'always' || isWifi || (!firstInstall && isManualReload));
+        if (firstInstall && navigator.onLine && !allowed && preference === 'ask') {
           const permissionKey = `${NETWORK_PERMISSION_KEY}-answer`;
           let previous = null;
           try { previous = sessionStorage.getItem(permissionKey); } catch (_) {}
@@ -966,13 +1091,31 @@
             const sizeNote = [applicationBytes, imageBytes, totalBytes].every(Number.isFinite) && totalBytes > 0
               ? `Estimación del paquete conocido: ${formatResourceSize(totalBytes)} en total (${formatResourceSize(applicationBytes)} aplicación + ${formatResourceSize(imageBytes)} imágenes). El tamaño transferido puede variar; los GIF de técnica están incluidos y los videos externos no.`
               : 'El tamaño no está disponible antes de iniciar; se mostrará el avance por recursos.';
-            allowed = await requestNetworkPermission('Gymratik necesita descargar la aplicación y sus imágenes esenciales para actualizar o preparar el uso offline.', sizeNote);
+            allowed = await requestNetworkPermission('Gymratik necesita descargar la aplicación y sus imágenes esenciales para preparar el uso offline por primera vez.', sizeNote);
           }
         }
         if (!allowed) {
-          updateState.textContent = preference === 'wifi' && !isWifi
-            ? 'Actualización pendiente: esperando una conexión Wi‑Fi identificable.'
-            : 'Actualización pendiente: no se autorizó el uso de red en esta apertura.';
+          const networkUpdateDeferred = navigator.onLine && !firstInstall && preference !== 'always' && !isWifi;
+          const deferredNetworkReason = isCellular
+            ? 'la conexión usa datos móviles'
+            : isDataSaver
+              ? 'está activado el ahorro de datos'
+              : 'no se pudo confirmar Wi‑Fi';
+          updateState.textContent = networkUpdateDeferred
+            ? waitingAtOpen ? `Nueva versión lista; esperando una actualización manual porque ${deferredNetworkReason}.` : `Actualización automática pausada porque ${deferredNetworkReason}; arrastra hacia abajo desde el borde superior para buscarla.`
+            : preference === 'wifi' && !isWifi
+              ? 'Actualización pendiente: esperando una conexión Wi‑Fi identificable.'
+              : 'Actualización pendiente: no se autorizó el uso de red en esta apertura.';
+          if (networkUpdateDeferred) {
+            const installInProgress = Boolean(registration?.installing);
+            showDeferredUpdateNotice(waitingAtOpen || installInProgress, waitingAtOpen, deferredNetworkReason);
+            if (registration?.installing) {
+              const deferredWorker = registration.installing;
+              deferredWorker.addEventListener('statechange', () => {
+                if (deferredWorker.state === 'installed') showDeferredUpdateNotice(true, true, deferredNetworkReason);
+              });
+            }
+          }
           splashNetworkState.textContent = updateState.textContent;
           markNetworkDecisionPhaseSettled();
           if (!firstInstall || preference === 'ask') { syncFinished = true; return; }
@@ -996,7 +1139,10 @@
           }
           registration = registrationResult.value;
         }
-        if (waitingAtOpen && registration.waiting) registration.waiting.postMessage({ type: 'ACTIVATE_UPDATE' });
+        if (waitingAtOpen && registration.waiting) {
+          showUpdateDetectedAnimation();
+          registration.waiting.postMessage({ type: 'ACTIVATE_UPDATE' });
+        }
         if (!firstInstall) {
           const updateResult = await Promise.race([
             registration.update().then(() => 'finished'),
@@ -1010,6 +1156,7 @@
         }
         let installWorker = registration.installing;
         if (installWorker && !syncTimedOut) {
+          if (!firstInstall) showUpdateDetectedAnimation();
           splashNetworkState.textContent = 'Actualización: versión nueva detectada; preparando recursos offline…';
           const result = await Promise.race([
             new Promise(resolve => {
@@ -1033,9 +1180,11 @@
           syncFinished = false;
           return;
         }
-        if (registration.waiting && !waitingAtOpen) {
-          updateState.textContent = 'Hay una actualización lista; se aplicará al abrir Gymratik de nuevo.';
-          splashNetworkState.textContent = 'Actualización: lista; se activará en la siguiente apertura de Gymratik.';
+        if (registration.waiting) {
+          showUpdateDetectedAnimation();
+          registration.waiting.postMessage({ type: 'ACTIVATE_UPDATE' });
+          updateState.textContent = 'Actualización completa detectada; se está aplicando automáticamente.';
+          splashNetworkState.textContent = 'Actualización: lista; se está aplicando automáticamente.';
         }
         if (!registration.waiting && !syncTimedOut) splashNetworkState.textContent = waitingAtOpen ? 'Actualización: versión nueva activada.' : 'Actualización: ya tienes la versión más reciente.';
         syncFinished = true;

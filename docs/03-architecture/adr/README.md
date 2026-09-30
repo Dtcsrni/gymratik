@@ -19,6 +19,8 @@ Estados: `Proposed`, `Accepted`, `Superseded`, `Rejected`.
 | [ADR-013](ADR-013-perfil-local-y-respaldo-pwa.md) | Perfil local, historial y respaldo de la PWA | Superseded |
 | [ADR-014](ADR-014-progresion-e-horarios-locales-pwa.md) | Progresión, días habituales y avisos locales de la PWA | Superseded |
 | [ADR-015](ADR-015-base-local-v3-exclusiva.md) | Uso exclusivo de la base local y respaldos v3 | Accepted |
+| [ADR-016](ADR-016-actualizacion-segura-pwa.md) | Inicio y actualización segura de la PWA | Superseded |
+| [ADR-017](ADR-017-politica-de-actualizacion-y-cache-pwa.md) | Política de actualización, red y caché acotada de la PWA | Accepted |
 
 ## Plantilla
 

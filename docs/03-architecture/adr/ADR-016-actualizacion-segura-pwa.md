@@ -1,6 +1,6 @@
 # ADR-016 — Inicio informativo y actualización segura de la PWA
 
-**Estado:** Accepted
+**Estado:** Superseded por [ADR-017](ADR-017-politica-de-actualizacion-y-cache-pwa.md)
 **Fecha:** 2026-09-23
 
 ## Contexto

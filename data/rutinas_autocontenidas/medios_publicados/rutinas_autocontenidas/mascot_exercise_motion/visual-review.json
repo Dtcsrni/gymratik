@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "requiredExerciseCount": 26,
+  "approvalRule": "No integrar a rutina ni precache sin aprobación visual humana explícita de técnica, orientación y geometría de máquina.",
+  "reviews": {
+    "day1-exercise01": {
+      "status": "rejected",
+      "angle": "three-quarter side",
+      "machineReference": "rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html",
+      "bodyOrientationVerified": false,
+      "supportsVerified": false,
+      "gripAndContactVerified": false,
+      "machinePartsAndPathVerified": false,
+      "fourPosesAndLoopVerified": false,
+      "findings": "La orientación personaje-máquina no demuestra correctamente la posición de trabajo frente a la torre y el cable. No usar como guía técnica ni publicar; rehacer usando la máquina como referencia geométrica principal."
+    },
+    "day1-exercise02": {
+      "status": "rejected",
+      "angle": "three-quarter side",
+      "machineReference": "ejercicios-compartido/images/panatta-super-high-row-unilateral-start.webp; panatta-super-high-row-unilateral-final.webp",
+      "bodyOrientationVerified": false,
+      "supportsVerified": false,
+      "gripAndContactVerified": false,
+      "machinePartsAndPathVerified": false,
+      "fourPosesAndLoopVerified": false,
+      "findings": "Revisión cuadro a cuadro contra panatta-super-high-row-unilateral-start.webp y panatta-super-high-row-unilateral-final.webp. Referencia visible: de perfil y mirando a la derecha; al inicio, brazo de trabajo elevado y casi extendido hacia el mango alto; el otro brazo flexionado sostiene el agarre interior junto al cojín; pecho apoyado, pelvis en el asiento, rodillas flexionadas y pies al suelo. Al final, el brazo de trabajo flexiona y lleva el mango al costado del torso; la foto deja parcialmente oculto el brazo estabilizador, por lo que no se debe inventar su articulación final. La candidata conserva la orientación general, pero se rechaza: las manos se solapan al final y no es posible distinguir ambos contactos; la pierna y los zapatos también se amontonan, así que no se puede seguir cada rodilla/tobillo/pie sin ambigüedad. En la máquina, el mango de trabajo debe seguir una sola palanca independiente alrededor de su pivote; la otra palanca alta y su mango deben permanecer separados y quietos. La candidata redibuja/une visualmente las palancas y no conserva de forma comprobable la trayectoria de la palanca activa ni sus articulaciones respecto al pivote. Mantener invariables bastidor, crucetas, almacenamiento de discos, asiento y cojín. No publicar ni usar como referencia técnica hasta validar cada mano, extremidad, pivote, palanca y agarre contra ambas fotos."
+    },
+    "day3-exercise07": {
+      "status": "pending",
+      "angle": "",
+      "machineReference": "rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html",
+      "bodyOrientationVerified": false,
+      "supportsVerified": false,
+      "gripAndContactVerified": false,
+      "machinePartsAndPathVerified": false,
+      "fourPosesAndLoopVerified": false,
+      "findings": "Pendiente de revisión visual estricta contra la referencia exacta del ejercicio."
+    }
+  }
+}

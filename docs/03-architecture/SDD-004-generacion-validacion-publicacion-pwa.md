@@ -4,7 +4,7 @@
 **Versión:** `0.1`
 **Fecha:** `2026-09-24`
 **TDD asociado:** [TDD-005](../05-quality/TDD-005-pwa-perfil-e2e.md)
-**Decisiones:** [ADR-013](adr/ADR-013-perfil-local-y-respaldo-pwa.md), [ADR-014](adr/ADR-014-progresion-e-horarios-locales-pwa.md), [ADR-015](adr/ADR-015-base-local-v3-exclusiva.md), [ADR-016](adr/ADR-016-actualizacion-segura-pwa.md)
+**Decisiones:** [ADR-013](adr/ADR-013-perfil-local-y-respaldo-pwa.md), [ADR-014](adr/ADR-014-progresion-e-horarios-locales-pwa.md), [ADR-015](adr/ADR-015-base-local-v3-exclusiva.md), [ADR-016](adr/ADR-016-actualizacion-segura-pwa.md), [ADR-017](adr/ADR-017-politica-de-actualizacion-y-cache-pwa.md)
 
 ## 1. Propósito y alcance
 
@@ -13,7 +13,7 @@ progreso/perfil local, el ciclo de instalación/actualización y la preparación
 offline. No sustituye el SRS ni declara implementadas las funciones Android,
 Tezkatli, nutrición, IA, Zepp o Health Connect.
 
-El alcance verificable es `FUN-PWA-001..008`, `FUN-PRO-001..014` y las partes
+El alcance verificable es `FUN-PWA-001..010`, `FUN-PRO-001..014` y las partes
 de `FUN-TRN-*` que la PWA efectivamente ofrece: calentamiento, series, descanso,
 deshacer y captura de repeticiones/carga. Los contratos Android más amplios se
 mantienen fuera de esta especificación.

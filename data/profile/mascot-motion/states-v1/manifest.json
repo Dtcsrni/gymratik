@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "assetSet": "gymratik-status-mascots-states-v1",
+  "sourceAtlases": {
+    "male": "male-pose-atlas.png",
+    "female": "female-pose-atlas.png"
+  },
+  "atlasLayout": {
+    "columns": 3,
+    "rows": 3,
+    "poseOrder": [
+      "idle",
+      "ready",
+      "preparing",
+      "warmup",
+      "strength",
+      "cardio",
+      "mobility",
+      "rest",
+      "approval"
+    ],
+    "outputSize": [128, 128],
+    "format": "PNG RGBA"
+  },
+  "activityToPose": {
+    "start": "idle",
+    "ready": "ready",
+    "preparing": "preparing",
+    "approximation": "warmup",
+    "strength": "strength",
+    "cardio": "cardio",
+    "mobility": "mobility",
+    "rest": "rest",
+    "celebration": "approval"
+  },
+  "states": [
+    "idle",
+    "ready",
+    "preparing",
+    "warmup",
+    "strength",
+    "cardio",
+    "mobility",
+    "rest",
+    "approval"
+  ],
+  "variants": ["male", "female"],
+  "motion": "per-state CSS loops; paused while document is hidden and disabled for reduced-motion preference",
+  "sourcePromptSummary": "Two transparent 3x3 pose atlases generated with the approved Gymratik rat-mascot visual brief: Mexican rat mascots, correct clothing, female glasses and black hair, male green camouflage Cuban-style cap and closed beard/moustache; nine distinct generic workout/session poses."
+}

@@ -1,17 +1,23 @@
-const CACHE_NAME = 'entrenamiento-pwa-5c3fbb848158';
-const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-6d699a857793';
+const CACHE_NAME = 'entrenamiento-pwa-84e1cf94b30c';
+const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-0ae6770f7a75';
 const PRECACHE = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './icon.png',
+  './assets/branding/gymratik-mascots-mark-192.png',
+  './assets/branding/gymratik-mascots-mark-v2.png',
+  './assets/branding/gymratik-cover-seated-breath-30fps.webp',
+  './assets/branding/gymratik-cover-seated-v1-poster.webp',
+  './assets/branding/routine-covers/day1.webp',
+  './assets/branding/routine-covers/day2.webp',
+  './assets/branding/routine-covers/day3.webp',
+  './assets/branding/routine-covers/day4.webp',
   './install-gate.js',
   './data/profile/mascot-install-phone.webp',
   './progress-store.js',
   './routine-liquid-glass-v13.css',
   './data/profile/mouse-female-effort.webp',
   './data/profile/mouse-male-effort.webp',
-  './data/profile/gymratik-machine-sprite.webp',
   './data/profile/mascot-motion/female-exercise-25fps.gif',
   './data/profile/mascot-motion/female-rest-25fps.gif',
   './data/profile/mascot-motion/male-exercise-25fps.gif',
@@ -24,10 +30,29 @@ const PRECACHE = [
   './data/profile/mascot-motion/male-rest-still.webp',
   './data/profile/mascot-motion/neutral-exercise-still.webp',
   './data/profile/mascot-motion/neutral-rest-still.webp',
+  './data/profile/mascot-motion/states-v1/female-idle.png',
+  './data/profile/mascot-motion/states-v1/female-ready.png',
+  './data/profile/mascot-motion/states-v1/female-preparing.png',
+  './data/profile/mascot-motion/states-v1/female-warmup.png',
+  './data/profile/mascot-motion/states-v1/female-strength.png',
+  './data/profile/mascot-motion/states-v1/female-cardio.png',
+  './data/profile/mascot-motion/states-v1/female-mobility.png',
+  './data/profile/mascot-motion/states-v1/female-rest.png',
+  './data/profile/mascot-motion/states-v1/female-approval.png',
+  './data/profile/mascot-motion/states-v1/male-idle.png',
+  './data/profile/mascot-motion/states-v1/male-ready.png',
+  './data/profile/mascot-motion/states-v1/male-preparing.png',
+  './data/profile/mascot-motion/states-v1/male-warmup.png',
+  './data/profile/mascot-motion/states-v1/male-strength.png',
+  './data/profile/mascot-motion/states-v1/male-cardio.png',
+  './data/profile/mascot-motion/states-v1/male-mobility.png',
+  './data/profile/mascot-motion/states-v1/male-rest.png',
+  './data/profile/mascot-motion/states-v1/male-approval.png',
   './data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html',
   './data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html',
   './data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html',
   './data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html',
+  './data/rutinas_autocontenidas/frases_fitness/fitness_quotes.js',
   './data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/images/0194-2IxROQ1-final.jpg',
   './data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/images/0194-2IxROQ1-machine-only.webp',
   './data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/images/0194-2IxROQ1-start.jpg',
@@ -111,10 +136,6 @@ const PRECACHE = [
   './data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia1_media_generated/0575-q6y3OhV-start.jpg',
   './data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia2_media_generated/ankle_circles_real_mymichigan.gif',
   './data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia2_media_generated/ankle_circles_real_mymichigan.jpg',
-  './data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia2_media_generated/hip_thrust_machine_booty_builder_correct_form.gif',
-  './data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia2_media_generated/hip_thrust_machine_booty_builder_correct_form.jpg',
-  './data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia2_media_generated/hip_thrust_machine_booty_builder_correct_form_final.jpg',
-  './data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia2_media_generated/hip_thrust_machine_booty_builder_correct_form_inicio.jpg',
   './data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/0578-GUT8I22-final.jpg',
   './data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/0578-GUT8I22-machine-reference.png',
   './data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/0578-GUT8I22-start.jpg',
@@ -142,18 +163,25 @@ const PRECACHE = [
   './data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/musculos_generados/upper_posterior_anatomy_v1.webp',
   './data/rutinas_autocontenidas/recursos_embebidos/b963bc266356a83bea4fe9909f0516c0c3a1543c06c8a17d24ca9d674fe3c759.png'
 ];
+const PRECACHE_URLS = new Set(PRECACHE.map((path) => new URL(path, self.registration.scope).href));
 const RESOURCE_BYTES = {
-  './': 95424,
-  './index.html': 95424,
-  './manifest.webmanifest': 456,
-  './icon.png': 2204485,
+  './': 108073,
+  './index.html': 108073,
+  './manifest.webmanifest': 640,
+  './assets/branding/gymratik-mascots-mark-192.png': 62920,
+  './assets/branding/gymratik-mascots-mark-v2.png': 338005,
+  './assets/branding/gymratik-cover-seated-breath-30fps.webp': 2813316,
+  './assets/branding/gymratik-cover-seated-v1-poster.webp': 33354,
+  './assets/branding/routine-covers/day1.webp': 212296,
+  './assets/branding/routine-covers/day2.webp': 144640,
+  './assets/branding/routine-covers/day3.webp': 201068,
+  './assets/branding/routine-covers/day4.webp': 403468,
   './install-gate.js': 8459,
   './data/profile/mascot-install-phone.webp': 1006568,
-  './progress-store.js': 36660,
+  './progress-store.js': 38780,
   './routine-liquid-glass-v13.css': 8250,
   './data/profile/mouse-female-effort.webp': 1212010,
   './data/profile/mouse-male-effort.webp': 1072538,
-  './data/profile/gymratik-machine-sprite.webp': 1001880,
   './data/profile/mascot-motion/female-exercise-25fps.gif': 530477,
   './data/profile/mascot-motion/female-rest-25fps.gif': 503783,
   './data/profile/mascot-motion/male-exercise-25fps.gif': 427464,
@@ -166,10 +194,29 @@ const RESOURCE_BYTES = {
   './data/profile/mascot-motion/male-rest-still.webp': 7480,
   './data/profile/mascot-motion/neutral-exercise-still.webp': 11634,
   './data/profile/mascot-motion/neutral-rest-still.webp': 10150,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html': 825362,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html': 2425228,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html': 397009,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html': 400082,
+  './data/profile/mascot-motion/states-v1/female-idle.png': 16720,
+  './data/profile/mascot-motion/states-v1/female-ready.png': 13872,
+  './data/profile/mascot-motion/states-v1/female-preparing.png': 13563,
+  './data/profile/mascot-motion/states-v1/female-warmup.png': 13232,
+  './data/profile/mascot-motion/states-v1/female-strength.png': 13432,
+  './data/profile/mascot-motion/states-v1/female-cardio.png': 11809,
+  './data/profile/mascot-motion/states-v1/female-mobility.png': 13739,
+  './data/profile/mascot-motion/states-v1/female-rest.png': 15821,
+  './data/profile/mascot-motion/states-v1/female-approval.png': 13340,
+  './data/profile/mascot-motion/states-v1/male-idle.png': 16440,
+  './data/profile/mascot-motion/states-v1/male-ready.png': 12461,
+  './data/profile/mascot-motion/states-v1/male-preparing.png': 13216,
+  './data/profile/mascot-motion/states-v1/male-warmup.png': 11900,
+  './data/profile/mascot-motion/states-v1/male-strength.png': 12537,
+  './data/profile/mascot-motion/states-v1/male-cardio.png': 11741,
+  './data/profile/mascot-motion/states-v1/male-mobility.png': 12451,
+  './data/profile/mascot-motion/states-v1/male-rest.png': 15701,
+  './data/profile/mascot-motion/states-v1/male-approval.png': 12307,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html': 957743,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html': 2556901,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html': 535979,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html': 538899,
+  './data/rutinas_autocontenidas/frases_fitness/fitness_quotes.js': 27248,
   './data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/images/0194-2IxROQ1-final.jpg': 4361,
   './data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/images/0194-2IxROQ1-machine-only.webp': 504122,
   './data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/images/0194-2IxROQ1-start.jpg': 4746,
@@ -253,10 +300,6 @@ const RESOURCE_BYTES = {
   './data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia1_media_generated/0575-q6y3OhV-start.jpg': 8351,
   './data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia2_media_generated/ankle_circles_real_mymichigan.gif': 7123900,
   './data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia2_media_generated/ankle_circles_real_mymichigan.jpg': 22250,
-  './data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia2_media_generated/hip_thrust_machine_booty_builder_correct_form.gif': 4339552,
-  './data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia2_media_generated/hip_thrust_machine_booty_builder_correct_form.jpg': 16439,
-  './data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia2_media_generated/hip_thrust_machine_booty_builder_correct_form_final.jpg': 22937,
-  './data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia2_media_generated/hip_thrust_machine_booty_builder_correct_form_inicio.jpg': 20873,
   './data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/0578-GUT8I22-final.jpg': 6898,
   './data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/0578-GUT8I22-machine-reference.png': 17662,
   './data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/0578-GUT8I22-start.jpg': 6343,
@@ -296,8 +339,13 @@ async function reportProgress(completed, bytesCompleted, current = '') {
 }
 
 async function refresh(request, cache) {
-  const response = await fetch(request, { cache: 'no-store' });
-  if (response.ok) await cache.put(request, response.clone());
+  const response = await fetch(new Request(request, { cache: 'no-cache' }));
+  const cacheKey = new URL(request.url);
+  cacheKey.search = '';
+  cacheKey.hash = '';
+  if (response.ok && !new URL(request.url).search && PRECACHE_URLS.has(cacheKey.href)) {
+    await cache.put(cacheKey.href, response.clone());
+  }
   return response;
 }
 
@@ -361,14 +409,16 @@ self.addEventListener('install', (event) => {
         await preserveOneCompleteCache();
       }
     }
-    // Activar solo después de descargar y marcar completo todo el paquete.
-    // El progreso de entrenamiento vive en IndexedDB/localStorage, fuera de Cache API.
-    await self.skipWaiting();
+    // La primera instalación toma control al completar el paquete. Una versión
+    // posterior espera la autorización de la portada y se activa en otra apertura.
+    // El progreso permanece en IndexedDB/localStorage, fuera de Cache API.
+    if (!self.registration.active) await self.skipWaiting();
   })());
 });
 
 self.addEventListener('message', (event) => {
-  if (event.data?.type === 'ACTIVATE_UPDATE' && self.registration.waiting === self) self.skipWaiting();
+  // El mensaje se envía directamente al worker en espera; `self` aquí es el global, no un objeto ServiceWorker.
+  if (event.data?.type === 'ACTIVATE_UPDATE') event.waitUntil(self.skipWaiting());
   if (event.data?.type === 'GET_VERSION_STATUS') {
     event.source?.postMessage({ type: 'VERSION_STATUS', cacheName: CACHE_NAME, total: PRECACHE.length });
   }
@@ -386,11 +436,12 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
-  if (request.method !== 'GET' || url.origin !== self.location.origin) return;
+  const scopeUrl = new URL(self.registration.scope);
+  if (request.method !== 'GET' || url.origin !== scopeUrl.origin || !url.pathname.startsWith(scopeUrl.pathname)) return;
 
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME);
-    const cached = await cache.match(request);
+    const cached = await cache.match(request, { ignoreSearch: true });
     const isNavigation = request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html');
     const bypassCache = ['no-cache', 'no-store', 'reload'].includes(request.cache);
 

@@ -314,7 +314,8 @@
           .map(([setKey, value]) => {
             const load = value.load === '' || value.load == null || !Number.isFinite(Number(value.load)) ? null : Math.min(2000, Math.max(0, Number(value.load)));
             const loadUnit = value.loadUnit === 'lb' ? 'lb' : 'kg';
-            return { exerciseId: String(exerciseId).slice(0, 80), exerciseName: String(value.title || '').slice(0, 100), setKey, setNumber: Number(setKey.match(/s(\d+)$/)?.[1]) || 0, reps: Math.min(100, Math.round(Number(value.reps))), load, loadUnit, loadKg: load === null ? null : loadUnit === 'lb' ? load * 0.45359237 : load, updatedAt: Number(value.updatedAt) || capturedAt };
+            const durationMs = Number.isFinite(Number(value.durationMs)) ? Math.min(24 * 60 * 60 * 1000, Math.max(0, Math.round(Number(value.durationMs)))) : null;
+            return { exerciseId: String(exerciseId).slice(0, 80), exerciseName: String(value.title || '').slice(0, 100), setKey, setNumber: Number(setKey.match(/s(\d+)$/)?.[1]) || 0, reps: Math.min(100, Math.round(Number(value.reps))), load, loadUnit, loadKg: load === null ? null : loadUnit === 'lb' ? load * 0.45359237 : load, ...(durationMs === null ? {} : { durationMs }), updatedAt: Number(value.updatedAt) || capturedAt };
           })
       ),
       capturedAt,
@@ -333,7 +334,7 @@
       startedAt: record.sessionStartedAt,
       endedAt: record.sessionEndedAt || 0,
       status: record.sessionEndedAt ? 'completed' : 'active',
-      completedSeries: nonNegativeNumber(record.doneSeries),
+      completedSeries: nonNegativeNumber(record.doneSeries ?? record.completedSeries),
       warmupCompleted: record.warmupCompleted === true,
       completedExercises: nonNegativeNumber(record.completedExercises),
       skippedExercises: nonNegativeNumber(record.skippedExercises),
@@ -345,7 +346,10 @@
 
   function toActivity(record) {
     const capturedAt = record.capturedAt || record.updatedAt || Date.now();
-    const temporal = timeKeys(capturedAt);
+    const startedAt = Number(record.startedAt || record.sessionStartedAt) || 0;
+    // Attribution to "today" must follow the workout start, not a later
+    // persistence/backfill timestamp that can refresh an older session.
+    const temporal = timeKeys(startedAt || capturedAt);
     const sessionId = record.sessionId || null;
     const activityKey = record.activityKey || `${record.routineId}:${sessionId || 'unscheduled'}:${temporal.minuteKey}`;
     return {
@@ -354,15 +358,15 @@
       routineId: record.routineId,
       sessionId,
       label: record.label,
-      dayKey: record.dayKey || temporal.dayKey,
-      hourKey: record.hourKey || temporal.hourKey,
-      minuteKey: record.minuteKey || temporal.minuteKey,
+      dayKey: startedAt ? temporal.dayKey : record.dayKey || temporal.dayKey,
+      hourKey: startedAt ? temporal.hourKey : record.hourKey || temporal.hourKey,
+      minuteKey: startedAt ? temporal.minuteKey : record.minuteKey || temporal.minuteKey,
       capturedAt,
-      completedSeries: nonNegativeNumber(record.doneSeries),
+      completedSeries: nonNegativeNumber(record.doneSeries ?? record.completedSeries),
       warmupCompleted: record.warmupCompleted === true,
       totalSeries: nonNegativeNumber(record.totalSeries),
-      startedAt: record.sessionStartedAt || 0,
-      endedAt: record.sessionEndedAt || 0,
+      startedAt: startedAt || 0,
+      endedAt: Number(record.endedAt || record.sessionEndedAt) || 0,
       updatedAt: record.updatedAt,
       performance: Array.isArray(record.performance) ? record.performance : [],
     };
@@ -474,9 +478,10 @@
       const cleanPerformance = performance.filter(record => record && typeof record === 'object').map(record => {
         const reps = Number(record.reps);
         const load = record.load === null || record.load === '' || record.load === undefined ? null : Number(record.load);
-        if (!Number.isInteger(reps) || reps < 1 || reps > 100 || (load !== null && (!Number.isFinite(load) || load < 0 || load > 2000))) throw new Error('El respaldo contiene repeticiones o carga fuera de rango');
+        const durationMs = record.durationMs === null || record.durationMs === undefined ? null : Number(record.durationMs);
+        if (!Number.isInteger(reps) || reps < 1 || reps > 100 || (load !== null && (!Number.isFinite(load) || load < 0 || load > 2000)) || (durationMs !== null && (!Number.isFinite(durationMs) || durationMs < 0 || durationMs > 24 * 60 * 60 * 1000))) throw new Error('El respaldo contiene repeticiones, carga o duración fuera de rango');
         const loadUnit = record.loadUnit === 'lb' ? 'lb' : 'kg';
-        return { exerciseId: String(record.exerciseId || '').slice(0, 80), exerciseName: String(record.exerciseName || '').slice(0, 100), setKey: String(record.setKey || '').slice(0, 16), setNumber: Math.max(0, Math.min(100, Math.round(Number(record.setNumber) || 0))), reps, load, loadUnit, loadKg: load === null ? null : loadUnit === 'lb' ? load * 0.45359237 : load, updatedAt: Number(record.updatedAt) || Number(session.updatedAt) || Date.now() };
+        return { exerciseId: String(record.exerciseId || '').slice(0, 80), exerciseName: String(record.exerciseName || '').slice(0, 100), setKey: String(record.setKey || '').slice(0, 16), setNumber: Math.max(0, Math.min(100, Math.round(Number(record.setNumber) || 0))), reps, load, loadUnit, loadKg: load === null ? null : loadUnit === 'lb' ? load * 0.45359237 : load, ...(durationMs === null ? {} : { durationMs: Math.round(durationMs) }), updatedAt: Number(record.updatedAt) || Number(session.updatedAt) || Date.now() };
       });
       return { ...session, performance: cleanPerformance, profileId: DEFAULT_PROFILE_ID };
     });
@@ -649,6 +654,8 @@
 
   function dashboardFrom(data) {
     const progressByRoutine = new Map(data.progress.map((record) => [record.routineId, record]));
+    const sessionsById = new Map(data.sessions.map((session) => [session.sessionId, session]));
+    const progressBySessionId = new Map(data.progress.filter((record) => record.sessionId).map((record) => [record.sessionId, record]));
     const sessions = data.sessions.filter((session) => session.status === 'completed');
     const completedSeries = sessions.reduce((sum, session) => sum + nonNegativeNumber(session.completedSeries), 0);
     const activeSeries = data.progress.reduce((sum, record) => sum + (record.sessionEndedAt ? 0 : nonNegativeNumber(record.doneSeries)), 0);
@@ -656,9 +663,23 @@
     const plannedSeries = Object.values(ROUTINES).reduce((sum, routine) => sum + routine.totalSeries, 0);
     const now = Date.now();
     const nowKeys = timeKeys(now);
-    const activity = (data.activity || []).filter((item) => item.warmupCompleted === true && nonNegativeNumber(item.completedSeries) > 0);
-    const latestActivity = activity.reduce((latest, item) => (item.capturedAt || item.updatedAt || 0) > (latest?.capturedAt || latest?.updatedAt || 0) ? item : latest, null);
-    const lastActivity = latestActivity?.capturedAt || latestActivity?.updatedAt || 0;
+    const activity = (data.activity || []).map((record) => {
+      const session = record.sessionId ? sessionsById.get(record.sessionId) : null;
+      const progress = record.sessionId ? progressBySessionId.get(record.sessionId) : null;
+      if ((!session || session.routineId !== record.routineId) && (!progress || progress.routineId !== record.routineId)) return toActivity(record);
+      // Older activity rows can lack timestamps or carry a recapture day. Only
+      // inherit dates from the exact linked session, never from routine alone.
+      return toActivity({
+        ...record,
+        startedAt: record.startedAt || record.sessionStartedAt || session?.startedAt || progress?.sessionStartedAt,
+        endedAt: record.endedAt || record.sessionEndedAt || session?.endedAt || progress?.sessionEndedAt,
+        completedSeries: record.completedSeries ?? record.doneSeries ?? session?.completedSeries ?? progress?.doneSeries,
+      });
+    })
+      .filter((item) => item.warmupCompleted === true && nonNegativeNumber(item.completedSeries) > 0);
+    const activityTime = (item) => Number(item?.endedAt || item?.startedAt || item?.capturedAt || item?.updatedAt) || 0;
+    const latestActivity = activity.reduce((latest, item) => activityTime(item) > activityTime(latest) ? item : latest, null);
+    const lastActivity = activityTime(latestActivity);
     const relation = temporalRelation(lastActivity, now);
     const todayBySession = new Map();
     activity.filter((item) => item.dayKey === nowKeys.dayKey).forEach((item) => {

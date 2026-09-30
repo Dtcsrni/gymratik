@@ -2,9 +2,9 @@
 
 ## Lucide
 
-Los iconos SVG `repeat-2` y `weight` se distribuyen integrados en la zona de registro de serie a partir de `lucide-static` v0.577.0. Son gráficos vectoriales que escalan sin pérdida de resolución. No se solicita ningún recurso externo en tiempo de ejecución.
+Los iconos SVG `activity`, `arrow-left`, `dumbbell`, `list-checks`, `move-up-right`, `repeat-2`, `settings-2`, `target`, `timer`, `triangle-alert`, `weight` y `wind` se distribuyen como símbolos SVG integrados a partir de `lucide-static` v0.577.0. Son gráficos vectoriales que escalan sin pérdida de resolución. No se instala una dependencia ni se solicita ningún recurso externo en tiempo de ejecución.
 
-Fuente: https://github.com/lucide-icons/lucide (archivos `icons/repeat-2.svg` y `icons/weight.svg`).
+Fuente: https://github.com/lucide-icons/lucide (archivos individuales bajo `icons/` en la versión 0.577.0).
 
 ```text
 ISC License

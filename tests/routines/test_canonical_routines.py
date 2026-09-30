@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 import re
+import json
 import tempfile
 import unittest
 from html.parser import HTMLParser
@@ -13,10 +14,12 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from validate_canonical_routines import validate_path  # noqa: E402
+from build_fitness_quotes_js import compact_payload  # noqa: E402
 from standardize_muscle_visuals import (  # noqa: E402
     close_unterminated_segmented_progress_style,
     standardize_offline_image_sources,
     standardize_series_entry_zone,
+    standardize_visual_language,
     standardize_warmup_single_viewers,
 )
 
@@ -303,6 +306,11 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertIn("beginSeries(item, Date.now())", source)
                 self.assertIn("}, 5000);", source)
                 self.assertIn(
+                    "longPressResetTimer = window.setTimeout(() => { longPressDetected = false; longPressResetTimer = 0; }, 350);",
+                    source,
+                )
+                self.assertIn("window.clearTimeout(longPressResetTimer);", source)
+                self.assertIn(
                     "resting && restRemaining > 0",
                     source,
                 )
@@ -337,6 +345,15 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertIn("summaryButton.classList.toggle('isResting', restActive)", timing_display)
                 self.assertIn("summaryButton.classList.toggle('isSeriesActive', seriesActive)", timing_display)
                 self.assertIn("`● S${row.done + 1} activa · ${formatElapsed(now - timing.seriesStartedAt)}`", timing_display)
+                self.assertIn("item.timerChips = new Map()", timing_display)
+                self.assertIn("display.setAttribute('aria-live', 'off')", timing_display)
+                self.assertIn("kind: 'active-set'", timing_display)
+                self.assertIn("kind: 'active-rest'", timing_display)
+                self.assertIn("entries.push({ key: `set-${index + 1}`", timing_display)
+                self.assertIn(".exerciseTimerChip[data-kind=\"active-set\"]::after", source)
+                self.assertIn(".exerciseTimerChip[data-kind=\"active-rest\"]::after", source)
+                self.assertIn(".exerciseTimerChip[data-kind=\"active-set\"]::before", source)
+                self.assertIn("@media(prefers-reduced-motion:reduce){.exerciseTimerChip", source)
                 floating_summary = source[
                     source.index('<aside class="floatingSessionSummary"') : source.index("</aside>")
                 ]
@@ -348,17 +365,55 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertEqual(source.count('id="summaryActivityStatus"'), 1)
                 self.assertEqual(source.count('id="summaryOverallProgress"'), 1)
                 self.assertEqual(floating_summary.count('id="summaryActivityMascot"'), 1)
+                self.assertIn('id="summaryToggle"', floating_summary[:floating_summary.index('id="summaryBody"')])
+                self.assertIn('aria-expanded="false"', floating_summary)
+                self.assertRegex(floating_summary, r'<div class="summaryBody" id="summaryBody"[^>]*\shidden(?:\s|>)')
+                self.assertIn('class="summaryMascotWrap"', floating_summary[:floating_summary.index('id="summaryBody"')])
+                self.assertEqual(floating_summary.count('class="summaryMascotWrap"'), 1)
+                self.assertNotIn('id="summaryActivityMascot"', floating_summary[floating_summary.index('id="summaryBody"'):])
                 self.assertNotIn('id="summaryActivity"', floating_summary)
                 self.assertIn("let currentActivity = null", timing_display)
                 self.assertIn("Descanso listo · ${item.title}", timing_display)
                 self.assertIn("activityButton.classList.toggle('isActive'", timing_display)
                 self.assertIn("activityHeadline.textContent = progressText", timing_display)
                 self.assertIn("if (compactActivityHeadline) compactActivityHeadline.textContent = activityText", timing_display)
-                self.assertIn("const mascotState = currentActivity?.kind === 'rest' ? 'rest' : currentActivity?.kind === 'active' ? 'exercise' : ''", timing_display)
-                self.assertIn("mascot.removeAttribute('src')", timing_display)
-                self.assertIn("25fps.gif", timing_display)
+                self.assertIn("kind: 'strength'", timing_display)
+                self.assertIn("kind: warmup.phase", timing_display)
+                self.assertIn("const mascotMode = displayActivity.kind === 'complete' ? 'celebration' : displayActivity.kind", timing_display)
+                self.assertIn("kind: 'complete', label: 'Rutina completada'", timing_display)
+                self.assertIn("kind: 'start', label: '¡Rutina iniciada!'", timing_display)
+                self.assertIn("document.getElementById('summaryActivityMascot')", timing_display)
+                self.assertIn("summaryToggle.getAttribute('aria-expanded') === 'true'", source)
+                self.assertIn("mascot.hidden = false", timing_display)
+                self.assertIn("neutral-${fallbackState}-still.webp", timing_display)
+                self.assertIn("const poseState = ({ start: 'idle', ready: 'ready'", timing_display)
+                self.assertIn("states-v1/${mascotVariant}-${poseState}.png", timing_display)
+                self.assertIn("mascot.dataset.poseState = poseState", timing_display)
+                self.assertIn("mascot.dataset.motion = document.hidden ? 'paused' : mascotMode", timing_display)
+                summary_style_source = re.search(r'<style data-fix="rest-countdown-activity-v1">.*?</style>', source, re.S).group(0)
+                self.assertIn("#summaryActivityMascot{display:block;width:70px;height:70px", summary_style_source)
+                self.assertIn("width:62px;height:62px", summary_style_source)
+                self.assertIn("width:58px;height:58px", summary_style_source)
+                self.assertIn("width:54px;height:54px", summary_style_source)
+                self.assertIn("clamp(50px,14vw,68px)", summary_style_source)
+                self.assertNotIn("mascot.removeAttribute('src')", timing_display)
+                self.assertIn("document.addEventListener('visibilitychange', syncTimingInterval", source)
+                self.assertIn("window.clearInterval(timingInterval)", source)
+                self.assertIn("mascotCardioCadence", summary_style_source)
+                self.assertIn("mascotStrengthEffort", summary_style_source)
+                self.assertIn("mascotIdleBreath", summary_style_source)
+                self.assertIn("mascotApprovalCelebrate", summary_style_source)
+                self.assertIn("mascotRecoveryBreath", summary_style_source)
+                self.assertIn("mascotWarmupFlow", summary_style_source)
+                self.assertIn("mascotPreparationBrace", summary_style_source)
+                self.assertIn(".summaryMascotWrap{position:relative;grid-column:3", summary_style_source)
+                self.assertNotIn("25fps.gif", timing_display)
+                self.assertIn('data-enhancement="compact-routine-metrics-v1"', source)
+                self.assertIn('data-enhancement="approval-toast-mascot-v1"', source)
+                self.assertIn("if (longPressTimer) { window.clearTimeout(longPressTimer); longPressTimer = 0; } longPressDetected = false;", source)
+                self.assertNotIn("timing.seriesStartedAt || longPressTimer) return;", source)
                 self.assertIn("window.TrainingProgressStore?.getProfile?.().then(updateActivityMascotProfile)", source)
-                self.assertIn("activityStatus.classList.toggle('isIdle', !currentActivity || currentActivity.kind === 'ready')", timing_display)
+                self.assertIn("activityStatus.classList.toggle('isIdle', ['start', 'ready', 'complete'].includes(displayActivity.kind))", timing_display)
                 self.assertIn("overallProgress.setAttribute('aria-valuenow', String(doneSeries))", timing_display)
                 summary_style = re.search(
                     r'<style data-fix="rest-countdown-activity-v1">.*?</style>', source, re.S
@@ -374,7 +429,7 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertIn(".exerciseTracker:has(.completeSetButton.is-series-active) .seriesProgressSegment.is-current", summary_style.group(0))
                 self.assertIn("#summaryActivityHeadline", summary_style.group(0))
                 self.assertIn("#floatingSessionSummary{position:fixed!important", summary_style.group(0))
-                self.assertIn("max-height:min(54dvh,480px)", summary_style.group(0))
+                self.assertIn("max-height:min(36dvh,320px)", summary_style.group(0))
                 self.assertIn(".summaryExercise::after", summary_style.group(0))
                 self.assertIn(".summaryExercise::before,.summaryExercise::after", summary_style.group(0))
                 self.assertIn("transform:scaleX(var(--summary-progress,0))", summary_style.group(0))
@@ -386,6 +441,11 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertIn(".seriesProgressSegment.is-current.is-resting", summary_style.group(0))
                 self.assertIn("@keyframes activityFillGlow", summary_style.group(0))
                 self.assertNotIn("@keyframes progressActivityFill", summary_style.group(0))
+                self.assertIn("repsRequired.textContent = 'Requerido'", source)
+                self.assertIn("loadRequired.textContent = 'Requerida'", source)
+                self.assertNotIn("repsOptional", source)
+                self.assertNotIn("loadOptional", source)
+                self.assertIn("Registra repeticiones y carga para completar", source)
                 self.assertNotRegex(summary_style.group(0), r"@keyframes activityFillGlow\s*\{[^}]*transform\s*:")
                 self.assertIn("@media(prefers-reduced-motion:reduce)", summary_style.group(0))
 
@@ -401,7 +461,7 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 )
             ]
             with self.subTest(path=path.name):
-                self.assertIn("repsInput.min = String(item.repMinimum)", source)
+                self.assertIn("repsInput.min = String(Math.max(1, item.repMinimum - 3))", source)
                 self.assertIn("repsInput.max = String(item.repMaximum + 4)", source)
                 self.assertIn("repsInput.dataset.selected = 'false'", source)
                 self.assertIn("item.performanceReps.dataset.selected === 'true'", source)
@@ -409,7 +469,11 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertIn("performanceRepsNudge", control)
                 self.assertIn("repsLabelText.textContent = 'Repeticiones'", source)
                 self.assertIn("createPerformanceIcon('repeat-2')", source)
-                self.assertIn("Sin registrar · ${item.repMinimum}–${item.repMaximum + 4} posibles", reps_logic)
+                self.assertIn("const repFeedbackZone = value =>", source)
+                self.assertIn("data-zone=\"below\"", source)
+                self.assertIn("const loadProfile = /prensa|hack squat|hip thrust|bisagra/", source)
+                self.assertIn("dataset.maxKg = String(item.performanceLoadProfile.maxKg)", source)
+                self.assertIn("Elige ${minPossible}–${maxPossible}; objetivo ${item.repMinimum}–${item.repMaximum}", reps_logic)
                 self.assertIn("repsClear.addEventListener('click'", source)
                 self.assertIn("aria-live', 'polite", source)
                 self.assertIn("Math.min(item.repMaximum + 4", reps_logic)
@@ -420,7 +484,10 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertIn("loadClear.addEventListener('click'", source)
                 self.assertIn("loadLabelText.textContent = 'Carga'", source)
                 self.assertIn("createPerformanceIcon('weight')", source)
-                self.assertIn("Puedes completar la serie sin registrar", source)
+                self.assertIn("await confirmMissingPerformance(missingPerformance)", source)
+                self.assertIn("Guardar sin estos datos", source)
+                self.assertIn("reps: repsSelected ? reps : null", source)
+                self.assertIn("durationMs: Math.min(MAX_TIMING_MS", source)
                 self.assertIn("item.performanceRepsClear.hidden = true", source)
                 self.assertNotIn("repsClear.hidden = true; updateRangeFill", source)
                 self.assertEqual(source.count("repsClear.addEventListener('click'"), 1)
@@ -524,7 +591,7 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertEqual(source.count('id="warmupAction"'), 1)
                 self.assertIn("warmupActionButton?.addEventListener('click'", source)
                 self.assertIn('id="warmupInstructions"', source)
-                self.assertIn("Sigue las actividades, tiempos y técnica indicados arriba", source)
+                self.assertIn("Sigue cardio y movilidad en ese orden.", source)
                 self.assertNotIn('id="warmupStart"', source)
                 self.assertNotIn('id="warmupAdvance"', source)
                 self.assertNotIn('id="warmupFinish"', source)
@@ -542,6 +609,9 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertIn("@keyframes progressSweep", source)
                 self.assertIn("@keyframes progressPulse", source)
                 self.assertIn("@keyframes progressFinish", source)
+                self.assertIn("@keyframes progressActiveSweep{from{background-position:100% 0}to{background-position:-120% 0}}", source)
+                self.assertNotRegex(source, r"@keyframes progressFinish\s*\{[^}]*transform\s*:")
+                self.assertIn("background-size:220% 100%;animation:progressActiveSweep", source)
                 self.assertIn("prefers-reduced-motion:reduce", source)
 
     def test_all_routines_have_well_formed_progress_and_open_licensed_logging_icons(self) -> None:
@@ -553,8 +623,27 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertLess(source.index("</style>", progress_style), interaction_style)
                 self.assertIn("createPerformanceIcon('repeat-2')", source)
                 self.assertIn("createPerformanceIcon('weight')", source)
-                self.assertIn("class=\"lucide lucide-repeat-2\"", source)
-                self.assertIn("class=\"lucide lucide-weight\"", source)
+                self.assertIn("lucide lucide-repeat-2", source)
+                self.assertIn("lucide lucide-weight", source)
+
+    def test_shared_visual_language_uses_local_lucide_sprite_and_keeps_copy_compact(self) -> None:
+        expected_icons = (
+            "activity", "arrow-left", "dumbbell", "list-checks", "move-up-right",
+            "repeat-2", "settings-2", "target", "timer", "triangle-alert", "weight", "wind",
+        )
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            source = path.read_text(encoding="utf-8")
+            with self.subTest(path=path.name):
+                self.assertEqual(source.count('id="gymratikLucideSprite"'), 1)
+                for icon in expected_icons:
+                    self.assertIn(f'id="gymratik-icon-{icon}"', source)
+                    self.assertIn(f"gymratik-icon-{icon}", source)
+                self.assertIn('data-enhancement="visual-language-lucide-v1"', source)
+                self.assertIn(".exerciseQuickSummary{display:none!important}", source)
+                self.assertIn("Sigue cardio y movilidad en ese orden.", source)
+                self.assertNotIn("Sigue las actividades, tiempos y técnica indicados arriba para este día.", source)
+                self.assertIn(".note.notePanel{display:none!important}", source)
+                self.assertEqual(standardize_visual_language(source), source)
 
     def test_each_exercise_has_one_dynamic_action_for_approximation_and_sets(self) -> None:
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
@@ -564,12 +653,30 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertRegex(source, r'class="setButton warmupSet"[^>]*\shidden')
                 self.assertIn('class="completeSetButton"', source)
                 self.assertIn('id="exerciseWarmupHint"', source)
-                self.assertIn("Registrar 1 serie ligera de aproximación", source)
+                self.assertRegex(source, r'class="exerciseWarmupHint" id="exerciseWarmupHint" hidden')
+                self.assertIn("Serie de aproximación", source)
+                self.assertIn("__warmupPerformance", source)
+                self.assertIn("warmupDurationMs", source)
+                self.assertIn("approximationProgress", source)
+                self.assertIn("Aproximación activa ·", source)
                 self.assertIn("if (warmup && state[warmup.dataset.key] !== true) {", source)
                 self.assertIn("state[warmup.dataset.key] = true;", source)
                 self.assertNotIn("warmup.click(); return;", source)
                 self.assertIn("longPressDetected = false; startSeriesButton.style.setProperty('--hold-progress', '0%');", source)
                 self.assertIn("button.classList.toggle('is-preparing', preparing)", source)
+
+    def test_routine_audio_and_haptic_feedback_match_session_events(self) -> None:
+        expected_cues = ("warmup", "cardio", "mobility", "preparation", "activity", "series", "rest", "exercise", "session")
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            source = path.read_text(encoding="utf-8")
+            with self.subTest(path=path.name):
+                self.assertIn("const playFeedback = type => { playMilestoneSound(type); playHaptic(type); };", source)
+                self.assertIn("gymratik-haptics-v1", source)
+                self.assertIn('id="hapticsToggle"', source)
+                self.assertEqual(source.count('id="hapticsToggle"'), 1)
+                self.assertIn("exponentialRampToValueAtTime", source)
+                for cue in expected_cues:
+                    self.assertIn(f"{cue}:", source)
 
     def test_load_slider_can_be_saved_when_completing_a_series(self) -> None:
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
@@ -592,6 +699,43 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 for phrase in fallback_phrases:
                     self.assertIn(phrase, source)
 
+    def test_motivation_quotes_are_compact_credited_and_randomized_across_days(self) -> None:
+        bank_path = ROOT / "data" / "rutinas_autocontenidas" / "frases_fitness" / "fitness_quotes.json"
+        bank = json.loads(bank_path.read_text(encoding="utf-8"))
+        compact = compact_payload(bank)
+        self.assertEqual(compact["count"], 120)
+        self.assertEqual(len({quote["author"] for quote in compact["quotes"]}), 118)
+        self.assertTrue(all(len(quote["quoteEs"]) <= 220 for quote in compact["quotes"]))
+        portrait_root = bank_path.parent
+        self.assertTrue(all((portrait_root / quote["portrait"]).is_file() for quote in compact["quotes"]))
+        arnold = [quote for quote in compact["quotes"] if quote["author"] == "Arnold Schwarzenegger"]
+        self.assertEqual(len(arnold), 3)
+        self.assertTrue(all(quote["sourceUrl"].startswith("https://www.schwarzenegger.com/") for quote in arnold))
+        self.assertTrue(all(quote["photoCredit"].endswith("CC BY 4.0") for quote in arnold))
+        runtime_js = ROOT / "data" / "rutinas_autocontenidas" / "frases_fitness" / "fitness_quotes.js"
+        runtime = runtime_js.read_text(encoding="utf-8")
+        self.assertIn("window.fitnessQuotesData = ", runtime)
+        self.assertLess(runtime_js.stat().st_size, 35_000)
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            source = path.read_text(encoding="utf-8")
+            with self.subTest(path=path.name):
+                self.assertIn('<script defer src="../frases_fitness/fitness_quotes.js"></script>', source)
+                self.assertIn("const fitnessQuotePayload = window.fitnessQuotesData || {};", source)
+                self.assertIn("const motivationKey = 'gymratik-motivation-rotation-v1';", source)
+                self.assertIn("Math.random() * poolSize", source)
+                self.assertIn("if (avoidLast && motivationIndex >= lastMotivationIndex)", source)
+                self.assertNotIn("motivationIndex = (motivationIndex + 1)", source)
+                self.assertIn("window.fitnessQuotesData?.quotes?.length", source)
+                self.assertTrue(
+                    "photoCreditEl.textContent = phrase.photoLine" in source,
+                    f"{path.name}: el crédito de la foto no se enlaza con la frase visible",
+                )
+                self.assertEqual(source.count("photoCreditEl.textContent = phrase.photoLine"), 1)
+                self.assertIn('class="motivationPhotoWrap"', source)
+                self.assertEqual(source.count('class="motivationPhotoWrap"'), 1)
+                self.assertIn("sessionCompletionCopy p{display:block!important", source)
+                self.assertNotIn('id="fitnessQuotesPayload"', source)
+
     def test_all_routines_expose_access_to_homepage(self) -> None:
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
             source = path.read_text(encoding="utf-8")
@@ -602,7 +746,7 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertIsNotNone(match)
                 self.assertEqual((path.parent / match.group(1)).resolve(), ROOT / "index.html")
                 self.assertIn('aria-label="Volver a la portada"', source)
-                self.assertIn('>← Portada</a>', source)
+                self.assertIn('<span>Portada</span></a>', source)
 
     def test_all_routines_use_the_shared_liquid_glass_redesign(self) -> None:
         stylesheet = ROOT / "routine-liquid-glass-v13.css"
@@ -638,6 +782,20 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 for card in cards:
                     for marker in required_markers:
                         self.assertEqual(len(re.findall(marker, card)), 1, marker)
+
+    def test_each_canonical_day_has_its_own_shared_template_cover(self) -> None:
+        cover_dir = ROOT / "assets" / "branding" / "routine-covers"
+        for day, path in enumerate(sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")), start=1):
+            source = path.read_text(encoding="utf-8")
+            cover_ref = f"../../../assets/branding/routine-covers/day{day}.webp"
+            with self.subTest(day=day, path=path.name):
+                self.assertIn(f'data-routine-cover="day{day}"', source)
+                self.assertIn(f'src="{cover_ref}"', source)
+                self.assertEqual(source.count('class="routineDayCover"'), 1)
+                self.assertIn('data-enhancement="routine-day-cover-v1"', source)
+                self.assertIn('object-fit:contain', source)
+                self.assertIn('width="1536" height="1024"', source)
+                self.assertTrue((cover_dir / f"day{day}.webp").is_file())
 
     def test_all_routines_share_the_realistic_muscle_day_media_contract(self) -> None:
         expected_images = {

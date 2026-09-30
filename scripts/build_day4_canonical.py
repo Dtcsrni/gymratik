@@ -127,7 +127,7 @@ EXERCISES = [
 def build_header(template: str) -> str:
     header = between(template, '<header class="hero">', "</header>")
     header = replace_all(header, {
-        "DÍA 1 · ESPALDA + BÍCEPS": "DÍA 4 · PIERNA · EQUILIBRIO",
+        "DÍA 1 · TIRÓN: ESPALDA Y BÍCEPS": "DÍA 4 · PIERNA Y CORE: CADERA Y ESTABILIDAD",
         "Máquinas + fotos reales": "Máquinas + guía visual",
         "Perfil intermedio. Tren superior con prioridad en espalda y bíceps; deltoides posterior y pecho complementarios.": "Perfil intermedio. Tren inferior equilibrado con trabajo de rodilla, cadera, pantorrilla y core.",
     })
@@ -194,18 +194,18 @@ def main() -> None:
     template = TEMPLATE.read_text(encoding="utf-8")
     head = template[: template.index("</head>") + len("</head>")]
     head = replace_all(head, {
-        'data-label="Día 1 · Espalda + Bíceps · v1 responsive"': 'data-label="Día 4 · Pierna · Equilibrio · v1 responsive"',
-        "<title>Día 1 · Espalda + Bíceps · v1 responsive</title>": "<title>Día 4 · Pierna · Equilibrio · v1 responsive</title>",
+        'data-label="Día 1 · Tirón: espalda y bíceps · v1 responsive"': 'data-label="Día 4 · Pierna y core: cadera y estabilidad · v1 responsive"',
+        "<title>Día 1 · Tirón: espalda y bíceps · v1 responsive</title>": "<title>Día 4 · Pierna y core: cadera y estabilidad · v1 responsive</title>",
         'data-fix="day1-gif-candidates"': 'data-fix="day4-gif-layout"',
     })
     head = head.replace("</head>", '''<style data-fix="day4-static-and-gif-layout">
 .phaseRow .day4StaticFrame{object-fit:contain!important;background:#fff!important}.gifProof{margin-top:12px;padding:10px 12px;border:1px solid rgba(45,97,121,.55);border-radius:14px;background:rgba(12,24,34,.68)}.gifProofTitle{font-size:12px;font-weight:900;letter-spacing:.6px;color:#72D4F0;margin-bottom:7px}.gifPreview{max-width:240px;margin:0 auto;aspect-ratio:1/1}.gifPreview img.day4ExerciseGif{object-fit:contain!important}.gifProof .videoProof{margin-top:7px!important}@media(max-width:700px){.gifPreview{max-width:220px}}
 </style></head>''', 1)
     quick_rules = build_section(template, '<section class="footer quickRules"', {"espalda y bíceps": "pierna y cadera", "tirones": "series", "remo": "recorrido", "Jalón": "Prensa", "1–2 s al tirar": "1–2 s al empujar", "al tirar": "al empujar", "Si cae la postura": "Si pierdes la postura o el control"})
-    summary = build_section(template, '<section class="routineSummary"', {"6 ejercicios · 20 series efectivas": "7 ejercicios · 20 series efectivas", "Día 1": "Día 4", "Espalda + bíceps": "Pierna equilibrada", "75–95 min": "75–90 min", "60 s–2.5 min": "60 s–3 min"})
+    summary = build_section(template, '<section class="routineSummary"', {"6 ejercicios · 20 series efectivas": "7 ejercicios · 20 series efectivas", "Día 1": "Día 4", "Tirón · espalda y bíceps": "Pierna y core · cadera y estabilidad", "75–95 min": "75–90 min", "60 s–2.5 min": "60 s–3 min"})
     gamification = build_section(template, '<section class="sessionGamification"', {})
     prep = build_section(template, '<section class="prep">', {"16–17 min": "8–10 min", "3 + 1": "3 + 1", "Jalón: series + calentamiento": "Prensa: series + aproximación"})
-    dashboard = build_section(template, '<section class="sessionDashboard">', {"75–95 min": "75–90 min", "20 series efectivas": "20 series efectivas", "4 + 4 + 3 + 3 + 3 + 3 series": "3 + 3 + 4 + 2 + 2 + 3 + 3 series", "Espalda + bíceps": "Pierna equilibrada", "Con trabajo complementario de deltoides posterior y pecho": "Con trabajo distribuido entre rodilla, cadera, pantorrilla y core", "De 60 s a 2.5 min según el ejercicio": "De 60 s a 3 min según el ejercicio"})
+    dashboard = build_section(template, '<section class="sessionDashboard">', {"75–95 min": "75–90 min", "20 series efectivas": "20 series efectivas", "4 + 4 + 3 + 3 + 3 + 3 series": "3 + 3 + 4 + 2 + 2 + 3 + 3 series", "Tirón · espalda y bíceps": "Pierna y core · cadera y estabilidad", "Con trabajo complementario de deltoides posterior y pecho": "Con trabajo distribuido entre rodilla, cadera, pantorrilla y core", "De 60 s a 2.5 min según el ejercicio": "De 60 s a 3 min según el ejercicio"})
     note = build_section(template, '<section class="note notePanel"', {"Puntos clave de la sesión": "Puntos clave del Día 4", "La serie de aproximación prepara el movimiento y no cuenta como efectiva.": "Las series de aproximación preparan el movimiento y no cuentan como efectivas.", "RIR 2–3 al inicio y 1–2 al final": "RIR 1–3, manteniendo técnica y rango controlados", "Si cae la postura": "Si pierdes la postura o el control"})
     cards = "\n".join(build_card(item, index) for index, item in enumerate(EXERCISES))
     overlays = replace_all(between(template, '<section class="sessionCompletionPanel"', "</aside>"), {"0/6 ejercicios · 0/20 series": "0/7 ejercicios · 0/20 series", "0 pendientes": "20 pendientes"})

@@ -138,7 +138,7 @@ def build_header(template: str) -> str:
     header = replace_all(
         header,
         {
-            "DÍA 1 · ESPALDA + BÍCEPS": "DÍA 3 · PECHO + HOMBRO + TRÍCEPS",
+            "DÍA 1 · TIRÓN: ESPALDA Y BÍCEPS": "DÍA 3 · EMPUJE: PECHO, HOMBROS Y TRÍCEPS",
             "Tirones verticales y remos · deltoides posterior · bíceps · pecho complementario": "Empujes horizontales y verticales · deltoides lateral · tríceps",
             "Tren superior": "Tren superior",
             "Máquinas + fotos reales": "Máquinas + guía visual",
@@ -337,8 +337,8 @@ def main() -> None:
     head = replace_all(
         head,
         {
-            'data-label="Día 1 · Espalda + Bíceps · v1 responsive"': 'data-label="Día 3 · Pecho + Hombro + Tríceps · v1 responsive"',
-            "<title>Día 1 · Espalda + Bíceps · v1 responsive</title>": "<title>Día 3 · Pecho + Hombro + Tríceps · v1 responsive</title>",
+            'data-label="Día 1 · Tirón: espalda y bíceps · v1 responsive"': 'data-label="Día 3 · Empuje: pecho, hombros y tríceps · v1 responsive"',
+            "<title>Día 1 · Tirón: espalda y bíceps · v1 responsive</title>": "<title>Día 3 · Empuje: pecho, hombros y tríceps · v1 responsive</title>",
             'data-fix="day1-gif-candidates"': 'data-fix="day3-gif-layout"',
         },
     )
@@ -375,7 +375,7 @@ def main() -> None:
         {
             "6 ejercicios · 20 series efectivas": "7 ejercicios · 22 series efectivas",
             "Día 1": "Día 3",
-            "Espalda + bíceps": "Pecho + hombro + tríceps",
+            "Tirón · espalda y bíceps": "Empuje · pecho, hombros y tríceps",
             "75–95 min": "83–98 min",
             "60 s–2.5 min": "60–180 s",
         },
@@ -389,7 +389,7 @@ def main() -> None:
             "75–95 min": "83–98 min",
             "20 series efectivas": "22 series efectivas",
             "4 + 4 + 3 + 3 + 3 + 3 series": "4 + 3 + 3 + 3 + 3 + 3 + 3 series",
-            "Espalda + bíceps": "Pecho + hombro + tríceps",
+            "Tirón · espalda y bíceps": "Empuje · pecho, hombros y tríceps",
             "Con trabajo complementario de deltoides posterior y pecho": "Con volumen directo para pecho, hombros y tríceps",
             "De 60 s a 2.5 min según el ejercicio": "De 60 s a 3 min según el ejercicio",
         },
