@@ -282,19 +282,20 @@ VISUAL_LANGUAGE_STYLE = '''<style data-enhancement="visual-language-lucide-v1">
 .coachRibbonIcon .gymratikIcon{width:1.2rem;height:1.2rem;flex-basis:1.2rem}
 .techStepTitle{display:flex!important;align-items:center;gap:.45rem;line-height:1.2}
 .techStepTitle .gymratikIcon{width:1.05rem;height:1.05rem;flex-basis:1.05rem}
-.techStep.setup .techStepTitle{color:#79ddff}.techStep.move .techStepTitle{color:#58e5c5}.techStep.control .techStepTitle{color:#c1b1ff}.techStep.warning .techStepTitle{color:#ffc477}
-.techSteps{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:.62rem!important;width:100%!important;margin:.75rem 0 0!important;padding:0!important}
-.techStep{display:grid!important;grid-template-rows:auto 1fr!important;align-content:start!important;gap:.42rem!important;min-width:0!important;min-height:118px!important;padding:.76rem .82rem!important;border:1px solid rgba(114,220,255,.2)!important;border-left:3px solid var(--guide-accent,#72dcff)!important;border-radius:.9rem!important;background:linear-gradient(145deg,rgba(9,31,46,.94),rgba(7,25,38,.92))!important;box-shadow:inset 0 1px rgba(255,255,255,.035)!important}
-.techStep.setup{--guide-accent:#72dcff}.techStep.move{--guide-accent:#43dcb9}.techStep.control{--guide-accent:#b7a1ff}.techStep.warning{--guide-accent:#ffd277}
-.techStepTitle{display:flex!important;align-items:center!important;gap:.48rem!important;min-height:1.45rem!important;font-size:.78rem!important;font-weight:900!important;letter-spacing:.045em!important;text-transform:uppercase!important}
-.techStepText{min-width:0!important;color:#d2e5ed!important;font-size:.88rem!important;font-weight:600!important;line-height:1.43!important;overflow-wrap:anywhere!important}
+.techStep.setup .techStepTitle{color:#79ddff}.techStep.move .techStepTitle{color:#58e5c5}.techStep.warning .techStepTitle{color:#ffc477}
+.techSteps{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:.48rem!important;width:100%!important;margin:.48rem 0 0!important;padding:0!important}
+.techStep{display:grid!important;grid-template-rows:auto 1fr!important;align-content:start!important;gap:.32rem!important;min-width:0!important;min-height:0!important;padding:.58rem .66rem!important;border:1px solid rgba(114,220,255,.2)!important;border-left:3px solid var(--guide-accent,#72dcff)!important;border-radius:.78rem!important;background:linear-gradient(145deg,rgba(9,31,46,.94),rgba(7,25,38,.92))!important;box-shadow:inset 0 1px rgba(255,255,255,.035)!important}
+.techStep.setup{--guide-accent:#72dcff}.techStep.move{--guide-accent:#43dcb9}.techStep.warning{--guide-accent:#ffd277}
+.techStepTitle{display:flex!important;align-items:center!important;gap:.38rem!important;min-height:1.25rem!important;font-size:.72rem!important;font-weight:900!important;letter-spacing:.04em!important;text-transform:uppercase!important}
+.techStepTitle .gymratikIcon{width:.95rem;height:.95rem;flex-basis:.95rem}
+.techStepText{min-width:0!important;color:#d2e5ed!important;font-size:.8rem!important;font-weight:600!important;line-height:1.35!important;overflow-wrap:anywhere!important}
 .techStep.warning{background:linear-gradient(145deg,rgba(54,39,24,.58),rgba(7,25,38,.92))!important}
 .techAccordion{width:100%;margin:.65rem 0 0;border:1px solid rgba(114,220,255,.22);border-radius:.82rem;background:rgba(6,24,37,.58);overflow:hidden}
 .techAccordion>summary{display:flex;min-height:42px;align-items:center;justify-content:space-between;gap:.6rem;padding:.58rem .78rem;color:#cfeaf3;font-size:.78rem;font-weight:900;cursor:pointer;list-style:none}
 .techAccordion>summary::-webkit-details-marker{display:none}.techAccordion>summary::after{content:"＋";color:#72dcff;font-size:1rem;transition:transform .18s ease}.techAccordion[open]>summary::after{content:"−"}
 .techAccordion>summary:focus-visible{outline:2px solid #72dcff;outline-offset:-3px}.techAccordion .techSteps{margin:0!important;padding:.1rem .65rem .65rem!important}
 @media(prefers-reduced-motion:reduce){.techAccordion>summary::after{transition:none}}
-@media(max-width:640px){.techSteps{grid-template-columns:minmax(0,1fr)!important;gap:.48rem!important;margin-top:.1rem!important}.techStep{min-height:0!important;padding:.68rem .74rem!important}.techStepTitle{font-size:.73rem!important}.techStepText{font-size:.84rem!important;line-height:1.4!important}}
+@media(max-width:640px){.techSteps{grid-template-columns:minmax(0,1fr)!important;gap:.38rem!important;margin-top:.1rem!important}.techStep{padding:.5rem .62rem!important}.techStepTitle{font-size:.7rem!important}.techStepText{font-size:.79rem!important;line-height:1.34!important}}
 .motivationPortrait img[hidden]{display:none!important}
 .warmupTrackerHead>span{display:inline-flex;align-items:center;gap:.4rem}
 .warmupTrackerHead .gymratikIcon{width:1rem;height:1rem;flex-basis:1rem;color:#65f2dd}
@@ -1838,6 +1839,12 @@ def standardize_shared_session_contract(source: str) -> str:
         "const timingInterval = window.setInterval(() => { renderTimingDisplays(); renderWarmupTiming(); exerciseItems.forEach(updateCompleteButton); }, 1000);",
         1,
     )
+    source = re.sub(
+        r"if \(item\) updatePendingButton\(item\);(?!\s*exerciseItems\.forEach\(updateCompleteButton\);)",
+        "if (item) updatePendingButton(item);\n      exerciseItems.forEach(updateCompleteButton);",
+        source,
+        count=1,
+    )
     if "const formatCountdown = milliseconds =>" not in source:
         source = source.replace(
             "const MAX_TIMING_MS = 24 * 60 * 60 * 1000;",
@@ -2005,6 +2012,88 @@ def standardize_quote_portrait_loading(source: str) -> str:
     return source[:start] + replacement + source[end:]
 
 
+TECHNIQUE_CUES = {
+    "JALÓN AL PECHO": ("Muslos firmes, pies apoyados y pecho erguido.", "Lleva los codos hacia las costillas; pausa y vuelve en 2–3 s. Exhala al tirar.", "No balancees el torso ni lleves la barra detrás de la nuca."),
+    "REMO ALTO UNILATERAL": ("Pecho apoyado y cuerpo mirando al frente.", "Guía el codo abajo y atrás; pausa y regresa en 2–3 s.", "No gires el tronco ni despegues el pecho."),
+    "REMO HORIZONTAL EN MÁQUINA": ("Pecho al apoyo, pies firmes y cuello neutro.", "Rema hacia las costillas; pausa y deja avanzar los hombros con control.", "No te impulses ni levantes los hombros."),
+    "APERTURA INVERSA EN MÁQUINA": ("Ajusta el asiento; pecho apoyado y codos alineados.", "Abre los brazos en arco cómodo y regresa lentamente, sin perder tensión.", "No conviertas la apertura en un remo ni fuerces el hombro."),
+    "CURL DE BÍCEPS EN MÁQUINA": ("Alinea el codo con el eje y apoya el brazo.", "Flexiona sin despegar el brazo; baja en 2–3 s.", "No adelantes el codo ni rebotes."),
+    "CURL DE BÍCEPS SENTADO EN MÁQUINA": ("Espalda apoyada, codos estables y muñecas neutras.", "Flexiona con agarre supino; pausa arriba y baja en 2–3 s.", "No balancees el tronco ni bloquees los codos."),
+    "HACK SQUAT": ("Espalda y hombros apoyados; pies simétricos.", "Baja en 2–3 s hasta donde mantengas apoyo; sube empujando el suelo.", "No rebotes ni dejes que las rodillas colapsen hacia dentro."),
+    "HIP THRUST": ("Espalda alta apoyada; arriba, tibias casi verticales.", "Extiende la cadera, aprieta glúteos y pausa 1 s; baja con control.", "No arquees la zona lumbar ni empujes solo con las puntas."),
+    "PRENSA DE PIERNAS": ("Espalda y pelvis apoyadas; pies al ancho de hombros.", "Baja sin despegar la pelvis y empuja con todo el pie.", "No cierres las rodillas ni bloquees con golpe."),
+    "CURL FEMORAL EN MÁQUINA": ("Alinea la rodilla con el eje y fija la pelvis.", "Flexiona, pausa y regresa en 2–3 s sin soltar la carga.", "No uses impulso ni levantes la cadera."),
+    "EXTENSIÓN DE PIERNAS": ("Alinea el eje de la máquina con la rodilla.", "Extiende con control, pausa breve y baja sin dejar caer la carga.", "No golpees el tope ni balancees el tronco."),
+    "PANTORRILLAS DE PIE": ("Apoya el antepié y deja libre el talón.", "Baja hasta un estiramiento cómodo; eleva, pausa y desciende lento.", "No rebotes ni acortes el recorrido."),
+    "PRESS DE PECHO SENTADO EN MÁQUINA": ("Ajusta las asas a media altura del pecho; espalda y pies apoyados.", "Empuja sin despegar el torso; vuelve en 2–3 s hasta un estiramiento cómodo.", "No abras excesivamente los codos ni golpees al extender."),
+    "PRESS INCLINADO CONVERGENTE EN MÁQUINA": ("Asas entre pecho medio y alto; torso apoyado.", "Empuja siguiendo la trayectoria y vuelve en 2–3 s, sin rebote.", "No arquees la espalda ni fuerces el hombro atrás."),
+    "PEC DECK / CONTRACTOR DE PECHO": ("Asiento a la altura del hombro; codos suavemente flexionados.", "Cierra en 1–2 s y vuelve en 2–3 s dentro de un rango cómodo.", "No abras con dolor ni eleves los hombros."),
+    "PRESS DE HOMBRO EN MÁQUINA": ("Asas cerca de los hombros; espalda y pelvis apoyadas.", "Empuja arriba y baja en 2–3 s manteniendo el torso estable.", "No arquees la espalda ni bajes a un rango doloroso."),
+    "ELEVACIÓN LATERAL EN MÁQUINA": ("Alinea el eje con el hombro y apoya el torso.", "Eleva hasta una altura cómoda; baja en 2–3 s sin perder control.", "No te balancees ni encojas los hombros."),
+    "JALÓN DE TRÍCEPS EN POLEA": ("Polea alta, codos junto al cuerpo y pies firmes.", "Extiende los codos; regresa en 2–3 s sin mover el torso.", "No uses el peso corporal ni adelantes los codos."),
+    "EXTENSIÓN DE TRÍCEPS SOBRE CABEZA CON CUERDA": ("Postura estable, costillas controladas y codos al frente.", "Extiende y flexiona los codos con control; mantén quietos los hombros.", "No arquees la espalda ni abras demasiado los codos."),
+    "PRENSA UNILATERAL ALTERNA": ("Pelvis apoyada; empieza con un lado y carga controlable.", "Empuja con un pie sin bloquear; completa ese lado antes de alternar.", "No dejes caer la pelvis ni colapses la rodilla hacia dentro."),
+    "PESO MUERTO RUMANO CON BARRA": ("Pies al ancho de cadera; barra sobre el mediopié y espalda neutra.", "Lleva la cadera atrás; baja la barra pegada a las piernas y sube extendiendo la cadera.", "No lo conviertas en sentadilla, alejes la barra ni redondees la espalda."),
+    "CURL FEMORAL TUMBADO": ("Alinea la rodilla con el eje; rodillo sobre el talón y cadera apoyada.", "Flexiona hacia los glúteos y regresa en 2–3 s sin soltar la carga.", "No levantes la pelvis ni acortes el recorrido."),
+    "ABDUCCIÓN DE CADERA SENTADA": ("Espalda y pelvis apoyadas; inicio en rango cómodo.", "Separa las rodillas con control y regresa lentamente.", "No rebotes, inclines el torso ni fuerces la apertura."),
+    "ADUCCIÓN DE CADERA SENTADA": ("Espalda y pelvis apoyadas; piernas simétricas.", "Acerca las rodillas y abre lentamente, manteniendo la tensión.", "No fuerces el estiramiento ni muevas la pelvis."),
+    "ELEVACIÓN DE PANTORRILLA SENTADA": ("Almohadilla sobre los muslos; antepié apoyado y talón libre.", "Eleva el talón, pausa arriba y baja en 2–3 s sin rebote.", "No ayudes con las rodillas ni acortes el descenso."),
+    "CRUNCH CON ELEVACIÓN DE PIERNAS SENTADA": ("Ajusta apoyos para mantener la pelvis estable; no tires del cuello.", "Acerca tronco y piernas; exhala al cerrar y regresa en 2–3 s.", "No jales la cabeza ni uses impulso."),
+}
+
+
+def _replace_technique_steps(card: str, cues: tuple[str, str, str]) -> str:
+    marker = 'class="techSteps"'
+    marker_pos = card.find(marker)
+    if marker_pos < 0:
+        return card
+    opening = card.rfind("<div", 0, marker_pos)
+    opening_end = card.find(">", marker_pos)
+    depth = 0
+    closing_end = -1
+    for token in re.finditer(r"<div\b[^>]*>|</div\s*>", card[opening:opening_end + 1], flags=re.I):
+        depth += 1 if token.group(0).lower().startswith("<div") else -1
+    for token in re.finditer(r"<div\b[^>]*>|</div\s*>", card[opening_end + 1:], flags=re.I):
+        depth += 1 if token.group(0).lower().startswith("<div") else -1
+        if depth == 0:
+            closing_end = opening_end + 1 + token.end()
+            break
+    if opening < 0 or opening_end < 0 or closing_end < 0:
+        return card
+    steps = (
+        ("setup", "settings-2", "Posición", cues[0]),
+        ("move", "move-up-right", "Movimiento", cues[1]),
+        ("warning", "triangle-alert", "Evita", cues[2]),
+    )
+    contents = "".join(
+        f'<div class="techStep {kind}"><div class="techStepTitle"><svg class="lucide lucide-{icon} gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-{icon}"></use></svg><span>{label}</span></div><div class="techStepText">{escape(text)}</div></div>'
+        for kind, icon, label, text in steps
+    )
+    return card[:opening_end + 1] + contents + card[closing_end - len("</div>"):]
+
+
+def standardize_technique_guidance(source: str) -> str:
+    """Use the same three concise, exercise-specific technique cues in every routine."""
+    cards = list(re.finditer(r'<article class="card\b.*?</article>', source, flags=re.S))
+    replacements: list[tuple[int, int, str]] = []
+    for match in cards:
+        card = match.group(0)
+        title_match = re.search(r'<div class="exTitle">(.*?)</div>', card, flags=re.S)
+        if not title_match:
+            continue
+        title = re.sub(r"<[^>]+>", "", title_match.group(1)).strip()
+        title = unescape(title)
+        cues = TECHNIQUE_CUES.get(title)
+        if not cues:
+            raise ValueError(f"Falta guía esencial para el ejercicio: {title}")
+        replacements.append((match.start(), match.end(), _replace_technique_steps(card, cues)))
+    if not replacements:
+        raise ValueError("No se encontraron ejercicios con guía técnica estandarizable")
+    for start, end, replacement in reversed(replacements):
+        source = source[:start] + replacement + source[end:]
+    return source
+
+
 def standardize_technique_accordion(source: str) -> str:
     """Wrap each technique grid in an accessible, collapsed-by-default details element."""
     source = re.sub(
@@ -2039,7 +2128,12 @@ def standardize_technique_accordion(source: str) -> str:
         if enclosing_details >= 0 and source.find("</details>", enclosing_details) >= closing_end:
             continue
         source = (source[:opening] + '<details class="techAccordion" data-enhancement="technique-accordion-v1">'
-                  '<summary>Guía breve de técnica</summary>' + source[opening:closing_end] + '</details>' + source[closing_end:])
+                  '<summary>Técnica esencial</summary>' + source[opening:closing_end] + '</details>' + source[closing_end:])
+    source = re.sub(
+        r'(<details class="techAccordion" data-enhancement="technique-accordion-v1">\s*<summary>).*?(</summary>)',
+        r'\1Técnica esencial\2',
+        source,
+    )
     return source
 
 
@@ -2086,6 +2180,7 @@ def standardize_summary_navigation(source: str) -> str:
 
 
 def standardize_muscle_visuals(source: str) -> str:
+    source = standardize_technique_guidance(source)
     source = standardize_technique_accordion(source)
     source = standardize_quote_portrait_loading(source)
     source = source.replace(

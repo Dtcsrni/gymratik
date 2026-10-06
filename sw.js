@@ -1,5 +1,5 @@
-const CACHE_NAME = 'entrenamiento-pwa-2a9c89db03b6';
-const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-dd840ca7a9d0';
+const CACHE_NAME = 'entrenamiento-pwa-ebb03bc466e8';
+const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-2a9c89db03b6';
 const PRECACHE = [
   './',
   './index.html',
@@ -277,10 +277,10 @@ const RESOURCE_BYTES = {
   './data/profile/mascot-motion/states-v1/male-mobility.png': 12451,
   './data/profile/mascot-motion/states-v1/male-rest.png': 15701,
   './data/profile/mascot-motion/states-v1/male-approval.png': 12307,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html': 1039749,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html': 2638979,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html': 618182,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html': 621169,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html': 1039407,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html': 2634868,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html': 622007,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html': 625008,
   './assets/branding/gymratik-mascots-mark-v2.png': 338005,
   './data/rutinas_autocontenidas/frases_fitness/fitness_quotes.js': 14218,
   './data/rutinas_autocontenidas/frases_fitness/retratos/allyson-felix.jpg': 28818,

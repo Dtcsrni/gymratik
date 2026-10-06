@@ -21,6 +21,8 @@ from standardize_muscle_visuals import (  # noqa: E402
     standardize_series_entry_zone,
     standardize_summary_navigation,
     standardize_technique_accordion,
+    standardize_technique_guidance,
+    TECHNIQUE_CUES,
     standardize_visual_language,
     standardize_warmup_single_viewers,
 )
@@ -34,12 +36,24 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
         source = '''<html><head></head><body><article><details class="techAccordion" data-enhancement="technique-accordion-v1"><summary>Guía breve de técnica</summary></details><div class="techSteps"><div class="techStep"><div class="techStepTitle">Ajuste</div><div class="techStepText">Postura estable.</div></div><div class="techStep"><div class="techStepTitle">Ejecución</div><div class="techStepText">Controla el recorrido.</div></div></div></article></body></html>'''
         result = standardize_technique_accordion(source)
         self.assertEqual(result.count('data-enhancement="technique-accordion-v1"'), 1)
-        self.assertIn('<summary>Guía breve de técnica</summary>', result)
+        self.assertIn('<summary>Técnica esencial</summary>', result)
         self.assertNotIn('<details class="techAccordion" open', result)
         self.assertEqual(result.count('<div class="techSteps">'), 1)
         accordion = re.search(r'<details class="techAccordion".*?</details>', result, re.S).group(0)
         self.assertIn('<div class="techSteps">', accordion)
         self.assertEqual(standardize_technique_accordion(result), result)
+
+    def test_technique_guidance_uses_three_compact_exercise_specific_cues(self) -> None:
+        source = '''<article class="card"><div class="exTitle">JALÓN AL PECHO</div><div class="techSteps"><div class="techStep setup">old setup</div><div class="techStep move">old movement</div><div class="techStep control">old tempo</div><div class="techStep warning">old warning</div></div></article>'''
+        result = standardize_technique_guidance(source)
+        self.assertEqual(len(TECHNIQUE_CUES), 26)
+        self.assertEqual(result.count('class="techStep setup"'), 1)
+        self.assertEqual(result.count('class="techStep move"'), 1)
+        self.assertEqual(result.count('class="techStep warning"'), 1)
+        self.assertNotIn('class="techStep control"', result)
+        self.assertIn("Movimiento", result)
+        self.assertIn("Exhala al tirar", result)
+        self.assertEqual(standardize_technique_guidance(result), result)
 
     def test_summary_navigation_preserves_free_scroll_and_clicks_to_exercise(self) -> None:
         source = '''<html><head></head><body><div class="sessionSummaryList"></div><script>
@@ -748,6 +762,8 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertIn("Aproximación activa ·", source)
                 self.assertIn("if (warmup && state[warmup.dataset.key] !== true) {", source)
                 self.assertIn("state[warmup.dataset.key] = true;", source)
+                self.assertIn("const approximationTarget = activeApproximation || (!warmupRecorded ? exerciseItems.find(entry => !snapshot(entry).complete && !snapshot(entry).machinePending) : null);", source)
+                self.assertIn("if (item) updatePendingButton(item);\n      exerciseItems.forEach(updateCompleteButton);\n      updateSummary();", source)
                 self.assertNotIn("warmup.click(); return;", source)
                 self.assertIn("longPressDetected = false; startSeriesButton.style.setProperty('--hold-progress', '0%');", source)
                 self.assertIn("button.classList.toggle('is-preparing', preparing)", source)
@@ -829,17 +845,24 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertIn("portraitEl.onerror = showPortraitFallback", source)
                 self.assertIn("portraitEl.loading = 'eager'", source)
                 self.assertIn("portraitEl.hidden = true; initialsEl.hidden = false;", source)
+                self.assertNotIn('id="fitnessQuotesPayload"', source)
+
+    def test_shared_technique_template_is_compact_and_identical_across_all_days(self) -> None:
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            with self.subTest(path=path.name):
+                source = path.read_text(encoding="utf-8")
                 card_count = len(re.findall(r'<article class="card', source))
-                for step_class in ("setup", "move", "control", "warning"):
+                for step_class in ("setup", "move", "warning"):
                     self.assertEqual(source.count(f'class="techStep {step_class}"'), card_count)
+                self.assertNotIn('class="techStep control"', source)
                 self.assertEqual(source.count('class="techSteps"'), card_count)
                 self.assertEqual(source.count('data-enhancement="technique-accordion-v1"'), card_count)
+                self.assertEqual(source.count('<summary>Técnica esencial</summary>'), card_count)
                 self.assertIn(".techSteps{display:grid!important", source)
                 self.assertIn('data-enhancement="summary-free-navigation-v1"', source)
                 self.assertNotIn("new MutationObserver(scheduleAlignment)", source)
                 self.assertIn("scrollIntoView({behavior:'smooth', block:'start'})", source)
                 self.assertIn("width:82px!important;height:82px!important", source)
-                self.assertNotIn('id="fitnessQuotesPayload"', source)
 
     def test_day_four_uses_free_barbell_romanian_deadlift_and_owned_local_media(self) -> None:
         path = CANONICAL / "Rutina_Dia_4_Pierna_Equilibrio_V1.html"
@@ -848,8 +871,8 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
         entry = next(item for item in manifest["entries"] if item["repo_id"] == "barbell-rdl-v1")
         self.assertIn("PESO MUERTO RUMANO CON BARRA", source)
         self.assertIn("barbell-rdl-v1.gif", source)
-        self.assertIn("Desplaza la cadera atrás", source)
-        self.assertIn("Detén el descenso", source)
+        self.assertIn("Lleva la cadera atrás", source)
+        self.assertIn("barra pegada a las piernas", source)
         self.assertIn("barra libre y discos", source)
         self.assertNotIn("PESO MUERTO EN MÁQUINA", source)
         self.assertNotIn("0578-GUT8I22", source)

@@ -439,7 +439,7 @@ def assert_visual_resource_quality(page, routine_name: str) -> dict:
         return {group:image.matches('.phaseRow .photo img.realphoto')?'exercise':image.matches('.warmupVisual img')?'warmup':image.matches('.gifFrame img')?'gif':'anatomy',src:image.currentSrc||image.src,motionSource:image.dataset.batteryMotionSrc||'',alt:image.alt,ariaHidden:image.getAttribute('aria-hidden')==='true',naturalWidth:image.naturalWidth,naturalHeight:image.naturalHeight,width:box.width,height:box.height,parentWidth:parent.width,parentHeight:parent.height,fit:style.objectFit,position:style.objectPosition,hidden:image.hidden,display:style.display};
       });
       const captions=[...document.querySelectorAll('.phaseRow .phaseLabel,.phaseRow .source,.warmupHead p,.warmupCopy p,.warmupInstructions')].map(element=>({tag:element.tagName,className:String(element.className),text:element.textContent.trim().slice(0,90),fontSize:parseFloat(getComputedStyle(element).fontSize),width:rect(element).width})).filter(item=>item.width>0);
-      const techniqueGuides=[...document.querySelectorAll('article.card[data-exercise-index]')].map(card=>{const panel=card.querySelector('.techSteps'),steps=[...(panel?.querySelectorAll(':scope > .techStep')||[])],box=panel?.getBoundingClientRect(),style=panel?getComputedStyle(panel):null;return {exercise:card.dataset.exerciseIndex,stepTypes:steps.map(step=>['setup','move','control','warning'].find(type=>step.classList.contains(type))||'missing'),columns:style?style.gridTemplateColumns.split(/\\s+/).filter(Boolean).length:0,width:box?.width||0,steps:steps.map(step=>{const r=step.getBoundingClientRect(),text=step.querySelector('.techStepText'),t=text?.getBoundingClientRect(),s=text?getComputedStyle(text):null;return {width:r.width,height:r.height,textWidth:t?.width||0,textClientWidth:text?.clientWidth||0,fontSize:s?parseFloat(s.fontSize):0}})}});
+      const techniqueGuides=[...document.querySelectorAll('article.card[data-exercise-index]')].map(card=>{const panel=card.querySelector('.techSteps'),steps=[...(panel?.querySelectorAll(':scope > .techStep')||[])],box=panel?.getBoundingClientRect(),style=panel?getComputedStyle(panel):null;return {exercise:card.dataset.exerciseIndex,stepTypes:steps.map(step=>['setup','move','warning'].find(type=>step.classList.contains(type))||'missing'),stepTitles:steps.map(step=>step.querySelector('.techStepTitle span')?.textContent.trim()||''),columns:style?style.gridTemplateColumns.split(/\\s+/).filter(Boolean).length:0,width:box?.width||0,steps:steps.map(step=>{const r=step.getBoundingClientRect(),text=step.querySelector('.techStepText'),t=text?.getBoundingClientRect(),s=text?getComputedStyle(text):null;return {width:r.width,height:r.height,textWidth:t?.width||0,textClientWidth:text?.clientWidth||0,fontSize:s?parseFloat(s.fontSize):0}})}});
       const instructional=images.filter(image=>image.group==='exercise'&&!image.hidden&&image.display!=='none');
       const cropFractions=instructional.filter(image=>image.fit==='cover'&&image.naturalWidth&&image.naturalHeight&&image.width&&image.height).map(image=>{const source=image.naturalWidth/image.naturalHeight,box=image.width/image.height;return 1-Math.min(source,box)/Math.max(source,box)});
       const warmupViewers=[...document.querySelectorAll('.warmupSingleViewer')].map(group=>{const frame=group.querySelector(':scope > .warmupVisual'),g=group.getBoundingClientRect(),f=frame?.getBoundingClientRect(),style=getComputedStyle(group),buttons=[...group.querySelectorAll('.warmupMediaChoice')].map(button=>{const r=button.getBoundingClientRect();return {width:r.width,height:r.height,left:r.left,right:r.right}});return {viewport:innerWidth,groupWidth:g.width,frameWidth:f?.width||0,frameHeight:f?.height||0,paddingLeft:parseFloat(style.paddingLeft),paddingRight:parseFloat(style.paddingRight),widthRatio:g.width&&f?f.width/g.width:0,buttons}});
@@ -457,7 +457,7 @@ def assert_visual_resource_quality(page, routine_name: str) -> dict:
     if audit["minCaptionFont"] and audit["minCaptionFont"] < 12:
         small_captions = [item for item in audit["captions"] if item["width"] > 0 and item["fontSize"] < 12]
         raise AssertionError(f"{routine_name}: texto instructivo menor a 12 CSS px: {audit['minCaptionFont']}; elementos={small_captions}")
-    invalid_guides = [guide for guide in audit["techniqueGuides"] if guide["stepTypes"] != ["setup", "move", "control", "warning"] or guide["columns"] != 1 or any(step["width"] <= 0 or step["height"] < 52 or step["fontSize"] < 12 or step["textWidth"] > step["textClientWidth"] + 1 for step in guide["steps"])]
+    invalid_guides = [guide for guide in audit["techniqueGuides"] if guide["stepTypes"] != ["setup", "move", "warning"] or guide["stepTitles"] != ["Posición", "Movimiento", "Evita"] or guide["columns"] != 1 or any(step["width"] <= 0 or step["height"] < 52 or step["fontSize"] < 12 or step["textWidth"] > step["textClientWidth"] + 1 for step in guide["steps"])]
     if invalid_guides:
         raise AssertionError(f"{routine_name}: la guía técnica no usa el marco/orden común y legible en cada ejercicio: {invalid_guides}; guías={audit['techniqueGuides']}")
     if audit["maxExerciseCoverCrop"] > 0.48:
@@ -1289,6 +1289,58 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
     return result
 
 
+def validate_approximation_moves_to_first_available(browser, name: str, sex: str) -> None:
+    """La aproximación pertenece al primer ejercicio libre, no al índice 1 fijo."""
+    context = browser.new_context(
+        viewport={"width": 412, "height": 915},
+        device_scale_factor=2,
+        is_mobile=True,
+        has_touch=True,
+    )
+    context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1', 'true')")
+    page = context.new_page()
+    try:
+        page.goto(f"http://127.0.0.1:{PORT}/data/rutinas_autocontenidas/canonicas/{quote(name)}", wait_until="domcontentloaded")
+        page.wait_for_function("() => [...document.querySelectorAll('link[rel=stylesheet]')].every(link => link.sheet)")
+        cards = page.locator("article.card[data-exercise-index]")
+        if cards.count() < 2:
+            raise AssertionError(f"{name}: se requieren al menos dos ejercicios para probar el cambio de aproximación")
+        install_test_clock(page)
+        if sex:
+            page.evaluate("sex => window.TrainingProgressStore.saveProfile({sex})", sex)
+
+        first, second = cards.nth(0), cards.nth(1)
+        warmup = page.locator("#warmupAction")
+        click_control(warmup)
+        advance_test_clock(page, 15_000)
+        click_control(warmup)
+        click_control(warmup)
+        if warmup.get_attribute("data-phase") != "done":
+            raise AssertionError(f"{name}: no se completó la preparación general de la regresión")
+        advance_test_clock(page, 2_600)
+
+        pending = first.locator(".machinePendingToggle")
+        if pending.get_attribute("aria-pressed") != "false":
+            raise AssertionError(f"{name}: el primer ejercicio no inicia disponible")
+        click_control(pending)
+        first_marker = first.locator(".warmupSet")
+        second_marker = second.locator(".warmupSet")
+        if first_marker.count() != 0 or second_marker.count() != 1 or second_marker.get_attribute("data-key") != "w2":
+            raise AssertionError(
+                f"{name}: al ocupar el ejercicio 1, la aproximación no se trasladó exclusivamente al 2 "
+                f"(marcadores 1={first_marker.count()}, 2={second_marker.count()})"
+            )
+
+        first_hint = first.locator(".exerciseWarmupHint")
+        second_hint = second.locator(".exerciseWarmupHint")
+        if first_hint.count() or not second_hint.is_visible():
+            raise AssertionError(f"{name}: la indicación de aproximación no quedó únicamente en el primer ejercicio disponible")
+        if "aproximación" not in second.locator(".completeSetButton").inner_text().lower():
+            raise AssertionError(f"{name}: el botón del primer ejercicio disponible no ofrece iniciar la aproximación")
+    finally:
+        context.close()
+
+
 def validate_primary_set_buttons(browser, name: str, sex: str, exercise_limit: int | None = None) -> dict[str, int]:
     """Exercise each card's dynamic and skip controls in a clean session."""
     context_settings = {
@@ -1298,6 +1350,7 @@ def validate_primary_set_buttons(browser, name: str, sex: str, exercise_limit: i
         "has_touch": True,
     }
     confirmation = validate_missing_performance_confirmation(browser, name)
+    validate_approximation_moves_to_first_available(browser, name, sex)
     checked = 0
     skipped = 0
     initial_context = browser.new_context(**context_settings)
