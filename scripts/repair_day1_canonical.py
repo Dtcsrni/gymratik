@@ -74,6 +74,37 @@ def main() -> None:
     with HTML.open("r", encoding="utf-8", newline="") as handle:
         source = handle.read()
     newline = "\r\n" if "\r\n" in source else "\n"
+    first_card_start = source.index('<article class="card" data-exercise-index="1">')
+    first_card_end = source.index('<article class="card" data-exercise-index="2">', first_card_start)
+    first_card = source[first_card_start:first_card_end]
+    machine_box = (
+        '<div class="machineRefBox latPulldown"><img alt="Jalón al pecho en polea alta; equipo y postura de referencia" '
+        'class="realphoto" loading="lazy" src="../medios_publicados/rutinas_autocontenidas/dia1_media_generated/0197-qdRxqCj-start.jpg"/>'
+        '<span class="refTag">EQUIPO · POLEA ALTA</span></div>'
+    )
+    first_card, machine_count = re.subn(
+        r'<div class="machineRefBox[^>]*>.*?</div>',
+        machine_box,
+        first_card,
+        count=1,
+        flags=re.S,
+    )
+    if machine_count != 1:
+        raise RuntimeError("No se encontró la referencia de máquina del jalón al pecho")
+    for phase, filename in (
+        ("inicio", "0197-qdRxqCj-start.jpg"),
+        ("final", "0197-qdRxqCj-final.jpg"),
+    ):
+        first_card, count = re.subn(
+            rf'(<img\b(?=[^>]*\balt="JALÓN AL PECHO · {phase}[^\"]*")[^>]*\bsrc=")[^\"]*(")',
+            rf'\g<1>../medios_publicados/rutinas_autocontenidas/dia1_media_generated/{filename}\g<2>',
+            first_card,
+            count=1,
+            flags=re.I,
+        )
+        if count != 1:
+            raise RuntimeError(f"No se encontró la imagen de {phase} del jalón al pecho")
+    source = source[:first_card_start] + first_card + source[first_card_end:]
     if "</head>" not in source or '<header class="hero">' not in source:
         with HEADER_SOURCE.open("r", encoding="utf-8", newline="") as handle:
             header_source = handle.read()

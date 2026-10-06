@@ -224,10 +224,12 @@ button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gra
 .summaryExercise.isCurrent{scroll-margin-block:8px}
 .summaryActivityStatus:not(.isIdle){animation:summaryStatusIn .24s ease-out both}
 @keyframes summaryStatusIn{from{opacity:.5;transform:translateY(3px)}to{opacity:1;transform:none}}
-@media(max-width:640px){#floatingSessionSummary{right:max(.55rem,env(safe-area-inset-right))!important;bottom:max(.55rem,env(safe-area-inset-bottom))!important;width:min(420px,calc(100vw - 1.1rem))!important;max-height:min(36dvh,320px)!important}#summaryToggle{grid-template-columns:auto minmax(0,1fr) 64px auto!important;min-height:68px!important}.sessionSummaryList{max-height:min(12dvh,110px)!important}.summaryExercise{min-height:44px!important;padding:.42rem .6rem .68rem!important}.summaryExercise::before,.summaryExercise::after{right:.6rem;bottom:.34rem;height:4px}.summaryExerciseName{font-size:.74rem!important}.summaryMascotWrap{width:62px;height:62px;border-radius:.88rem}#summaryActivityMascot{width:58px;height:58px}}
+@media(max-width:640px){#floatingSessionSummary{right:max(.55rem,env(safe-area-inset-right))!important;bottom:max(.55rem,env(safe-area-inset-bottom))!important;width:min(420px,calc(100vw - 1.1rem))!important;max-height:min(44dvh,400px)!important}#summaryToggle{grid-template-columns:auto minmax(0,1fr) 64px auto!important;min-height:68px!important}.sessionSummaryList{max-height:min(28dvh,180px)!important}.summaryExercise{min-height:44px!important;padding:.42rem .6rem .68rem!important}.summaryExercise::before,.summaryExercise::after{right:.6rem;bottom:.34rem;height:4px}.summaryExerciseName{font-size:.74rem!important}.summaryMascotWrap{width:62px;height:62px;border-radius:.88rem}#summaryActivityMascot{width:58px;height:58px}}
+@media(max-width:640px){#summaryToggle[aria-expanded="true"]{grid-template-columns:auto minmax(0,1fr) 58px auto!important;grid-template-rows:auto auto!important;min-height:58px!important}#summaryToggle[aria-expanded="true"] #summaryActivityHeadline{display:block!important;font-size:.62rem!important;line-height:1.1!important}#summaryToggle[aria-expanded="true"] .summaryMascotWrap{width:54px!important;height:54px!important}#summaryToggle[aria-expanded="true"] #summaryActivityMascot{width:50px!important;height:50px!important}#summaryToggle[aria-expanded="true"] + #summaryBody{max-height:none!important;padding:.32rem .48rem .42rem!important;gap:.28rem!important}#summaryToggle[aria-expanded="true"] + #summaryBody .summaryTotals{display:none!important}#summaryToggle[aria-expanded="true"] + #summaryBody .summaryActivityStatus{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}#summaryToggle[aria-expanded="true"] + #summaryBody #summaryElapsed{display:none!important}}
 @media(max-width:380px){.summaryMascotWrap{width:54px;height:54px}#summaryActivityMascot{width:50px;height:50px}#summaryToggle{grid-template-columns:auto minmax(0,1fr) 54px auto!important;gap:.2rem .38rem!important;padding:.48rem .5rem!important}}
-@media(max-height:680px){#floatingSessionSummary{max-height:38dvh!important}.sessionSummaryList{max-height:18dvh!important}}
-@media(max-height:420px) and (max-width:900px){#floatingSessionSummary{max-height:34dvh!important}.sessionSummaryList{max-height:12dvh!important}#summaryBody{gap:.22rem!important;padding:.3rem .5rem .42rem!important}.summaryTotals{min-height:22px!important}}
+@media(max-height:680px){#floatingSessionSummary{max-height:min(62dvh,380px)!important}.sessionSummaryList{max-height:min(28dvh,180px)!important}}
+@media(min-width:341px) and (max-width:640px) and (min-height:600px) and (max-height:680px){#floatingSessionSummary{max-height:min(58dvh,380px)!important}}
+@media(max-height:420px) and (max-width:900px){#floatingSessionSummary{max-height:min(62.5dvh,225px)!important}.sessionSummaryList{max-height:min(24dvh,90px)!important;gap:.12rem!important}.summaryToggle[aria-expanded=true]{min-height:48px!important}.summaryActivityStatus{min-height:32px!important;padding:.24rem .45rem!important;font-size:.65rem!important}.summaryBody{gap:.18rem!important;padding:.2rem .4rem .28rem!important}.summaryTotals,.summaryTotals span{min-height:20px!important}.summaryTotals span{padding:.12rem .42rem!important;font-size:.58rem!important}.summaryExercise{min-height:24px!important;padding:.06rem .35rem .28rem!important}.summaryExerciseName,.summaryExerciseState{font-size:.58rem!important}}
 @media(max-width:380px){.exerciseTiming{gap:.28rem;padding:.3rem}.exerciseTimerChip{min-height:28px;padding:.3rem .42rem;gap:.28rem}.exerciseTimerLabel{font-size:.52rem}.exerciseTimerValue{font-size:.65rem}}
 @media(prefers-reduced-motion:reduce){.exerciseTimerChip[data-kind="active-set"]::before,.exerciseTimerChip[data-kind="active-rest"]::before,.exerciseTimerChip[data-kind="active-set"]::after,.summaryActivityStatus:not(.isIdle),.summaryActivityStatus.isResting .summaryActivityIndicator,.summaryActivityStatus.isActive .summaryActivityIndicator,.summaryActivityStatus.isPreparing .summaryActivityIndicator,.summaryActivityStatus.isApproximation .summaryActivityIndicator,#summaryActivityMascot,.summaryMascotWrap::before,.summaryMascotWrap::after,.summaryExercise::after,.summaryProgressTrack>span,.summaryExercise,.warmupProgressSegment.is-current,.seriesProgressSegment.is-current,.warmupProgressSegment.is-current::after,.seriesProgressSegment.is-current::after,.approximationProgress[data-active=true] .approximationProgressTrack>span{animation:none!important;transition:none!important}#floatingSessionSummary,#summaryToggle{scroll-behavior:auto}}
 @keyframes activityFillGlow{from{opacity:1}to{opacity:1}}
@@ -281,6 +283,19 @@ VISUAL_LANGUAGE_STYLE = '''<style data-enhancement="visual-language-lucide-v1">
 .techStepTitle{display:flex!important;align-items:center;gap:.45rem;line-height:1.2}
 .techStepTitle .gymratikIcon{width:1.05rem;height:1.05rem;flex-basis:1.05rem}
 .techStep.setup .techStepTitle{color:#79ddff}.techStep.move .techStepTitle{color:#58e5c5}.techStep.control .techStepTitle{color:#c1b1ff}.techStep.warning .techStepTitle{color:#ffc477}
+.techSteps{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:.62rem!important;width:100%!important;margin:.75rem 0 0!important;padding:0!important}
+.techStep{display:grid!important;grid-template-rows:auto 1fr!important;align-content:start!important;gap:.42rem!important;min-width:0!important;min-height:118px!important;padding:.76rem .82rem!important;border:1px solid rgba(114,220,255,.2)!important;border-left:3px solid var(--guide-accent,#72dcff)!important;border-radius:.9rem!important;background:linear-gradient(145deg,rgba(9,31,46,.94),rgba(7,25,38,.92))!important;box-shadow:inset 0 1px rgba(255,255,255,.035)!important}
+.techStep.setup{--guide-accent:#72dcff}.techStep.move{--guide-accent:#43dcb9}.techStep.control{--guide-accent:#b7a1ff}.techStep.warning{--guide-accent:#ffd277}
+.techStepTitle{display:flex!important;align-items:center!important;gap:.48rem!important;min-height:1.45rem!important;font-size:.78rem!important;font-weight:900!important;letter-spacing:.045em!important;text-transform:uppercase!important}
+.techStepText{min-width:0!important;color:#d2e5ed!important;font-size:.88rem!important;font-weight:600!important;line-height:1.43!important;overflow-wrap:anywhere!important}
+.techStep.warning{background:linear-gradient(145deg,rgba(54,39,24,.58),rgba(7,25,38,.92))!important}
+.techAccordion{width:100%;margin:.65rem 0 0;border:1px solid rgba(114,220,255,.22);border-radius:.82rem;background:rgba(6,24,37,.58);overflow:hidden}
+.techAccordion>summary{display:flex;min-height:42px;align-items:center;justify-content:space-between;gap:.6rem;padding:.58rem .78rem;color:#cfeaf3;font-size:.78rem;font-weight:900;cursor:pointer;list-style:none}
+.techAccordion>summary::-webkit-details-marker{display:none}.techAccordion>summary::after{content:"＋";color:#72dcff;font-size:1rem;transition:transform .18s ease}.techAccordion[open]>summary::after{content:"−"}
+.techAccordion>summary:focus-visible{outline:2px solid #72dcff;outline-offset:-3px}.techAccordion .techSteps{margin:0!important;padding:.1rem .65rem .65rem!important}
+@media(prefers-reduced-motion:reduce){.techAccordion>summary::after{transition:none}}
+@media(max-width:640px){.techSteps{grid-template-columns:minmax(0,1fr)!important;gap:.48rem!important;margin-top:.1rem!important}.techStep{min-height:0!important;padding:.68rem .74rem!important}.techStepTitle{font-size:.73rem!important}.techStepText{font-size:.84rem!important;line-height:1.4!important}}
+.motivationPortrait img[hidden]{display:none!important}
 .warmupTrackerHead>span{display:inline-flex;align-items:center;gap:.4rem}
 .warmupTrackerHead .gymratikIcon{width:1rem;height:1rem;flex-basis:1rem;color:#65f2dd}
 .warmup-title-icon{width:1em;height:1em;margin-right:.3em;color:#65f2dd}
@@ -299,7 +314,8 @@ VISUAL_LANGUAGE_STYLE = '''<style data-enhancement="visual-language-lucide-v1">
 .sessionCompletionActions{grid-column:2/4!important;min-width:0}
 @media(max-width:640px){.sessionCompletionPanel:not([hidden]){width:calc(100vw - 1.25rem)!important;max-width:calc(100vw - 1.25rem)!important;min-width:0!important;box-sizing:border-box!important;grid-template-columns:minmax(0,6.5rem) minmax(0,1fr)!important;align-items:start!important;gap:.7rem!important;padding:.8rem!important;overflow-x:clip!important}.sessionCompletionPanel:not([hidden])>*{min-width:0!important;max-width:100%!important}.sessionCompletionPanel .completionOrb{display:none!important}.motivationPhotoWrap{grid-column:1;align-items:flex-start}.motivationPortrait{width:min(100%,6.5rem)!important;height:clamp(7.25rem,34vw,8.5rem)!important}.motivationPhotoCredit{text-align:left;font-size:.52rem}.sessionCompletionCopy{grid-column:2;align-self:center}.sessionCompletionCopy p{font-size:clamp(.98rem,4.3vw,1.12rem)!important}.sessionCompletionActions{grid-column:1/-1!important;flex-wrap:wrap!important;min-width:0!important}.newMotivation,.soundToggle{min-width:0;max-width:100%;min-height:44px;white-space:normal;overflow-wrap:anywhere}}
 @media(max-width:360px){.sessionCompletionPanel:not([hidden]){grid-template-columns:5.5rem minmax(0,1fr)!important;gap:.55rem!important;padding:.68rem!important}.motivationPortrait{width:5.5rem!important;height:6.7rem!important}.sessionCompletionCopy p{font-size:.96rem!important}}
-@media(max-width:640px){.routine-home-link{top:.65rem!important;left:.65rem!important;min-height:44px!important;padding:.45rem .68rem!important;font-size:.82rem!important}.routine-home-link .gymratikIcon{width:1rem;height:1rem;flex-basis:1rem}}
+@media(max-width:640px){.sessionCompletionPanel::before,.sessionCompletionPanel::after{inset:0!important;transform:none!important;animation:none!important}.sessionCompletionPanel .motivationPortrait img:not([hidden]){transform:scale(1.38);transform-origin:50% 60%}}
+@media(max-width:640px){.routine-home-link{top:.15rem!important;left:.65rem!important;min-height:44px!important;padding:.45rem .68rem!important;font-size:.82rem!important}.hero>div:first-of-type{padding-top:56px!important}.routine-home-link .gymratikIcon{width:1rem;height:1rem;flex-basis:1rem}}
 @media(prefers-reduced-motion:reduce){.gymratikIcon{transition:none!important}}
 </style>'''
 
@@ -440,7 +456,13 @@ REST_TIMING_DISPLAY_CONTRACT = '''  const renderTimingDisplays = () => {
     const renderTimerEntries = (item, timing, row, now, restActive, restRemaining, recommendation, seriesActive, preparing) => {
       const entries = [];
       (timing?.seriesTimes || []).forEach((duration, index) => {
-        if (Number.isFinite(duration)) entries.push({ key: `set-${index + 1}`, label: `Serie ${index + 1}`, value: formatElapsed(duration), kind: 'set' });
+        if (Number.isFinite(duration)) {
+          const record = state.__performance?.[String(item.index + 1)]?.[item.seriesKeys[index]];
+          const reps = Number.isInteger(Number(record?.reps)) ? `${record.reps}r` : null;
+          const load = record?.load !== null && record?.load !== undefined && Number.isFinite(Number(record.load)) ? `${Number(record.load)}${record.loadUnit || 'kg'}` : null;
+          const details = [reps, load].filter(Boolean).join(' · ') || 'sin datos';
+          entries.push({ key: `set-${index + 1}`, label: `S${index + 1} · ${details}`, value: formatElapsed(duration), kind: 'set' });
+        }
       });
       (timing?.restTimes || []).forEach((duration, index) => {
         if (Number.isFinite(duration)) entries.push({ key: `rest-${index + 1}`, label: `Descanso ${index + 1}`, value: formatElapsed(duration), kind: 'rest' });
@@ -1545,9 +1567,24 @@ def standardize_shared_session_contract(source: str) -> str:
     )
     source = re.sub(
         r"  const updateCompleteButton = item => \{.*?\n  \};",
-        """  const updateCompleteButton = item => {
+        lambda _: """  const updateCompleteButton = item => {
     const button = item.tracker.querySelector('.completeSetButton');
     if (!button) return;
+    const warmupRecorded = Object.keys(state.__warmupPerformance || {}).length > 0 || Object.keys(state).some(key => /^w\\d+$/.test(key) && state[key] === true);
+    const activeApproximation = exerciseItems.find(entry => Number(state.__timing?.exercises?.[String(entry.index + 1)]?.warmupStartedAt) > 0);
+    const approximationTarget = activeApproximation || (!warmupRecorded ? exerciseItems.find(entry => !snapshot(entry).complete && !snapshot(entry).machinePending) : null);
+    exerciseItems.forEach(entry => {
+      const entryTracker = entry.tracker;
+      let marker = entryTracker.querySelector('.warmupSet');
+      let hint = entryTracker.querySelector('.exerciseWarmupHint');
+      if (entry !== approximationTarget) { marker?.remove(); hint?.remove(); entryTracker.querySelector('.completeSetButton')?.removeAttribute('aria-describedby'); return; }
+      const setButtons = entryTracker.querySelector('.exerciseSetButtons');
+      if (!marker) { marker = document.createElement('span'); marker.className = 'warmupSet'; marker.hidden = true; marker.setAttribute('aria-hidden', 'true'); marker.tabIndex = -1; setButtons?.prepend(marker); }
+      marker.dataset.key = `w${entry.index + 1}`;
+      if (!hint) { hint = document.createElement('p'); hint.className = 'exerciseWarmupHint'; hint.textContent = 'Serie ligera para ensayar el recorrido; se registra aparte y no suma al volumen de trabajo.'; marker.before(hint); }
+      hint.id = `exerciseWarmupHint-${entry.index + 1}`;
+      entryTracker.querySelector('.completeSetButton')?.setAttribute('aria-describedby', hint.id);
+    });
     const nextIndex = item.seriesKeys.findIndex(key => state[key] !== true);
     const complete = snapshot(item).complete;
     const timing = state.__timing?.exercises?.[String(item.index + 1)];
@@ -1937,7 +1974,120 @@ def _image_markup(markup: str, name: str, focus: dict[str, str]) -> str:
     )
 
 
+def standardize_quote_portrait_loading(source: str) -> str:
+    start_marker = "if (portraitEl && initialsEl) { portraitEl.hidden = !phrase.portrait;"
+    start = source.find(start_marker)
+    if start < 0:
+        return source.replace(
+            "portraitEl.alt = `Retrato de ${phrase.author}`;\n        portraitEl.src = phrase.portrait;",
+            "portraitEl.alt = `Retrato de ${phrase.author}`;\n        portraitEl.loading = 'eager';\n        portraitEl.src = phrase.portrait;",
+            1,
+        )
+    end_marker = "portraitEl.onerror = () => { portraitEl.hidden = true; initialsEl.hidden = false; }; } }"
+    end = source.find(end_marker, start)
+    if end < 0:
+        raise ValueError("No se encontró el fallback del retrato de la cita")
+    end += len(end_marker)
+    replacement = """if (portraitEl && initialsEl) {
+      initialsEl.textContent = phrase.author.split(/\\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase() || '★';
+      const showPortraitFallback = () => { portraitEl.hidden = true; initialsEl.hidden = false; };
+      portraitEl.onload = () => { if (portraitEl.complete && portraitEl.naturalWidth > 0) { portraitEl.hidden = false; initialsEl.hidden = true; } else showPortraitFallback(); };
+      portraitEl.onerror = showPortraitFallback;
+      if (phrase.portrait) {
+        portraitEl.hidden = true; initialsEl.hidden = false;
+        portraitEl.alt = `Retrato de ${phrase.author}`;
+        portraitEl.loading = 'eager';
+        portraitEl.src = phrase.portrait;
+      } else {
+        showPortraitFallback(); portraitEl.alt = ''; portraitEl.removeAttribute('src');
+      }
+    }"""
+    return source[:start] + replacement + source[end:]
+
+
+def standardize_technique_accordion(source: str) -> str:
+    """Wrap each technique grid in an accessible, collapsed-by-default details element."""
+    source = re.sub(
+        r'<details class="techAccordion" data-enhancement="technique-accordion-v1">\s*<summary>[^<]*</summary>\s*</details>\s*',
+        "",
+        source,
+    )
+    marker = 'class="techSteps"'
+    positions = [match.start() for match in re.finditer(marker, source)]
+    for marker_pos in reversed(positions):
+        opening = source.rfind("<div", 0, marker_pos)
+        opening_end = source.find(">", marker_pos)
+        if opening < 0 or opening_end < 0:
+            continue
+        depth = 0
+        closing_start = -1
+        closing_end = -1
+        for token in re.finditer(r"<div\b[^>]*>|</div\s*>", source[opening:opening_end + 1], flags=re.I):
+            depth += 1 if token.group(0).lower().startswith("<div") else -1
+        for token in re.finditer(r"<div\b[^>]*>|</div\s*>", source[opening_end + 1:], flags=re.I):
+            if token.group(0).lower().startswith("<div"):
+                depth += 1
+            else:
+                depth -= 1
+                if depth == 0:
+                    closing_start = opening_end + 1 + token.start()
+                    closing_end = opening_end + 1 + token.end()
+                    break
+        if closing_start < 0:
+            continue
+        enclosing_details = source.rfind('<details class="techAccordion"', 0, opening)
+        if enclosing_details >= 0 and source.find("</details>", enclosing_details) >= closing_end:
+            continue
+        source = (source[:opening] + '<details class="techAccordion" data-enhancement="technique-accordion-v1">'
+                  '<summary>Guía breve de técnica</summary>' + source[opening:closing_end] + '</details>' + source[closing_end:])
+    return source
+
+
+SUMMARY_NAVIGATION_STYLE = '''<style data-enhancement="summary-free-navigation-v1">
+.sessionSummaryList{max-height:min(24dvh,168px)!important;overflow-y:auto!important;overscroll-behavior:contain!important;touch-action:pan-y!important;-webkit-overflow-scrolling:touch!important;scrollbar-gutter:stable}
+#floatingSessionSummary .sessionSummaryList{max-height:150px!important}
+#summaryToggle{grid-template-columns:auto minmax(0,1fr) 86px auto!important}
+.summaryMascotWrap{width:82px!important;height:82px!important}.summaryMascotWrap #summaryActivityMascot{width:78px!important;height:78px!important}
+@media(max-width:380px){#summaryToggle{grid-template-columns:auto minmax(0,1fr) 68px auto!important}.summaryMascotWrap{width:64px!important;height:64px!important}.summaryMascotWrap #summaryActivityMascot{width:60px!important;height:60px!important}}
+@media(max-height:420px) and (max-width:900px){#floatingSessionSummary .sessionSummaryList{max-height:78px!important;gap:.12rem!important}}
+</style>'''
+
+
+def standardize_summary_navigation(source: str) -> str:
+    """Stop periodic status repaint from snapping the user's scroll position."""
+    old_focus = "const focusedIndex = rows.findIndex(row => !row.complete && row.done > 0) >= 0 ? rows.findIndex(row => !row.complete && row.done > 0) : rows.findIndex(row => !row.complete);"
+    new_focus = "const activeIndex = exerciseItems.findIndex(entry => { const timing = state.__timing?.exercises?.[String(entry.index + 1)]; return Boolean(timing?.warmupStartedAt || timing?.seriesStartedAt || timing?.restStartedAt || timing?.preparationEndsAt); }); const selectedIndex = Number.isInteger(window.gymratikFocusedExerciseIndex) ? window.gymratikFocusedExerciseIndex : -1; const focusedIndex = selectedIndex >= 0 && selectedIndex < rows.length ? selectedIndex : activeIndex >= 0 ? activeIndex : rows.findIndex(row => !row.complete);"
+    source = source.replace(old_focus, new_focus)
+    source = source.replace(
+        "    new MutationObserver(scheduleAlignment).observe(list, {childList:true, subtree:true});\n",
+        "",
+    )
+    source = re.sub(r"(?m)^([ \t]*if \(list\) \{)\n[ \t]*\n([ \t]*list\.addEventListener\('click')", r"\1\n\2", source)
+    source = source.replace(
+        "requestedExercise = button.dataset.exercise || '';\n      window.setTimeout(scheduleAlignment, 0);",
+        "requestedExercise = button.dataset.exercise || '';\n      window.gymratikFocusedExerciseIndex = Number(requestedExercise) - 1;\n      var exerciseCard = doc.querySelectorAll('.exerciseTracker')[window.gymratikFocusedExerciseIndex]?.closest('article.card');\n      exerciseCard?.scrollIntoView({behavior:'smooth', block:'start'});\n      window.setTimeout(scheduleAlignment, 0);",
+    )
+    source = source.replace(
+        "  if (list) {\n    list.addEventListener('click', function(event){",
+        "  if (list) {\n    doc.addEventListener('click', function(event){ if (event.target.closest && event.target.closest('.completeSetButton')) window.gymratikFocusedExerciseIndex = -1; }, true);\n    list.addEventListener('click', function(event){",
+    )
+    source = re.sub(
+        r"  function alignSummary\(exerciseNumber\)\{.*?\n  \}\n\n  function scheduleAlignment",
+        "  function alignSummary(exerciseNumber){\n    if (!list) return;\n    var buttons = Array.from(list.querySelectorAll('.summaryExercise'));\n    var target = exerciseNumber ? buttons.find(function(button){ return button.dataset.exercise === String(exerciseNumber); }) : null;\n    if (!target && Number.isInteger(window.gymratikFocusedExerciseIndex)) target = buttons.find(function(button){ return Number(button.dataset.exercise) - 1 === window.gymratikFocusedExerciseIndex; });\n    if (target) buttons.forEach(function(button){ button.classList.toggle('isCurrent', button === target); });\n  }\n\n  function scheduleAlignment",
+        source,
+        count=1,
+        flags=re.S,
+    )
+    if 'data-enhancement="summary-free-navigation-v1"' not in source:
+        source = source.replace('</head>', SUMMARY_NAVIGATION_STYLE + '\n</head>', 1)
+    else:
+        source = re.sub(r'<style data-enhancement="summary-free-navigation-v1">.*?</style>', lambda _: SUMMARY_NAVIGATION_STYLE, source, count=1, flags=re.S)
+    return source
+
+
 def standardize_muscle_visuals(source: str) -> str:
+    source = standardize_technique_accordion(source)
+    source = standardize_quote_portrait_loading(source)
     source = source.replace(
         "if (seriesIndex + 1 < item.seriesKeys.length) timing.restStartedAt = timestamp; else timing.endedAt = timestamp;",
         "if (seriesIndex + 1 < item.seriesKeys.length || exerciseItems.some(entry => !snapshot(entry).complete)) timing.restStartedAt = timestamp; else timing.endedAt = timestamp;",
@@ -2267,6 +2417,7 @@ def standardize_muscle_visuals(source: str) -> str:
     source = standardize_optional_media_fallback(source)
     source = standardize_warmup_single_viewers(source)
     source = standardize_visual_language(source)
+    source = standardize_summary_navigation(source)
     source = standardize_motivational_toast(source)
     newline = "\r\n" if "\r\n" in source else "\n"
     return apply_battery_motion(source, newline)
@@ -2468,7 +2619,7 @@ def standardize_series_entry_zone(source: str) -> str:
     if "const loadDescription =" not in source:
         source = source.replace(
             "item.repMaximum = rangeMatch ? Number(rangeMatch[2]) : 100;",
-            "item.repMaximum = rangeMatch ? Number(rangeMatch[2]) : 100;\n    const loadDescription = `${item.title} ${item.tracker.closest('article.card')?.querySelector('.machinePill')?.textContent || ''}`.toLocaleLowerCase('es');\n    const loadProfile = /prensa|hack squat|hip thrust|bisagra/.test(loadDescription) ? { minKg: 5, maxKg: 300, stepKg: 5, label: 'máquina de fuerza para tren inferior' } : /polea/.test(loadDescription) ? { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'polea' } : /curl femoral|extensión de piernas|abducción|aducción|pantorrilla/.test(loadDescription) ? { minKg: 2.5, maxKg: 160, stepKg: 2.5, label: 'máquina de aislamiento' } : { minKg: 2.5, maxKg: 120, stepKg: 2.5, label: 'máquina de tren superior' };\n    item.performanceLoadProfile = loadProfile;",
+            "item.repMaximum = rangeMatch ? Number(rangeMatch[2]) : 100;\n    const loadDescription = `${item.title} ${item.tracker.closest('article.card')?.querySelector('.machinePill')?.textContent || ''}`.toLocaleLowerCase('es');\n    const loadProfile = /barra libre|barbell/.test(loadDescription) ? { minKg: 0, maxKg: 300, stepKg: 2.5, label: 'barra libre · peso total' } : /prensa|hack squat|hip thrust|bisagra/.test(loadDescription) ? { minKg: 5, maxKg: 300, stepKg: 5, label: 'máquina de fuerza para tren inferior' } : /polea/.test(loadDescription) ? { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'polea' } : /curl femoral|extensión de piernas|abducción|aducción|pantorrilla/.test(loadDescription) ? { minKg: 2.5, maxKg: 160, stepKg: 2.5, label: 'máquina de aislamiento' } : { minKg: 2.5, maxKg: 120, stepKg: 2.5, label: 'máquina de tren superior' };\n    item.performanceLoadProfile = loadProfile;",
             1,
         )
     dialog_helper = """  const confirmMissingPerformance = missing => new Promise(resolve => {
@@ -2521,9 +2672,19 @@ def standardize_series_entry_zone(source: str) -> str:
     source = source.replace("loadTitle.textContent = 'Carga utilizada · opcional'; const loadClear = document.createElement('button');", "const loadClear = document.createElement('button');", 1)
     source = source.replace(
         "[['kg', 'kg · kilogramos'], ['lb', 'lb · libras']].forEach(([value, label]) => { const option = document.createElement('option'); option.value = value; option.textContent = label; loadUnitSelect.append(option); });",
-        "[['kg', 'kg'], ['lb', 'lb']].forEach(([value, label]) => { const option = document.createElement('option'); option.value = value; option.textContent = label; option.setAttribute('aria-label', value === 'kg' ? 'Kilogramos' : 'Libras'); loadUnitSelect.append(option); });",
+        "[['kg', 'kg'], ['lb', 'lb']].forEach(([value, label]) => { const option = document.createElement('option'); option.value = value; option.textContent = label; option.setAttribute('aria-label', value === 'kg' ? 'Kilogramos' : 'Libras'); loadUnitSelect.append(option); }); loadUnitSelect.addEventListener('keydown', event => { if (event.key === 'Enter') event.stopPropagation(); });",
         1,
     )
+    if "const loadUnitSelect = document.createElement('select')" in source and "loadUnitSelect.addEventListener('keydown', event => { if (event.key === 'Enter') event.stopPropagation(); });" not in source:
+        source, guarded_unit_selects = re.subn(
+            r"(\[\['kg',\s*'kg'\].*?loadUnitSelect\.append\(option\);\s*\}\);)",
+            r"\1 loadUnitSelect.addEventListener('keydown', event => { if (event.key === 'Enter') event.stopPropagation(); });",
+            source,
+            count=1,
+            flags=re.S,
+        )
+        if guarded_unit_selects != 1:
+            raise ValueError("No se encontró el selector kg/lb para impedir que Enter active acciones ajenas")
     source = source.replace(
         "progressionCue.textContent = 'Ambos datos son opcionales. Ajusta las repeticiones con −/+ o el deslizador; toca la carga para escribirla con precisión. La serie se completa aunque no registres datos.';",
         "progressionCue.textContent = `Registra ambos datos para completar. Rango sugerido para ${item.performanceLoadProfile.label}: ${item.performanceLoadProfile.minKg}–${item.performanceLoadProfile.maxKg} kg; si no conoces algún dato, podrás continuar tras confirmarlo.`;",

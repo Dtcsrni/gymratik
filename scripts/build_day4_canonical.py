@@ -7,6 +7,7 @@ from pathlib import Path
 
 from build_day2_canonical import build_warmup as build_lower_warmup
 from build_day3_canonical import between, build_section, build_day3_script, replace_all
+from build_day4_barbell_rdl_media import main as build_barbell_rdl_media
 from standardize_muscle_visuals import sanitize_canonical_metadata, standardize_muscle_visuals
 
 
@@ -32,19 +33,19 @@ EXERCISES = [
         "avoid": "Despegar la pelvis, colapsar la rodilla hacia dentro, rebotar en el fondo o usar una carga que obligue a compensar con el tronco.",
     },
     {
-        "title": "PESO MUERTO EN MÁQUINA",
+        "title": "PESO MUERTO RUMANO CON BARRA",
         "zone": "CADERA · GLÚTEOS E ISQUIOSURALES",
-        "equipment": "máquina de bisagra de cadera con apoyos regulables",
-        "repo": "0578-GUT8I22",
+        "equipment": "barra libre y discos · bisagra de cadera",
+        "repo": "barbell-rdl-v1",
         "series": 3,
         "reps": "8–12",
         "rest": "2–3 min",
         "duration": "10–13 min",
-        "focus": "Glúteos e isquiosurales; cuádriceps como sinergista",
-        "setup": "Regula los apoyos para que el eje de la máquina permita una bisagra cómoda. Mantén pies firmes, columna neutra y costillas controladas.",
-        "execution": "Lleva la cadera hacia atrás con una ligera flexión de rodilla y vuelve extendiendo la cadera. Conserva el contacto con los apoyos sin convertir el movimiento en una sentadilla.",
-        "rhythm": "Desciende en 2–3 s, pausa sólo si mantienes tensión y extiende la cadera en 1–2 s sin hiperextender la espalda.",
-        "avoid": "Redondear la espalda, bloquear la rodilla, tirar con los brazos, rebotar o terminar inclinándote hacia atrás.",
+        "focus": "Glúteos e isquiosurales; bisagra de cadera",
+        "setup": "Pies al ancho de cadera; barra sobre el mediopié. Tómala apenas por fuera de las piernas y empieza de pie, con rodillas suaves, abdomen firme y espalda neutra.",
+        "execution": "Desplaza la cadera atrás y baja la barra pegada a muslos y piernas. Detén el descenso cuando notes tensión clara en isquiosurales antes de redondear la espalda; vuelve llevando la cadera al frente.",
+        "rhythm": "Baja en 2–3 s y sube en 1–2 s. Mantén los brazos largos y la barra rozando las piernas.",
+        "avoid": "Convertirlo en sentadilla, alejar la barra, doblar más las rodillas durante el descenso, redondear la espalda o hiperextender al subir.",
     },
     {
         "title": "CURL FEMORAL TUMBADO",
@@ -191,6 +192,7 @@ def build_day4_script(template: str) -> str:
 
 
 def main() -> None:
+    build_barbell_rdl_media()
     template = TEMPLATE.read_text(encoding="utf-8")
     head = template[: template.index("</head>") + len("</head>")]
     head = replace_all(head, {

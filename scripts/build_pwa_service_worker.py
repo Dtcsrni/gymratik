@@ -18,7 +18,7 @@ ROUTINE_FILES = (
     "Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html",
     "Rutina_Dia_4_Pierna_Equilibrio_V1.html",
 )
-HTML_ATTR_PATTERN = re.compile(r"(?:src|data-static-src|gif|thumbnail)\s*[:=]\s*[\"']([^\"']+)")
+HTML_ATTR_PATTERN = re.compile(r"(?<![\w-])(?:src|data-static-src|gif|thumbnail)\s*[:=]\s*[\"']([^\"']+)")
 TEXT_RESOURCE_SUFFIXES = {".css", ".html", ".js", ".json", ".svg", ".txt", ".webmanifest", ".xml"}
 IMAGE_SUFFIXES = {".avif", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp"}
 ESTIMATE_META = re.compile(r"<meta name=\"gymratik-resource-estimate\" content='[^']*'>")
@@ -76,6 +76,46 @@ def routine_resources(canonical: Path) -> set[str]:
         resolved = resolve_reference(canonical, reference)
         if resolved:
             resources.add(resolved)
+    return resources
+
+
+def homepage_resources() -> set[str]:
+    """Precache local assets directly referenced by the app shell."""
+    homepage = ROOT / "index.html"
+    text = homepage.read_text(encoding="utf-8")
+    parser = ResourceParser()
+    parser.feed(text)
+    parser.references.update(match.group(1) for match in HTML_ATTR_PATTERN.finditer(text))
+    return {
+        resolved
+        for reference in parser.references
+        if (resolved := resolve_reference(homepage, reference))
+    }
+
+
+def quote_portrait_resources() -> set[str]:
+    """Precache the local portraits exposed by the runtime quote rotation."""
+    quote_module = ROOT / "data" / "rutinas_autocontenidas" / "frases_fitness" / "fitness_quotes.js"
+    prefix = "window.fitnessQuotesData = "
+    text = quote_module.read_text(encoding="utf-8").strip()
+    if not text.startswith(prefix) or not text.endswith(";"):
+        raise SystemExit("El módulo local de frases tiene un formato no reconocido")
+    payload = json.loads(text[len(prefix) : -1])
+    quotes = payload.get("quotes") if isinstance(payload, dict) else None
+    if not isinstance(quotes, list) or not quotes:
+        raise SystemExit("El módulo local de frases no contiene citas")
+    resources: set[str] = set()
+    for quote in quotes:
+        portrait = quote.get("portrait") if isinstance(quote, dict) else None
+        if not isinstance(portrait, str) or not portrait:
+            raise SystemExit("Cada frase debe tener un retrato local para el modo offline")
+        normalized = PurePosixPath(portrait)
+        if normalized.is_absolute() or ".." in normalized.parts or normalized.suffix.lower() not in IMAGE_SUFFIXES:
+            raise SystemExit(f"Ruta de retrato no válida en el banco local: {portrait}")
+        relative = PurePosixPath("data/rutinas_autocontenidas/frases_fitness", *normalized.parts)
+        if not (ROOT / Path(*relative.parts)).is_file():
+            raise SystemExit(f"Retrato de frase no encontrado: {relative.as_posix()}")
+        resources.add(f"./{relative.as_posix()}")
     return resources
 
 
@@ -172,6 +212,8 @@ def build_precache() -> list[str]:
     ]
     routines = [f"./data/rutinas_autocontenidas/canonicas/{name}" for name in ROUTINE_FILES]
     resources = set(base + routines)
+    resources.update(homepage_resources())
+    resources.update(quote_portrait_resources())
     for name in ROUTINE_FILES:
         resources.update(routine_resources(CANONICAL_DIR / name))
     validate_mascot_motion_reviews(resources)

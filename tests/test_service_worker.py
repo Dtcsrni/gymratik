@@ -1,14 +1,18 @@
 import re
 import unittest
+import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from scripts.build_pwa_service_worker import (
     CANONICAL_DIR,
+    HTML_ATTR_PATTERN,
     ROUTINE_FILES,
     build_precache,
     fingerprint_content,
+    homepage_resources,
     manifest_icon_resources,
+    quote_portrait_resources,
     render,
     resource_size,
     routine_resources,
@@ -33,6 +37,10 @@ class ServiceWorkerContractTests(unittest.TestCase):
             self.assertIn("if (cached && !bypassCache) return cached", source)
             self.assertIn("if (cached) return cached", source)
 
+    def test_resource_scanner_ignores_original_source_provenance_metadata(self):
+        snippet = '<img data-original-src="https://example.test/source.jpg" src="./image.jpg">'
+        self.assertEqual(HTML_ATTR_PATTERN.findall(snippet), ["./image.jpg"])
+
     def test_manifest_icon_inventory_rejects_nonlocal_missing_and_traversal_paths(self):
         with TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
@@ -49,12 +57,17 @@ class ServiceWorkerContractTests(unittest.TestCase):
             self.assertIn(f"data/profile/{asset}", self.service_worker)
             self.assertIn(f"data/profile/{asset}", self.generator)
 
-    def test_shared_brand_mark_is_part_of_the_offline_precache(self):
-        asset = "assets/branding/gymratik-mascots-mark-v2.png"
-        self.assertIn(asset, self.service_worker)
+    def test_page_brand_mark_is_precached_but_pwa_icons_are_manifest_owned(self):
+        page_asset = "assets/branding/gymratik-mascots-mark-v2.png"
+        self.assertIn(f"./{page_asset}", homepage_resources())
+        self.assertIn(f"./{page_asset}", set(build_precache()))
         self.assertIn("manifest_icon_resources(manifest)", self.generator)
-        self.assertIn(asset, (ROOT / "manifest.webmanifest").read_text(encoding="utf-8"))
-        self.assertIn(f'src="./{asset}"', self.homepage)
+        manifest = json.loads((ROOT / "manifest.webmanifest").read_text(encoding="utf-8"))
+        icon_paths = {icon["src"] for icon in manifest["icons"]}
+        self.assertEqual(len(icon_paths), 4)
+        self.assertTrue(all("gymratik-pwa-icon-v7-" in path for path in icon_paths))
+        self.assertNotIn(f"./{page_asset}", icon_paths)
+        self.assertIn(f'src="./{page_asset}"', self.homepage)
 
     def test_pose_loop_and_static_fallback_are_precached_offline(self):
         resources = set(build_precache())
@@ -65,6 +78,14 @@ class ServiceWorkerContractTests(unittest.TestCase):
             with self.subTest(asset=asset):
                 self.assertIn(asset, resources)
                 self.assertIn(asset.removeprefix("./"), self.service_worker)
+
+    def test_every_runtime_quote_portrait_is_precached_offline(self):
+        portraits = quote_portrait_resources()
+        resources = set(build_precache())
+        self.assertEqual(len(portraits), 58)
+        self.assertTrue(portraits <= resources)
+        self.assertTrue(all((ROOT / resource.removeprefix("./")).is_file() for resource in portraits))
+        self.assertTrue(all(resource.removeprefix("./") in self.service_worker for resource in portraits))
 
     def test_all_routine_covers_are_offline_precached(self):
         resources = set(build_precache())
@@ -179,7 +200,7 @@ class ServiceWorkerContractTests(unittest.TestCase):
 
     def test_homepage_shows_the_active_service_worker_version(self):
         self.assertIn('id="appVersion"', self.homepage)
-        self.assertIn('class="brand-version" aria-label="Versión 0.4.3">v0.4.3', self.homepage)
+        self.assertIn('class="brand-version" aria-label="Versión 0.4.4">v0.4.4', self.homepage)
         self.assertIn("event.data?.type === 'VERSION_STATUS'", self.homepage)
         self.assertIn("postMessage({ type: 'GET_VERSION_STATUS' })", self.homepage)
         self.assertIn("cacheName: CACHE_NAME", self.service_worker)

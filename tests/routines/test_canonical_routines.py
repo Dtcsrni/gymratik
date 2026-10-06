@@ -19,6 +19,8 @@ from standardize_muscle_visuals import (  # noqa: E402
     close_unterminated_segmented_progress_style,
     standardize_offline_image_sources,
     standardize_series_entry_zone,
+    standardize_summary_navigation,
+    standardize_technique_accordion,
     standardize_visual_language,
     standardize_warmup_single_viewers,
 )
@@ -28,6 +30,43 @@ CANONICAL = ROOT / "data" / "rutinas_autocontenidas" / "canonicas"
 
 
 class CanonicalRoutineValidationTests(unittest.TestCase):
+    def test_technique_steps_are_collapsed_in_an_accessible_accordion(self) -> None:
+        source = '''<html><head></head><body><article><details class="techAccordion" data-enhancement="technique-accordion-v1"><summary>Guía breve de técnica</summary></details><div class="techSteps"><div class="techStep"><div class="techStepTitle">Ajuste</div><div class="techStepText">Postura estable.</div></div><div class="techStep"><div class="techStepTitle">Ejecución</div><div class="techStepText">Controla el recorrido.</div></div></div></article></body></html>'''
+        result = standardize_technique_accordion(source)
+        self.assertEqual(result.count('data-enhancement="technique-accordion-v1"'), 1)
+        self.assertIn('<summary>Guía breve de técnica</summary>', result)
+        self.assertNotIn('<details class="techAccordion" open', result)
+        self.assertEqual(result.count('<div class="techSteps">'), 1)
+        accordion = re.search(r'<details class="techAccordion".*?</details>', result, re.S).group(0)
+        self.assertIn('<div class="techSteps">', accordion)
+        self.assertEqual(standardize_technique_accordion(result), result)
+
+    def test_summary_navigation_preserves_free_scroll_and_clicks_to_exercise(self) -> None:
+        source = '''<html><head></head><body><div class="sessionSummaryList"></div><script>
+const focusedIndex = rows.findIndex(row => !row.complete && row.done > 0) >= 0 ? rows.findIndex(row => !row.complete && row.done > 0) : rows.findIndex(row => !row.complete);
+if (list) {
+    new MutationObserver(scheduleAlignment).observe(list, {childList:true, subtree:true});
+    list.addEventListener('click', function(event){
+      var button = event.target.closest('.summaryExercise');
+      if (!button) return;
+      requestedExercise = button.dataset.exercise || '';
+      window.setTimeout(scheduleAlignment, 0);
+    });
+  }
+function alignSummary(exerciseNumber){
+    list.scrollTop = target.offsetTop;
+  }
+function scheduleAlignment() {}
+</script></body></html>'''
+        result = standardize_summary_navigation(source)
+        self.assertNotIn('new MutationObserver(scheduleAlignment)', result)
+        self.assertIn('window.gymratikFocusedExerciseIndex', result)
+        self.assertIn("scrollIntoView({behavior:'smooth', block:'start'})", result)
+        self.assertIn('max-height:min(24dvh,168px)', result)
+        self.assertIn('#floatingSessionSummary .sessionSummaryList{max-height:150px!important}', result)
+        self.assertIn('#floatingSessionSummary .sessionSummaryList{max-height:78px!important', result)
+        self.assertIn('width:82px!important;height:82px!important', result)
+
     def test_warmup_media_groups_become_single_active_viewers_with_accessible_choices(self) -> None:
         source = '''<html><head></head><body><article class="warmupStep cardio">
           <div class="warmupMedia warmupMediaStrip" role="list" aria-label="Opciones">
@@ -142,6 +181,11 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
             source = path.read_text(encoding="utf-8")
             with self.subTest(path=path.name):
+                self.assertIn(
+                    "loadUnitSelect.addEventListener('keydown', event => { if (event.key === 'Enter') event.stopPropagation(); });",
+                    source,
+                    "Enter en kg/lb no debe propagarse y activar otra acción de la rutina",
+                )
                 self.assertEqual(source.count('data-fix="offline-optional-gif-fallback-v1"'), 1)
                 self.assertIn('.warmupVisual[data-media-state="FALLBACK_STATIC"] .warmupFallback', source)
                 self.assertIn('.gifFrame[data-media-state="FALLBACK_STATIC"] .gifFallback', source)
@@ -264,6 +308,40 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
         self.assertEqual(source.count('<div class="phaseLabel">Final'), 6)
         self.assertIn("3025-butterfly-reverse-front.jpg", source)
         self.assertIn("0592-b6hQYMb-machine-only.jpg", source)
+
+    def test_every_exercise_has_a_complete_position_pair_or_explicit_hip_thrust_guide(self) -> None:
+        expected_counts = {
+            "Rutina_Dia_1_Espalda_Biceps_V1.html": 6,
+            "Rutina_Dia_2_Pierna_Gluteo_V1.html": 6,
+            "Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html": 7,
+            "Rutina_Dia_4_Pierna_Equilibrio_V1.html": 7,
+        }
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            source = path.read_text(encoding="utf-8")
+            cards = re.findall(
+                r'<article class="card" data-exercise-index="(\d+)">(.*?)</article>',
+                source,
+                re.S,
+            )
+            with self.subTest(routine=path.name):
+                self.assertEqual(len(cards), expected_counts[path.name])
+                for index, card in cards:
+                    if path.name == "Rutina_Dia_2_Pierna_Gluteo_V1.html" and index == "2":
+                        self.assertIn('class="phaseRow hipThrustGuide"', card)
+                        self.assertEqual(card.count('class="hipThrustGuideTitle"'), 3)
+                        self.assertNotIn('class="phaseCol"', card)
+                        continue
+                    self.assertEqual(card.count('class="phaseCol"'), 2, f"ejercicio {index}")
+                    self.assertEqual(card.count('class="phaseLabel">Inicio'), 1, f"ejercicio {index}")
+                    self.assertEqual(card.count('class="phaseLabel">Final'), 1, f"ejercicio {index}")
+                    phase_images = re.findall(r'<div class="phaseCol">.*?</div>\s*</div>', card, re.S)
+                    self.assertEqual(len(phase_images), 2, f"ejercicio {index}")
+                    self.assertTrue(all(re.search(r'<img\b[^>]*class="[^"]*realphoto[^"]*"', phase) for phase in phase_images), f"ejercicio {index}")
+                if path.name == "Rutina_Dia_1_Espalda_Biceps_V1.html":
+                    first = dict(cards)["1"]
+                    self.assertIn("0197-qdRxqCj-start.jpg", first)
+                    self.assertIn("0197-qdRxqCj-final.jpg", first)
+                    self.assertNotIn("0577-T0yTjgW", first)
 
     def test_day1_row_has_matching_media_and_metrics(self) -> None:
         source = (CANONICAL / "Rutina_Dia_1_Espalda_Biceps_V1.html").read_text(
@@ -429,7 +507,16 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertIn(".exerciseTracker:has(.completeSetButton.is-series-active) .seriesProgressSegment.is-current", summary_style.group(0))
                 self.assertIn("#summaryActivityHeadline", summary_style.group(0))
                 self.assertIn("#floatingSessionSummary{position:fixed!important", summary_style.group(0))
-                self.assertIn("max-height:min(36dvh,320px)", summary_style.group(0))
+                self.assertIn("max-height:min(44dvh,400px)", summary_style.group(0))
+                self.assertIn("max-height:min(28dvh,180px)", summary_style.group(0))
+                self.assertIn("max-height:min(62dvh,380px)", summary_style.group(0))
+                self.assertIn("max-height:min(58dvh,380px)", summary_style.group(0))
+                self.assertIn('#summaryToggle[aria-expanded="true"] #summaryActivityHeadline{display:block!important', summary_style.group(0))
+                self.assertIn('#summaryToggle[aria-expanded="true"] + #summaryBody .summaryActivityStatus{position:absolute!important', summary_style.group(0))
+                self.assertIn('#summaryToggle[aria-expanded="true"] + #summaryBody .summaryTotals{display:none!important}', summary_style.group(0))
+                self.assertIn("max-height:min(62.5dvh,225px)", summary_style.group(0))
+                self.assertIn("max-height:min(24dvh,90px)", summary_style.group(0))
+                self.assertIn(".summaryTotals span{min-height:20px!important", summary_style.group(0))
                 self.assertIn(".summaryExercise::after", summary_style.group(0))
                 self.assertIn(".summaryExercise::before,.summaryExercise::after", summary_style.group(0))
                 self.assertIn("transform:scaleX(var(--summary-progress,0))", summary_style.group(0))
@@ -703,9 +790,13 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
         bank_path = ROOT / "data" / "rutinas_autocontenidas" / "frases_fitness" / "fitness_quotes.json"
         bank = json.loads(bank_path.read_text(encoding="utf-8"))
         compact = compact_payload(bank)
-        self.assertEqual(compact["count"], 120)
-        self.assertEqual(len({quote["author"] for quote in compact["quotes"]}), 118)
+        self.assertGreaterEqual(compact["count"], 23)
+        self.assertLessEqual(compact["count"], 60)
+        self.assertEqual(len({quote["author"] for quote in compact["quotes"]}), compact["count"] - 2)
         self.assertTrue(all(len(quote["quoteEs"]) <= 220 for quote in compact["quotes"]))
+        self.assertFalse(any("MTV fue un gran entrenamiento para mí" in quote["quoteEs"] for quote in compact["quotes"]))
+        self.assertFalse(any("Football Manager" in quote["quoteEs"] or "booing" in quote["quoteEs"] for quote in compact["quotes"]))
+        self.assertNotIn("Claire Danes", {quote["author"] for quote in compact["quotes"]})
         portrait_root = bank_path.parent
         self.assertTrue(all((portrait_root / quote["portrait"]).is_file() for quote in compact["quotes"]))
         arnold = [quote for quote in compact["quotes"] if quote["author"] == "Arnold Schwarzenegger"]
@@ -734,7 +825,39 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertIn('class="motivationPhotoWrap"', source)
                 self.assertEqual(source.count('class="motivationPhotoWrap"'), 1)
                 self.assertIn("sessionCompletionCopy p{display:block!important", source)
+                self.assertIn("portraitEl.onload = () =>", source)
+                self.assertIn("portraitEl.onerror = showPortraitFallback", source)
+                self.assertIn("portraitEl.loading = 'eager'", source)
+                self.assertIn("portraitEl.hidden = true; initialsEl.hidden = false;", source)
+                card_count = len(re.findall(r'<article class="card', source))
+                for step_class in ("setup", "move", "control", "warning"):
+                    self.assertEqual(source.count(f'class="techStep {step_class}"'), card_count)
+                self.assertEqual(source.count('class="techSteps"'), card_count)
+                self.assertEqual(source.count('data-enhancement="technique-accordion-v1"'), card_count)
+                self.assertIn(".techSteps{display:grid!important", source)
+                self.assertIn('data-enhancement="summary-free-navigation-v1"', source)
+                self.assertNotIn("new MutationObserver(scheduleAlignment)", source)
+                self.assertIn("scrollIntoView({behavior:'smooth', block:'start'})", source)
+                self.assertIn("width:82px!important;height:82px!important", source)
                 self.assertNotIn('id="fitnessQuotesPayload"', source)
+
+    def test_day_four_uses_free_barbell_romanian_deadlift_and_owned_local_media(self) -> None:
+        path = CANONICAL / "Rutina_Dia_4_Pierna_Equilibrio_V1.html"
+        source = path.read_text(encoding="utf-8")
+        manifest = json.loads((ROOT / "data/rutinas_autocontenidas/evidencia/dia4_media_manifest.json").read_text(encoding="utf-8"))
+        entry = next(item for item in manifest["entries"] if item["repo_id"] == "barbell-rdl-v1")
+        self.assertIn("PESO MUERTO RUMANO CON BARRA", source)
+        self.assertIn("barbell-rdl-v1.gif", source)
+        self.assertIn("Desplaza la cadera atrás", source)
+        self.assertIn("Detén el descenso", source)
+        self.assertIn("barra libre y discos", source)
+        self.assertNotIn("PESO MUERTO EN MÁQUINA", source)
+        self.assertNotIn("0578-GUT8I22", source)
+        self.assertEqual(entry["gif"]["frames"], 72)
+        self.assertEqual(entry["equipment_identity_status"], "FREE_BAR_AND_PLATES")
+        for key in ("gif", "start", "final", "machine_reference"):
+            asset = (ROOT / entry["published"][key]).resolve()
+            self.assertTrue(asset.is_file(), f"Falta medio del peso muerto rumano: {asset}")
 
     def test_all_routines_expose_access_to_homepage(self) -> None:
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):

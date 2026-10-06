@@ -11,7 +11,18 @@
       "thumbnail": "artifacts/ejercicios-compartido/images/0197-qdRxqCj.jpg",
       "sha256_gif": "c31616695af60740d47a7f67be708ecd238bfc943a0f51baf0ba03adeac315c3",
       "dimensions": "180x180",
-      "frames": 12
+      "frames": 12,
+      "derived_media": {
+        "start": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia1_media_generated/0197-qdRxqCj-start.jpg",
+        "final": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia1_media_generated/0197-qdRxqCj-final.jpg",
+        "source_frames": {
+          "start": 0,
+          "final": 6
+        },
+        "sha256_start": "9935724403ab094d5c998172c2cd31166214eee91dfbb224e4e14e29e23f1757",
+        "sha256_final": "cfc792974fb5ec2871845b0799e171ff7940045716dee85f68a348fe243e135d",
+        "selection_note": "Cuadros terminales limpios; se excluyen transiciones con sobreimpresión del GIF fuente."
+      }
     },
     {
       "exercise_number": 2,

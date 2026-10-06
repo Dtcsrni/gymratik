@@ -105,6 +105,8 @@ class ReusablePhysicalContext:
         self.original_goto = original_goto
         self.routes = []
         self.lightweight_assets = lightweight_assets
+        self._offline = False
+        self.clear_test_origin_data()
         self.page._gt6_physical_tap = android_tap
         self.page._gt6_physical_hold = android_touch_hold
         self.page._gt6_physical_select_performance = android_select_valid_performance
@@ -128,6 +130,29 @@ class ReusablePhysicalContext:
     def new_page(self):
         return self.page
 
+    def clear_test_origin_data(self) -> None:
+        """Reset only temporary localhost storage, never the installed PWA origin."""
+        if not self.page.url.startswith(self.test_origin + "/"):
+            return
+        self.page.evaluate("""async () => {
+          localStorage.clear(); sessionStorage.clear();
+          await Promise.all((await navigator.serviceWorker.getRegistrations()).map(registration => registration.unregister()));
+          if (typeof indexedDB.databases === 'function') {
+            const databases = await indexedDB.databases();
+            await Promise.all(databases.map(({name}) => new Promise(resolve => {
+              if (!name) return resolve();
+              const request = indexedDB.deleteDatabase(name);
+              request.onsuccess = request.onerror = request.onblocked = () => resolve();
+            })));
+          }
+          if ('caches' in window) await Promise.all((await caches.keys()).map(name => caches.delete(name)));
+        }""")
+
+    def set_offline(self, offline: bool) -> None:
+        """Toggle network emulation through the existing WebAPK context."""
+        self.page.context.set_offline(offline)
+        self._offline = bool(offline)
+
     def route(self, pattern, handler) -> None:
         if self.lightweight_assets:
             original_handler = handler
@@ -146,21 +171,12 @@ class ReusablePhysicalContext:
         self.routes.append((pattern, handler))
 
     def close(self) -> None:
-        # Solo se limpia el origen localhost, cuya separación respecto al WebAPK
-        # real ya fue comprobada. No se borra IndexedDB/localStorage del origen instalado.
-        if self.page.url.startswith(self.test_origin + "/"):
-            self.page.evaluate("""async () => {
-              localStorage.clear(); sessionStorage.clear();
-              if (typeof indexedDB.databases === 'function') {
-                const databases = await indexedDB.databases();
-                await Promise.all(databases.map(({name}) => new Promise(resolve => {
-                  if (!name) return resolve();
-                  const request = indexedDB.deleteDatabase(name);
-                  request.onsuccess = request.onerror = request.onblocked = () => resolve();
-                })));
-              }
-              if ('caches' in window) await Promise.all((await caches.keys()).map(name => caches.delete(name)));
-            }""")
+        # La barrera de origen vive en clear_test_origin_data(); nunca se borra
+        # IndexedDB/localStorage del origen instalado 127.0.0.1.
+        if self._offline:
+            self.page.context.set_offline(False)
+            self._offline = False
+        self.clear_test_origin_data()
         if self._virtual_time_session is not None:
             try:
                 self._virtual_time_session.send(
@@ -189,6 +205,7 @@ def android_tap(locator: Locator, hold_ms: int = 80) -> None:
     if not box:
         raise AssertionError("El control táctil no tiene un rectángulo visible")
     page = locator.page
+    before_url = page.url
     before = locator.evaluate("element => ({aria:element.getAttribute('aria-label'), text:element.innerText, className:element.className?.toString?.(), value:element.value, checked:element.checked, disabled:element.disabled, activity:document.querySelector('#summaryActivityStatus')?.dataset.activity, progress:element.closest('article')?.querySelector('.exerciseProgress')?.innerText, dialogs:document.querySelectorAll('dialog[open],[role=dialog]:not([hidden])').length})")
     locator.evaluate("element => { window.__gt6TouchClickReceived = false; window.__gt6TouchClickHandler = event => { if (event.composedPath().includes(element)) window.__gt6TouchClickReceived = true; }; document.addEventListener('click', window.__gt6TouchClickHandler, true); }")
     point = {
@@ -217,12 +234,21 @@ def android_tap(locator: Locator, hold_ms: int = 80) -> None:
         after = locator.evaluate("element => ({aria:element.getAttribute('aria-label'), text:element.innerText, className:element.className?.toString?.(), value:element.value, checked:element.checked, disabled:element.disabled, activity:document.querySelector('#summaryActivityStatus')?.dataset.activity, progress:element.closest('article')?.querySelector('.exerciseProgress')?.innerText, dialogs:document.querySelectorAll('dialog[open],[role=dialog]:not([hidden])').length})")
     except Exception:
         pass
+    if page.url != before_url:
+        # La navegación correcta desmonta el nodo y el listener de su documento;
+        # para enlaces se comprueba el destino, no el listener ya destruido.
+        return
     received = page.evaluate("() => { const result = window.__gt6TouchClickReceived === true; if (window.__gt6TouchClickHandler) document.removeEventListener('click', window.__gt6TouchClickHandler, true); delete window.__gt6TouchClickHandler; delete window.__gt6TouchClickReceived; return result; }")
     state_changed = after is not None and before != after
-    if not received:
+    if not physical_tap_succeeded(before_url, page.url, received, state_changed):
         hit = page.evaluate("""({x,y})=>{const e=document.elementFromPoint(x,y);return {tag:e?.tagName,className:e?.className?.toString?.(),ariaLabel:e?.getAttribute?.('aria-label')}}""", {"x": point["x"], "y": point["y"]})
-        if not state_changed:
-            raise AssertionError(f"El gesto táctil del GT6 no generó click ni una transición de interfaz; antes={before}, después={after}, hit-test={hit}")
+        raise AssertionError(f"El gesto táctil del GT6 no generó click ni una transición de interfaz; antes={before}, después={after}, hit-test={hit}")
+
+
+def physical_tap_succeeded(before_url: str, after_url: str, click_received: bool,
+                           state_changed: bool) -> bool:
+    """A navigation itself proves a link tap when its old DOM listener is gone."""
+    return after_url != before_url or click_received or state_changed
 
 
 def android_touch_hold(page, button, duration_ms: int, release_click: bool = True,
@@ -289,17 +315,17 @@ def android_select_valid_performance(card) -> None:
     """Select rep/load by real touch gestures on the GT6 range controls."""
     for selector in ("input.performanceReps", "input.performanceLoad"):
         control = card.locator(selector)
-        control.evaluate("element => element.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'})")
+        control.evaluate("element => { element.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'}); const r=element.getBoundingClientRect(); if(r.top<0||r.bottom>innerHeight) window.scrollBy({top:r.top+r.height/2-innerHeight/2,behavior:'instant'}); }")
         control.page.wait_for_timeout(350)
-        metrics = control.evaluate("element => ({min:Number(element.min),max:Number(element.max),value:Number(element.value),rect:(()=>{const r=element.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height}})()})")
+        metrics = control.evaluate("element => ({min:Number(element.min),max:Number(element.max),value:Number(element.value),viewport:{width:innerWidth,height:innerHeight},rect:(()=>{const r=element.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height}})()})")
         rect = metrics["rect"]
         x = rect["x"] + rect["width"] * (0.06 + 0.88 * 0.58)
-        y = rect["y"] + rect["height"] / 2
+        y = (max(rect["y"], 0) + min(rect["y"] + rect["height"], metrics["viewport"]["height"])) / 2
         page = control.page
         hit = control.evaluate("(element,point) => { const target=document.elementFromPoint(point.x,point.y); return target===element||element.contains(target); }", {"x": x, "y": y})
         if not hit:
             overlay = page.evaluate("({x,y})=>{const e=document.elementFromPoint(x,y);return {tag:e?.tagName,id:e?.id,className:e?.className?.toString?.(),aria:e?.getAttribute?.('aria-label')}}", {"x": x, "y": y})
-            raise AssertionError(f"El punto táctil calculado no cae sobre {selector} después de desplazarlo: rect={rect}, hit={overlay}")
+            raise AssertionError(f"El punto táctil calculado no cae sobre {selector} después de centrarlo: rect={rect}, viewport={metrics['viewport']}, hit={overlay}")
         session = page.context.new_cdp_session(page)
         try:
             # Un toque sobre la pista selecciona un valor real y evita dejar
@@ -810,6 +836,7 @@ def main() -> int:
             test_origin=test_origin, home_url=home_url, original_goto=original_goto,
         )
         original_locator_click = Locator.click
+        original_locator_scroll = Locator.scroll_into_view_if_needed
         original_touch_hold = suite.dispatch_touch_hold
         original_performance_selector = suite.select_valid_performance
 
@@ -818,7 +845,14 @@ def main() -> int:
                 raise RuntimeError(f"Opción de click no compatible con el gesto táctil GT6: {positional}, {options}")
             android_tap(locator)
 
+        def physical_locator_scroll(locator, *positional, **options):
+            if positional or options:
+                raise RuntimeError(f"Opción de scroll no compatible con el viewport GT6: {positional}, {options}")
+            locator.evaluate("element => element.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'})")
+            locator.page.wait_for_timeout(120)
+
         Locator.click = physical_locator_click
+        Locator.scroll_into_view_if_needed = physical_locator_scroll
         suite.dispatch_touch_hold = android_touch_hold
         suite.select_valid_performance = android_select_valid_performance
         print("GT6: portada y versión visibles en la PWA instalada", flush=True)
@@ -841,6 +875,7 @@ def main() -> int:
             bring_android_page_to_foreground(installed_page)
         map_test_origin["enabled"] = True
         results = []
+        failures = []
         routines = [item for item in suite.ROUTINES if args.day is None or f"Dia_{args.day}_" in item[0]]
         for name, sex, variant in routines:
             print(f"GT6: rutina interactiva iniciada: {name}", flush=True)
@@ -857,37 +892,69 @@ def main() -> int:
                 print(f"GT6: controles táctiles y celebración validados: {name}", flush=True)
                 continue
 
-            day = suite.validate_day(isolated, name, sex, variant)
-            print(f"GT6: actividad, GIF y persistencia validados: {name}", flush=True)
+            day = {"routine": name, "status": "failed", "phaseResults": {}}
+            try:
+                day.update(suite.validate_day(isolated, name, sex, variant))
+                day["phaseResults"]["routineActivity"] = "passed"
+                print(f"GT6: actividad, GIF y persistencia validados: {name}", flush=True)
+            except Exception as error:
+                message = f"{name} / rutina, actividad y recursos: {error}"
+                failures.append(message)
+                day["phaseResults"]["routineActivity"] = {"status": "failed", "error": str(error)}
+                print(f"GT6: fallo registrado; continuaré con las demás fases y rutinas: {message}", flush=True)
             isolated.lightweight_assets = True
             try:
-                day.update(suite.validate_primary_set_buttons(isolated, name, sex))
+                button_results = suite.validate_primary_set_buttons(isolated, name, sex)
+                day.update(button_results)
+                day["phaseResults"]["buttonsAndSkips"] = "passed"
+                exercise_count = day.get("exercises", button_results["primarySetButtonsTested"])
+                if button_results["primarySetButtonsTested"] != exercise_count or button_results["exerciseSkipButtonsTested"] != exercise_count:
+                    raise AssertionError(
+                        f"cobertura incompleta: ejercicios={exercise_count}, "
+                        f"botones dinámicos={button_results['primarySetButtonsTested']}, "
+                        f"omisiones={button_results['exerciseSkipButtonsTested']}"
+                    )
+                print(f"GT6: botones dinámicos, series y omisiones validados en todos los ejercicios: {name}", flush=True)
+            except Exception as error:
+                message = f"{name} / botones y omisiones: {error}"
+                failures.append(message)
+                day["phaseResults"]["buttonsAndSkips"] = {"status": "failed", "error": str(error)}
+                print(f"GT6: fallo registrado; continuaré con las demás fases y rutinas: {message}", flush=True)
             finally:
                 isolated.lightweight_assets = False
-            if day["primarySetButtonsTested"] != day["exercises"] or day["exerciseSkipButtonsTested"] != day["exercises"]:
-                raise AssertionError(
-                    f"{name}: cobertura física de acciones incompleta; "
-                    f"ejercicios={day['exercises']}, "
-                    f"botones dinámicos={day['primarySetButtonsTested']}, "
-                    f"omisiones={day['exerciseSkipButtonsTested']}"
-                )
-            print(f"GT6: botones dinámicos, series y omisiones validados en todos los ejercicios: {name}", flush=True)
-            day.update(suite.validate_completed_session_celebration(isolated, name, sex, variant))
-            print(f"GT6: celebración validada: {name}", flush=True)
-            results.append(summarize_day(day))
+            try:
+                day.update(suite.validate_completed_session_celebration(isolated, name, sex, variant))
+                day["phaseResults"]["celebration"] = "passed"
+                print(f"GT6: celebración validada: {name}", flush=True)
+            except Exception as error:
+                message = f"{name} / celebración: {error}"
+                failures.append(message)
+                day["phaseResults"]["celebration"] = {"status": "failed", "error": str(error)}
+                print(f"GT6: fallo registrado; continuaré con las demás rutinas: {message}", flush=True)
+            day["status"] = "passed" if all(value == "passed" for value in day["phaseResults"].values()) else "failed"
+            results.append(day)
 
         # En modo --day se limita la sesión física a una rutina para evitar
         # agotar el Chrome del teléfono. Estas comprobaciones transversales se
         # ejecutan en el E2E sintético, no se presentan como omitidas globalmente.
         if args.day is None:
             print("GT6: inventario de recursos y técnica visual", flush=True)
-            resource_results = suite.validate_resource_pages(isolated)
+            try:
+                resource_results = suite.validate_resource_pages(isolated)
+            except Exception as error:
+                resource_results = []
+                failures.append(f"inventario de recursos/técnica: {error}")
             print("GT6: matriz de tamaños móviles", flush=True)
             # El GT6 se conserva en su geometría real; el barrido de breakpoints
             # se ejecuta en Chromium sintético y no se falsea mediante emulación.
             response_matrix = []
             print("GT6: tarjeta de citas", flush=True)
-            quote_result = suite.validate_motivation_card(isolated)
+            try:
+                physical_width = int(installed_state["viewport"][0])
+                quote_result = suite.validate_motivation_card(isolated, widths=(physical_width,))
+            except Exception as error:
+                quote_result = {"status": "failed", "error": str(error)}
+                failures.append(f"tarjeta de citas: {error}")
             shared_checks = "recursos y citas en GT6; matriz de breakpoints en E2E sintético"
         else:
             resource_results = []
@@ -895,7 +962,32 @@ def main() -> int:
             quote_result = None
             shared_checks = "omitidos en modalidad --day; cubiertos por E2E sintético"
         print("GT6: paquete offline de la PWA instalada", flush=True)
-        offline_result = None if args.skip_offline else suite.validate_installed_offline_package(isolated)
+        try:
+            offline_result = None if args.skip_offline else suite.validate_installed_offline_package(isolated)
+        except Exception as error:
+            offline_result = {"status": "failed", "error": str(error)}
+            failures.append(f"paquete offline: {error}")
+        # All physical flows reuse the WebAPK tab on the isolated localhost
+        # origin. Restore the installed origin before reading its data; never
+        # compare a localhost test snapshot with the user's 127.0.0.1 profile.
+        map_test_origin["enabled"] = False
+        if installed_page.url.startswith(test_origin + "/"):
+            installed_page.evaluate("""async () => {
+              localStorage.clear(); sessionStorage.clear();
+              if (typeof indexedDB.databases === 'function') {
+                await Promise.all((await indexedDB.databases()).map(({name}) => new Promise(resolve => {
+                  if (!name) return resolve();
+                  const request = indexedDB.deleteDatabase(name);
+                  request.onsuccess = request.onerror = request.onblocked = () => resolve();
+                })));
+              }
+              if ('caches' in window) await Promise.all((await caches.keys()).map(name => caches.delete(name)));
+            }""")
+            original_goto(installed_page, home_url, wait_until="domcontentloaded")
+            installed_page.wait_for_function(
+                "!document.documentElement.classList.contains('gymratik-loading')",
+                timeout=30_000,
+            )
         installed_state["restoredForegroundTimeline"] = bring_android_page_to_foreground(installed_page)
         user_data_after = snapshot_installed_user_data(installed_page)
         if user_data_after["sha256"] != user_data_before["sha256"]:
@@ -914,7 +1006,8 @@ def main() -> int:
             )
 
         report.update({
-            "status": "E2E_GT6_OK",
+            "status": "E2E_GT6_OK" if not failures else "E2E_GT6_FAILED",
+            "failures": failures,
             "installedPwa": installed_state,
             "installedHome": visible_home,
             "deviceRoutineCovers": installed_covers,
@@ -927,14 +1020,17 @@ def main() -> int:
             "quoteFlow": quote_result,
             "sharedChecks": shared_checks,
             "offline": offline_result,
-            "testDataIsolation": "Los flujos se ejecutaron en la pestaña WebAPK sobre el origen separado localhost; la huella SHA-256 de localStorage, sessionStorage e IndexedDB del origen instalado coincide antes y después.",
+            "testDataIsolation": "Los flujos se ejecutaron en la pestaña WebAPK sobre el origen separado localhost; se restauró el origen instalado antes de comparar la huella SHA-256 de localStorage, sessionStorage e IndexedDB.",
             "userDataPreserved": {"sameSnapshot": True, "sha256": user_data_after["sha256"], "stores": user_data_after["indexedDbRecords"]},
         })
         print(json.dumps(report, ensure_ascii=True, indent=2))
         Locator.click = original_locator_click
+        Locator.scroll_into_view_if_needed = original_locator_scroll
         suite.dispatch_touch_hold = original_touch_hold
         suite.select_valid_performance = original_performance_selector
         # No cerrar `browser`: pertenece al Chrome del usuario en el teléfono.
+        if failures:
+            return 1
     return 0
 
 

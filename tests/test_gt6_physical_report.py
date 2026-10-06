@@ -8,7 +8,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from e2e_gt6_physical import ReusablePhysicalContext, bring_android_page_to_foreground, require_installed_webapk_foreground, resolve_cdp_websocket_url, resolve_device_metrics, snapshot_installed_user_data, summarize_day  # noqa: E402
+from e2e_gt6_physical import ReusablePhysicalContext, bring_android_page_to_foreground, physical_tap_succeeded, require_installed_webapk_foreground, resolve_cdp_websocket_url, resolve_device_metrics, snapshot_installed_user_data, summarize_day  # noqa: E402
 from e2e_routine_activity_check import click_control, dispatch_touch_hold, select_valid_performance  # noqa: E402
 
 
@@ -55,6 +55,14 @@ class PhysicalE2EReportTests(unittest.TestCase):
         self.assertIn("event.composedPath().includes(element)", tap)
         self.assertNotIn('"type": "touchStart"', tap)
 
+    def test_tap_navigation_counts_as_a_success_after_the_original_node_is_detached(self):
+        self.assertTrue(physical_tap_succeeded(
+            "http://localhost:8768/day.html", "http://localhost:8768/index.html", False, False
+        ))
+        self.assertTrue(physical_tap_succeeded("same", "same", True, False))
+        self.assertTrue(physical_tap_succeeded("same", "same", False, True))
+        self.assertFalse(physical_tap_succeeded("same", "same", False, False))
+
     def test_long_press_release_synthesizes_missing_android_click_once(self):
         source = (ROOT / "scripts" / "e2e_gt6_physical.py").read_text(encoding="utf-8")
         hold = source.split("def android_touch_hold", 1)[1].split("def android_select_valid_performance", 1)[0]
@@ -99,9 +107,63 @@ class PhysicalE2EReportTests(unittest.TestCase):
 
         context.close()
 
-        self.assertEqual(len(page.evaluated), 1)
+        self.assertEqual(len(page.evaluated), 2)
         self.assertIn("localStorage.clear()", page.evaluated[0])
+        self.assertIn("serviceWorker.getRegistrations()", page.evaluated[0])
+        self.assertIn("registration.unregister()", page.evaluated[0])
+        self.assertEqual(page.evaluated[0], page.evaluated[1])
         self.assertEqual(navigations[0][1], "http://127.0.0.1:8768/")
+
+    def test_reusable_context_never_clears_the_installed_127_origin(self):
+        class FakePage:
+            def __init__(self):
+                self.url = "http://127.0.0.1:8768/"
+                self.evaluated = []
+                self.context = SimpleNamespace(add_init_script=lambda _script: None)
+
+            def evaluate(self, script):
+                self.evaluated.append(script)
+
+        page = FakePage()
+        context = ReusablePhysicalContext(
+            page, "http://localhost:8768", "http://127.0.0.1:8768/",
+            lambda *_args, **_kwargs: None,
+        )
+        context.close()
+        self.assertEqual(page.evaluated, [])
+
+    def test_reusable_context_restores_network_and_unregisters_only_test_origin_worker(self):
+        class FakeContext:
+            def __init__(self):
+                self.offline_values = []
+
+            def add_init_script(self, _script):
+                pass
+
+            def set_offline(self, value):
+                self.offline_values.append(value)
+
+        class FakePage:
+            def __init__(self):
+                self.url = "http://localhost:8768/routine.html"
+                self.evaluated = []
+                self.context = FakeContext()
+
+            def evaluate(self, script):
+                self.evaluated.append(script)
+
+        page = FakePage()
+        context = ReusablePhysicalContext(
+            page, "http://localhost:8768", "http://127.0.0.1:8768/",
+            lambda *_args, **_kwargs: None,
+        )
+        context.set_offline(True)
+        self.assertIn("serviceWorker.getRegistrations()", page.evaluated[0])
+        self.assertEqual(page.context.offline_values, [True])
+        context.close()
+        self.assertEqual(page.context.offline_values, [True, False])
+        self.assertEqual(len(page.evaluated), 2)
+        self.assertTrue(all("serviceWorker.getRegistrations()" in script for script in page.evaluated))
 
     def test_visible_device_motion_reactivates_android_target_and_requires_advancing_timeline(self):
         class FakePage:

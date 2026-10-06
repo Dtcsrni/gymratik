@@ -45,6 +45,14 @@ RESPONSIVE_VIEWPORTS = (
 )
 
 
+def service_worker_cache_name(source: str) -> str:
+    """Return the exact cache identifier declared by the generated worker."""
+    match = re.search(r"^const CACHE_NAME = '([^']+)';$", source, flags=re.MULTILINE)
+    if not match:
+        raise AssertionError("sw.js no declara CACHE_NAME con el formato esperado")
+    return match.group(1)
+
+
 def capture_visual(page, filename: str) -> None:
     if SCREENSHOT_DIR is None:
         return
@@ -170,14 +178,14 @@ def assert_image_inventory(page, routine_name: str) -> dict:
     for index in range(images.count()):
         image = images.nth(index)
         source = image.get_attribute("src") or ""
-        state = image.evaluate("""image => {const box=image.getBoundingClientRect(),style=getComputedStyle(image);return {visible:box.width>0&&box.height>0&&style.display!=='none'&&style.visibility!=='hidden'&&Number(style.opacity)!==0,hidden:image.hidden,complete:image.complete,naturalWidth:image.naturalWidth}}""")
+        state = image.evaluate("""image => {const box=image.getBoundingClientRect();let painted=true;for(let node=image;node;node=node.parentElement){const style=getComputedStyle(node);if(node.hidden||style.display==='none'||style.visibility==='hidden'||Number(style.opacity)===0){painted=false;break}}return {visible:painted&&box.width>0&&box.height>0,hidden:image.hidden,complete:image.complete,naturalWidth:image.naturalWidth}}""")
         if not source or state["hidden"] or not state["visible"] or not image.is_visible():
             continue
         # A continuously breathing cover is never considered geometrically
         # stable by Playwright's auto-scroll action. An instant DOM scroll is
         # deterministic and still triggers lazy loading at the target image.
         image.evaluate("image => image.scrollIntoView({block:'center',behavior:'instant'})")
-        refreshed = image.evaluate("image => {const box=image.getBoundingClientRect(),style=getComputedStyle(image);return {visible:box.width>0&&box.height>0&&style.display!=='none'&&style.visibility!=='hidden'&&Number(style.opacity)!==0,hidden:image.hidden,connected:image.isConnected}}")
+        refreshed = image.evaluate("image => {const box=image.getBoundingClientRect();let painted=true;for(let node=image;node;node=node.parentElement){const style=getComputedStyle(node);if(node.hidden||style.display==='none'||style.visibility==='hidden'||Number(style.opacity)===0){painted=false;break}}return {visible:painted&&box.width>0&&box.height>0,hidden:image.hidden,connected:image.isConnected}}")
         if not refreshed["connected"] or refreshed["hidden"] or not refreshed["visible"] or not image.is_visible():
             continue
         try:
@@ -190,19 +198,62 @@ def assert_image_inventory(page, routine_name: str) -> dict:
         except Exception as error:
             raise AssertionError(f"{routine_name}: recurso no decodifica al mostrarse: {source[:140]}") from error
     page.evaluate("window.scrollTo({top:0,behavior:'instant'})")
+    # Scrolling back can trigger the battery-aware GIF/poster swap one last
+    # time. Require decoded dimensions and an unchanged source across two
+    # polls; `complete` alone can describe a stale request during a source swap.
+    try:
+        page.wait_for_function(
+            """() => [...document.images].every(image => {
+          const rect = image.getBoundingClientRect();
+          const onScreen = rect.bottom > 0 && rect.top < innerHeight && rect.right > 0 && rect.left < innerWidth;
+          let painted=true;for(let node=image;node;node=node.parentElement){const style=getComputedStyle(node);if(node.hidden||style.display==='none'||style.visibility==='hidden'||Number(style.opacity)===0){painted=false;break}}
+          const visible = onScreen && painted && rect.width > 0 && rect.height > 0;
+          return !visible || (image.complete && image.naturalWidth > 0 && image.naturalHeight > 0);
+        })""",
+            timeout=20_000,
+        )
+    except Exception as error:
+        pending = page.evaluate("""() => [...document.images].filter(image => {
+          const r=image.getBoundingClientRect(),s=getComputedStyle(image);
+          return r.bottom>0&&r.top<innerHeight&&r.right>0&&r.left<innerWidth&&!image.hidden
+            &&r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden'&&Number(s.opacity)!==0
+            &&(!image.complete||image.naturalWidth<=0||image.naturalHeight<=0);
+        }).map(image=>({id:image.id,className:image.className,alt:image.alt,html:image.outerHTML.slice(0,260),src:image.currentSrc||image.src,motion:image.dataset.batteryMotionSrc||'',complete:image.complete,
+          size:[image.naturalWidth,image.naturalHeight],box:(()=>{const r=image.getBoundingClientRect();return [r.left,r.top,r.right,r.bottom]})(),
+          paused:image.dataset.batteryPaused||'',fallback:image.parentElement?.querySelector('.warmupFallback,.gifFallback')?.currentSrc||''}))""")
+        raise AssertionError(f"{routine_name}: imágenes visibles no estabilizaron tras volver al inicio: {pending}") from error
+    page.wait_for_timeout(120)
+    page.wait_for_function(
+        """() => {
+          const images = [...document.images];
+          const visible = images.filter(image => {
+            const rect=image.getBoundingClientRect();let painted=true;for(let node=image;node;node=node.parentElement){const style=getComputedStyle(node);if(node.hidden||style.display==='none'||style.visibility==='hidden'||Number(style.opacity)===0){painted=false;break}}
+            return rect.bottom>0 && rect.top<innerHeight && rect.right>0 && rect.left<innerWidth
+              && painted && rect.width>0 && rect.height>0;
+          });
+          if (!visible.every(image => image.complete && image.naturalWidth>0 && image.naturalHeight>0)) return false;
+          const signature = visible.map(image => `${image.currentSrc||image.src}:${image.naturalWidth}x${image.naturalHeight}`).join('|');
+          const stable = window.__gymratikImageAuditSignature === signature;
+          window.__gymratikImageAuditSignature = signature;
+          return stable;
+        }""",
+        timeout=5_000,
+    )
     inventory = page.evaluate(
         """async () => {
           const images = [...document.images];
           return await Promise.all(images.map(async image => {
             const rect = image.getBoundingClientRect();
-            const style = getComputedStyle(image);
-            const rendered = !image.hidden && rect.width > 0 && rect.height > 0
-              && style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) !== 0;
+            let painted=true;for(let node=image;node;node=node.parentElement){const ancestorStyle=getComputedStyle(node);if(node.hidden||ancestorStyle.display==='none'||ancestorStyle.visibility==='hidden'||Number(ancestorStyle.opacity)===0){painted=false;break}}
+            const rendered = painted && rect.width > 0 && rect.height > 0;
+            const onScreen = rect.bottom > 0 && rect.top < innerHeight && rect.right > 0 && rect.left < innerWidth;
+            const visible = rendered && onScreen;
+            const style=getComputedStyle(image);
             let decodeError = '';
             const sourceBeforeDecode = image.currentSrc || image.src;
             if (!image.complete || image.naturalWidth <= 0 || image.naturalHeight <= 0) {
-              if (rendered) decodeError = 'visible image is incomplete or has no decoded dimensions';
-            } else {
+              if (visible) decodeError = 'visible image is incomplete or has no decoded dimensions';
+            } else if (visible) {
               try { await image.decode(); } catch (error) {
                 // Battery-aware GIFs can swap to their poster while decode() is
                 // pending. Retry the current source before calling it broken.
@@ -227,7 +278,7 @@ def assert_image_inventory(page, routine_name: str) -> dict:
               renderedWidth: Math.round(rect.width),
               renderedHeight: Math.round(rect.height),
               display: style.display,
-              visible: !image.hidden && rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) !== 0,
+              visible,
               mediaState: frame?.dataset.mediaState || '',
               fallback: fallback ? {
                 complete: fallback.complete,
@@ -259,6 +310,59 @@ def assert_image_inventory(page, routine_name: str) -> dict:
         "offlineStaticFallbacks": 0,
         "animatedGifs": sum("/videos/" in item["motionSource"] for item in inventory),
     }
+
+
+def assert_exercise_phase_pairs(page, routine_name: str) -> dict:
+    """Verifica que cada ejercicio tenga dos imágenes estáticas válidas.
+
+    Hip thrust es la única excepción deliberada: su recurso de movimiento fue
+    rechazado por no corresponder a la máquina; se conserva una guía visual de
+    tres pasos y no se etiqueta una ilustración incorrecta como inicio/final.
+    """
+    cards = page.locator("article.card[data-exercise-index]")
+    checked = 0
+    for index in range(cards.count()):
+        card = cards.nth(index)
+        exercise_number = card.get_attribute("data-exercise-index") or str(index + 1)
+        if routine_name == "Rutina_Dia_2_Pierna_Gluteo_V1.html" and exercise_number == "2":
+            guide = card.locator(".hipThrustGuideTitle")
+            if guide.count() != 3 or card.locator(".phaseRow .phaseCol").count():
+                raise AssertionError(f"{routine_name}: hip thrust debe conservar su guía explícita de tres pasos")
+            continue
+
+        row = card.locator(".phaseRow")
+        columns = row.locator(":scope > .phaseCol")
+        if row.count() != 1 or columns.count() != 2:
+            raise AssertionError(f"{routine_name}: ejercicio {exercise_number} debe tener exactamente las fases inicio y final")
+        row.evaluate("element => element.scrollIntoView({block:'center',behavior:'instant'})")
+        endpoints = []
+        for phase_index, expected_label in enumerate(("inicio", "final")):
+            column = columns.nth(phase_index)
+            label = (column.locator(".phaseLabel").inner_text() if column.locator(".phaseLabel").count() else "").casefold()
+            if expected_label not in label:
+                raise AssertionError(f"{routine_name}: ejercicio {exercise_number} fase {phase_index + 1} sin etiqueta {expected_label!r}")
+            image = column.locator(".photo img.realphoto")
+            if image.count() != 1:
+                raise AssertionError(f"{routine_name}: ejercicio {exercise_number} fase {expected_label} no tiene exactamente una imagen real")
+            try:
+                page.wait_for_function(
+                    "image => image.complete && image.naturalWidth >= 180 && image.naturalHeight >= 180",
+                    arg=image.element_handle(),
+                    timeout=20_000,
+                )
+                image.evaluate("image => image.decode()")
+            except Exception as error:
+                raise AssertionError(f"{routine_name}: ejercicio {exercise_number} fase {expected_label} no decodifica a resolución mínima") from error
+            state = image.evaluate("image => {const r=image.getBoundingClientRect(),p=image.closest('.photo')?.getBoundingClientRect();return {src:image.currentSrc||image.src,alt:image.alt,box:[r.width,r.height],frame:p?[p.width,p.height]:[0,0],fit:getComputedStyle(image).objectFit}}")
+            if not state["alt"].strip() or min(state["box"]) <= 0 or min(state["frame"]) <= 0:
+                raise AssertionError(f"{routine_name}: ejercicio {exercise_number} fase {expected_label} no es legible/renderizable: {state}")
+            if state["fit"] not in ("contain", "scale-down"):
+                raise AssertionError(f"{routine_name}: ejercicio {exercise_number} fase {expected_label} usa recorte {state['fit']!r}")
+            endpoints.append(state["src"])
+        if endpoints[0] == endpoints[1]:
+            raise AssertionError(f"{routine_name}: ejercicio {exercise_number} repite el mismo recurso para inicio y final")
+        checked += 1
+    return {"exercisePairsValidated": checked, "intentionalHipThrustGuide": routine_name == "Rutina_Dia_2_Pierna_Gluteo_V1.html"}
 
 
 def assert_warmup_single_viewers(page, routine_name: str) -> dict:
@@ -335,10 +439,11 @@ def assert_visual_resource_quality(page, routine_name: str) -> dict:
         return {group:image.matches('.phaseRow .photo img.realphoto')?'exercise':image.matches('.warmupVisual img')?'warmup':image.matches('.gifFrame img')?'gif':'anatomy',src:image.currentSrc||image.src,motionSource:image.dataset.batteryMotionSrc||'',alt:image.alt,ariaHidden:image.getAttribute('aria-hidden')==='true',naturalWidth:image.naturalWidth,naturalHeight:image.naturalHeight,width:box.width,height:box.height,parentWidth:parent.width,parentHeight:parent.height,fit:style.objectFit,position:style.objectPosition,hidden:image.hidden,display:style.display};
       });
       const captions=[...document.querySelectorAll('.phaseRow .phaseLabel,.phaseRow .source,.warmupHead p,.warmupCopy p,.warmupInstructions')].map(element=>({tag:element.tagName,className:String(element.className),text:element.textContent.trim().slice(0,90),fontSize:parseFloat(getComputedStyle(element).fontSize),width:rect(element).width})).filter(item=>item.width>0);
+      const techniqueGuides=[...document.querySelectorAll('article.card[data-exercise-index]')].map(card=>{const panel=card.querySelector('.techSteps'),steps=[...(panel?.querySelectorAll(':scope > .techStep')||[])],box=panel?.getBoundingClientRect(),style=panel?getComputedStyle(panel):null;return {exercise:card.dataset.exerciseIndex,stepTypes:steps.map(step=>['setup','move','control','warning'].find(type=>step.classList.contains(type))||'missing'),columns:style?style.gridTemplateColumns.split(/\\s+/).filter(Boolean).length:0,width:box?.width||0,steps:steps.map(step=>{const r=step.getBoundingClientRect(),text=step.querySelector('.techStepText'),t=text?.getBoundingClientRect(),s=text?getComputedStyle(text):null;return {width:r.width,height:r.height,textWidth:t?.width||0,textClientWidth:text?.clientWidth||0,fontSize:s?parseFloat(s.fontSize):0}})}});
       const instructional=images.filter(image=>image.group==='exercise'&&!image.hidden&&image.display!=='none');
       const cropFractions=instructional.filter(image=>image.fit==='cover'&&image.naturalWidth&&image.naturalHeight&&image.width&&image.height).map(image=>{const source=image.naturalWidth/image.naturalHeight,box=image.width/image.height;return 1-Math.min(source,box)/Math.max(source,box)});
       const warmupViewers=[...document.querySelectorAll('.warmupSingleViewer')].map(group=>{const frame=group.querySelector(':scope > .warmupVisual'),g=group.getBoundingClientRect(),f=frame?.getBoundingClientRect(),style=getComputedStyle(group),buttons=[...group.querySelectorAll('.warmupMediaChoice')].map(button=>{const r=button.getBoundingClientRect();return {width:r.width,height:r.height,left:r.left,right:r.right}});return {viewport:innerWidth,groupWidth:g.width,frameWidth:f?.width||0,frameHeight:f?.height||0,paddingLeft:parseFloat(style.paddingLeft),paddingRight:parseFloat(style.paddingRight),widthRatio:g.width&&f?f.width/g.width:0,buttons}});
-      return {images,captions,exerciseImages:instructional.length,minExerciseWidth:instructional.length?Math.min(...instructional.map(image=>image.width)):0,minExerciseHeight:instructional.length?Math.min(...instructional.map(image=>image.height)):0,maxExerciseCoverCrop:cropFractions.length?Math.max(...cropFractions):0,minCaptionFont:captions.length?Math.min(...captions.map(caption=>caption.fontSize)):0,fitModes:[...new Set(images.map(image=>image.fit))],warmupViewers};
+      return {images,captions,techniqueGuides,exerciseImages:instructional.length,minExerciseWidth:instructional.length?Math.min(...instructional.map(image=>image.width)):0,minExerciseHeight:instructional.length?Math.min(...instructional.map(image=>image.height)):0,maxExerciseCoverCrop:cropFractions.length?Math.max(...cropFractions):0,minCaptionFont:captions.length?Math.min(...captions.map(caption=>caption.fontSize)):0,fitModes:[...new Set(images.map(image=>image.fit))],warmupViewers};
     }""")
     visible_images = [item for item in audit["images"] if not item["hidden"] and item["display"] != "none"]
     invalid = [item for item in visible_images if item["naturalWidth"] and (item["width"] <= 0 or item["height"] <= 0)]
@@ -352,6 +457,9 @@ def assert_visual_resource_quality(page, routine_name: str) -> dict:
     if audit["minCaptionFont"] and audit["minCaptionFont"] < 12:
         small_captions = [item for item in audit["captions"] if item["width"] > 0 and item["fontSize"] < 12]
         raise AssertionError(f"{routine_name}: texto instructivo menor a 12 CSS px: {audit['minCaptionFont']}; elementos={small_captions}")
+    invalid_guides = [guide for guide in audit["techniqueGuides"] if guide["stepTypes"] != ["setup", "move", "control", "warning"] or guide["columns"] != 1 or any(step["width"] <= 0 or step["height"] < 52 or step["fontSize"] < 12 or step["textWidth"] > step["textClientWidth"] + 1 for step in guide["steps"])]
+    if invalid_guides:
+        raise AssertionError(f"{routine_name}: la guía técnica no usa el marco/orden común y legible en cada ejercicio: {invalid_guides}; guías={audit['techniqueGuides']}")
     if audit["maxExerciseCoverCrop"] > 0.48:
         worst = [item for item in audit["images"] if item["group"] == "exercise" and item["fit"] == "cover"]
         raise AssertionError(f"{routine_name}: recorte potencialmente excesivo (>48% de un eje): {audit['maxExerciseCoverCrop']:.2%}; recursos={worst}")
@@ -777,9 +885,12 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
         is_mobile=True,
         has_touch=True,
         reduced_motion="no-preference",
-        service_workers="block",
+        # Este flujo ahora sale a la portada y la recarga como lo hace la PWA
+        # real; bloquear el worker dejaba el splash esperando una versión
+        # offline que el propio contexto de prueba impedía instalar.
+        service_workers="allow",
     )
-    context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1', 'true')")
+    context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1', 'true');localStorage.setItem('gymratik-network-preference-v1','always')")
     page = context.new_page()
     if getattr(page, "_gt6_physical_tap", None):
         page.add_init_script("""(() => {
@@ -819,6 +930,7 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
         empty_profile = page.evaluate("async () => await window.TrainingProgressStore.getProfile()")
         if empty_profile.get("sex"):
             raise AssertionError(f"{name}: el caso default ya tiene sexo persistido: {empty_profile}")
+    page.evaluate("sex => window.TrainingProgressStore.saveProfile({displayName: 'Perfil E2E', sex})", sex)
     page.wait_for_function("expected => window.gymratikMascotVariant === expected", arg=variant)
     page.wait_for_function("document.querySelector('#summaryActivityStatus')?.dataset.activity === 'start'")
     start_asset = assert_mascot(page, variant, "start")
@@ -933,6 +1045,18 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
     first.locator("select.performanceLoadUnit").select_option("lb")
     if "lb" not in first.locator(".performanceLoadValue").inner_text():
         raise AssertionError(f"{name}: el selector kg/lb no actualizó la carga")
+    unit_selector = first.locator("select.performanceLoadUnit")
+    unit_selector.evaluate("element => element.scrollIntoView({block:'center',behavior:'instant'})")
+    page.wait_for_timeout(80)
+    unit_selector.focus()
+    before_enter = page.evaluate("({scrollY, active: document.activeElement?.className})")
+    unit_selector.press("Enter")
+    after_enter = page.evaluate("({scrollY, active: document.activeElement?.className})")
+    expected_progress = f"0/{first.locator('.seriesProgressSegment').count()}"
+    if unit_selector.input_value() != "lb" or first.locator(".exerciseProgress").inner_text().strip() != expected_progress:
+        raise AssertionError(f"{name}: Enter en kg/lb alteró la unidad o registró una serie")
+    if abs(after_enter["scrollY"] - before_enter["scrollY"]) > 120:
+        raise AssertionError(f"{name}: Enter en el selector kg/lb desplazó la página a otro ejercicio: {before_enter} -> {after_enter}")
 
     # Barra de progreso flotante: una sola tarjeta y una fila por ejercicio.
     click_control(page.locator("#summaryToggle"))
@@ -940,6 +1064,19 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
         raise AssertionError(f"{name}: resumen flotante duplicado o incompleto")
     if not page.locator(".sessionSummaryList").evaluate("element => element.scrollHeight >= element.clientHeight"):
         raise AssertionError(f"{name}: lista flotante no conserva desplazamiento táctil")
+    summary_list = page.locator(".sessionSummaryList")
+    summary_geometry = summary_list.evaluate("element => { const bounds=element.getBoundingClientRect(); const rows=[...element.querySelectorAll('.summaryExercise')].map(row=>{const rect=row.getBoundingClientRect();return {top:rect.top,bottom:rect.bottom}});return {viewport:[innerWidth,innerHeight],clientHeight:element.clientHeight,scrollHeight:element.scrollHeight,fullyVisibleRows:rows.filter(row=>row.top>=bounds.top-1&&row.bottom<=bounds.bottom+1).length,rows}; }")
+    if summary_geometry["fullyVisibleRows"] != 3:
+        raise AssertionError(f"{name}: el resumen móvil debe mostrar exactamente tres ejercicios completos (anterior/actual/siguiente): {summary_geometry}")
+    target_summary_row = page.locator(".summaryExercise").last
+    target_index = int(target_summary_row.get_attribute("data-exercise")) - 1
+    click_control(target_summary_row)
+    page.wait_for_function("index => window.gymratikFocusedExerciseIndex === index", arg=target_index, timeout=5_000)
+    page.wait_for_function("index => document.querySelectorAll('.summaryExercise')[index]?.classList.contains('isCurrent')", arg=target_index, timeout=5_000)
+    target_card = page.locator("article.card[data-exercise-index]").nth(target_index)
+    page.wait_for_function("index => { const card=document.querySelectorAll('article.card[data-exercise-index]')[index]; if(!card)return false; const rect=card.getBoundingClientRect(); return rect.top>=-1&&rect.top<innerHeight*.7; }", arg=target_index, timeout=5_000)
+    if "isCurrent" not in target_summary_row.get_attribute("class"):
+        raise AssertionError(f"{name}: tocar una fila no mantiene enfocado ese ejercicio en la barra")
 
     # Calentamiento completo, con su mínimo de preparación de 15 s.
     warmup = page.locator("#warmupAction")
@@ -1010,6 +1147,9 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
         state = button.evaluate("element => { const key=Object.keys(localStorage).find(value=>/^fitlovers-day\\d+-series-v1$/.test(value)); const saved=key?JSON.parse(localStorage.getItem(key)||'{}'):{}; return {disabled:element.disabled,text:element.textContent,className:element.className,ariaLabel:element.getAttribute('aria-label'),reps:element.closest('.exerciseTracker')?.querySelector('.performanceReps')?.getAttribute('data-selected'),repsValue:element.closest('.exerciseTracker')?.querySelector('.performanceReps')?.value,load:element.closest('.exerciseTracker')?.querySelector('.performanceLoadValue')?.getAttribute('data-selected'),loadValue:element.closest('.exerciseTracker')?.querySelector('.performanceLoadOutput')?.textContent,dialogOpen:document.querySelector('#performanceMissingDialog')?.open,dialogText:document.querySelector('#performanceMissingDialog')?.innerText,timing:saved.__timing?.exercises?.['1'],clickReceived:window.__gt6TouchClickReceived}; }")
         click_trace = page.evaluate("() => window.__gt6SeriesClickTrace || []")
         raise AssertionError(f"{name}: completar serie no inició el descanso; actividad={activity.get_attribute('data-activity')!r}, botón/estado={state}, clickTrace={click_trace}, errores={errors}")
+    set_marker = first.locator('.exerciseTimerChip[data-kind="set"]').first.inner_text().strip()
+    if not re.search(r"S1 · \d+r · [\d.]+(?:kg|lb)", set_marker, re.IGNORECASE):
+        raise AssertionError(f"{name}: el marcador de series no muestra repeticiones y carga junto al tiempo: {set_marker!r}")
     toast_feedback = assert_approval_toast(page, variant)
     rest_gif = assert_mascot(page, variant, "rest")
     rest_feedback = assert_activity_feedback(page, "rest")
@@ -1034,6 +1174,69 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
     restored_progress = page.locator(".summaryExercise").first.evaluate("element => Number(element.style.getPropertyValue('--summary-progress'))")
     if restored_progress != progress:
         raise AssertionError(f"{name}: la recarga alteró el progreso de la serie ({progress} -> {restored_progress})")
+
+    # Salir explícitamente a la portada no debe perder perfil, series, carga,
+    # repeticiones ni el estado de descanso de la sesión en curso.
+    page.locator(".routine-home-link").click()
+    page.wait_for_url("**/index.html", timeout=10_000)
+    page.wait_for_function(
+        "!document.documentElement.classList.contains('gymratik-loading') && getComputedStyle(document.querySelector('#appSplash')).visibility === 'hidden'",
+        timeout=60_000,
+    )
+    page.wait_for_function("document.querySelector('#profileDisplayName')?.value === 'Perfil E2E'", timeout=10_000)
+    if page.locator("#profileEditor").evaluate("element => element.open"):
+        raise AssertionError(f"{name}: el formulario se volvió a abrir pese a que ya existe un perfil guardado")
+    routine_id = f"day{routine_id}"
+    page.wait_for_function("""async routineId => {
+      const [dashboard, history] = await Promise.all([
+        window.TrainingProgressStore.getDashboard(), window.TrainingProgressStore.getHistory(50)
+      ]);
+      const routine = dashboard.routines.find(item => item.routineId === routineId);
+      return routine?.doneSeries >= 1 && history.some(item => item.routineId === routineId
+        && item.status === 'active' && item.completedSeries >= 1);
+    }""", arg=routine_id, timeout=10_000)
+    home_snapshot = page.evaluate("""async routineId => {
+      const [profile, dashboard, history] = await Promise.all([
+        window.TrainingProgressStore.getProfile(), window.TrainingProgressStore.getDashboard(),
+        window.TrainingProgressStore.getHistory(50)
+      ]);
+      return {
+        profile: {displayName: profile.displayName, sex: profile.sex},
+        profileFormOpen: document.querySelector('#profileEditor')?.open === true,
+        routine: dashboard.routines.find(item => item.routineId === routineId),
+        activeSession: history.find(item => item.routineId === routineId && item.status === 'active')
+      };
+    }""", routine_id)
+    page.reload(wait_until="networkidle")
+    page.wait_for_function(
+        "!document.documentElement.classList.contains('gymratik-loading') && getComputedStyle(document.querySelector('#appSplash')).visibility === 'hidden'",
+        timeout=60_000,
+    )
+    page.wait_for_function("document.querySelector('#profileDisplayName')?.value === 'Perfil E2E'", timeout=10_000)
+    if page.locator("#profileSex").input_value() != sex:
+        raise AssertionError(f"{name}: recargar la portada alteró el sexo/perfil almacenado")
+    day_card = page.locator(f'a.routine-card[href$="{name}"]')
+    if day_card.count() != 1:
+        raise AssertionError(f"{name}: la portada ya no permite reabrir la misma rutina")
+    day_card.click()
+    page.wait_for_function("document.querySelector('#summaryActivityStatus')?.dataset.activity === 'rest'", timeout=15_000)
+    resumed_card = page.locator("article.card[data-exercise-index]").first
+    resumed_progress = resumed_card.locator(".exerciseProgress").inner_text().strip()
+    resumed_marker = resumed_card.locator('.exerciseTimerChip[data-kind="set"]').first.inner_text().strip()
+    if not re.fullmatch(r"1/\d+", resumed_progress):
+        raise AssertionError(f"{name}: volver desde portada perdió el avance de la serie: {resumed_progress!r}")
+    if not re.search(r"S1 · \d+r · [\d.]+(?:kg|lb)", resumed_marker, re.IGNORECASE):
+        raise AssertionError(f"{name}: volver desde portada perdió repeticiones/carga/tiempo: {resumed_marker!r}")
+    page.reload(wait_until="networkidle")
+    page.wait_for_function("document.querySelector('#summaryActivityStatus')?.dataset.activity === 'rest'", timeout=15_000)
+    if not re.fullmatch(r"1/\d+", page.locator("article.card[data-exercise-index]").first.locator(".exerciseProgress").inner_text().strip()):
+        raise AssertionError(f"{name}: recargar la sesión reabierta perdió el progreso actual")
+    persistence_roundtrip = {
+        "profileAndForm": "perfil preservado; formulario no reaparece",
+        "homeReload": "portada recargada con perfil y progreso",
+        "session": "portada → misma rutina → recarga; serie, carga, repeticiones y descanso preservados",
+        "homeSnapshot": home_snapshot,
+    }
 
     # La pose de descanso permanece; reduced-motion detiene solo la animación.
     page.emulate_media(reduced_motion="reduce")
@@ -1077,6 +1280,7 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
         "startMascotAsset": start_asset,
         "activityVisuals": {"active": active_feedback, "rest": rest_feedback},
         "approvalToast": toast_feedback,
+        "homeReturnPersistence": persistence_roundtrip,
         "stableActiveFillTransform": stable_fill,
         "skipGestures": {"rest": "cancelled <5 s; continued at 5 s", "exercise": "cancelled <10 s; skip+undo at 10 s"},
         "progress": progress,
@@ -1398,26 +1602,25 @@ def validate_installed_offline_package(browser) -> dict:
 
     page.on("requestfailed", record_failed_request)
     page.on("response", record_bad_response)
+    expected_cache_name = service_worker_cache_name((ROOT / "sw.js").read_text(encoding="utf-8"))
     page.goto(f"http://127.0.0.1:{PORT}/", wait_until="domcontentloaded")
     page.wait_for_function(
-        "async () => { const names = await caches.keys(); "
-        "for (const name of names) { if (!name.startsWith('entrenamiento-pwa-')) continue; "
-        "const cache = await caches.open(name); "
-        "if (await cache.match(new URL('./__gymratik_complete__', location.origin + '/').href)) return true; } "
-        "return false; }",
+        "async cacheName => { const cache = await caches.open(cacheName); "
+        "return Boolean(await cache.match(new URL('./__gymratik_complete__', location.origin + '/').href)); }",
+        arg=expected_cache_name,
         timeout=120_000,
     )
     page.wait_for_function("navigator.serviceWorker.controller !== null", timeout=30_000)
     expected_precache = build_precache()
     cache_summary = page.evaluate(
-        "async expected => { const names = (await caches.keys()).filter(name => name.startsWith('entrenamiento-pwa-')); "
-        "const cache = await caches.open(names[0]); "
+        "async ({expected, cacheName}) => { const names = (await caches.keys()).filter(name => name.startsWith('entrenamiento-pwa-')); "
+        "const cache = await caches.open(cacheName); "
         "const missing = []; for (const path of expected) { "
         "if (!await cache.match(new URL(path, location.origin + '/').href)) missing.push(path); } "
-        "return {names, entries: (await cache.keys()).length, expected: expected.length, missing}; }",
-        expected_precache,
+        "return {names, cacheName, entries: (await cache.keys()).length, expected: expected.length, missing}; }",
+        {"expected": expected_precache, "cacheName": expected_cache_name},
     )
-    if not cache_summary["names"] or cache_summary["missing"]:
+    if expected_cache_name not in cache_summary["names"] or cache_summary["missing"]:
         raise AssertionError(f"El paquete instalado no contiene todo el precache: {cache_summary}")
 
     context.set_offline(True)
@@ -1440,6 +1643,17 @@ def validate_installed_offline_package(browser) -> dict:
             raise AssertionError(f"Icono PWA incorrecto o no decodificable sin conexión: {icon}")
     if {icon["width"] for icon in manifest_icons} != {192, 512}:
         raise AssertionError(f"Se esperan iconos instalables de 192 y 512 px: {manifest_icons}")
+    portrait_urls = [path for path in expected_precache if "/frases_fitness/retratos/" in path]
+    portrait_audit = page.evaluate("""async paths => {
+      const failures=[];
+      for(const path of paths){
+        try{const response=await fetch(path);if(!response.ok)throw new Error(`HTTP ${response.status}`);const bitmap=await createImageBitmap(await response.blob());if(bitmap.width<80||bitmap.height<80)throw new Error(`dimensión ${bitmap.width}x${bitmap.height}`);bitmap.close();}
+        catch(error){failures.push({path,error:String(error)});}
+      }
+      return {count:paths.length,failures};
+    }""", portrait_urls)
+    if portrait_audit["count"] != 58 or portrait_audit["failures"]:
+        raise AssertionError(f"Retratos de citas no decodificables sin conexión: {portrait_audit}")
     offline_results = []
     for name, _sex, _variant in ROUTINES:
         page.goto(f"{origin}data/rutinas_autocontenidas/canonicas/{quote(name)}", wait_until="domcontentloaded")
@@ -1508,9 +1722,16 @@ def validate_responsive_layout(browser) -> dict:
               const card=entry.closest('.card');
               const ancestry=[]; for(let node=entry;node&&node!==card;node=node.parentElement){const s=getComputedStyle(node);ancestry.push({tag:node.tagName,className:String(node.className),box:rect(node),display:s.display,gridColumns:s.gridTemplateColumns,overflow:s.overflow});}
               const responsiveElements=[...document.querySelectorAll('.page,.hero,.hero>div,.heroMeta,.heroDetails,.muscleDayGrid,.muscleDayItem,.muscleDayVisual,.performanceFieldTitleRow,.performanceFieldLabel')].slice(0,22).map(element=>{const s=getComputedStyle(element);return {className:String(element.className).slice(0,60),box:rect(element),scrollWidth:element.scrollWidth,clientWidth:element.clientWidth,display:s.display,gridColumns:s.gridTemplateColumns,minWidth:s.minWidth,overflow:s.overflow,text:(element.innerText||'').trim().replace(/\\s+/g,' ').slice(0,70)}});
-              return {viewport:{width:innerWidth,height:innerHeight},documentWidth:document.documentElement.scrollWidth,bodyWidth:document.body.scrollWidth,entry:rect(entry),card:rect(card),cardGrid:getComputedStyle(card).gridTemplateColumns,cardChildren:[...card.children].map(child=>({className:String(child.className),box:rect(child),gridColumn:getComputedStyle(child).gridColumn})),ancestry,controls,offenders,edgeOverflow,responsiveElements};
+              const homeLink=document.querySelector('.routine-home-link'), eyebrow=document.querySelector('.hero .eyebrow');
+              const headerGap=homeLink&&eyebrow?eyebrow.getBoundingClientRect().top-homeLink.getBoundingClientRect().bottom:null;
+              return {viewport:{width:innerWidth,height:innerHeight},documentWidth:document.documentElement.scrollWidth,bodyWidth:document.body.scrollWidth,entry:rect(entry),card:rect(card),cardGrid:getComputedStyle(card).gridTemplateColumns,cardChildren:[...card.children].map(child=>({className:String(child.className),box:rect(child),gridColumn:getComputedStyle(child).gridColumn})),headerGap,ancestry,controls,offenders,edgeOverflow,responsiveElements};
             }""")
             visual_audit = page.evaluate("""() => {
+              const techniqueAccordions=[...document.querySelectorAll('article.card details.techAccordion')];
+              const accordionsCollapsedByDefault=techniqueAccordions.every(details=>!details.open);
+              if(techniqueAccordions[0]) techniqueAccordions[0].querySelector('summary')?.click();
+              const accordionTapWorks=Boolean(techniqueAccordions[0]?.open);
+              techniqueAccordions.forEach(details=>{details.open=true});
               const visible = element => { const box=element.getBoundingClientRect(), style=getComputedStyle(element); return box.width>0&&box.height>0&&style.display!=='none'&&style.visibility!=='hidden'&&Number(style.opacity)!==0; };
               const box = element => { const r=element.getBoundingClientRect(); return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height}; };
               const positioned = [...document.querySelectorAll('article.card,.performanceEntry,.exerciseTracker,.warmupSteps,.warmupVisual,.muscleDayGrid,#summaryToggle,#floatingSessionSummary')].filter(visible).map(element=>({tag:element.tagName,id:element.id,className:String(element.className).slice(0,90),box:box(element)}));
@@ -1524,18 +1745,23 @@ def validate_responsive_layout(browser) -> dict:
               const detachedTechniqueSections=[...document.querySelectorAll('.techSteps,.techniqueSteps')].filter(section=>!section.closest('article.card')).map(section=>({text:(section.innerText||'').trim().slice(0,90),parent:section.parentElement?.tagName+'.'+String(section.parentElement?.className||''),grandparent:section.parentElement?.parentElement?.tagName+'.'+String(section.parentElement?.parentElement?.className||'')}));
               const allExerciseCards=[...document.querySelectorAll('article.card[data-exercise-index]')];
               const cardTopology={total:allExerciseCards.length,insideRoutineGrid:document.querySelectorAll('main.cards>article.card[data-exercise-index]').length,detached:allExerciseCards.filter(card=>card.parentElement!==document.querySelector('main.cards')).map(card=>card.dataset.exerciseIndex)};
-              return {positioned:positioned.length,controls:controls.length,textNodes:text.length,offscreen,clippedText,clippedControls,missingExerciseParts,detachedTechniqueSections,cardTopology};
+              const expandedTechniqueVisible=techniqueAccordions.length>0&&techniqueAccordions.every(details=>{const section=details.querySelector('.techSteps,.techniqueSteps');return Boolean(section&&visible(section)&&section.textContent.trim().length>0)});
+              techniqueAccordions.forEach(details=>{details.open=false});
+              return {positioned:positioned.length,controls:controls.length,textNodes:text.length,offscreen,clippedText,clippedControls,missingExerciseParts,detachedTechniqueSections,cardTopology,accordions:{count:techniqueAccordions.length,collapsedByDefault:accordionsCollapsedByDefault,tapWorks:accordionTapWorks,expandedTechniqueVisible}};
             }""")
             if layout["documentWidth"] > width:
                 raise AssertionError(f"{name} {width}x{height}: el documento permite desplazamiento horizontal: ancho={layout['documentWidth']}, viewport={width}, bordes={layout['edgeOverflow']}, elementosConOverflow={layout['offenders']}")
+            if layout["headerGap"] is None or layout["headerGap"] < 8:
+                raise AssertionError(f"{name} {width}x{height}: el botón Portada invade o queda demasiado cerca de la etiqueta del encabezado: separación={layout['headerGap']} px")
             if layout["entry"]["left"] < -1 or layout["entry"]["right"] > width + 1:
                 raise AssertionError(f"{name} {width}x{height}: zona de registro fuera del viewport: {layout['entry']}")
             if any(control["left"] < -1 or control["right"] > width + 1 for control in layout["controls"]):
                 raise AssertionError(f"{name} {width}x{height}: control recortado horizontalmente: {layout['controls']}")
-            if visual_audit["offscreen"] or visual_audit["clippedText"] or visual_audit["clippedControls"] or visual_audit["missingExerciseParts"] or visual_audit["detachedTechniqueSections"] or visual_audit["cardTopology"]["total"] != visual_audit["cardTopology"]["insideRoutineGrid"]:
+            if visual_audit["offscreen"] or visual_audit["clippedText"] or visual_audit["clippedControls"] or visual_audit["missingExerciseParts"] or visual_audit["detachedTechniqueSections"] or visual_audit["cardTopology"]["total"] != visual_audit["cardTopology"]["insideRoutineGrid"] or visual_audit["accordions"]["count"] != visual_audit["cardTopology"]["total"] or not visual_audit["accordions"]["collapsedByDefault"] or not visual_audit["accordions"]["tapWorks"] or not visual_audit["accordions"]["expandedTechniqueVisible"]:
                 raise AssertionError(f"{name} {width}x{height}: auditoría de geometría visual falló: {visual_audit}")
 
             overlap = None
+            summary_visible_rows = None
             if width <= 640:
                 warmup = page.locator("#warmupAction")
                 warmup.scroll_into_view_if_needed()
@@ -1572,15 +1798,18 @@ def validate_responsive_layout(browser) -> dict:
                 }""")
                 if overlap["intersects"]:
                     raise AssertionError(f"{name} {width}x{height}: resumen flotante tapa el botón de acción: {overlap}")
-            results.append({"routine": name, "viewport": f"{width}x{height}", "horizontalOverflow": False, "visualGeometry": visual_audit, "actionPanelOverlap": overlap})
+                summary_visible_rows = summary.locator(".sessionSummaryList").evaluate("element => {const bounds=element.getBoundingClientRect(),panel=document.querySelector('#floatingSessionSummary'),body=document.querySelector('#summaryBody');const rect=node=>{const r=node.getBoundingClientRect();return {top:r.top,bottom:r.bottom,height:r.height}};const rows=[...element.querySelectorAll('.summaryExercise')].map(row=>{const r=row.getBoundingClientRect();return {top:r.top,bottom:r.bottom}});return {viewport:[innerWidth,innerHeight],visible:rows.filter(row=>row.top>=bounds.top-1&&row.bottom<=bounds.bottom+1).length,clientHeight:element.clientHeight,scrollHeight:element.scrollHeight,panel:rect(panel),panelMax:getComputedStyle(panel).maxHeight,body:rect(body),bodyChildren:[...body.children].map(node=>({className:node.className,box:rect(node),flex:getComputedStyle(node).flex,minHeight:getComputedStyle(node).minHeight})),rows};}")
+                if summary_visible_rows["visible"] != 3:
+                    raise AssertionError(f"{name} {width}x{height}: el resumen flotante no deja exactamente tres ejercicios visibles: {summary_visible_rows}")
+            results.append({"routine": name, "viewport": f"{width}x{height}", "horizontalOverflow": False, "visualGeometry": visual_audit, "actionPanelOverlap": overlap, "summaryVisibleRows": summary_visible_rows})
             context.close()
     return {"viewports": len(RESPONSIVE_VIEWPORTS), "routineViewportChecks": results}
 
 
-def validate_motivation_card(browser) -> dict:
+def validate_motivation_card(browser, widths=(320, 360, 412, 530)) -> dict:
     """Render an Arnold quote and portrait in isolated phone-sized contexts."""
     results = []
-    for width in (320, 360, 412, 530):
+    for width in widths:
         context = browser.new_context(
             viewport={"width": width, "height": 915},
             device_scale_factor=2,
@@ -1589,8 +1818,12 @@ def validate_motivation_card(browser) -> dict:
         )
         context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1', 'true');")
         page = context.new_page()
+        portrait_failures = []
+        portrait_responses = []
+        page.on("requestfailed", lambda request: portrait_failures.append({"url": request.url, "failure": request.failure}) if "/frases_fitness/retratos/" in request.url else None)
+        page.on("response", lambda response: portrait_responses.append({"url": response.url, "status": response.status}) if "/frases_fitness/retratos/" in response.url else None)
         page.goto(f"http://127.0.0.1:{PORT}/data/rutinas_autocontenidas/canonicas/{quote(ROUTINES[0][0])}", wait_until="domcontentloaded")
-        page.wait_for_function("window.fitnessQuotesData?.quotes?.length === 120")
+        page.wait_for_function("window.fitnessQuotesData?.quotes?.length === 60")
         page.locator("#sessionCompletionPanel").evaluate("element => { element.hidden = false; }")
         page.locator("#summaryToggle").evaluate("element => element.setAttribute('aria-expanded', 'false')")
         page.locator("#summaryBody").evaluate("element => { element.hidden = true; }")
@@ -1603,7 +1836,12 @@ def validate_motivation_card(browser) -> dict:
           if(!author.textContent.includes('Arnold Schwarzenegger'))throw new Error('La selección aleatoria controlada no eligió la cita esperada');
         }""")
         page.evaluate("() => { const panel=document.getElementById('sessionCompletionPanel'); window.scrollTo(0, Math.max(0, panel.getBoundingClientRect().top + window.scrollY - 16)); }")
-        page.wait_for_function("document.getElementById('motivationPortrait')?.complete && document.getElementById('motivationPortrait')?.naturalWidth > 0")
+        try:
+            page.wait_for_function("document.getElementById('motivationPortrait')?.complete && document.getElementById('motivationPortrait')?.naturalWidth > 0", timeout=8_000)
+        except Exception as error:
+            diagnosis = page.evaluate("""() => {const image=document.getElementById('motivationPortrait');return {src:image?.getAttribute('src'),resolvedSrc:image?.src,complete:image?.complete,naturalWidth:image?.naturalWidth,naturalHeight:image?.naturalHeight,hidden:image?.hidden,loading:image?.loading,alt:image?.alt,quote:document.getElementById('motivationMessage')?.textContent,author:document.getElementById('motivationNote')?.textContent,portraitData:window.fitnessQuotesData?.quotes?.find(item=>item.author==='Arnold Schwarzenegger')?.portrait}}""")
+            context.close()
+            raise AssertionError(f"Retrato de la frase no se cargó/decodificó: diagnosis={diagnosis}, failed={portrait_failures}, responses={portrait_responses}") from error
         layout = page.evaluate("""() => {
           const panel=document.querySelector('#sessionCompletionPanel'), message=document.querySelector('#motivationMessage'), image=document.querySelector('#motivationPortrait'), credit=document.querySelector('#motivationPhotoCredit'), source=document.querySelector('#motivationNote');
           const box=node=>{const r=node.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height}};
@@ -1632,6 +1870,14 @@ def validate_motivation_card(browser) -> dict:
         if "CC BY 4.0" not in layout["photoCredit"] or "schwarzenegger.com/fitness/post" not in layout["source"]:
             context.close()
             raise AssertionError(f"Falta la atribución enlazada de la cita o fotografía: {layout}")
+        page.route("**/data/rutinas_autocontenidas/frases_fitness/retratos/*.jpg", lambda route: route.abort())
+        page.evaluate("() => { Math.random=()=>0; document.getElementById('newMotivation').click(); }")
+        page.wait_for_function("document.getElementById('motivationPortrait')?.hidden === true && document.getElementById('motivationInitials')?.hidden === false")
+        fallback = page.evaluate("() => ({imageHidden:document.getElementById('motivationPortrait').hidden, initialsVisible:!document.getElementById('motivationInitials').hidden})")
+        if not fallback["imageHidden"] or not fallback["initialsVisible"]:
+            context.close()
+            raise AssertionError(f"La cita dejó visible un retrato roto en vez del avatar de respaldo: {fallback}")
+        layout["brokenPortraitFallback"] = fallback
         results.append(layout)
         context.close()
     return {"viewports": results, "quotePortraitAndTextVerified": True}
@@ -1652,6 +1898,7 @@ def validate_resource_pages(browser) -> list[dict]:
         page = context.new_page()
         page.goto(f"http://127.0.0.1:{PORT}/data/rutinas_autocontenidas/canonicas/{quote(name)}", wait_until="networkidle")
         inventory = assert_image_inventory(page, name)
+        phase_pairs = assert_exercise_phase_pairs(page, name)
         warmup_viewers = assert_warmup_single_viewers(page, name)
         quality = assert_visual_resource_quality(page, name)
         if SCREENSHOT_DIR is not None:
@@ -1672,7 +1919,7 @@ def validate_resource_pages(browser) -> list[dict]:
             if warmup.count():
                 warmup.scroll_into_view_if_needed()
                 warmup.screenshot(path=str(SCREENSHOT_DIR / f"resource-day-{day}-warmup.png"))
-        result = {"routine": name, **inventory, "warmupViewers": warmup_viewers, "quality": quality}
+        result = {"routine": name, **inventory, **phase_pairs, "warmupViewers": warmup_viewers, "quality": quality}
         results.append(result)
         context.close()
     return results
@@ -1680,6 +1927,8 @@ def validate_resource_pages(browser) -> list[dict]:
 
 def main() -> None:
     global SCREENSHOT_DIR, PORT
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--screenshot-dir", type=Path, default=SCREENSHOT_DIR, help="opcional: guarda capturas de actividad y fallbacks en viewport móvil")
     parser.add_argument("--responsive-only", action="store_true", help="ejecuta solo la matriz de tamaños móviles")
@@ -1689,6 +1938,7 @@ def main() -> None:
     parser.add_argument("--cover-only", action="store_true", help="valida y captura la animación de portada en movimiento y con movimiento reducido")
     parser.add_argument("--day", type=int, choices=range(1, 5), help="limita el E2E funcional a un día para diagnóstico reproducible")
     parser.add_argument("--offline-only", action="store_true", help="ejecuta solo la validación offline del precache y rutas profundas")
+    parser.add_argument("--quote-only", action="store_true", help="valida solo selección aleatoria y retrato/fallback de la frase")
     args = parser.parse_args()
     SCREENSHOT_DIR = args.screenshot_dir
     server = create_isolated_server()
@@ -1714,6 +1964,11 @@ def main() -> None:
             if args.cover_only:
                 browser.close()
                 print(json.dumps({"status": "E2E_COVER_OK", "coverAnimation": cover_animation}, ensure_ascii=False, indent=2))
+                return
+            if args.quote_only:
+                quote_card = validate_motivation_card(browser)
+                browser.close()
+                print(json.dumps({"status": "E2E_QUOTE_OK", "quoteCard": quote_card}, ensure_ascii=False, indent=2))
                 return
             if args.resources_only:
                 print("Sintético: recursos visuales de las cuatro rutinas", flush=True)
