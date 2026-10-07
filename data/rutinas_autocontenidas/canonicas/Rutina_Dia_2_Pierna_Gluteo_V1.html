@@ -4644,11 +4644,14 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
   const routineWeekKey = timestamp => { const date = new Date(timestamp); date.setHours(0, 0, 0, 0); date.setDate(date.getDate() - ((date.getDay() + 6) % 7)); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; };
   const resetPreviousWeekProgress = () => {
     const startedAt = Number(state.__timing?.sessionStartedAt) || 0;
+    const endedAt = Number(state.__timing?.sessionEndedAt) || 0;
+    const abandonedAt = Number(state.__timing?.sessionAbandonedAt) || 0;
     const recordedWeek = typeof state.__routineWeek === 'string' ? state.__routineWeek : startedAt ? routineWeekKey(startedAt) : '';
+    const unfinishedSession = startedAt > 0 && endedAt < startedAt && !abandonedAt;
     const hasProgress = Object.entries(state).some(([key, value]) => (/^e\d+s\d+$/.test(key) || /^w\d+$/.test(key)) && value === true)
       || Object.keys(state.__skippedExercises || {}).length > 0
       || Boolean(state.__timing?.warmup?.phase === 'done' || startedAt);
-    if (!hasProgress || !recordedWeek || recordedWeek >= routineWeekKey(Date.now())) return false;
+    if (!hasProgress || unfinishedSession || !recordedWeek || recordedWeek >= routineWeekKey(Date.now())) return false;
     state = {};
     return true;
   };
@@ -4971,6 +4974,114 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       if (state.__performanceDraft?.[String(item.index + 1)]) state.__performanceDraft[String(item.index + 1)].reps = '0';
       state[nextKey] = true;
       recordSeriesTime(item, seriesIndex, completedAt);
+      if (snapshot(item).complete) {
+        const toKg = record => record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load);
+        const isQualified = session => {
+          const records = (session.performance || []).filter(record => record.exerciseId === String(item.index + 1)).sort((a, b) => a.setNumber - b.setNumber);
+          if (records.length !== item.seriesKeys.length || records.some(record => Number(record.reps) < item.repMaximum + 1 || record.load === null || record.load === undefined || !Number.isFinite(Number(record.load)) || !(Number(record.durationMs) > 0))) return null;
+          const loads = records.map(toKg);
+          if (Math.max(...loads) - Math.min(...loads) > 0.01) return null;
+          return records.reduce((sum, record) => sum + Number(record.durationMs) / Number(record.reps), 0) / records.length;
+        };
+        const current = item.seriesKeys.map(key => state.__performance?.[String(item.index + 1)]?.[key]);
+        const currentTiming = getExerciseTiming(item).seriesTimes || [];
+        const currentValid = current.length === item.seriesKeys.length && current.every((record, index) => record && Number(record.reps) >= item.repMaximum + 1 && record.load !== null && record.load !== undefined && Number.isFinite(toKg(record)) && Number(currentTiming[index]) > 0);
+        const currentLoads = currentValid ? current.map(toKg) : [];
+        const currentRate = currentValid && Math.max(...currentLoads) - Math.min(...currentLoads) <= 0.01
+          ? current.reduce((sum, record, index) => sum + Number(currentTiming[index]) / Number(record.reps), 0) / current.length
+          : null;
+        const recent = (item.performanceHistory || []).slice(0, 2).map(isQualified);
+        if (currentRate !== null && recent.length === 2 && recent.every(rate => rate !== null) && currentRate <= (recent[0] + recent[1]) / 2) {
+          const loadKg = currentLoads[0];
+          const stepKg = item.performanceLoadProfile.stepKg;
+          const stepPercent = stepKg / loadKg;
+          if (stepKg <= item.performanceLoadProfile.maxKg - loadKg && stepPercent >= 0.02 && stepPercent <= 0.10) {
+            const displayStep = item.performanceLoadUnit === 'lb' ? `${Math.round(stepKg / 0.45359237)} lb` : `${stepKg} kg`;
+            item.progressionCue.textContent = `Progresión sugerida: alcanzaste al menos ${item.repMaximum + 1} repeticiones en todas las series durante 3 sesiones con datos; tu ritmo por repetición fue igual o más rápido que la media de tus 2 sesiones previas. Si conservaste la técnica, prueba el menor incremento de esta máquina (${displayStep}, ${Math.round(stepPercent * 100)}%).`;
+          }
+        }
+      }
+      if (snapshot(item).complete) {
+        const toKg = record => record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load);
+        const isQualified = session => {
+          const records = (session.performance || []).filter(record => record.exerciseId === String(item.index + 1)).sort((a, b) => a.setNumber - b.setNumber);
+          if (records.length !== item.seriesKeys.length || records.some(record => Number(record.reps) < item.repMaximum + 1 || record.load === null || record.load === undefined || !Number.isFinite(Number(record.load)) || !(Number(record.durationMs) > 0))) return null;
+          const loads = records.map(toKg);
+          if (Math.max(...loads) - Math.min(...loads) > 0.01) return null;
+          return records.reduce((sum, record) => sum + Number(record.durationMs) / Number(record.reps), 0) / records.length;
+        };
+        const current = item.seriesKeys.map(key => state.__performance?.[String(item.index + 1)]?.[key]);
+        const currentTiming = getExerciseTiming(item).seriesTimes || [];
+        const currentValid = current.length === item.seriesKeys.length && current.every((record, index) => record && Number(record.reps) >= item.repMaximum + 1 && record.load !== null && record.load !== undefined && Number.isFinite(toKg(record)) && Number(currentTiming[index]) > 0);
+        const currentLoads = currentValid ? current.map(toKg) : [];
+        const currentRate = currentValid && Math.max(...currentLoads) - Math.min(...currentLoads) <= 0.01
+          ? current.reduce((sum, record, index) => sum + Number(currentTiming[index]) / Number(record.reps), 0) / current.length
+          : null;
+        const recent = (item.performanceHistory || []).slice(0, 2).map(isQualified);
+        if (currentRate !== null && recent.length === 2 && recent.every(rate => rate !== null) && currentRate <= (recent[0] + recent[1]) / 2) {
+          const loadKg = currentLoads[0];
+          const stepKg = item.performanceLoadProfile.stepKg;
+          const stepPercent = stepKg / loadKg;
+          if (stepKg <= item.performanceLoadProfile.maxKg - loadKg && stepPercent >= 0.02 && stepPercent <= 0.10) {
+            const displayStep = item.performanceLoadUnit === 'lb' ? `${Math.round(stepKg / 0.45359237)} lb` : `${stepKg} kg`;
+            item.progressionCue.textContent = `Progresión sugerida: alcanzaste al menos ${item.repMaximum + 1} repeticiones en todas las series durante 3 sesiones con datos; tu ritmo por repetición fue igual o más rápido que la media de tus 2 sesiones previas. Si conservaste la técnica, prueba el menor incremento de esta máquina (${displayStep}, ${Math.round(stepPercent * 100)}%).`;
+          }
+        }
+      }
+      if (snapshot(item).complete) {
+        const toKg = record => record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load);
+        const isQualified = session => {
+          const records = (session.performance || []).filter(record => record.exerciseId === String(item.index + 1)).sort((a, b) => a.setNumber - b.setNumber);
+          if (records.length !== item.seriesKeys.length || records.some(record => Number(record.reps) < item.repMaximum + 1 || record.load === null || record.load === undefined || !Number.isFinite(Number(record.load)) || !(Number(record.durationMs) > 0))) return null;
+          const loads = records.map(toKg);
+          if (Math.max(...loads) - Math.min(...loads) > 0.01) return null;
+          return records.reduce((sum, record) => sum + Number(record.durationMs) / Number(record.reps), 0) / records.length;
+        };
+        const current = item.seriesKeys.map(key => state.__performance?.[String(item.index + 1)]?.[key]);
+        const currentTiming = getExerciseTiming(item).seriesTimes || [];
+        const currentValid = current.length === item.seriesKeys.length && current.every((record, index) => record && Number(record.reps) >= item.repMaximum + 1 && record.load !== null && record.load !== undefined && Number.isFinite(toKg(record)) && Number(currentTiming[index]) > 0);
+        const currentLoads = currentValid ? current.map(toKg) : [];
+        const currentRate = currentValid && Math.max(...currentLoads) - Math.min(...currentLoads) <= 0.01
+          ? current.reduce((sum, record, index) => sum + Number(currentTiming[index]) / Number(record.reps), 0) / current.length
+          : null;
+        const recent = (item.performanceHistory || []).slice(0, 2).map(isQualified);
+        if (currentRate !== null && recent.length === 2 && recent.every(rate => rate !== null) && currentRate <= (recent[0] + recent[1]) / 2) {
+          const loadKg = currentLoads[0];
+          const stepKg = item.performanceLoadProfile.stepKg;
+          const stepPercent = stepKg / loadKg;
+          if (stepKg <= item.performanceLoadProfile.maxKg - loadKg && stepPercent >= 0.02 && stepPercent <= 0.10) {
+            const displayStep = item.performanceLoadUnit === 'lb' ? `${Math.round(stepKg / 0.45359237)} lb` : `${stepKg} kg`;
+            item.progressionCue.textContent = `Progresión sugerida: alcanzaste al menos ${item.repMaximum + 1} repeticiones en todas las series durante 3 sesiones con datos; tu ritmo por repetición fue igual o más rápido que la media de tus 2 sesiones previas. Si conservaste la técnica, prueba el menor incremento de esta máquina (${displayStep}, ${Math.round(stepPercent * 100)}%).`;
+          }
+        }
+      }
+      if (snapshot(item).complete) {
+        const toKg = record => record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load);
+        const isQualified = session => {
+          const records = (session.performance || []).filter(record => record.exerciseId === String(item.index + 1)).sort((a, b) => a.setNumber - b.setNumber);
+          if (records.length !== item.seriesKeys.length || records.some(record => Number(record.reps) < item.repMaximum + 1 || record.load === null || record.load === undefined || !Number.isFinite(Number(record.load)) || !(Number(record.durationMs) > 0))) return null;
+          const loads = records.map(toKg);
+          if (Math.max(...loads) - Math.min(...loads) > 0.01) return null;
+          return records.reduce((sum, record) => sum + Number(record.durationMs) / Number(record.reps), 0) / records.length;
+        };
+        const current = item.seriesKeys.map(key => state.__performance?.[String(item.index + 1)]?.[key]);
+        const currentTiming = getExerciseTiming(item).seriesTimes || [];
+        const currentValid = current.length === item.seriesKeys.length && current.every((record, index) => record && Number(record.reps) >= item.repMaximum + 1 && record.load !== null && record.load !== undefined && Number.isFinite(toKg(record)) && Number(currentTiming[index]) > 0);
+        const currentLoads = currentValid ? current.map(toKg) : [];
+        const currentRate = currentValid && Math.max(...currentLoads) - Math.min(...currentLoads) <= 0.01
+          ? current.reduce((sum, record, index) => sum + Number(currentTiming[index]) / Number(record.reps), 0) / current.length
+          : null;
+        const recent = (item.performanceHistory || []).slice(0, 2).map(isQualified);
+        if (currentRate !== null && recent.length === 2 && recent.every(rate => rate !== null) && currentRate <= (recent[0] + recent[1]) / 2) {
+          const loadKg = currentLoads[0];
+          const stepKg = item.performanceLoadProfile.stepKg;
+          const stepPercent = stepKg / loadKg;
+          if (stepKg <= item.performanceLoadProfile.maxKg - loadKg && stepPercent >= 0.02 && stepPercent <= 0.10) {
+            const displayStep = item.performanceLoadUnit === 'lb' ? `${Math.round(stepKg / 0.45359237)} lb` : `${stepKg} kg`;
+            item.progressionCue.textContent = `Progresión sugerida: alcanzaste al menos ${item.repMaximum + 1} repeticiones en todas las series durante 3 sesiones con datos; tu ritmo por repetición fue igual o más rápido que la media de tus 2 sesiones previas. Si conservaste la técnica, prueba el menor incremento de esta máquina (${displayStep}, ${Math.round(stepPercent * 100)}%).`;
+          }
+        }
+      }
       if (snapshot(item).complete) {
         const toKg = record => record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load);
         const isQualified = session => {

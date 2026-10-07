@@ -2149,26 +2149,45 @@ SUMMARY_NAVIGATION_STYLE = '''<style data-enhancement="summary-free-navigation-v
 
 def standardize_weekly_progress_reset(source: str) -> str:
     """Scope current routine progress to the local Monday-based week and expose reset in the floating panel."""
-    if "const routineWeekKey = timestamp =>" not in source:
-        source = source.replace(
-            "  const migrateTimingState = () => {",
-            """  const routineWeekKey = timestamp => { const date = new Date(timestamp); date.setHours(0, 0, 0, 0); date.setDate(date.getDate() - ((date.getDay() + 6) % 7)); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; };
+    weekly_reset_logic = """  const routineWeekKey = timestamp => { const date = new Date(timestamp); date.setHours(0, 0, 0, 0); date.setDate(date.getDate() - ((date.getDay() + 6) % 7)); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; };
   const resetPreviousWeekProgress = () => {
     const startedAt = Number(state.__timing?.sessionStartedAt) || 0;
+    const endedAt = Number(state.__timing?.sessionEndedAt) || 0;
+    const abandonedAt = Number(state.__timing?.sessionAbandonedAt) || 0;
     const recordedWeek = typeof state.__routineWeek === 'string' ? state.__routineWeek : startedAt ? routineWeekKey(startedAt) : '';
+    const unfinishedSession = startedAt > 0 && endedAt < startedAt && !abandonedAt;
     const hasProgress = Object.entries(state).some(([key, value]) => (/^e\\d+s\\d+$/.test(key) || /^w\\d+$/.test(key)) && value === true)
       || Object.keys(state.__skippedExercises || {}).length > 0
       || Boolean(state.__timing?.warmup?.phase === 'done' || startedAt);
-    if (!hasProgress || !recordedWeek || recordedWeek >= routineWeekKey(Date.now())) return false;
+    if (!hasProgress || unfinishedSession || !recordedWeek || recordedWeek >= routineWeekKey(Date.now())) return false;
     state = {};
     return true;
-  };
-  const migrateTimingState = () => {""",
+  };"""
+    routine_week_key = weekly_reset_logic.split("\n", 1)[0]
+    reset_helper = weekly_reset_logic.split("\n", 1)[1]
+    first_week_key = source.find(routine_week_key)
+    if first_week_key >= 0:
+        key_end = first_week_key + len(routine_week_key)
+        source = source[:key_end] + source[key_end:].replace(routine_week_key + "\n", "")
+    if "const routineWeekKey = timestamp =>" not in source:
+        source = source.replace(
+            "  const migrateTimingState = () => {",
+            weekly_reset_logic + "\n  const migrateTimingState = () => {",
             1,
         )
         if "const resetPreviousWeekProgress = () =>" not in source:
             raise ValueError("No se encontró el contrato temporal para reiniciar progreso semanal")
         source = source.replace("  migrateTimingState();", "  if (resetPreviousWeekProgress()) save();\n  migrateTimingState();", 1)
+    else:
+        source, reset_count = re.subn(
+            r"  const resetPreviousWeekProgress = \(\) => \{.*?\n  \};",
+            lambda _match: reset_helper,
+            source,
+            count=1,
+            flags=re.S,
+        )
+        if reset_count != 1:
+            raise ValueError("No se pudo actualizar la regla semanal ya instalada")
     if "state.__routineWeek = routineWeekKey(Date.now())" not in source:
         source, save_count = re.subn(
             r"(const save = \(\) => \{\s*if \(!window\.GymratikInstallGate\?\.isInstalled\(\)\) return;)",
@@ -2877,9 +2896,10 @@ def standardize_series_entry_zone(source: str) -> str:
         "item.performanceHistory = history.filter(session => session.routineId === routineId && session.sessionId !== currentSessionId && (session.performance || []).some(record => record.exerciseId === String(item.index + 1))).sort((a, b) => Number(b.endedAt || b.updatedAt || 0) - Number(a.endedAt || a.updatedAt || 0)); const previous = item.performanceHistory[0];",
         1,
     )
-    source = source.replace(
-        "      recordSeriesTime(item, seriesIndex, completedAt);",
-        """      recordSeriesTime(item, seriesIndex, completedAt);
+    if "Progresión sugerida: alcanzaste al menos" not in source:
+        source = source.replace(
+            "      recordSeriesTime(item, seriesIndex, completedAt);",
+            """      recordSeriesTime(item, seriesIndex, completedAt);
       if (snapshot(item).complete) {
         const toKg = record => record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load);
         const isQualified = session => {
@@ -2907,8 +2927,8 @@ def standardize_series_entry_zone(source: str) -> str:
           }
         }
       }""",
-        1,
-    )
+            1,
+        )
     source = source.replace(
         "tracker.querySelector('.completeSetButton')?.addEventListener('click', () => {",
         "tracker.querySelector('.completeSetButton')?.addEventListener('click', async () => {",

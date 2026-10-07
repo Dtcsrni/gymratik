@@ -22,7 +22,8 @@ const weekKey = `${currentWeek.getFullYear()}-${String(currentWeek.getMonth()+1)
 const fallback = JSON.stringify({
   progress: {
     day1: { routineId: 'day1', sessionId: oldSession, doneSeries: 20, totalSeries: 20, sessionStartedAt: startedAt, sessionEndedAt: endedAt, updatedAt: Date.now() },
-    day2: { routineId: 'day2', weekKey, doneSeries: 2, totalSeries: 20, sessionStartedAt: currentStartedAt, sessionEndedAt: 0, updatedAt: Date.now() }
+    day2: { routineId: 'day2', weekKey, doneSeries: 2, totalSeries: 20, sessionStartedAt: currentStartedAt, sessionEndedAt: 0, updatedAt: Date.now() },
+    day3: { routineId: 'day3', sessionId: `day3:${startedAt}`, doneSeries: 1, totalSeries: 20, sessionStartedAt: startedAt, sessionEndedAt: 0, updatedAt: Date.now() }
   },
   sessions: { [oldSession]: { sessionId: oldSession, routineId: 'day1', startedAt, endedAt, status: 'completed', completedSeries: 20, totalSeries: 20, updatedAt: endedAt } },
   activity: {}
@@ -36,9 +37,10 @@ vm.runInNewContext(source, context);
 window.TrainingProgressStore.getDashboard().then(dashboard => {
   assert.strictEqual(dashboard.routines.find(row => row.routineId === 'day1').doneSeries, 0);
   assert.strictEqual(dashboard.routines.find(row => row.routineId === 'day2').doneSeries, 2);
-  assert.strictEqual(dashboard.currentSeries, 2);
+  assert.strictEqual(dashboard.routines.find(row => row.routineId === 'day3').doneSeries, 1, 'an unfinished previous-week session remains recoverable');
+  assert.strictEqual(dashboard.currentSeries, 3);
   assert.strictEqual(dashboard.sessionsCompleted, 1);
-  assert.strictEqual(dashboard.recordedSeries, 22, 'last-week workout remains in history alongside current-week activity');
+  assert.strictEqual(dashboard.recordedSeries, 23, 'completed history and unfinished session remain recorded');
   console.log(JSON.stringify({ ok: true }));
 }).catch(error => { console.error(error); process.exit(1); });
 """

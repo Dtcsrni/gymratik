@@ -662,7 +662,11 @@
 
   function dashboardFrom(data) {
     const currentWeek = trainingWeekKey();
-    const currentWeekProgress = data.progress.filter((record) => (record.weekKey || trainingWeekKey(record.sessionStartedAt || record.updatedAt)) === currentWeek);
+    const currentWeekProgress = data.progress.filter((record) => {
+      const belongsToCurrentWeek = (record.weekKey || trainingWeekKey(record.sessionStartedAt || record.updatedAt)) === currentWeek;
+      const isUnfinishedSession = Number(record.sessionStartedAt) > 0 && Number(record.sessionEndedAt) < Number(record.sessionStartedAt);
+      return belongsToCurrentWeek || isUnfinishedSession;
+    });
     const progressByRoutine = new Map(currentWeekProgress.map((record) => [record.routineId, record]));
     const sessionsById = new Map(data.sessions.map((session) => [session.sessionId, session]));
     const progressBySessionId = new Map(data.progress.filter((record) => record.sessionId).map((record) => [record.sessionId, record]));

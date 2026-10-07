@@ -1296,7 +1296,7 @@ def validate_weekly_progress_rollover(page, name: str) -> dict[str, bool]:
     """Ensure last-week work rolls off this week's view and reset stays reachable."""
     routine_id = re.search(r"Rutina_Dia_(\d+)_", name).group(1)
     storage_key = f"fitlovers-day{routine_id}-series-v1"
-    page.evaluate("({storageKey, endedAt}) => { const state = {}; document.querySelectorAll('.exerciseTracker[data-series-keys]').forEach(tracker => tracker.dataset.seriesKeys.trim().split(/\\s+/).filter(Boolean).forEach(key => { state[key] = true; })); state.__timing = { sessionStartedAt: endedAt - 45 * 60 * 1000, sessionEndedAt: endedAt, warmup: { phase: 'done' }, exercises: {} }; localStorage.setItem(storageKey, JSON.stringify(state)); }", {"storageKey": storage_key, "endedAt": int(time.time() * 1000) - 8 * 24 * 60 * 60 * 1000})
+    page.evaluate("storageKey => { const endedAt = Date.now() - 8 * 24 * 60 * 60 * 1000; const state = {}; document.querySelectorAll('.exerciseTracker[data-series-keys]').forEach(tracker => tracker.dataset.seriesKeys.trim().split(/\\s+/).filter(Boolean).forEach(key => { state[key] = true; })); state.__timing = { sessionStartedAt: endedAt - 45 * 60 * 1000, sessionEndedAt: endedAt, warmup: { phase: 'done' }, exercises: {} }; localStorage.setItem(storageKey, JSON.stringify(state)); }", storage_key)
     page.reload(wait_until="networkidle")
     page.wait_for_function("() => [...document.querySelectorAll('.exerciseProgress')].length > 0 && [...document.querySelectorAll('.exerciseProgress')].every(node => /^0\\//.test(node.textContent.trim()))")
     if page.locator("#sessionCompletionPanel").is_visible():
@@ -1311,8 +1311,19 @@ def validate_weekly_progress_rollover(page, name: str) -> dict[str, bool]:
     if not reset.is_visible() or "reiniciar día" not in reset.inner_text().lower():
         raise AssertionError(f"{name}: el botón Reiniciar día no está visible al final de la rutina")
 
-    current_end = int(time.time() * 1000) - 60_000
-    page.evaluate("({storageKey, endedAt}) => { const state = {}; document.querySelectorAll('.exerciseTracker[data-series-keys]').forEach(tracker => tracker.dataset.seriesKeys.trim().split(/\\s+/).filter(Boolean).forEach(key => { state[key] = true; })); state.__timing = { sessionStartedAt: endedAt - 45 * 60 * 1000, sessionEndedAt: endedAt, warmup: { phase: 'done' }, exercises: {} }; localStorage.setItem(storageKey, JSON.stringify(state)); }", {"storageKey": storage_key, "endedAt": current_end})
+    page.evaluate("storageKey => { const startedAt = Date.now() - 8 * 24 * 60 * 60 * 1000; const tracker = document.querySelector('.exerciseTracker[data-series-keys]'); const key = tracker.dataset.seriesKeys.trim().split(/\\s+/)[0]; const state = { [key]: true, __timing: { sessionStartedAt: startedAt, sessionEndedAt: 0, warmup: { phase: 'done' }, exercises: { '1': { startedAt, seriesStartedAt: startedAt, seriesTimes: [53000] } } }, __performance: { '1': { [key]: { title: document.querySelector('.exTitle')?.textContent.trim() || 'Ejercicio', reps: 10, load: 40, loadUnit: 'kg', durationMs: 53000, updatedAt: startedAt } } } }; localStorage.setItem(storageKey, JSON.stringify(state)); }", storage_key)
+    page.reload(wait_until="networkidle")
+    try:
+        page.wait_for_function("() => [...document.querySelectorAll('.exerciseProgress')].some(node => /^1\\//.test(node.textContent.trim()))")
+    except Exception as error:
+        diagnostic = page.evaluate("storageKey => ({storage: localStorage.getItem(storageKey), progress: [...document.querySelectorAll('.exerciseProgress')].map(node => node.textContent.trim()), markers: [...document.querySelectorAll('.exerciseTimerChip[data-kind=\\\"set\\\"]')].map(node => node.textContent.trim()), clock: Date.now()})", storage_key)
+        raise AssertionError(f"{name}: sesión activa tras recarga no reapareció; {json.dumps(diagnostic, ensure_ascii=False)}") from error
+    active_progress = page.locator(".exerciseProgress").first.inner_text().strip()
+    active_marker = page.locator('.exerciseTimerChip[data-kind="set"]').first.inner_text().strip()
+    if not re.fullmatch(r"1/\d+", active_progress) or not re.search(r"S1 · 10r · 40kg", active_marker, re.IGNORECASE):
+        raise AssertionError(f"{name}: recargar una sesión activa de la semana previa perdió su registro: {active_progress!r}, {active_marker!r}")
+
+    page.evaluate("storageKey => { const endedAt = Date.now() - 60_000; const state = {}; document.querySelectorAll('.exerciseTracker[data-series-keys]').forEach(tracker => tracker.dataset.seriesKeys.trim().split(/\\s+/).filter(Boolean).forEach(key => { state[key] = true; })); state.__timing = { sessionStartedAt: endedAt - 45 * 60 * 1000, sessionEndedAt: endedAt, warmup: { phase: 'done' }, exercises: {} }; localStorage.setItem(storageKey, JSON.stringify(state)); }", storage_key)
     page.reload(wait_until="networkidle")
     page.wait_for_function("() => [...document.querySelectorAll('.exerciseProgress')].length > 0 && [...document.querySelectorAll('.exerciseProgress')].every(node => !/^0\\//.test(node.textContent.trim()))")
     retained_current_week = page.locator("#sessionCompletionPanel").is_visible()
@@ -1323,7 +1334,7 @@ def validate_weekly_progress_rollover(page, name: str) -> dict[str, bool]:
     page.wait_for_function("() => [...document.querySelectorAll('.exerciseProgress')].length > 0 && [...document.querySelectorAll('.exerciseProgress')].every(node => /^0\\//.test(node.textContent.trim()))")
     if page.locator("#summaryToggle").get_attribute("aria-expanded") == "true":
         click_control(page.locator("#summaryToggle"))
-    return {"previousWeekRolledToZero": True, "currentWeekCompletionPreserved": retained_current_week, "resetButtonVisibleInSummary": True}
+    return {"previousWeekRolledToZero": True, "unfinishedSessionPreservedOnReload": True, "currentWeekCompletionPreserved": retained_current_week, "resetButtonVisibleAtRoutineEnd": True}
 
 
 def validate_approximation_moves_to_first_available(browser, name: str, sex: str) -> None:
