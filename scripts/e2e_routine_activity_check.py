@@ -433,6 +433,8 @@ def assert_warmup_single_viewers(page, routine_name: str) -> dict:
 def assert_visual_resource_quality(page, routine_name: str) -> dict:
     """Valida tamaño, proporción, ajuste y legibilidad de recursos instructivos."""
     audit = page.evaluate("""() => {
+      const techniqueAccordions=[...document.querySelectorAll('article.card details.techAccordion')];
+      techniqueAccordions.forEach(details=>{details.open=true});
       const rect = element => { const r=element.getBoundingClientRect(); return {width:r.width,height:r.height}; };
       const images = [...document.querySelectorAll('.phaseRow .photo img.realphoto,.warmupVisual img,.gifFrame img,.muscleDayVisual img')].map(image => {
         const box=rect(image), parent=rect(image.parentElement), style=getComputedStyle(image);
@@ -443,6 +445,7 @@ def assert_visual_resource_quality(page, routine_name: str) -> dict:
       const instructional=images.filter(image=>image.group==='exercise'&&!image.hidden&&image.display!=='none');
       const cropFractions=instructional.filter(image=>image.fit==='cover'&&image.naturalWidth&&image.naturalHeight&&image.width&&image.height).map(image=>{const source=image.naturalWidth/image.naturalHeight,box=image.width/image.height;return 1-Math.min(source,box)/Math.max(source,box)});
       const warmupViewers=[...document.querySelectorAll('.warmupSingleViewer')].map(group=>{const frame=group.querySelector(':scope > .warmupVisual'),g=group.getBoundingClientRect(),f=frame?.getBoundingClientRect(),style=getComputedStyle(group),buttons=[...group.querySelectorAll('.warmupMediaChoice')].map(button=>{const r=button.getBoundingClientRect();return {width:r.width,height:r.height,left:r.left,right:r.right}});return {viewport:innerWidth,groupWidth:g.width,frameWidth:f?.width||0,frameHeight:f?.height||0,paddingLeft:parseFloat(style.paddingLeft),paddingRight:parseFloat(style.paddingRight),widthRatio:g.width&&f?f.width/g.width:0,buttons}});
+      techniqueAccordions.forEach(details=>{details.open=false});
       return {images,captions,techniqueGuides,exerciseImages:instructional.length,minExerciseWidth:instructional.length?Math.min(...instructional.map(image=>image.width)):0,minExerciseHeight:instructional.length?Math.min(...instructional.map(image=>image.height)):0,maxExerciseCoverCrop:cropFractions.length?Math.max(...cropFractions):0,minCaptionFont:captions.length?Math.min(...captions.map(caption=>caption.fontSize)):0,fitModes:[...new Set(images.map(image=>image.fit))],warmupViewers};
     }""")
     visible_images = [item for item in audit["images"] if not item["hidden"] and item["display"] != "none"]
@@ -1830,6 +1833,8 @@ def validate_responsive_layout(browser) -> dict:
             visual_audit = page.evaluate("""() => {
               const techniqueAccordions=[...document.querySelectorAll('article.card details.techAccordion')];
               const accordionsCollapsedByDefault=techniqueAccordions.every(details=>!details.open);
+              const hiddenWhenCollapsed=details=>{const section=details.querySelector('.techSteps,.techniqueSteps');return Boolean(section&&getComputedStyle(section).display==='none'&&section.getBoundingClientRect().height===0)};
+              const collapsedContentHiddenByDefault=techniqueAccordions.length>0&&techniqueAccordions.every(hiddenWhenCollapsed);
               if(techniqueAccordions[0]) techniqueAccordions[0].querySelector('summary')?.click();
               const accordionTapWorks=Boolean(techniqueAccordions[0]?.open);
               techniqueAccordions.forEach(details=>{details.open=true});
@@ -1848,7 +1853,8 @@ def validate_responsive_layout(browser) -> dict:
               const cardTopology={total:allExerciseCards.length,insideRoutineGrid:document.querySelectorAll('main.cards>article.card[data-exercise-index]').length,detached:allExerciseCards.filter(card=>card.parentElement!==document.querySelector('main.cards')).map(card=>card.dataset.exerciseIndex)};
               const expandedTechniqueVisible=techniqueAccordions.length>0&&techniqueAccordions.every(details=>{const section=details.querySelector('.techSteps,.techniqueSteps');return Boolean(section&&visible(section)&&section.textContent.trim().length>0)});
               techniqueAccordions.forEach(details=>{details.open=false});
-              return {positioned:positioned.length,controls:controls.length,textNodes:text.length,offscreen,clippedText,clippedControls,missingExerciseParts,detachedTechniqueSections,cardTopology,accordions:{count:techniqueAccordions.length,collapsedByDefault:accordionsCollapsedByDefault,tapWorks:accordionTapWorks,expandedTechniqueVisible}};
+              const collapsedContentHiddenAfterClose=techniqueAccordions.length>0&&techniqueAccordions.every(hiddenWhenCollapsed);
+              return {positioned:positioned.length,controls:controls.length,textNodes:text.length,offscreen,clippedText,clippedControls,missingExerciseParts,detachedTechniqueSections,cardTopology,accordions:{count:techniqueAccordions.length,collapsedByDefault:accordionsCollapsedByDefault,contentHiddenByDefault:collapsedContentHiddenByDefault,tapWorks:accordionTapWorks,expandedTechniqueVisible,contentHiddenAfterClose:collapsedContentHiddenAfterClose}};
             }""")
             if layout["documentWidth"] > width:
                 raise AssertionError(f"{name} {width}x{height}: el documento permite desplazamiento horizontal: ancho={layout['documentWidth']}, viewport={width}, bordes={layout['edgeOverflow']}, elementosConOverflow={layout['offenders']}")
@@ -1858,7 +1864,7 @@ def validate_responsive_layout(browser) -> dict:
                 raise AssertionError(f"{name} {width}x{height}: zona de registro fuera del viewport: {layout['entry']}")
             if any(control["left"] < -1 or control["right"] > width + 1 for control in layout["controls"]):
                 raise AssertionError(f"{name} {width}x{height}: control recortado horizontalmente: {layout['controls']}")
-            if visual_audit["offscreen"] or visual_audit["clippedText"] or visual_audit["clippedControls"] or visual_audit["missingExerciseParts"] or visual_audit["detachedTechniqueSections"] or visual_audit["cardTopology"]["total"] != visual_audit["cardTopology"]["insideRoutineGrid"] or visual_audit["accordions"]["count"] != visual_audit["cardTopology"]["total"] or not visual_audit["accordions"]["collapsedByDefault"] or not visual_audit["accordions"]["tapWorks"] or not visual_audit["accordions"]["expandedTechniqueVisible"]:
+            if visual_audit["offscreen"] or visual_audit["clippedText"] or visual_audit["clippedControls"] or visual_audit["missingExerciseParts"] or visual_audit["detachedTechniqueSections"] or visual_audit["cardTopology"]["total"] != visual_audit["cardTopology"]["insideRoutineGrid"] or visual_audit["accordions"]["count"] != visual_audit["cardTopology"]["total"] or not visual_audit["accordions"]["collapsedByDefault"] or not visual_audit["accordions"]["contentHiddenByDefault"] or not visual_audit["accordions"]["tapWorks"] or not visual_audit["accordions"]["expandedTechniqueVisible"] or not visual_audit["accordions"]["contentHiddenAfterClose"]:
                 raise AssertionError(f"{name} {width}x{height}: auditoría de geometría visual falló: {visual_audit}")
 
             overlap = None

@@ -880,6 +880,8 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertEqual(source.count('data-enhancement="technique-accordion-v1"'), card_count)
                 self.assertEqual(source.count('<summary>Técnica esencial</summary>'), card_count)
                 self.assertIn(".techSteps{display:grid!important", source)
+                self.assertIn(".techAccordion:not([open])>.techSteps{display:none!important}", source)
+                self.assertIn(".techAccordion[open]>.techSteps{display:grid!important}", source)
                 self.assertIn('data-enhancement="summary-free-navigation-v1"', source)
                 self.assertNotIn("new MutationObserver(scheduleAlignment)", source)
                 self.assertIn("scrollIntoView({behavior:'smooth', block:'start'})", source)
