@@ -9,6 +9,43 @@ STORE = ROOT / "progress-store.js"
 
 
 class ProgressStoreRuntimeTests(unittest.TestCase):
+    def test_previous_week_progress_is_excluded_from_current_plan_without_deleting_history(self):
+        script = r"""
+const fs = require('fs'), vm = require('vm'), assert = require('assert');
+const source = fs.readFileSync(process.argv[1], 'utf8');
+const startedAt = Date.now() - 8 * 24 * 60 * 60 * 1000;
+const currentStartedAt = Date.now() - 60 * 1000;
+const endedAt = startedAt + 60 * 60 * 1000;
+const oldSession = `day1:${startedAt}`;
+const currentWeek = new Date(); currentWeek.setHours(0,0,0,0); currentWeek.setDate(currentWeek.getDate() - ((currentWeek.getDay()+6)%7));
+const weekKey = `${currentWeek.getFullYear()}-${String(currentWeek.getMonth()+1).padStart(2,'0')}-${String(currentWeek.getDate()).padStart(2,'0')}`;
+const fallback = JSON.stringify({
+  progress: {
+    day1: { routineId: 'day1', sessionId: oldSession, doneSeries: 20, totalSeries: 20, sessionStartedAt: startedAt, sessionEndedAt: endedAt, updatedAt: Date.now() },
+    day2: { routineId: 'day2', weekKey, doneSeries: 2, totalSeries: 20, sessionStartedAt: currentStartedAt, sessionEndedAt: 0, updatedAt: Date.now() }
+  },
+  sessions: { [oldSession]: { sessionId: oldSession, routineId: 'day1', startedAt, endedAt, status: 'completed', completedSeries: 20, totalSeries: 20, updatedAt: endedAt } },
+  activity: {}
+});
+const window = { GymratikInstallGate: { isInstalled() { return true; } },
+  CustomEvent: class CustomEvent { constructor(name, init) { this.name = name; this.detail = init?.detail; } }, dispatchEvent() {},
+  localStorage: { getItem() { return fallback; }, setItem() {} }
+};
+const context = { window, CustomEvent: window.CustomEvent, localStorage: window.localStorage, navigator: {}, console, Date, setTimeout, clearTimeout };
+vm.runInNewContext(source, context);
+window.TrainingProgressStore.getDashboard().then(dashboard => {
+  assert.strictEqual(dashboard.routines.find(row => row.routineId === 'day1').doneSeries, 0);
+  assert.strictEqual(dashboard.routines.find(row => row.routineId === 'day2').doneSeries, 2);
+  assert.strictEqual(dashboard.currentSeries, 2);
+  assert.strictEqual(dashboard.sessionsCompleted, 1);
+  assert.strictEqual(dashboard.recordedSeries, 22, 'last-week workout remains in history alongside current-week activity');
+  console.log(JSON.stringify({ ok: true }));
+}).catch(error => { console.error(error); process.exit(1); });
+"""
+        result = subprocess.run(["node", "-e", script, str(STORE)], cwd=ROOT, check=False, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), {"ok": True})
+
     def test_legacy_activity_without_start_uses_linked_session_date(self):
         script = r"""
 const fs = require('fs');
@@ -32,7 +69,7 @@ const context = { window, CustomEvent: window.CustomEvent, localStorage: window.
 vm.runInNewContext(source, context);
 window.TrainingProgressStore.getDashboard().then((dashboard) => {
   assert.strictEqual(dashboard.todaySeries, 0, 'legacy activity must inherit the linked historical session date');
-  assert.strictEqual(dashboard.routines[0].doneSeries, 22, 'historical progress must remain intact');
+  assert.strictEqual(dashboard.routines[0].doneSeries, 0, 'last-week progress must not appear in this-week routine status');
   assert.strictEqual(dashboard.temporal.otherDay, true, 'latest activity must use its linked session timestamp');
   assert.strictEqual(dashboard.lastActivity, startedAt + 3600000, 'legacy rows must retain the linked session end timestamp');
   console.log(JSON.stringify({ ok: true }));
@@ -66,7 +103,7 @@ const context = { window, CustomEvent: window.CustomEvent, localStorage: window.
 vm.runInNewContext(source, context);
 window.TrainingProgressStore.getDashboard().then((dashboard) => {
   assert.strictEqual(dashboard.todaySeries, 0, 'a session started two days ago must not be attributed to today');
-  assert.strictEqual(dashboard.routines[0].doneSeries, 22, 'historical progress must remain intact');
+  assert.strictEqual(dashboard.routines[0].doneSeries, 0, 'last-week progress must not appear in this-week routine status');
   assert.strictEqual(dashboard.temporal.otherDay, true, 'the last-session label must use the workout date, not its recapture date');
   assert.strictEqual(dashboard.lastActivity, startedAt + 3600000, 'recapturing old progress must retain the original session end timestamp');
   console.log(JSON.stringify({ ok: true }));

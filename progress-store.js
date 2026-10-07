@@ -89,6 +89,13 @@
     return { dayKey, hourKey, minuteKey };
   }
 
+  function trainingWeekKey(timestamp = Date.now()) {
+    const date = new Date(timestamp);
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() - ((date.getDay() + 6) % 7));
+    return timeKeys(date.getTime()).dayKey;
+  }
+
   function temporalRelation(timestamp, referenceTimestamp = Date.now()) {
     if (!timestamp) return 'none';
     const source = timeKeys(timestamp);
@@ -309,6 +316,7 @@
       sessionStartedAt: metrics.sessionStartedAt,
       sessionEndedAt: metrics.sessionEndedAt,
       sessionId,
+      weekKey: trainingWeekKey(metrics.sessionStartedAt || capturedAt),
       performance: Object.entries(state?.__performance || {}).flatMap(([exerciseId, sets]) =>
         Object.entries(sets || {}).filter(([setKey, value]) => /^e\d+s\d+$/.test(setKey) && state[setKey] === true && value && Number.isFinite(Number(value.reps)) && Number(value.reps) >= 1)
           .map(([setKey, value]) => {
@@ -653,13 +661,15 @@
   }
 
   function dashboardFrom(data) {
-    const progressByRoutine = new Map(data.progress.map((record) => [record.routineId, record]));
+    const currentWeek = trainingWeekKey();
+    const currentWeekProgress = data.progress.filter((record) => (record.weekKey || trainingWeekKey(record.sessionStartedAt || record.updatedAt)) === currentWeek);
+    const progressByRoutine = new Map(currentWeekProgress.map((record) => [record.routineId, record]));
     const sessionsById = new Map(data.sessions.map((session) => [session.sessionId, session]));
     const progressBySessionId = new Map(data.progress.filter((record) => record.sessionId).map((record) => [record.sessionId, record]));
     const sessions = data.sessions.filter((session) => session.status === 'completed');
     const completedSeries = sessions.reduce((sum, session) => sum + nonNegativeNumber(session.completedSeries), 0);
-    const activeSeries = data.progress.reduce((sum, record) => sum + (record.sessionEndedAt ? 0 : nonNegativeNumber(record.doneSeries)), 0);
-    const currentSeries = data.progress.reduce((sum, record) => sum + nonNegativeNumber(record.doneSeries), 0);
+    const activeSeries = currentWeekProgress.reduce((sum, record) => sum + (record.sessionEndedAt ? 0 : nonNegativeNumber(record.doneSeries)), 0);
+    const currentSeries = currentWeekProgress.reduce((sum, record) => sum + nonNegativeNumber(record.doneSeries), 0);
     const plannedSeries = Object.values(ROUTINES).reduce((sum, routine) => sum + routine.totalSeries, 0);
     const now = Date.now();
     const nowKeys = timeKeys(now);

@@ -406,6 +406,7 @@ def main() -> None:
     )
     cards = "\n".join(build_card(item, index) for index, item in enumerate(EXERCISES))
     overlays = between(template, '<section class="sessionCompletionPanel"', "</aside>")
+    overlays = re.sub(r'<footer class="sessionFooter".*?</footer>', "", overlays, count=1, flags=re.S)
     overlays = replace_all(
         overlays,
         {

@@ -2147,6 +2147,75 @@ SUMMARY_NAVIGATION_STYLE = '''<style data-enhancement="summary-free-navigation-v
 </style>'''
 
 
+def standardize_weekly_progress_reset(source: str) -> str:
+    """Scope current routine progress to the local Monday-based week and expose reset in the floating panel."""
+    if "const routineWeekKey = timestamp =>" not in source:
+        source = source.replace(
+            "  const migrateTimingState = () => {",
+            """  const routineWeekKey = timestamp => { const date = new Date(timestamp); date.setHours(0, 0, 0, 0); date.setDate(date.getDate() - ((date.getDay() + 6) % 7)); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; };
+  const resetPreviousWeekProgress = () => {
+    const startedAt = Number(state.__timing?.sessionStartedAt) || 0;
+    const recordedWeek = typeof state.__routineWeek === 'string' ? state.__routineWeek : startedAt ? routineWeekKey(startedAt) : '';
+    const hasProgress = Object.entries(state).some(([key, value]) => (/^e\\d+s\\d+$/.test(key) || /^w\\d+$/.test(key)) && value === true)
+      || Object.keys(state.__skippedExercises || {}).length > 0
+      || Boolean(state.__timing?.warmup?.phase === 'done' || startedAt);
+    if (!hasProgress || !recordedWeek || recordedWeek >= routineWeekKey(Date.now())) return false;
+    state = {};
+    return true;
+  };
+  const migrateTimingState = () => {""",
+            1,
+        )
+        if "const resetPreviousWeekProgress = () =>" not in source:
+            raise ValueError("No se encontró el contrato temporal para reiniciar progreso semanal")
+        source = source.replace("  migrateTimingState();", "  if (resetPreviousWeekProgress()) save();\n  migrateTimingState();", 1)
+    if "state.__routineWeek = routineWeekKey(Date.now())" not in source:
+        source, save_count = re.subn(
+            r"(const save = \(\) => \{\s*if \(!window\.GymratikInstallGate\?\.isInstalled\(\)\) return;)",
+            r"\1\n    state.__routineWeek = routineWeekKey(Date.now());",
+            source,
+            count=1,
+        )
+        if save_count != 1:
+            raise ValueError("No se encontró el guardado local para asignar el ámbito semanal")
+    source = source.replace(
+        "const confirmed = window.confirm('¿Reiniciar el progreso de esta sesión? Se borrarán marcadores, pendientes y tiempos.');",
+        "const confirmed = window.confirm('¿Reiniciar este día? Se borrarán los marcadores y tiempos de esta semana; el historial de entrenamientos se conservará.');",
+        1,
+    )
+    source = source.replace(
+        "    try { await window.TrainingProgressStore?.clearRoutine?.(routineId); } catch (error) { console.error('Routine reset failed', error); }\n",
+        "",
+        1,
+    )
+
+    footer_match = re.search(r'<footer class="sessionFooter"[^>]*>.*?</footer>', source, flags=re.S)
+    if not footer_match:
+        raise ValueError("No se encontró el botón de reinicio del día")
+    summary_start = source.find('<div class="summaryBody"')
+    summary_end = source.find("</aside>", footer_match.end())
+    if summary_start >= 0 and summary_start < footer_match.start() and summary_end >= 0:
+        footer_markup = footer_match.group(0)
+        source = source[:footer_match.start()] + source[footer_match.end():]
+        aside_end = source.find("</aside>", summary_start)
+        if aside_end < 0:
+            raise ValueError("No se encontró el cierre del resumen flotante")
+        aside_end += len("</aside>")
+        source = source[:aside_end] + "\n" + footer_markup + source[aside_end:]
+    source = re.sub(r'<style data-enhancement="footer-reset-v1">.*?</style>\s*', "", source, count=1, flags=re.S)
+    source = re.sub(r'<style data-enhancement="weekly-routine-reset-v1">.*?</style>\s*', "", source, count=1, flags=re.S)
+    reset_style = '''<style data-enhancement="weekly-routine-reset-v1">
+#resetSession{display:block;width:min(100%,38rem);min-height:48px;margin:1rem auto 2rem;padding:.72rem 1rem;border:1px solid rgba(255,157,162,.62);border-radius:.8rem;background:linear-gradient(110deg,rgba(113,44,61,.3),rgba(38,35,68,.42));color:#ffc1c5;font:inherit;font-size:.9rem;font-weight:850;cursor:pointer}
+#resetSession::before{content:"↻";margin-right:.5rem;font-size:1.1rem}
+#resetSession:focus-visible{outline:3px solid #72dcff;outline-offset:3px}
+@media(prefers-reduced-motion:no-preference){#resetSession{transition:background-color .2s ease,border-color .2s ease,transform .2s ease}#resetSession:hover{border-color:#ffb6bb;background-color:rgba(145,53,70,.38);transform:translateY(-1px)}}
+@media(prefers-reduced-motion:reduce){#resetSession{transition:none!important}}
+</style>'''
+    source = source.replace("</head>", reset_style + "\n</head>", 1)
+    source = source.replace('aria-label="Acciones del día"><button type="button" class="summaryReset" id="resetSession">Reiniciar día</button>', 'aria-label="Acciones del día"><button type="button" id="resetSession">Reiniciar día</button>')
+    return source
+
+
 def standardize_summary_navigation(source: str) -> str:
     """Stop periodic status repaint from snapping the user's scroll position."""
     old_focus = "const focusedIndex = rows.findIndex(row => !row.complete && row.done > 0) >= 0 ? rows.findIndex(row => !row.complete && row.done > 0) : rows.findIndex(row => !row.complete);"
@@ -2513,6 +2582,7 @@ def standardize_muscle_visuals(source: str) -> str:
     source = standardize_warmup_single_viewers(source)
     source = standardize_visual_language(source)
     source = standardize_summary_navigation(source)
+    source = standardize_weekly_progress_reset(source)
     source = standardize_motivational_toast(source)
     newline = "\r\n" if "\r\n" in source else "\n"
     return apply_battery_motion(source, newline)

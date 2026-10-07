@@ -140,7 +140,10 @@ def build() -> dict[str, object]:
 def main() -> None:
     entry = build()
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
-    manifest["entries"] = [row for row in manifest["entries"] if row.get("repo_id") != "0578-GUT8I22"]
+    manifest["entries"] = [
+        row for row in manifest["entries"]
+        if row.get("repo_id") not in {"0578-GUT8I22", "barbell-rdl-v1"}
+    ]
     manifest["entries"].append(entry)
     manifest["equipment_note"] = "El peso muerto rumano usa barra libre y discos; no requiere la Smith ni una máquina de bisagra."
     MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")

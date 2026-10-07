@@ -921,6 +921,8 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
     page.goto(f"http://127.0.0.1:{PORT}/data/rutinas_autocontenidas/canonicas/{quote(name)}", wait_until="networkidle")
     page.bring_to_front()
 
+    weekly_reset = validate_weekly_progress_rollover(page, name)
+
     if page.locator("#installGate").count() and page.locator("#installGate").is_visible():
         raise AssertionError(f"{name}: el gate instalado no se aplicó al contexto E2E")
     background_timing = assert_background_timing_pauses(page, name)
@@ -1286,7 +1288,42 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
         "progress": progress,
     }
     context.close()
+    result["weeklyProgressReset"] = weekly_reset
     return result
+
+
+def validate_weekly_progress_rollover(page, name: str) -> dict[str, bool]:
+    """Ensure last-week work rolls off this week's view and reset stays reachable."""
+    routine_id = re.search(r"Rutina_Dia_(\d+)_", name).group(1)
+    storage_key = f"fitlovers-day{routine_id}-series-v1"
+    page.evaluate("({storageKey, endedAt}) => { const state = {}; document.querySelectorAll('.exerciseTracker[data-series-keys]').forEach(tracker => tracker.dataset.seriesKeys.trim().split(/\\s+/).filter(Boolean).forEach(key => { state[key] = true; })); state.__timing = { sessionStartedAt: endedAt - 45 * 60 * 1000, sessionEndedAt: endedAt, warmup: { phase: 'done' }, exercises: {} }; localStorage.setItem(storageKey, JSON.stringify(state)); }", {"storageKey": storage_key, "endedAt": int(time.time() * 1000) - 8 * 24 * 60 * 60 * 1000})
+    page.reload(wait_until="networkidle")
+    page.wait_for_function("() => [...document.querySelectorAll('.exerciseProgress')].length > 0 && [...document.querySelectorAll('.exerciseProgress')].every(node => /^0\\//.test(node.textContent.trim()))")
+    if page.locator("#sessionCompletionPanel").is_visible():
+        raise AssertionError(f"{name}: la finalización de la semana anterior debe iniciar el día en cero")
+    summary = page.locator("#summaryToggle")
+    if summary.get_attribute("aria-expanded") != "true":
+        click_control(summary)
+    reset = page.locator("#resetSession")
+    if reset.count() != 1 or reset.locator("xpath=ancestor::*[@id='summaryBody']").count():
+        raise AssertionError(f"{name}: Reiniciar día debe ser único y estar fuera del resumen flotante")
+    reset.scroll_into_view_if_needed()
+    if not reset.is_visible() or "reiniciar día" not in reset.inner_text().lower():
+        raise AssertionError(f"{name}: el botón Reiniciar día no está visible al final de la rutina")
+
+    current_end = int(time.time() * 1000) - 60_000
+    page.evaluate("({storageKey, endedAt}) => { const state = {}; document.querySelectorAll('.exerciseTracker[data-series-keys]').forEach(tracker => tracker.dataset.seriesKeys.trim().split(/\\s+/).filter(Boolean).forEach(key => { state[key] = true; })); state.__timing = { sessionStartedAt: endedAt - 45 * 60 * 1000, sessionEndedAt: endedAt, warmup: { phase: 'done' }, exercises: {} }; localStorage.setItem(storageKey, JSON.stringify(state)); }", {"storageKey": storage_key, "endedAt": current_end})
+    page.reload(wait_until="networkidle")
+    page.wait_for_function("() => [...document.querySelectorAll('.exerciseProgress')].length > 0 && [...document.querySelectorAll('.exerciseProgress')].every(node => !/^0\\//.test(node.textContent.trim()))")
+    retained_current_week = page.locator("#sessionCompletionPanel").is_visible()
+    if not retained_current_week:
+        raise AssertionError(f"{name}: el reinicio semanal no debe borrar una sesión de esta semana")
+    page.evaluate("key => localStorage.removeItem(key)", storage_key)
+    page.reload(wait_until="networkidle")
+    page.wait_for_function("() => [...document.querySelectorAll('.exerciseProgress')].length > 0 && [...document.querySelectorAll('.exerciseProgress')].every(node => /^0\\//.test(node.textContent.trim()))")
+    if page.locator("#summaryToggle").get_attribute("aria-expanded") == "true":
+        click_control(page.locator("#summaryToggle"))
+    return {"previousWeekRolledToZero": True, "currentWeekCompletionPreserved": retained_current_week, "resetButtonVisibleInSummary": True}
 
 
 def validate_approximation_moves_to_first_available(browser, name: str, sex: str) -> None:

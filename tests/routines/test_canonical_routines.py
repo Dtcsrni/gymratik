@@ -20,6 +20,7 @@ from standardize_muscle_visuals import (  # noqa: E402
     standardize_offline_image_sources,
     standardize_series_entry_zone,
     standardize_summary_navigation,
+    standardize_weekly_progress_reset,
     standardize_technique_accordion,
     standardize_technique_guidance,
     TECHNIQUE_CUES,
@@ -32,6 +33,20 @@ CANONICAL = ROOT / "data" / "rutinas_autocontenidas" / "canonicas"
 
 
 class CanonicalRoutineValidationTests(unittest.TestCase):
+    def test_weekly_reset_is_reachable_and_preserves_training_history(self) -> None:
+        source = '''<html><head></head><body><aside class="floatingSessionSummary"><div class="summaryBody" id="summaryBody"><div class="summaryActivityStatus"></div><div class="summaryProgressTrack" id="summaryOverallProgress"></div><ul id="sessionSummaryList"></ul></div></aside><footer class="sessionFooter" aria-label="Acciones del día"><button type="button" id="resetSession">Reiniciar día</button></footer><script>const save = () => {\n    if (!window.GymratikInstallGate?.isInstalled()) return;\n  };\n  const migrateTimingState = () => {};\n  migrateTimingState(); const confirmed = window.confirm('¿Reiniciar el progreso de esta sesión? Se borrarán marcadores, pendientes y tiempos.');</script></body></html>'''
+        result = standardize_weekly_progress_reset(source)
+        self.assertEqual(result.count('id="resetSession"'), 1)
+        self.assertIn('aria-label="Acciones del día"', result)
+        self.assertIn('id="resetSession">Reiniciar día</button>', result)
+        self.assertGreater(result.index('id="resetSession"'), result.index('id="summaryOverallProgress"'))
+        self.assertLess(result.index('id="resetSession"'), result.rindex('</body>'))
+        self.assertIn('el historial de entrenamientos se conservará', result)
+        self.assertIn('resetPreviousWeekProgress()', result)
+        self.assertIn("state.__routineWeek = routineWeekKey(Date.now())", result)
+        self.assertNotIn('clearRoutine?.(routineId)', result)
+        self.assertEqual(standardize_weekly_progress_reset(result), result)
+
     def test_technique_steps_are_collapsed_in_an_accessible_accordion(self) -> None:
         source = '''<html><head></head><body><article><details class="techAccordion" data-enhancement="technique-accordion-v1"><summary>Guía breve de técnica</summary></details><div class="techSteps"><div class="techStep"><div class="techStepTitle">Ajuste</div><div class="techStepText">Postura estable.</div></div><div class="techStep"><div class="techStepTitle">Ejecución</div><div class="techStepText">Controla el recorrido.</div></div></div></article></body></html>'''
         result = standardize_technique_accordion(source)
@@ -664,6 +679,11 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
             with self.subTest(path=path.name):
                 self.assertEqual(source.count('<main class="cards">'), 1)
                 self.assertEqual(source.count('<footer class="sessionFooter"'), 1)
+                self.assertIn('id="resetSession">Reiniciar día</button>', source)
+                self.assertGreater(source.index('id="resetSession"'), source.index('id="summaryOverallProgress"'))
+                self.assertLess(source.index('id="resetSession"'), source.rindex('</body>'))
+                self.assertNotIn('clearRoutine?.(routineId)', source)
+                self.assertIn('state.__routineWeek = routineWeekKey(Date.now())', source)
                 self.assertNotIn('<footer class="footer">', source)
                 card_indexes = [int(value) for value in re.findall(r'<article class="card" data-exercise-index="(\d+)">', source)]
                 self.assertEqual(card_indexes, list(range(1, expected_cards[path.name] + 1)))

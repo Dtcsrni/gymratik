@@ -181,7 +181,8 @@ def build_session_overlays(template: str) -> str:
     start = template.index('<section class="sessionCompletionPanel"')
     end_marker = "</aside>"
     end = template.index(end_marker, start) + len(end_marker)
-    return template[start:end]
+    overlays = template[start:end]
+    return re.sub(r'<footer class="sessionFooter".*?</footer>', "", overlays, count=1, flags=re.S)
 
 
 def build_gif_script(template: str) -> str:
@@ -454,6 +455,9 @@ def main() -> None:
     tail = tail.replace("fitlovers-day1-series-v1", "fitlovers-day2-series-v1")
     tail = tail.replace("fitlovers-day1-sound-v1", "fitlovers-day2-sound-v1")
     tail = tail.replace("fitlovers-day1-motivation-v1", "fitlovers-day2-motivation-v1")
+    footer = re.search(r'<footer class="sessionFooter".*?</footer>', template, flags=re.S)
+    if footer is None:
+        raise ValueError("No se encontró el botón Reiniciar día de la plantilla")
 
     body = "\n".join([
         "<body>",
@@ -470,6 +474,7 @@ def main() -> None:
         cards,
         '</main>',
         build_session_overlays(template),
+        footer.group(0),
         tail,
         "</body>",
         "</html>",

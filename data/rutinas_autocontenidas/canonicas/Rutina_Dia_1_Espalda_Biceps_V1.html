@@ -2821,6 +2821,13 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 @media(max-width:380px){#summaryToggle{grid-template-columns:auto minmax(0,1fr) 68px auto!important}.summaryMascotWrap{width:64px!important;height:64px!important}.summaryMascotWrap #summaryActivityMascot{width:60px!important;height:60px!important}}
 @media(max-height:420px) and (max-width:900px){#floatingSessionSummary .sessionSummaryList{max-height:78px!important;gap:.12rem!important}}
 </style>
+<style data-enhancement="weekly-routine-reset-v1">
+#resetSession{display:block;width:min(100%,38rem);min-height:48px;margin:1rem auto 2rem;padding:.72rem 1rem;border:1px solid rgba(255,157,162,.62);border-radius:.8rem;background:linear-gradient(110deg,rgba(113,44,61,.3),rgba(38,35,68,.42));color:#ffc1c5;font:inherit;font-size:.9rem;font-weight:850;cursor:pointer}
+#resetSession::before{content:"↻";margin-right:.5rem;font-size:1.1rem}
+#resetSession:focus-visible{outline:3px solid #72dcff;outline-offset:3px}
+@media(prefers-reduced-motion:no-preference){#resetSession{transition:background-color .2s ease,border-color .2s ease,transform .2s ease}#resetSession:hover{border-color:#ffb6bb;background-color:rgba(145,53,70,.38);transform:translateY(-1px)}}
+@media(prefers-reduced-motion:reduce){#resetSession{transition:none!important}}
+</style>
 </head>
 <body><svg id="gymratikLucideSprite" class="gymratikIconSprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
 <symbol id="gymratik-icon-activity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></symbol>
@@ -3260,6 +3267,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 <button type="button" class="summaryToggle" id="summaryToggle" aria-expanded="false" aria-controls="summaryBody"><span id="summaryActivityIcon" aria-hidden="true"><svg class="lucide lucide-activity gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-activity"></use></svg></span><span id="summaryHeadline">0/6 ejercicios · 0/20 series</span><span id="summaryActivityHeadline">¡Vamos a entrenar!</span><span class="summaryMascotWrap"><img id="summaryActivityMascot" class="summaryActivityMascot" src="../../../data/profile/mascot-motion/neutral-exercise-still.webp" alt="Mascotas Gymratik animando el inicio de la rutina" decoding="async"></span><span class="summaryChevron" aria-hidden="true">⌃</span></button>
 <div class="summaryBody" id="summaryBody" hidden><div class="summaryTotals"><span id="summaryPending">0 pendientes</span></div><div class="summaryActivityStatus isIdle" id="summaryActivityStatus" data-activity="idle" aria-live="polite"><span class="summaryActivityIndicator" aria-hidden="true"></span><span class="summaryActivityLabel" id="summaryActivityLabel">¡Vamos a entrenar!</span><span class="summaryActivityClock" id="summaryActivityClock">Iniciar</span></div><div class="summaryProgressTrack" id="summaryOverallProgress" role="progressbar" aria-label="Progreso total de series" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="Sin series completadas" data-state="empty"><span id="summaryProgressFill"></span></div><div class="summaryTime" id="summaryElapsed" aria-live="polite">⏱ Total de rutina: —</div><ul class="sessionSummaryList" id="sessionSummaryList"></ul></div>
 </aside>
+<footer class="sessionFooter" aria-label="Acciones del día"><button type="button" id="resetSession">Reiniciar día</button></footer>
 </div>
 <script>
 (function(){
@@ -3695,6 +3703,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
   };
   const save = () => {
     if (!window.GymratikInstallGate?.isInstalled()) return;
+    state.__routineWeek = routineWeekKey(Date.now());
     try { localStorage.setItem(storageKey, JSON.stringify(state)); }
     catch (error) { window.dispatchEvent(new CustomEvent('training-storage-error', { detail: { error } })); }
     publishProgress();
@@ -4645,6 +4654,17 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     const machinePending = state[item.pendingKey] === true && !complete;
     return { done, complete, skipped, machinePending, remaining: skipped ? 0 : item.seriesKeys.length - done };
   };
+  const routineWeekKey = timestamp => { const date = new Date(timestamp); date.setHours(0, 0, 0, 0); date.setDate(date.getDate() - ((date.getDay() + 6) % 7)); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; };
+  const resetPreviousWeekProgress = () => {
+    const startedAt = Number(state.__timing?.sessionStartedAt) || 0;
+    const recordedWeek = typeof state.__routineWeek === 'string' ? state.__routineWeek : startedAt ? routineWeekKey(startedAt) : '';
+    const hasProgress = Object.entries(state).some(([key, value]) => (/^e\d+s\d+$/.test(key) || /^w\d+$/.test(key)) && value === true)
+      || Object.keys(state.__skippedExercises || {}).length > 0
+      || Boolean(state.__timing?.warmup?.phase === 'done' || startedAt);
+    if (!hasProgress || !recordedWeek || recordedWeek >= routineWeekKey(Date.now())) return false;
+    state = {};
+    return true;
+  };
   const migrateTimingState = () => {
     const timing = state.__timing;
     if (!timing || typeof timing !== 'object') return;
@@ -4679,6 +4699,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     timing.timingVersion = 5; timing.sessionAbandonedAt = Number.isFinite(timing.sessionAbandonedAt) && timing.sessionAbandonedAt >= 0 ? timing.sessionAbandonedAt : 0;
     save();
   };
+  if (resetPreviousWeekProgress()) save();
   migrateTimingState();
   const updateCompleteButton = item => {
     const button = item.tracker.querySelector('.completeSetButton');
@@ -6502,6 +6523,87 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
           }
         }
       }
+      if (snapshot(item).complete) {
+        const toKg = record => record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load);
+        const isQualified = session => {
+          const records = (session.performance || []).filter(record => record.exerciseId === String(item.index + 1)).sort((a, b) => a.setNumber - b.setNumber);
+          if (records.length !== item.seriesKeys.length || records.some(record => Number(record.reps) < item.repMaximum + 1 || record.load === null || record.load === undefined || !Number.isFinite(Number(record.load)) || !(Number(record.durationMs) > 0))) return null;
+          const loads = records.map(toKg);
+          if (Math.max(...loads) - Math.min(...loads) > 0.01) return null;
+          return records.reduce((sum, record) => sum + Number(record.durationMs) / Number(record.reps), 0) / records.length;
+        };
+        const current = item.seriesKeys.map(key => state.__performance?.[String(item.index + 1)]?.[key]);
+        const currentTiming = getExerciseTiming(item).seriesTimes || [];
+        const currentValid = current.length === item.seriesKeys.length && current.every((record, index) => record && Number(record.reps) >= item.repMaximum + 1 && record.load !== null && record.load !== undefined && Number.isFinite(toKg(record)) && Number(currentTiming[index]) > 0);
+        const currentLoads = currentValid ? current.map(toKg) : [];
+        const currentRate = currentValid && Math.max(...currentLoads) - Math.min(...currentLoads) <= 0.01
+          ? current.reduce((sum, record, index) => sum + Number(currentTiming[index]) / Number(record.reps), 0) / current.length
+          : null;
+        const recent = (item.performanceHistory || []).slice(0, 2).map(isQualified);
+        if (currentRate !== null && recent.length === 2 && recent.every(rate => rate !== null) && currentRate <= (recent[0] + recent[1]) / 2) {
+          const loadKg = currentLoads[0];
+          const stepKg = item.performanceLoadProfile.stepKg;
+          const stepPercent = stepKg / loadKg;
+          if (stepKg <= item.performanceLoadProfile.maxKg - loadKg && stepPercent >= 0.02 && stepPercent <= 0.10) {
+            const displayStep = item.performanceLoadUnit === 'lb' ? `${Math.round(stepKg / 0.45359237)} lb` : `${stepKg} kg`;
+            item.progressionCue.textContent = `Progresión sugerida: alcanzaste al menos ${item.repMaximum + 1} repeticiones en todas las series durante 3 sesiones con datos; tu ritmo por repetición fue igual o más rápido que la media de tus 2 sesiones previas. Si conservaste la técnica, prueba el menor incremento de esta máquina (${displayStep}, ${Math.round(stepPercent * 100)}%).`;
+          }
+        }
+      }
+      if (snapshot(item).complete) {
+        const toKg = record => record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load);
+        const isQualified = session => {
+          const records = (session.performance || []).filter(record => record.exerciseId === String(item.index + 1)).sort((a, b) => a.setNumber - b.setNumber);
+          if (records.length !== item.seriesKeys.length || records.some(record => Number(record.reps) < item.repMaximum + 1 || record.load === null || record.load === undefined || !Number.isFinite(Number(record.load)) || !(Number(record.durationMs) > 0))) return null;
+          const loads = records.map(toKg);
+          if (Math.max(...loads) - Math.min(...loads) > 0.01) return null;
+          return records.reduce((sum, record) => sum + Number(record.durationMs) / Number(record.reps), 0) / records.length;
+        };
+        const current = item.seriesKeys.map(key => state.__performance?.[String(item.index + 1)]?.[key]);
+        const currentTiming = getExerciseTiming(item).seriesTimes || [];
+        const currentValid = current.length === item.seriesKeys.length && current.every((record, index) => record && Number(record.reps) >= item.repMaximum + 1 && record.load !== null && record.load !== undefined && Number.isFinite(toKg(record)) && Number(currentTiming[index]) > 0);
+        const currentLoads = currentValid ? current.map(toKg) : [];
+        const currentRate = currentValid && Math.max(...currentLoads) - Math.min(...currentLoads) <= 0.01
+          ? current.reduce((sum, record, index) => sum + Number(currentTiming[index]) / Number(record.reps), 0) / current.length
+          : null;
+        const recent = (item.performanceHistory || []).slice(0, 2).map(isQualified);
+        if (currentRate !== null && recent.length === 2 && recent.every(rate => rate !== null) && currentRate <= (recent[0] + recent[1]) / 2) {
+          const loadKg = currentLoads[0];
+          const stepKg = item.performanceLoadProfile.stepKg;
+          const stepPercent = stepKg / loadKg;
+          if (stepKg <= item.performanceLoadProfile.maxKg - loadKg && stepPercent >= 0.02 && stepPercent <= 0.10) {
+            const displayStep = item.performanceLoadUnit === 'lb' ? `${Math.round(stepKg / 0.45359237)} lb` : `${stepKg} kg`;
+            item.progressionCue.textContent = `Progresión sugerida: alcanzaste al menos ${item.repMaximum + 1} repeticiones en todas las series durante 3 sesiones con datos; tu ritmo por repetición fue igual o más rápido que la media de tus 2 sesiones previas. Si conservaste la técnica, prueba el menor incremento de esta máquina (${displayStep}, ${Math.round(stepPercent * 100)}%).`;
+          }
+        }
+      }
+      if (snapshot(item).complete) {
+        const toKg = record => record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load);
+        const isQualified = session => {
+          const records = (session.performance || []).filter(record => record.exerciseId === String(item.index + 1)).sort((a, b) => a.setNumber - b.setNumber);
+          if (records.length !== item.seriesKeys.length || records.some(record => Number(record.reps) < item.repMaximum + 1 || record.load === null || record.load === undefined || !Number.isFinite(Number(record.load)) || !(Number(record.durationMs) > 0))) return null;
+          const loads = records.map(toKg);
+          if (Math.max(...loads) - Math.min(...loads) > 0.01) return null;
+          return records.reduce((sum, record) => sum + Number(record.durationMs) / Number(record.reps), 0) / records.length;
+        };
+        const current = item.seriesKeys.map(key => state.__performance?.[String(item.index + 1)]?.[key]);
+        const currentTiming = getExerciseTiming(item).seriesTimes || [];
+        const currentValid = current.length === item.seriesKeys.length && current.every((record, index) => record && Number(record.reps) >= item.repMaximum + 1 && record.load !== null && record.load !== undefined && Number.isFinite(toKg(record)) && Number(currentTiming[index]) > 0);
+        const currentLoads = currentValid ? current.map(toKg) : [];
+        const currentRate = currentValid && Math.max(...currentLoads) - Math.min(...currentLoads) <= 0.01
+          ? current.reduce((sum, record, index) => sum + Number(currentTiming[index]) / Number(record.reps), 0) / current.length
+          : null;
+        const recent = (item.performanceHistory || []).slice(0, 2).map(isQualified);
+        if (currentRate !== null && recent.length === 2 && recent.every(rate => rate !== null) && currentRate <= (recent[0] + recent[1]) / 2) {
+          const loadKg = currentLoads[0];
+          const stepKg = item.performanceLoadProfile.stepKg;
+          const stepPercent = stepKg / loadKg;
+          if (stepKg <= item.performanceLoadProfile.maxKg - loadKg && stepPercent >= 0.02 && stepPercent <= 0.10) {
+            const displayStep = item.performanceLoadUnit === 'lb' ? `${Math.round(stepKg / 0.45359237)} lb` : `${stepKg} kg`;
+            item.progressionCue.textContent = `Progresión sugerida: alcanzaste al menos ${item.repMaximum + 1} repeticiones en todas las series durante 3 sesiones con datos; tu ritmo por repetición fue igual o más rápido que la media de tus 2 sesiones previas. Si conservaste la técnica, prueba el menor incremento de esta máquina (${displayStep}, ${Math.round(stepPercent * 100)}%).`;
+          }
+        }
+      }
       const button = tracker.querySelector('.completeSetButton');
       if (button) pulse(button);
       playFeedback('series');
@@ -6535,10 +6637,9 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
   document.addEventListener('click', async event => {
     const resetSessionButton = event.target instanceof Element ? event.target.closest('#resetSession') : null;
     if (!resetSessionButton) return;
-    const confirmed = window.confirm('¿Reiniciar el progreso de esta sesión? Se borrarán marcadores, pendientes y tiempos.');
+    const confirmed = window.confirm('¿Reiniciar este día? Se borrarán los marcadores y tiempos de esta semana; el historial de entrenamientos se conservará.');
     if (!confirmed) return;
     clearPreparationTimers();
-    try { await window.TrainingProgressStore?.clearRoutine?.(routineId); } catch (error) { console.error('Routine reset failed', error); }
     state = {};
     save();
     exerciseItems.forEach(item => updateTracker(item.tracker));
@@ -6610,18 +6711,7 @@ input[type="checkbox"]{touch-action:manipulation}
   main.cards{padding-bottom:6rem!important}
   .summaryToggle,.summaryExercise,.summaryReset,.warmupTrackerActions button,.completeSetButton,.machinePendingToggle{user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
 }
-</style><style data-enhancement="footer-reset-v1">
-/* Resumen flotante compacto; el reinicio vive solo al final de la página. */
-@media (pointer:coarse), (max-width:700px){
-  .floatingSessionSummary{width:min(170px,calc(100vw - 1rem))!important;max-height:38vh!important}
-  .floatingSessionSummary .summaryBody{max-height:calc(38vh - 48px)!important;overflow:auto!important}
-  .floatingSessionSummary .sessionSummaryList{max-height:none!important}
-}
-.sessionFooter{display:flex;justify-content:center;align-items:center;margin:2rem auto 3rem;padding:0 1rem}
-.sessionFooter .summaryReset{width:auto!important;min-width:220px;min-height:44px;margin:0!important;padding:.65rem 1rem!important}
-@media(max-width:700px){.sessionFooter{margin:1.5rem auto 2.5rem;padding:0 .75rem}.sessionFooter .summaryReset{width:min(100%,280px)!important;min-width:0;min-height:48px}}
-</style>
-<footer class="sessionFooter" aria-label="Acciones de la sesión"><button type="button" class="summaryReset" id="resetSession">Reiniciar</button></footer><style data-enhancement="floating-summary-ultra-compact-v1">
+</style><style data-enhancement="floating-summary-ultra-compact-v1">
 /* Resumen flotante: una sola lectura por dato y altura reducida; la lista conserva su scroll interno. */
 .floatingSessionSummary{width:min(150px,calc(100vw - .9rem))!important;max-height:126px!important;border-radius:.52rem!important}
 .summaryToggle{min-height:1.55rem!important;padding:.22rem .32rem!important;gap:.18rem!important;font-size:.54rem!important;line-height:1!important}

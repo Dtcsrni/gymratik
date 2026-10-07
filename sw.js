@@ -1,5 +1,5 @@
-const CACHE_NAME = 'entrenamiento-pwa-ebb03bc466e8';
-const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-2a9c89db03b6';
+const CACHE_NAME = 'entrenamiento-pwa-38d7024d19fc';
+const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-753a1f0078ff';
 const PRECACHE = [
   './',
   './index.html',
@@ -243,7 +243,7 @@ const RESOURCE_BYTES = {
   './assets/branding/routine-covers/day4.webp': 403468,
   './install-gate.js': 8459,
   './data/profile/mascot-install-phone.webp': 1006568,
-  './progress-store.js': 38780,
+  './progress-store.js': 39310,
   './routine-liquid-glass-v13.css': 8250,
   './data/profile/mouse-female-effort.webp': 1212010,
   './data/profile/mouse-male-effort.webp': 1072538,
@@ -277,10 +277,10 @@ const RESOURCE_BYTES = {
   './data/profile/mascot-motion/states-v1/male-mobility.png': 12451,
   './data/profile/mascot-motion/states-v1/male-rest.png': 15701,
   './data/profile/mascot-motion/states-v1/male-approval.png': 12307,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html': 1039407,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html': 2634868,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html': 622007,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html': 625008,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html': 1048408,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html': 2643869,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html': 631007,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html': 634008,
   './assets/branding/gymratik-mascots-mark-v2.png': 338005,
   './data/rutinas_autocontenidas/frases_fitness/fitness_quotes.js': 14218,
   './data/rutinas_autocontenidas/frases_fitness/retratos/allyson-felix.jpg': 28818,

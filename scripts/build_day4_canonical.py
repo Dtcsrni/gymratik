@@ -211,6 +211,7 @@ def main() -> None:
     note = build_section(template, '<section class="note notePanel"', {"Puntos clave de la sesión": "Puntos clave del Día 4", "La serie de aproximación prepara el movimiento y no cuenta como efectiva.": "Las series de aproximación preparan el movimiento y no cuentan como efectivas.", "RIR 2–3 al inicio y 1–2 al final": "RIR 1–3, manteniendo técnica y rango controlados", "Si cae la postura": "Si pierdes la postura o el control"})
     cards = "\n".join(build_card(item, index) for index, item in enumerate(EXERCISES))
     overlays = replace_all(between(template, '<section class="sessionCompletionPanel"', "</aside>"), {"0/6 ejercicios · 0/20 series": "0/7 ejercicios · 0/20 series", "0 pendientes": "20 pendientes"})
+    overlays = re.sub(r'<footer class="sessionFooter".*?</footer>', "", overlays, count=1, flags=re.S)
     footer = replace_all(between(template, '<footer class="sessionFooter"', "</footer>"), {"Día 1": "Día 4", "espalda y bíceps": "pierna y cadera", "18 series": "20 series"})
     lower_warmup = build_lower_warmup(template).replace('data-fix="day2-warmup-guide"', 'data-fix="day4-warmup-guide"', 1)
     body = "\n".join(["<body>", '<div class="page">', build_header(template), quick_rules, lower_warmup, summary, gamification, prep, dashboard, note, '<main class="cards">', cards, "</main>", overlays, footer, build_day4_script(template), "</div>", "</body>", "</html>"])
