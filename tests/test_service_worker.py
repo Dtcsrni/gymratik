@@ -65,7 +65,7 @@ class ServiceWorkerContractTests(unittest.TestCase):
         manifest = json.loads((ROOT / "manifest.webmanifest").read_text(encoding="utf-8"))
         icon_paths = {icon["src"] for icon in manifest["icons"]}
         self.assertEqual(len(icon_paths), 4)
-        self.assertTrue(all("gymratik-pwa-icon-v7-" in path for path in icon_paths))
+        self.assertTrue(all("gymratik-pwa-icon-v8-" in path for path in icon_paths))
         self.assertNotIn(f"./{page_asset}", icon_paths)
         self.assertIn(f'src="./{page_asset}"', self.homepage)
 
@@ -200,7 +200,7 @@ class ServiceWorkerContractTests(unittest.TestCase):
 
     def test_homepage_shows_the_active_service_worker_version(self):
         self.assertIn('id="appVersion"', self.homepage)
-        self.assertIn('class="brand-version" aria-label="Versión 0.4.5">v0.4.5', self.homepage)
+        self.assertIn('class="brand-version" aria-label="Versión 0.4.6">v0.4.6', self.homepage)
         self.assertIn("event.data?.type === 'VERSION_STATUS'", self.homepage)
         self.assertIn("postMessage({ type: 'GET_VERSION_STATUS' })", self.homepage)
         self.assertIn("cacheName: CACHE_NAME", self.service_worker)

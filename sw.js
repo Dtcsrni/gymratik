@@ -1,5 +1,5 @@
-const CACHE_NAME = 'entrenamiento-pwa-783d4eba80d3';
-const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-981d61cc5251';
+const CACHE_NAME = 'entrenamiento-pwa-b007cf8b4fa1';
+const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-783d4eba80d3';
 const PRECACHE = [
   './',
   './index.html',
@@ -7,10 +7,10 @@ const PRECACHE = [
   './records.css',
   './records.js',
   './manifest.webmanifest',
-  './assets/branding/gymratik-pwa-icon-v7-192.png',
-  './assets/branding/gymratik-pwa-icon-v7-512.png',
-  './assets/branding/gymratik-pwa-icon-v7-maskable-192.png',
-  './assets/branding/gymratik-pwa-icon-v7-maskable-512.png',
+  './assets/branding/gymratik-pwa-icon-v8-192.png',
+  './assets/branding/gymratik-pwa-icon-v8-512.png',
+  './assets/branding/gymratik-pwa-icon-v8-maskable-192.png',
+  './assets/branding/gymratik-pwa-icon-v8-maskable-512.png',
   './assets/branding/gymratik-cover-seated-breath-30fps.webp',
   './assets/branding/gymratik-cover-seated-v1-poster.webp',
   './assets/branding/routine-covers/day1.webp',
@@ -237,10 +237,10 @@ const RESOURCE_BYTES = {
   './records.css': 7273,
   './records.js': 9743,
   './manifest.webmanifest': 971,
-  './assets/branding/gymratik-pwa-icon-v7-192.png': 51237,
-  './assets/branding/gymratik-pwa-icon-v7-512.png': 272058,
-  './assets/branding/gymratik-pwa-icon-v7-maskable-192.png': 33306,
-  './assets/branding/gymratik-pwa-icon-v7-maskable-512.png': 178008,
+  './assets/branding/gymratik-pwa-icon-v8-192.png': 67672,
+  './assets/branding/gymratik-pwa-icon-v8-512.png': 365117,
+  './assets/branding/gymratik-pwa-icon-v8-maskable-192.png': 40211,
+  './assets/branding/gymratik-pwa-icon-v8-maskable-512.png': 221236,
   './assets/branding/gymratik-cover-seated-breath-30fps.webp': 2813316,
   './assets/branding/gymratik-cover-seated-v1-poster.webp': 33354,
   './assets/branding/routine-covers/day1.webp': 212296,

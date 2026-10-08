@@ -3,7 +3,7 @@ import re
 import unittest
 from pathlib import Path
 
-from PIL import Image, ImageChops, ImageStat
+from PIL import Image, ImageChops, ImageDraw, ImageStat
 from scripts.build_pwa_service_worker import IMAGE_SUFFIXES, build_precache, resource_size
 
 
@@ -24,8 +24,8 @@ class HomepageContractTests(unittest.TestCase):
         self.assertEqual(self.manifest["name"], "Gymratik: Rutinas y progreso")
         self.assertEqual(self.manifest["short_name"], "Gymratik")
         self.assertIn("Gymratik: Rutinas y progreso", self.html)
-        self.assertIn('aria-label="Gymratik v0.4.5, inicio"', self.html)
-        self.assertIn('class="brand-version" aria-label="Versión 0.4.5">v0.4.5', self.html)
+        self.assertIn('aria-label="Gymratik v0.4.6, inicio"', self.html)
+        self.assertIn('class="brand-version" aria-label="Versión 0.4.6">v0.4.6', self.html)
         self.assertIn('<span class="brand-mark" aria-hidden="true"><img src="./assets/branding/gymratik-mascots-mark-v2.png" alt=""></span>', self.html)
         self.assertIn("background:rgba(11,16,23,.72)", self.html)
         self.assertIn(".hero-strength-stage", self.html)
@@ -109,17 +109,32 @@ class HomepageContractTests(unittest.TestCase):
                 self.assertEqual(data[:8], b"\x89PNG\r\n\x1a\n")
                 self.assertEqual(icon["type"], "image/png")
                 self.assertIn(icon["purpose"], declared_sizes)
-                self.assertTrue(icon_path.name.startswith("gymratik-pwa-icon-v7-"))
+                self.assertTrue(icon_path.name.startswith("gymratik-pwa-icon-v8-"))
                 self.assertLess(icon_path.stat().st_size, 500_000)
                 with Image.open(icon_path) as mark:
                     self.assertEqual(icon["sizes"], f"{mark.width}x{mark.height}")
                     self.assertEqual(mark.width, mark.height)
                     self.assertLessEqual(mark.getchannel("A").getextrema()[0], 1)
                     self.assertEqual(mark.getchannel("A").getpixel((0, 0)), 0)
+                    if icon["purpose"] == "maskable":
+                        safe_zone = Image.new("L", mark.size, 0)
+                        ImageDraw.Draw(safe_zone).ellipse(
+                            (
+                                mark.width * 0.1,
+                                mark.height * 0.1,
+                                mark.width * 0.9,
+                                mark.height * 0.9,
+                            ),
+                            fill=255,
+                        )
+                        outside_safe_zone = ImageChops.multiply(
+                            mark.getchannel("A"), ImageChops.invert(safe_zone)
+                        )
+                        self.assertLessEqual(outside_safe_zone.getextrema()[1], 8)
                     declared_sizes[icon["purpose"]].add(mark.size)
         self.assertEqual(declared_sizes["any"], {(192, 192), (512, 512)})
         self.assertEqual(declared_sizes["maskable"], {(192, 192), (512, 512)})
-        self.assertIn('href="./assets/branding/gymratik-pwa-icon-v7-192.png"', self.html)
+        self.assertIn('href="./assets/branding/gymratik-pwa-icon-v8-192.png"', self.html)
         self.assertIn('href="./assets/branding/gymratik-mascots-mark-v2.png"', self.html)
 
     def test_pwa_precache_derives_installed_icons_from_manifest(self):
