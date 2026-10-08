@@ -2790,6 +2790,7 @@ button:not(:disabled):active,[role="button"]:not([aria-disabled="true"]):active{
 .performanceLoadValue{min-height:44px;border-color:rgba(105,215,255,.28);border-radius:.68rem;background:rgba(7,28,42,.78);text-align:left;transition:border-color .18s ease,background .18s ease,transform .18s ease}
 .performanceLoadUnit{min-height:36px;padding:.25rem .45rem;border:1px solid rgba(164,223,231,.24);border-radius:.55rem;background:#081923;color:#dff5fa;font:inherit;font-size:.75rem;font-weight:800}
 .performanceEntry .progressionCue{margin:.05rem .2rem 0;color:#9dbac4;font-size:.68rem;line-height:1.35}
+.performanceEntry.isLocked{border-color:rgba(101,242,221,.38)!important;background:linear-gradient(145deg,rgba(14,48,52,.84),rgba(5,22,34,.96))!important}.performanceEntry.isLocked :disabled{cursor:not-allowed!important}.performanceEntry.isLocked .performanceField{opacity:.76}
 .performanceEntry{grid-template-columns:minmax(0,1fr)!important;gap:.55rem!important;padding:.65rem!important;border-color:rgba(105,215,255,.25)!important;border-radius:1rem!important;background:linear-gradient(145deg,rgba(10,33,48,.94),rgba(5,22,34,.96))!important}
 .performanceField input[type="range"]{height:38px!important;min-height:38px!important;margin:0!important;touch-action:pan-x!important}
 .performanceLoadValue[data-selected="true"]{border-color:rgba(101,242,221,.56)!important;background:linear-gradient(110deg,rgba(18,91,83,.48),rgba(15,45,65,.8))!important;color:#8ef4d8!important}
@@ -3028,7 +3029,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 <div class="exerciseTrackerHead"><span>Contador de series</span><span class="exerciseTrackerMeta"><strong class="exerciseProgress">0/3</strong><span class="exerciseStatus" hidden><span class="completionMark" aria-hidden="true">✓</span> Completado</span></span></div>
 <div class="exerciseSetButtons" role="group" aria-label="Contador de series del ejercicio 1"><p class="exerciseWarmupHint" id="exerciseWarmupHint" hidden aria-live="polite">Aproximación: usa una carga ligera y recorrido controlado; se registra aparte y no suma al volumen de trabajo.</p><button type="button" class="setButton warmupSet" data-key="w1" aria-pressed="false" hidden aria-hidden="true" tabindex="-1">Calentamiento</button><button type="button" class="completeSetButton" aria-label="Completar serie 1 de 3" aria-describedby="exerciseWarmupHint">Completar serie 1 de 3</button><button type="button" class="machinePendingToggle" data-pending-key="p1" aria-pressed="false">⚠ Máquina ocupada</button><div class="nextExerciseRow"><button type="button" class="nextExerciseCue" data-next="2" hidden><span class="nextArrow" aria-hidden="true">↓</span> Siguiente ejercicio</button></div></div>
 </div>
-<details class="techAccordion" data-enhancement="technique-accordion-v1"><summary>Técnica esencial</summary><div class="techSteps"><div class="techStep setup"><div class="techStepTitle"><svg class="lucide lucide-settings-2 gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-settings-2"></use></svg><span>Posición</span></div><div class="techStepText">Espalda y hombros apoyados; pies simétricos.</div></div><div class="techStep move"><div class="techStepTitle"><svg class="lucide lucide-move-up-right gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-move-up-right"></use></svg><span>Movimiento</span></div><div class="techStepText">Baja en 2–3 s hasta donde mantengas apoyo; sube empujando el suelo.</div></div><div class="techStep warning"><div class="techStepTitle"><svg class="lucide lucide-triangle-alert gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-triangle-alert"></use></svg><span>Evita</span></div><div class="techStepText">No rebotes ni dejes que las rodillas colapsen hacia dentro.</div></div></div></details>
+<details class="techAccordion" data-enhancement="technique-accordion-v1"><summary>Técnica esencial</summary><div class="techSteps"><div class="techStep setup"><div class="techStepTitle"><svg class="lucide lucide-settings-2 gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-settings-2"></use></svg><span>Posición</span></div><div class="techStepText">Espalda apoyada y pies firmes.</div></div><div class="techStep move"><div class="techStepTitle"><svg class="lucide lucide-move-up-right gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-move-up-right"></use></svg><span>Movimiento</span></div><div class="techStepText">Baja hasta donde conserves el apoyo; empuja para subir.</div></div><div class="techStep warning"><div class="techStepTitle"><svg class="lucide lucide-triangle-alert gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-triangle-alert"></use></svg><span>Evita</span></div><div class="techStepText">No rebotes ni juntes las rodillas.</div></div></div></details>
 </div></article>
 <article class="card" data-exercise-index="2"><div aria-hidden="true" class="cardGlow"></div>
 <div class="meta">
@@ -3071,7 +3072,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 <div class="exerciseTrackerHead"><span>Contador de series</span><span class="exerciseTrackerMeta"><strong class="exerciseProgress">0/3</strong><span class="exerciseStatus" hidden><span class="completionMark" aria-hidden="true">✓</span> Completado</span></span></div>
 <div class="exerciseSetButtons" role="group" aria-label="Contador de series del ejercicio 2"><button type="button" class="completeSetButton" aria-label="Completar serie 1 de 3">Completar serie 1 de 3</button><button type="button" class="machinePendingToggle" data-pending-key="p2" aria-pressed="false">⚠ Máquina ocupada</button><div class="nextExerciseRow"><button type="button" class="nextExerciseCue" data-next="3" hidden><span class="nextArrow" aria-hidden="true">↓</span> Siguiente ejercicio</button></div></div>
 </div>
-<details class="techAccordion" data-enhancement="technique-accordion-v1"><summary>Técnica esencial</summary><div class="techSteps"><div class="techStep setup"><div class="techStepTitle"><svg class="lucide lucide-settings-2 gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-settings-2"></use></svg><span>Posición</span></div><div class="techStepText">Espalda alta apoyada; arriba, tibias casi verticales.</div></div><div class="techStep move"><div class="techStepTitle"><svg class="lucide lucide-move-up-right gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-move-up-right"></use></svg><span>Movimiento</span></div><div class="techStepText">Extiende la cadera, aprieta glúteos y pausa 1 s; baja con control.</div></div><div class="techStep warning"><div class="techStepTitle"><svg class="lucide lucide-triangle-alert gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-triangle-alert"></use></svg><span>Evita</span></div><div class="techStepText">No arquees la zona lumbar ni empujes solo con las puntas.</div></div></div></details>
+<details class="techAccordion" data-enhancement="technique-accordion-v1"><summary>Técnica esencial</summary><div class="techSteps"><div class="techStep setup"><div class="techStepTitle"><svg class="lucide lucide-settings-2 gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-settings-2"></use></svg><span>Posición</span></div><div class="techStepText">Espalda alta apoyada; pies firmes.</div></div><div class="techStep move"><div class="techStepTitle"><svg class="lucide lucide-move-up-right gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-move-up-right"></use></svg><span>Movimiento</span></div><div class="techStepText">Eleva la cadera, aprieta glúteos y baja con control.</div></div><div class="techStep warning"><div class="techStepTitle"><svg class="lucide lucide-triangle-alert gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-triangle-alert"></use></svg><span>Evita</span></div><div class="techStepText">No arquees la espalda al subir.</div></div></div></details>
 </div></article>
 <article class="card" data-exercise-index="3"><div aria-hidden="true" class="cardGlow"></div>
 <div class="meta">
@@ -3113,7 +3114,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 <div class="exerciseTrackerHead"><span>Contador de series</span><span class="exerciseTrackerMeta"><strong class="exerciseProgress">0/3</strong><span class="exerciseStatus" hidden><span class="completionMark" aria-hidden="true">✓</span> Completado</span></span></div>
 <div class="exerciseSetButtons" role="group" aria-label="Contador de series del ejercicio 3"><button type="button" class="completeSetButton" aria-label="Completar serie 1 de 3">Completar serie 1 de 3</button><button type="button" class="machinePendingToggle" data-pending-key="p3" aria-pressed="false">⚠ Máquina ocupada</button><div class="nextExerciseRow"><button type="button" class="nextExerciseCue" data-next="4" hidden><span class="nextArrow" aria-hidden="true">↓</span> Siguiente ejercicio</button></div></div>
 </div>
-<details class="techAccordion" data-enhancement="technique-accordion-v1"><summary>Técnica esencial</summary><div class="techSteps"><div class="techStep setup"><div class="techStepTitle"><svg class="lucide lucide-settings-2 gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-settings-2"></use></svg><span>Posición</span></div><div class="techStepText">Espalda y pelvis apoyadas; pies al ancho de hombros.</div></div><div class="techStep move"><div class="techStepTitle"><svg class="lucide lucide-move-up-right gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-move-up-right"></use></svg><span>Movimiento</span></div><div class="techStepText">Baja sin despegar la pelvis y empuja con todo el pie.</div></div><div class="techStep warning"><div class="techStepTitle"><svg class="lucide lucide-triangle-alert gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-triangle-alert"></use></svg><span>Evita</span></div><div class="techStepText">No cierres las rodillas ni bloquees con golpe.</div></div></div></details>
+<details class="techAccordion" data-enhancement="technique-accordion-v1"><summary>Técnica esencial</summary><div class="techSteps"><div class="techStep setup"><div class="techStepTitle"><svg class="lucide lucide-settings-2 gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-settings-2"></use></svg><span>Posición</span></div><div class="techStepText">Espalda y pelvis apoyadas; pies firmes.</div></div><div class="techStep move"><div class="techStepTitle"><svg class="lucide lucide-move-up-right gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-move-up-right"></use></svg><span>Movimiento</span></div><div class="techStepText">Baja sin despegar la pelvis; empuja con todo el pie.</div></div><div class="techStep warning"><div class="techStepTitle"><svg class="lucide lucide-triangle-alert gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-triangle-alert"></use></svg><span>Evita</span></div><div class="techStepText">No juntes las rodillas ni bloquees con golpe.</div></div></div></details>
 </div></article>
 <article class="card" data-exercise-index="4"><div aria-hidden="true" class="cardGlow"></div>
 <div class="meta">
@@ -3155,7 +3156,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 <div class="exerciseTrackerHead"><span>Contador de series</span><span class="exerciseTrackerMeta"><strong class="exerciseProgress">0/4</strong><span class="exerciseStatus" hidden><span class="completionMark" aria-hidden="true">✓</span> Completado</span></span></div>
 <div class="exerciseSetButtons" role="group" aria-label="Contador de series del ejercicio 4"><button type="button" class="completeSetButton" aria-label="Completar serie 1 de 4">Completar serie 1 de 4</button><button type="button" class="machinePendingToggle" data-pending-key="p4" aria-pressed="false">⚠ Máquina ocupada</button><div class="nextExerciseRow"><button type="button" class="nextExerciseCue" data-next="5" hidden><span class="nextArrow" aria-hidden="true">↓</span> Siguiente ejercicio</button></div></div>
 </div>
-<details class="techAccordion" data-enhancement="technique-accordion-v1"><summary>Técnica esencial</summary><div class="techSteps"><div class="techStep setup"><div class="techStepTitle"><svg class="lucide lucide-settings-2 gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-settings-2"></use></svg><span>Posición</span></div><div class="techStepText">Alinea la rodilla con el eje y fija la pelvis.</div></div><div class="techStep move"><div class="techStepTitle"><svg class="lucide lucide-move-up-right gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-move-up-right"></use></svg><span>Movimiento</span></div><div class="techStepText">Flexiona, pausa y regresa en 2–3 s sin soltar la carga.</div></div><div class="techStep warning"><div class="techStepTitle"><svg class="lucide lucide-triangle-alert gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-triangle-alert"></use></svg><span>Evita</span></div><div class="techStepText">No uses impulso ni levantes la cadera.</div></div></div></details>
+<details class="techAccordion" data-enhancement="technique-accordion-v1"><summary>Técnica esencial</summary><div class="techSteps"><div class="techStep setup"><div class="techStepTitle"><svg class="lucide lucide-settings-2 gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-settings-2"></use></svg><span>Posición</span></div><div class="techStepText">Pelvis estable y rodilla alineada con el eje.</div></div><div class="techStep move"><div class="techStepTitle"><svg class="lucide lucide-move-up-right gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-move-up-right"></use></svg><span>Movimiento</span></div><div class="techStepText">Flexiona las rodillas; vuelve lentamente.</div></div><div class="techStep warning"><div class="techStepTitle"><svg class="lucide lucide-triangle-alert gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-triangle-alert"></use></svg><span>Evita</span></div><div class="techStepText">No levantes la cadera ni uses impulso.</div></div></div></details>
 </div></article>
 <article class="card" data-exercise-index="5"><div aria-hidden="true" class="cardGlow"></div>
 <div class="meta">
@@ -3197,7 +3198,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 <div class="exerciseTrackerHead"><span>Contador de series</span><span class="exerciseTrackerMeta"><strong class="exerciseProgress">0/3</strong><span class="exerciseStatus" hidden><span class="completionMark" aria-hidden="true">✓</span> Completado</span></span></div>
 <div class="exerciseSetButtons" role="group" aria-label="Contador de series del ejercicio 5"><button type="button" class="completeSetButton" aria-label="Completar serie 1 de 3">Completar serie 1 de 3</button><button type="button" class="machinePendingToggle" data-pending-key="p5" aria-pressed="false">⚠ Máquina ocupada</button><div class="nextExerciseRow"><button type="button" class="nextExerciseCue" data-next="6" hidden><span class="nextArrow" aria-hidden="true">↓</span> Siguiente ejercicio</button></div></div>
 </div>
-<details class="techAccordion" data-enhancement="technique-accordion-v1"><summary>Técnica esencial</summary><div class="techSteps"><div class="techStep setup"><div class="techStepTitle"><svg class="lucide lucide-settings-2 gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-settings-2"></use></svg><span>Posición</span></div><div class="techStepText">Alinea el eje de la máquina con la rodilla.</div></div><div class="techStep move"><div class="techStepTitle"><svg class="lucide lucide-move-up-right gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-move-up-right"></use></svg><span>Movimiento</span></div><div class="techStepText">Extiende con control, pausa breve y baja sin dejar caer la carga.</div></div><div class="techStep warning"><div class="techStepTitle"><svg class="lucide lucide-triangle-alert gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-triangle-alert"></use></svg><span>Evita</span></div><div class="techStepText">No golpees el tope ni balancees el tronco.</div></div></div></details>
+<details class="techAccordion" data-enhancement="technique-accordion-v1"><summary>Técnica esencial</summary><div class="techSteps"><div class="techStep setup"><div class="techStepTitle"><svg class="lucide lucide-settings-2 gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-settings-2"></use></svg><span>Posición</span></div><div class="techStepText">Rodilla alineada con el eje de la máquina.</div></div><div class="techStep move"><div class="techStepTitle"><svg class="lucide lucide-move-up-right gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-move-up-right"></use></svg><span>Movimiento</span></div><div class="techStepText">Extiende y baja con control.</div></div><div class="techStep warning"><div class="techStepTitle"><svg class="lucide lucide-triangle-alert gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-triangle-alert"></use></svg><span>Evita</span></div><div class="techStepText">No golpees el tope ni te balancees.</div></div></div></details>
 </div></article>
 <article class="card" data-exercise-index="6"><div aria-hidden="true" class="cardGlow"></div>
 <div class="meta">
@@ -3239,7 +3240,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 <div class="exerciseTrackerHead"><span>Contador de series</span><span class="exerciseTrackerMeta"><strong class="exerciseProgress">0/4</strong><span class="exerciseStatus" hidden><span class="completionMark" aria-hidden="true">✓</span> Completado</span></span></div>
 <div class="exerciseSetButtons" role="group" aria-label="Contador de series del ejercicio 6"><button type="button" class="completeSetButton" aria-label="Completar serie 1 de 4">Completar serie 1 de 4</button><button type="button" class="machinePendingToggle" data-pending-key="p6" aria-pressed="false">⚠ Máquina ocupada</button><div class="nextExerciseRow"></div></div>
 </div>
-<details class="techAccordion" data-enhancement="technique-accordion-v1"><summary>Técnica esencial</summary><div class="techSteps"><div class="techStep setup"><div class="techStepTitle"><svg class="lucide lucide-settings-2 gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-settings-2"></use></svg><span>Posición</span></div><div class="techStepText">Apoya el antepié y deja libre el talón.</div></div><div class="techStep move"><div class="techStepTitle"><svg class="lucide lucide-move-up-right gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-move-up-right"></use></svg><span>Movimiento</span></div><div class="techStepText">Baja hasta un estiramiento cómodo; eleva, pausa y desciende lento.</div></div><div class="techStep warning"><div class="techStepTitle"><svg class="lucide lucide-triangle-alert gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-triangle-alert"></use></svg><span>Evita</span></div><div class="techStepText">No rebotes ni acortes el recorrido.</div></div></div></details>
+<details class="techAccordion" data-enhancement="technique-accordion-v1"><summary>Técnica esencial</summary><div class="techSteps"><div class="techStep setup"><div class="techStepTitle"><svg class="lucide lucide-settings-2 gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-settings-2"></use></svg><span>Posición</span></div><div class="techStepText">Antepié apoyado y talones libres.</div></div><div class="techStep move"><div class="techStepTitle"><svg class="lucide lucide-move-up-right gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-move-up-right"></use></svg><span>Movimiento</span></div><div class="techStepText">Baja el talón; elévate y desciende despacio.</div></div><div class="techStep warning"><div class="techStepTitle"><svg class="lucide lucide-triangle-alert gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-triangle-alert"></use></svg><span>Evita</span></div><div class="techStepText">No rebotes ni recortes el recorrido.</div></div></div></details>
 </div></article>
 </main>
 <section class="sessionCompletionPanel" id="sessionCompletionPanel" aria-labelledby="session-completion-title" hidden>
@@ -3862,8 +3863,35 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     const rangeMatch = metricRange.match(/(\d+)\s*[–-]\s*(\d+)/);
     item.repMinimum = rangeMatch ? Number(rangeMatch[1]) : 1;
     item.repMaximum = rangeMatch ? Number(rangeMatch[2]) : 100;
-    const loadDescription = `${item.title} ${item.tracker.closest('article.card')?.querySelector('.machinePill')?.textContent || ''}`.toLocaleLowerCase('es');
-    const loadProfile = /prensa|hack squat|hip thrust|bisagra/.test(loadDescription) ? { minKg: 5, maxKg: 300, stepKg: 5, label: 'máquina de fuerza para tren inferior' } : /polea/.test(loadDescription) ? { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'polea' } : /curl femoral|extensión de piernas|abducción|aducción|pantorrilla/.test(loadDescription) ? { minKg: 2.5, maxKg: 160, stepKg: 2.5, label: 'máquina de aislamiento' } : { minKg: 2.5, maxKg: 120, stepKg: 2.5, label: 'máquina de tren superior' };
+            const loadDescription = item.title.toLocaleLowerCase('es');
+    const loadProfiles = [
+      [/^jalón al pecho$/, { minKg: 2.5, maxKg: 150, stepKg: 2.5, label: 'jalón · torre de polea (rango orientativo)' }],
+      [/^remo alto unilateral$/, { minKg: 2.5, maxKg: 120, stepKg: 2.5, label: 'remo unilateral · discos por brazo (rango orientativo)' }],
+      [/^remo horizontal en máquina$/, { minKg: 2.5, maxKg: 120, stepKg: 2.5, label: 'remo sentado · rango orientativo' }],
+      [/^apertura inversa en máquina$/, { minKg: 2.5, maxKg: 80, stepKg: 2.5, label: 'apertura inversa · rango orientativo' }],
+      [/^curl de bíceps/, { minKg: 2.5, maxKg: 80, stepKg: 2.5, label: 'curl de bíceps · rango orientativo' }],
+      [/^hack squat$/, { minKg: 5, maxKg: 300, stepKg: 5, label: 'hack squat · carga externa total (rango orientativo)' }],
+      [/^hip thrust$/, { minKg: 5, maxKg: 250, stepKg: 5, label: 'hip thrust · discos totales (rango orientativo)' }],
+      [/^prensa de piernas$/, { minKg: 5, maxKg: 300, stepKg: 5, label: 'prensa bilateral · carga externa total (rango orientativo)' }],
+      [/^prensa unilateral alterna$/, { minKg: 5, maxKg: 200, stepKg: 5, label: 'prensa unilateral · carga externa total (rango orientativo)' }],
+      [/^curl femoral/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'curl femoral · rango orientativo' }],
+      [/^extensión de piernas$/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'extensión de piernas · rango orientativo' }],
+      [/^pantorrillas de pie$/, { minKg: 2.5, maxKg: 150, stepKg: 2.5, label: 'pantorrilla de pie · rango orientativo' }],
+      [/^press de pecho sentado/, { minKg: 2.5, maxKg: 120, stepKg: 2.5, label: 'press de pecho · rango orientativo' }],
+      [/^press inclinado convergente/, { minKg: 2.5, maxKg: 120, stepKg: 2.5, label: 'press inclinado · rango orientativo' }],
+      [/^pec deck/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'pec deck · rango orientativo' }],
+      [/^press de hombro/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'press de hombro · rango orientativo' }],
+      [/^elevación lateral/, { minKg: 2.5, maxKg: 60, stepKg: 2.5, label: 'elevación lateral · rango orientativo' }],
+      [/^jalón de tríceps/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'tríceps en polea · rango orientativo' }],
+      [/^extensión de tríceps sobre cabeza/, { minKg: 2.5, maxKg: 80, stepKg: 2.5, label: 'tríceps con cuerda · rango orientativo' }],
+      [/^peso muerto rumano con barra$/, { minKg: 10, maxKg: 250, stepKg: 2.5, label: 'barra libre · peso total con barra (rango orientativo)' }],
+      [/^abducción de cadera/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'abducción de cadera · rango orientativo' }],
+      [/^aducción de cadera/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'aducción de cadera · rango orientativo' }],
+      [/^elevación de pantorrilla sentada$/, { minKg: 2.5, maxKg: 150, stepKg: 2.5, label: 'pantorrilla sentada · rango orientativo' }],
+      [/^crunch con elevación de piernas sentada$/, { minKg: 2.5, maxKg: 80, stepKg: 2.5, label: 'crunch sentado · rango orientativo' }]
+    ];
+    const loadProfile = loadProfiles.find(([pattern]) => pattern.test(loadDescription))?.[1];
+    if (!loadProfile) throw new Error(`Falta un perfil de carga revisado para: ${item.title}`);
     item.performanceLoadProfile = loadProfile;
     const createPerformanceIcon = name => {
       const icons = {
@@ -3915,11 +3943,12 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       const pounds = item.performanceLoadUnit === 'lb';
       const factor = pounds ? 1 / 0.45359237 : 1;
       const unitStep = pounds ? 5 : item.performanceLoadProfile.stepKg;
-      const unitMin = Math.ceil(item.performanceLoadProfile.minKg * factor / unitStep) * unitStep;
-      const unitMax = Math.floor(item.performanceLoadProfile.maxKg * factor / unitStep) * unitStep;
+      const selectedValue = Number(item.performanceLoadExact);
+      const unitMin = Math.ceil(Math.min(item.performanceLoadProfile.minKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.minKg) * factor / unitStep) * unitStep;
+      const unitMax = Math.floor(Math.max(item.performanceLoadProfile.maxKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.maxKg) * factor / unitStep) * unitStep;
       loadInput.min = String(unitMin); loadInput.max = String(unitMax); loadInput.step = String(unitStep); loadInput.dataset.loadProfile = item.performanceLoadProfile.label; loadInput.dataset.maxKg = String(item.performanceLoadProfile.maxKg);
       if (!item.performanceLoadSelected) loadInput.value = String(unitMin);
-      else loadInput.value = String(Math.min(unitMax, Math.max(unitMin, Number(item.performanceLoadExact) || unitMin)));
+      else loadInput.value = String(Math.min(unitMax, Math.max(unitMin, selectedValue || unitMin)));
       loadUnitSelect.value = item.performanceLoadUnit;
       const value = Number(item.performanceLoadExact) || 0;
       loadOutput.textContent = item.performanceLoadSelected ? `${Number.isInteger(value) ? value : value.toFixed(1)} ${item.performanceLoadUnit}` : 'Sin registrar · toca para añadir'; loadOutput.dataset.selected = String(item.performanceLoadSelected); loadClear.hidden = !item.performanceLoadSelected; updateRangeFill(loadInput);
@@ -3983,8 +4012,8 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       const converted = nextUnit === 'lb' ? kilograms / 0.45359237 : kilograms;
       const nextStep = nextUnit === 'lb' ? 5 : 2.5;
       item.performanceLoadUnit = nextUnit;
-      const factor = nextUnit === 'lb' ? 1 / 0.45359237 : 1; const unitStep = nextUnit === 'lb' ? 5 : item.performanceLoadProfile.stepKg; const unitMin = Math.ceil(item.performanceLoadProfile.minKg * factor / unitStep) * unitStep; const unitMax = Math.floor(item.performanceLoadProfile.maxKg * factor / unitStep) * unitStep;
-      item.performanceLoadExact = Math.min(unitMax, Math.max(unitMin, Math.round(converted * factor / unitStep) * unitStep));
+      const factor = nextUnit === 'lb' ? 1 / 0.45359237 : 1; const unitStep = nextUnit === 'lb' ? 5 : item.performanceLoadProfile.stepKg; const rounded = Math.round(converted / unitStep) * unitStep; const unitMin = Math.ceil(Math.min(item.performanceLoadProfile.minKg * factor, item.performanceLoadSelected ? rounded : item.performanceLoadProfile.minKg * factor) / unitStep) * unitStep; const unitMax = Math.floor(Math.max(item.performanceLoadProfile.maxKg * factor, item.performanceLoadSelected ? rounded : item.performanceLoadProfile.maxKg * factor) / unitStep) * unitStep;
+      item.performanceLoadExact = Math.min(unitMax, Math.max(unitMin, rounded));
       item.performanceLoad.value = String(item.performanceLoadExact);
       updateLoadControl();
       savePerformanceDraft();
@@ -3996,7 +4025,23 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       }
       const currentSessionId = state.__timing?.sessionStartedAt ? `${routineId}:${state.__timing.sessionStartedAt}` : '';
       item.performanceHistory = history.filter(session => session.routineId === routineId && session.sessionId !== currentSessionId && (session.performance || []).some(record => record.exerciseId === String(item.index + 1))).sort((a, b) => Number(b.endedAt || b.updatedAt || 0) - Number(a.endedAt || a.updatedAt || 0)); const previous = item.performanceHistory[0];
-      const records = (previous?.performance || []).filter(record => record.exerciseId === String(item.index + 1)).sort((a, b) => a.setNumber - b.setNumber);
+      const latestLoadRecord = item.performanceHistory.flatMap(session => (session.performance || []).filter(record => record.exerciseId === String(item.index + 1)).map(record => ({ ...record, _sessionUpdatedAt: Number(session.endedAt || session.updatedAt || 0) }))).filter(record => record.loadSelected !== false && record.load !== null && record.load !== undefined && String(record.load).trim() !== '' && Number.isFinite(Number(record.load))).sort((a, b) => Number(b.updatedAt || b._sessionUpdatedAt || 0) - Number(a.updatedAt || a._sessionUpdatedAt || 0))[0];
+      if (latestLoadRecord) {
+        const storedKg = Number.isFinite(Number(latestLoadRecord.loadKg)) ? Number(latestLoadRecord.loadKg) : latestLoadRecord.loadUnit === 'lb' ? Number(latestLoadRecord.load) * 0.45359237 : Number(latestLoadRecord.load);
+        if (Number.isFinite(storedKg)) item.previousLoadKg = storedKg;
+        if (!savedDraft && !item.performanceLoadSelected && !isExerciseStarted(item) && Number.isFinite(storedKg)) {
+          const factor = item.performanceLoadUnit === 'lb' ? 1 / 0.45359237 : 1;
+          const step = item.performanceLoadUnit === 'lb' ? 5 : item.performanceLoadProfile.stepKg;
+          const min = Math.ceil(item.performanceLoadProfile.minKg * factor / step) * step;
+          const max = Math.floor(item.performanceLoadProfile.maxKg * factor / step) * step;
+          const restored = Math.min(max, Math.max(min, Math.round(storedKg * factor / step) * step));
+          item.performanceLoadExact = restored; item.performanceLoad.value = String(restored); item.performanceLoadSelected = true; updateLoadControl(); savePerformanceDraft();
+        }
+      }
+      const records = (previous?.performance || []).filter(record => {
+        const reps = Number(record?.reps);
+        return record && record.exerciseId === String(item.index + 1) && Number.isInteger(reps) && reps >= 1 && reps <= 100;
+      }).sort((a, b) => a.setNumber - b.setNumber);
       if (!records.length) return;
       const formatLoad = record => { if (record.load == null) return ''; const unit = record.loadUnit === 'lb' ? 'lb' : 'kg'; const loadKg = Number.isFinite(Number(record.loadKg)) ? Number(record.loadKg) : unit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load); const original = `${Number.isInteger(Number(record.load)) ? Number(record.load) : Number(record.load).toFixed(1)} ${unit}`; return unit === 'lb' ? `${original} (${loadKg.toFixed(1)} kg)` : original; };
       const summary = records.map(record => `${record.reps} ${record.reps === 1 ? 'repetición' : 'repeticiones'}${record.load == null ? '' : ` · ${formatLoad(record)}`}`).join(' / ');
@@ -4103,7 +4148,8 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       (timing?.seriesTimes || []).forEach((duration, index) => {
         if (Number.isFinite(duration)) {
           const record = state.__performance?.[String(item.index + 1)]?.[item.seriesKeys[index]];
-          const reps = Number.isInteger(Number(record?.reps)) ? `${record.reps}r` : null;
+          const repsValue = Number(record?.reps);
+          const reps = Number.isInteger(repsValue) && repsValue >= 1 && repsValue <= 100 ? `${repsValue}r` : null;
           const load = record?.load !== null && record?.load !== undefined && Number.isFinite(Number(record.load)) ? `${Number(record.load)}${record.loadUnit || 'kg'}` : null;
           const details = [reps, load].filter(Boolean).join(' · ') || 'sin datos';
           entries.push({ key: `set-${index + 1}`, label: `S${index + 1} · ${details}`, value: formatElapsed(duration), kind: 'set' });
@@ -4879,6 +4925,12 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     });
     const wasDone = tracker.classList.contains('exerciseDone');
     const completed = skipped || done === item.seriesKeys.length;
+    const performancePanel = tracker.closest('article.card')?.querySelector('.performanceEntry');
+    if (performancePanel) {
+      performancePanel.classList.toggle('isLocked', completed);
+      performancePanel.setAttribute('aria-disabled', String(completed));
+      performancePanel.querySelectorAll('input, select, button').forEach(control => { control.disabled = completed; });
+    }
     tracker.querySelector('.exerciseProgress').textContent = `${done}/${item.seriesKeys.length}`;
     tracker.classList.toggle('exerciseDone', completed);
     tracker.classList.toggle('exerciseSkipped', skipped);
@@ -4972,35 +5024,14 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       item.performanceReps.dataset.selected = 'false';
       item.performanceRepsOutput.textContent = `Sin registrar · ${item.repMinimum}–${item.repMaximum + 4} posibles`; item.performanceRepsOutput.dataset.selected = 'false'; item.performanceRepsClear.hidden = true; item.performanceRangeFill?.(item.performanceReps);
       if (state.__performanceDraft?.[String(item.index + 1)]) state.__performanceDraft[String(item.index + 1)].reps = '0';
+      if (load !== null && Number.isFinite(item.previousLoadKg)) {
+        const deltaKg = loadKg - item.previousLoadKg;
+        if (deltaKg > 0.01) window.dispatchEvent(new CustomEvent('gymratik:weight-change', { detail: { direction: 'up', title: item.title, target: item.tracker, load, loadUnit } }));
+        else if (deltaKg < -0.01) window.dispatchEvent(new CustomEvent('gymratik:weight-change', { detail: { direction: 'down', title: item.title, target: item.tracker, load, loadUnit } }));
+        item.previousLoadKg = loadKg;
+      } else if (load !== null) item.previousLoadKg = loadKg;
       state[nextKey] = true;
       recordSeriesTime(item, seriesIndex, completedAt);
-      if (snapshot(item).complete) {
-        const toKg = record => record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load);
-        const isQualified = session => {
-          const records = (session.performance || []).filter(record => record.exerciseId === String(item.index + 1)).sort((a, b) => a.setNumber - b.setNumber);
-          if (records.length !== item.seriesKeys.length || records.some(record => Number(record.reps) < item.repMaximum + 1 || record.load === null || record.load === undefined || !Number.isFinite(Number(record.load)) || !(Number(record.durationMs) > 0))) return null;
-          const loads = records.map(toKg);
-          if (Math.max(...loads) - Math.min(...loads) > 0.01) return null;
-          return records.reduce((sum, record) => sum + Number(record.durationMs) / Number(record.reps), 0) / records.length;
-        };
-        const current = item.seriesKeys.map(key => state.__performance?.[String(item.index + 1)]?.[key]);
-        const currentTiming = getExerciseTiming(item).seriesTimes || [];
-        const currentValid = current.length === item.seriesKeys.length && current.every((record, index) => record && Number(record.reps) >= item.repMaximum + 1 && record.load !== null && record.load !== undefined && Number.isFinite(toKg(record)) && Number(currentTiming[index]) > 0);
-        const currentLoads = currentValid ? current.map(toKg) : [];
-        const currentRate = currentValid && Math.max(...currentLoads) - Math.min(...currentLoads) <= 0.01
-          ? current.reduce((sum, record, index) => sum + Number(currentTiming[index]) / Number(record.reps), 0) / current.length
-          : null;
-        const recent = (item.performanceHistory || []).slice(0, 2).map(isQualified);
-        if (currentRate !== null && recent.length === 2 && recent.every(rate => rate !== null) && currentRate <= (recent[0] + recent[1]) / 2) {
-          const loadKg = currentLoads[0];
-          const stepKg = item.performanceLoadProfile.stepKg;
-          const stepPercent = stepKg / loadKg;
-          if (stepKg <= item.performanceLoadProfile.maxKg - loadKg && stepPercent >= 0.02 && stepPercent <= 0.10) {
-            const displayStep = item.performanceLoadUnit === 'lb' ? `${Math.round(stepKg / 0.45359237)} lb` : `${stepKg} kg`;
-            item.progressionCue.textContent = `Progresión sugerida: alcanzaste al menos ${item.repMaximum + 1} repeticiones en todas las series durante 3 sesiones con datos; tu ritmo por repetición fue igual o más rápido que la media de tus 2 sesiones previas. Si conservaste la técnica, prueba el menor incremento de esta máquina (${displayStep}, ${Math.round(stepPercent * 100)}%).`;
-          }
-        }
-      }
       if (snapshot(item).complete) {
         const toKg = record => record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load);
         const isQualified = session => {
@@ -7276,6 +7307,16 @@ body{height:auto!important;min-height:100%!important;overflow-x:hidden!important
       window.setTimeout(() => particle.remove(), 1300);
     }
   };
+
+  window.addEventListener('gymratik:weight-change', event => {
+    const detail = event.detail || {};
+    if (detail.direction === 'up') {
+      celebrate(detail.target, 20);
+      encourage(`¡Carga aumentada en ${detail.title}! Serie completada con ${detail.load} ${detail.loadUnit}. Buen progreso; conserva la técnica.`);
+    } else if (detail.direction === 'down') {
+      encourage(`Buen ajuste en ${detail.title}: completaste la serie con menos carga. Prioriza control y rango cómodo; progresar también es entrenar con criterio.`);
+    }
+  });
 
   const revealObserver = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
     entries.forEach(entry => {

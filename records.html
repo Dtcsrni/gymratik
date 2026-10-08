@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10161f">
+  <meta name="application-name" content="Gymratik">
+  <meta name="description" content="Consulta el historial local de sesiones, series, repeticiones y cargas registradas en Gymratik.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./assets/branding/gymratik-mascots-mark-v2.png" type="image/png">
+  <link rel="stylesheet" href="./records.css">
+  <script src="./install-gate.js"></script>
+  <script src="./progress-store.js"></script>
+  <title>Registros y estadísticas · Gymratik</title>
+</head>
+<body>
+  <main class="records-shell">
+    <header class="records-header">
+      <a class="records-brand" href="./" aria-label="Gymratik, volver a portada">GYMRATIK <span>REGISTRO LOCAL</span></a>
+      <a class="back-link" href="./">← Portada</a>
+    </header>
+    <section class="intro" aria-labelledby="pageTitle">
+      <p class="eyebrow">Tu entrenamiento, en este dispositivo</p>
+      <h1 id="pageTitle">Registros y estadísticas</h1>
+      <p>Consulta tus sesiones y los datos que guardaste en cada serie. Este resumen no modifica tu progreso.</p>
+    </section>
+    <section class="records-panel" aria-label="Periodo del historial">
+      <label for="periodFilter">Mostrar</label>
+      <select id="periodFilter">
+        <option value="7">Últimos 7 días</option>
+        <option value="30" selected>Últimos 30 días</option>
+        <option value="all">Todo el historial disponible (hasta 50 sesiones)</option>
+      </select>
+      <p id="dataStatus" class="status" role="status" aria-live="polite">Cargando tus registros guardados…</p>
+    </section>
+    <section id="recordsContent" hidden>
+      <section class="stats-grid" aria-label="Resumen del periodo">
+        <article class="stat-card"><span>Sesiones con actividad</span><strong id="statSessions">0</strong></article>
+        <article class="stat-card"><span>Series completadas</span><strong id="statSets">0</strong></article>
+        <article class="stat-card"><span>Repeticiones registradas</span><strong id="statReps">0</strong></article>
+        <article class="stat-card"><span>Días con entrenamiento</span><strong id="statDays">0</strong></article>
+      </section>
+      <section class="records-panel" aria-labelledby="trendTitle">
+        <div class="section-heading"><div><p class="eyebrow">Frecuencia</p><h2 id="trendTitle">Series por semana</h2></div><p>Últimas seis semanas</p></div>
+        <div id="weeklyChart" class="weekly-chart" role="img" aria-label="Gráfica de series completadas por semana"></div>
+      </section>
+      <section class="records-panel" aria-labelledby="exerciseTitle">
+        <div class="section-heading"><div><p class="eyebrow">Progresión observada</p><h2 id="exerciseTitle">Cargas guardadas por ejercicio</h2></div></div>
+        <p class="section-note">Se muestra el mayor valor registrado para cada ejercicio, conservando la unidad anotada. Las máquinas y los ejercicios distintos no son comparables entre sí.</p>
+        <div id="exerciseLoads" class="exercise-list"></div>
+      </section>
+      <section class="records-panel" aria-labelledby="routineTitle">
+        <div class="section-heading"><div><p class="eyebrow">Distribución</p><h2 id="routineTitle">Actividad por rutina</h2></div></div>
+        <div id="routineBreakdown" class="routine-list"></div>
+      </section>
+      <section class="records-panel" aria-labelledby="historyTitle">
+        <div class="section-heading"><div><p class="eyebrow">Detalle</p><h2 id="historyTitle">Historial de sesiones</h2></div><span id="historyCount" class="count-pill">0</span></div>
+        <div id="sessionHistory" class="session-list"></div>
+      </section>
+    </section>
+    <footer class="records-footer"><a class="back-link" href="./">← Volver a Gymratik</a><span>Los registros permanecen en este dispositivo.</span></footer>
+  </main>
+  <script src="./records.js" defer></script>
+</body>
+</html>

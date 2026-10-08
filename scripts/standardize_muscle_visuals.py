@@ -71,6 +71,7 @@ button:not(:disabled):active,[role="button"]:not([aria-disabled="true"]):active{
 .performanceLoadValue{min-height:44px;border-color:rgba(105,215,255,.28);border-radius:.68rem;background:rgba(7,28,42,.78);text-align:left;transition:border-color .18s ease,background .18s ease,transform .18s ease}
 .performanceLoadUnit{min-height:36px;padding:.25rem .45rem;border:1px solid rgba(164,223,231,.24);border-radius:.55rem;background:#081923;color:#dff5fa;font:inherit;font-size:.75rem;font-weight:800}
 .performanceEntry .progressionCue{margin:.05rem .2rem 0;color:#9dbac4;font-size:.68rem;line-height:1.35}
+.performanceEntry.isLocked{border-color:rgba(101,242,221,.38)!important;background:linear-gradient(145deg,rgba(14,48,52,.84),rgba(5,22,34,.96))!important}.performanceEntry.isLocked :disabled{cursor:not-allowed!important}.performanceEntry.isLocked .performanceField{opacity:.76}
 .performanceEntry{grid-template-columns:minmax(0,1fr)!important;gap:.55rem!important;padding:.65rem!important;border-color:rgba(105,215,255,.25)!important;border-radius:1rem!important;background:linear-gradient(145deg,rgba(10,33,48,.94),rgba(5,22,34,.96))!important}
 .performanceField input[type="range"]{height:38px!important;min-height:38px!important;margin:0!important;touch-action:pan-x!important}
 .performanceLoadValue[data-selected="true"]{border-color:rgba(101,242,221,.56)!important;background:linear-gradient(110deg,rgba(18,91,83,.48),rgba(15,45,65,.8))!important;color:#8ef4d8!important}
@@ -460,7 +461,8 @@ REST_TIMING_DISPLAY_CONTRACT = '''  const renderTimingDisplays = () => {
       (timing?.seriesTimes || []).forEach((duration, index) => {
         if (Number.isFinite(duration)) {
           const record = state.__performance?.[String(item.index + 1)]?.[item.seriesKeys[index]];
-          const reps = Number.isInteger(Number(record?.reps)) ? `${record.reps}r` : null;
+          const repsValue = Number(record?.reps);
+          const reps = Number.isInteger(repsValue) && repsValue >= 1 && repsValue <= 100 ? `${repsValue}r` : null;
           const load = record?.load !== null && record?.load !== undefined && Number.isFinite(Number(record.load)) ? `${Number(record.load)}${record.loadUnit || 'kg'}` : null;
           const details = [reps, load].filter(Boolean).join(' · ') || 'sin datos';
           entries.push({ key: `set-${index + 1}`, label: `S${index + 1} · ${details}`, value: formatElapsed(duration), kind: 'set' });
@@ -2014,32 +2016,32 @@ def standardize_quote_portrait_loading(source: str) -> str:
 
 
 TECHNIQUE_CUES = {
-    "JALÓN AL PECHO": ("Muslos firmes, pies apoyados y pecho erguido.", "Lleva los codos hacia las costillas; pausa y vuelve en 2–3 s. Exhala al tirar.", "No balancees el torso ni lleves la barra detrás de la nuca."),
-    "REMO ALTO UNILATERAL": ("Pecho apoyado y cuerpo mirando al frente.", "Guía el codo abajo y atrás; pausa y regresa en 2–3 s.", "No gires el tronco ni despegues el pecho."),
-    "REMO HORIZONTAL EN MÁQUINA": ("Pecho al apoyo, pies firmes y cuello neutro.", "Rema hacia las costillas; pausa y deja avanzar los hombros con control.", "No te impulses ni levantes los hombros."),
-    "APERTURA INVERSA EN MÁQUINA": ("Ajusta el asiento; pecho apoyado y codos alineados.", "Abre los brazos en arco cómodo y regresa lentamente, sin perder tensión.", "No conviertas la apertura en un remo ni fuerces el hombro."),
-    "CURL DE BÍCEPS EN MÁQUINA": ("Alinea el codo con el eje y apoya el brazo.", "Flexiona sin despegar el brazo; baja en 2–3 s.", "No adelantes el codo ni rebotes."),
-    "CURL DE BÍCEPS SENTADO EN MÁQUINA": ("Espalda apoyada, codos estables y muñecas neutras.", "Flexiona con agarre supino; pausa arriba y baja en 2–3 s.", "No balancees el tronco ni bloquees los codos."),
-    "HACK SQUAT": ("Espalda y hombros apoyados; pies simétricos.", "Baja en 2–3 s hasta donde mantengas apoyo; sube empujando el suelo.", "No rebotes ni dejes que las rodillas colapsen hacia dentro."),
-    "HIP THRUST": ("Espalda alta apoyada; arriba, tibias casi verticales.", "Extiende la cadera, aprieta glúteos y pausa 1 s; baja con control.", "No arquees la zona lumbar ni empujes solo con las puntas."),
-    "PRENSA DE PIERNAS": ("Espalda y pelvis apoyadas; pies al ancho de hombros.", "Baja sin despegar la pelvis y empuja con todo el pie.", "No cierres las rodillas ni bloquees con golpe."),
-    "CURL FEMORAL EN MÁQUINA": ("Alinea la rodilla con el eje y fija la pelvis.", "Flexiona, pausa y regresa en 2–3 s sin soltar la carga.", "No uses impulso ni levantes la cadera."),
-    "EXTENSIÓN DE PIERNAS": ("Alinea el eje de la máquina con la rodilla.", "Extiende con control, pausa breve y baja sin dejar caer la carga.", "No golpees el tope ni balancees el tronco."),
-    "PANTORRILLAS DE PIE": ("Apoya el antepié y deja libre el talón.", "Baja hasta un estiramiento cómodo; eleva, pausa y desciende lento.", "No rebotes ni acortes el recorrido."),
-    "PRESS DE PECHO SENTADO EN MÁQUINA": ("Ajusta las asas a media altura del pecho; espalda y pies apoyados.", "Empuja sin despegar el torso; vuelve en 2–3 s hasta un estiramiento cómodo.", "No abras excesivamente los codos ni golpees al extender."),
-    "PRESS INCLINADO CONVERGENTE EN MÁQUINA": ("Asas entre pecho medio y alto; torso apoyado.", "Empuja siguiendo la trayectoria y vuelve en 2–3 s, sin rebote.", "No arquees la espalda ni fuerces el hombro atrás."),
-    "PEC DECK / CONTRACTOR DE PECHO": ("Asiento a la altura del hombro; codos suavemente flexionados.", "Cierra en 1–2 s y vuelve en 2–3 s dentro de un rango cómodo.", "No abras con dolor ni eleves los hombros."),
-    "PRESS DE HOMBRO EN MÁQUINA": ("Asas cerca de los hombros; espalda y pelvis apoyadas.", "Empuja arriba y baja en 2–3 s manteniendo el torso estable.", "No arquees la espalda ni bajes a un rango doloroso."),
-    "ELEVACIÓN LATERAL EN MÁQUINA": ("Alinea el eje con el hombro y apoya el torso.", "Eleva hasta una altura cómoda; baja en 2–3 s sin perder control.", "No te balancees ni encojas los hombros."),
-    "JALÓN DE TRÍCEPS EN POLEA": ("Polea alta, codos junto al cuerpo y pies firmes.", "Extiende los codos; regresa en 2–3 s sin mover el torso.", "No uses el peso corporal ni adelantes los codos."),
-    "EXTENSIÓN DE TRÍCEPS SOBRE CABEZA CON CUERDA": ("Postura estable, costillas controladas y codos al frente.", "Extiende y flexiona los codos con control; mantén quietos los hombros.", "No arquees la espalda ni abras demasiado los codos."),
-    "PRENSA UNILATERAL ALTERNA": ("Pelvis apoyada; empieza con un lado y carga controlable.", "Empuja con un pie sin bloquear; completa ese lado antes de alternar.", "No dejes caer la pelvis ni colapses la rodilla hacia dentro."),
-    "PESO MUERTO RUMANO CON BARRA": ("Pies al ancho de cadera; barra sobre el mediopié y espalda neutra.", "Lleva la cadera atrás; baja la barra pegada a las piernas y sube extendiendo la cadera.", "No lo conviertas en sentadilla, alejes la barra ni redondees la espalda."),
-    "CURL FEMORAL TUMBADO": ("Alinea la rodilla con el eje; rodillo sobre el talón y cadera apoyada.", "Flexiona hacia los glúteos y regresa en 2–3 s sin soltar la carga.", "No levantes la pelvis ni acortes el recorrido."),
-    "ABDUCCIÓN DE CADERA SENTADA": ("Espalda y pelvis apoyadas; inicio en rango cómodo.", "Separa las rodillas con control y regresa lentamente.", "No rebotes, inclines el torso ni fuerces la apertura."),
-    "ADUCCIÓN DE CADERA SENTADA": ("Espalda y pelvis apoyadas; piernas simétricas.", "Acerca las rodillas y abre lentamente, manteniendo la tensión.", "No fuerces el estiramiento ni muevas la pelvis."),
-    "ELEVACIÓN DE PANTORRILLA SENTADA": ("Almohadilla sobre los muslos; antepié apoyado y talón libre.", "Eleva el talón, pausa arriba y baja en 2–3 s sin rebote.", "No ayudes con las rodillas ni acortes el descenso."),
-    "CRUNCH CON ELEVACIÓN DE PIERNAS SENTADA": ("Ajusta apoyos para mantener la pelvis estable; no tires del cuello.", "Acerca tronco y piernas; exhala al cerrar y regresa en 2–3 s.", "No jales la cabeza ni uses impulso."),
+    "JALÓN AL PECHO": ("Muslos sujetos y pecho erguido.", "Lleva los codos hacia abajo; regresa despacio.", "No balancees el torso ni bajes la barra tras la nuca."),
+    "REMO ALTO UNILATERAL": ("Pecho apoyado y mirada al frente.", "Lleva un codo abajo y atrás; vuelve despacio.", "No gires el tronco ni despegues el pecho."),
+    "REMO HORIZONTAL EN MÁQUINA": ("Pecho apoyado, pies firmes.", "Lleva los codos hacia atrás; vuelve con control.", "No te impulses ni encojas los hombros."),
+    "APERTURA INVERSA EN MÁQUINA": ("Pecho apoyado y codos alineados.", "Abre los brazos y vuelve lentamente.", "No gires el movimiento en un remo."),
+    "CURL DE BÍCEPS EN MÁQUINA": ("Brazo apoyado y codo alineado con el eje.", "Flexiona el codo; baja lentamente.", "No despegues el brazo ni rebotes."),
+    "CURL DE BÍCEPS SENTADO EN MÁQUINA": ("Espalda apoyada y muñecas rectas.", "Flexiona los codos; baja lentamente.", "No balancees el cuerpo ni golpees el tope."),
+    "HACK SQUAT": ("Espalda apoyada y pies firmes.", "Baja hasta donde conserves el apoyo; empuja para subir.", "No rebotes ni juntes las rodillas."),
+    "HIP THRUST": ("Espalda alta apoyada; pies firmes.", "Eleva la cadera, aprieta glúteos y baja con control.", "No arquees la espalda al subir."),
+    "PRENSA DE PIERNAS": ("Espalda y pelvis apoyadas; pies firmes.", "Baja sin despegar la pelvis; empuja con todo el pie.", "No juntes las rodillas ni bloquees con golpe."),
+    "CURL FEMORAL EN MÁQUINA": ("Pelvis estable y rodilla alineada con el eje.", "Flexiona las rodillas; vuelve lentamente.", "No levantes la cadera ni uses impulso."),
+    "EXTENSIÓN DE PIERNAS": ("Rodilla alineada con el eje de la máquina.", "Extiende y baja con control.", "No golpees el tope ni te balancees."),
+    "PANTORRILLAS DE PIE": ("Antepié apoyado y talones libres.", "Baja el talón; elévate y desciende despacio.", "No rebotes ni recortes el recorrido."),
+    "PRESS DE PECHO SENTADO EN MÁQUINA": ("Asas a media altura del pecho; espalda apoyada.", "Empuja y regresa lentamente, sin despegar el torso.", "No abras demasiado los codos ni golpees al extender."),
+    "PRESS INCLINADO CONVERGENTE EN MÁQUINA": ("Torso apoyado; asas a la altura del pecho alto.", "Empuja siguiendo las asas; vuelve despacio.", "No arquees la espalda ni fuerces el hombro."),
+    "PEC DECK / CONTRACTOR DE PECHO": ("Codos levemente flexionados y hombros relajados.", "Junta los brazos; vuelve dentro de un rango cómodo.", "No fuerces la apertura ni eleves los hombros."),
+    "PRESS DE HOMBRO EN MÁQUINA": ("Espalda y pelvis apoyadas.", "Empuja arriba y baja lentamente.", "No arquees la espalda ni fuerces el rango."),
+    "ELEVACIÓN LATERAL EN MÁQUINA": ("Torso apoyado y eje alineado con el hombro.", "Eleva los brazos; bájalos lentamente.", "No te balancees ni encojas los hombros."),
+    "JALÓN DE TRÍCEPS EN POLEA": ("Codos junto al cuerpo y torso estable.", "Estira los codos; vuelve lentamente.", "No uses el peso del cuerpo ni muevas los codos."),
+    "EXTENSIÓN DE TRÍCEPS SOBRE CABEZA CON CUERDA": ("Codos al frente y abdomen firme.", "Estira y flexiona los codos con control.", "No arquees la espalda ni abras los codos."),
+    "PRENSA UNILATERAL ALTERNA": ("Pelvis apoyada; trabaja un lado a la vez.", "Empuja con un pie; cambia de lado sin bloquear la rodilla.", "No levantes la pelvis ni hundas la rodilla hacia dentro."),
+    "PESO MUERTO RUMANO CON BARRA": ("Pies al ancho de cadera; barra cerca de las piernas.", "Lleva la cadera atrás; sube apretando glúteos.", "No redondees la espalda ni alejes la barra."),
+    "CURL FEMORAL TUMBADO": ("Cadera apoyada y rodilla alineada con el eje.", "Lleva los talones hacia los glúteos; baja despacio.", "No levantes la cadera ni uses impulso."),
+    "ABDUCCIÓN DE CADERA SENTADA": ("Espalda apoyada y pelvis estable.", "Separa las rodillas; vuelve lentamente.", "No rebotes ni inclines el torso."),
+    "ADUCCIÓN DE CADERA SENTADA": ("Espalda apoyada y piernas simétricas.", "Junta las rodillas; vuelve lentamente.", "No muevas la pelvis ni fuerces la apertura."),
+    "ELEVACIÓN DE PANTORRILLA SENTADA": ("Antepié apoyado y almohadilla sobre los muslos.", "Eleva los talones; baja lentamente.", "No rebotes ni ayudes con las rodillas."),
+    "CRUNCH CON ELEVACIÓN DE PIERNAS SENTADA": ("Pelvis estable; manos sin tirar del cuello.", "Acerca tronco y piernas; vuelve lentamente.", "No jales la cabeza ni uses impulso."),
 }
 
 
@@ -2792,19 +2794,45 @@ def standardize_series_entry_zone(source: str) -> str:
         "if (doneSeries > 0 && summaryToggle && summaryBody && completedExercises !== exerciseItems.length && summaryToggle.getAttribute('aria-expanded') === 'true') { summaryToggle.setAttribute('aria-expanded', 'true'); summaryBody.hidden = false; }",
         1,
     )
-    load_profile_pattern = (
-        r"(?P<profile>[ \t]*const loadDescription =[^\r\n]*\r?\n"
-        r"[ \t]*const loadProfile =[^\r\n]*\r?\n"
-        r"[ \t]*item\.performanceLoadProfile = loadProfile;\r?\n)"
-        r"(?:[ \t]*const loadDescription =[^\r\n]*\r?\n"
-        r"[ \t]*const loadProfile =[^\r\n]*\r?\n"
-        r"[ \t]*item\.performanceLoadProfile = loadProfile;\r?\n)+"
-    )
-    source = re.sub(load_profile_pattern, lambda match: match.group("profile"), source)
-    if "const loadDescription =" not in source:
+    load_profile_block = """    const loadDescription = item.title.toLocaleLowerCase('es');
+    const loadProfiles = [
+      [/^jalón al pecho$/, { minKg: 2.5, maxKg: 150, stepKg: 2.5, label: 'jalón · torre de polea (rango orientativo)' }],
+      [/^remo alto unilateral$/, { minKg: 2.5, maxKg: 120, stepKg: 2.5, label: 'remo unilateral · discos por brazo (rango orientativo)' }],
+      [/^remo horizontal en máquina$/, { minKg: 2.5, maxKg: 120, stepKg: 2.5, label: 'remo sentado · rango orientativo' }],
+      [/^apertura inversa en máquina$/, { minKg: 2.5, maxKg: 80, stepKg: 2.5, label: 'apertura inversa · rango orientativo' }],
+      [/^curl de bíceps/, { minKg: 2.5, maxKg: 80, stepKg: 2.5, label: 'curl de bíceps · rango orientativo' }],
+      [/^hack squat$/, { minKg: 5, maxKg: 300, stepKg: 5, label: 'hack squat · carga externa total (rango orientativo)' }],
+      [/^hip thrust$/, { minKg: 5, maxKg: 250, stepKg: 5, label: 'hip thrust · discos totales (rango orientativo)' }],
+      [/^prensa de piernas$/, { minKg: 5, maxKg: 300, stepKg: 5, label: 'prensa bilateral · carga externa total (rango orientativo)' }],
+      [/^prensa unilateral alterna$/, { minKg: 5, maxKg: 200, stepKg: 5, label: 'prensa unilateral · carga externa total (rango orientativo)' }],
+      [/^curl femoral/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'curl femoral · rango orientativo' }],
+      [/^extensión de piernas$/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'extensión de piernas · rango orientativo' }],
+      [/^pantorrillas de pie$/, { minKg: 2.5, maxKg: 150, stepKg: 2.5, label: 'pantorrilla de pie · rango orientativo' }],
+      [/^press de pecho sentado/, { minKg: 2.5, maxKg: 120, stepKg: 2.5, label: 'press de pecho · rango orientativo' }],
+      [/^press inclinado convergente/, { minKg: 2.5, maxKg: 120, stepKg: 2.5, label: 'press inclinado · rango orientativo' }],
+      [/^pec deck/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'pec deck · rango orientativo' }],
+      [/^press de hombro/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'press de hombro · rango orientativo' }],
+      [/^elevación lateral/, { minKg: 2.5, maxKg: 60, stepKg: 2.5, label: 'elevación lateral · rango orientativo' }],
+      [/^jalón de tríceps/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'tríceps en polea · rango orientativo' }],
+      [/^extensión de tríceps sobre cabeza/, { minKg: 2.5, maxKg: 80, stepKg: 2.5, label: 'tríceps con cuerda · rango orientativo' }],
+      [/^peso muerto rumano con barra$/, { minKg: 10, maxKg: 250, stepKg: 2.5, label: 'barra libre · peso total con barra (rango orientativo)' }],
+      [/^abducción de cadera/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'abducción de cadera · rango orientativo' }],
+      [/^aducción de cadera/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'aducción de cadera · rango orientativo' }],
+      [/^elevación de pantorrilla sentada$/, { minKg: 2.5, maxKg: 150, stepKg: 2.5, label: 'pantorrilla sentada · rango orientativo' }],
+      [/^crunch con elevación de piernas sentada$/, { minKg: 2.5, maxKg: 80, stepKg: 2.5, label: 'crunch sentado · rango orientativo' }]
+    ];
+    const loadProfile = loadProfiles.find(([pattern]) => pattern.test(loadDescription))?.[1];
+    if (!loadProfile) throw new Error(`Falta un perfil de carga revisado para: ${item.title}`);
+    item.performanceLoadProfile = loadProfile;
+"""
+    profile_start = source.find("const loadDescription =")
+    profile_end = source.find("const createPerformanceIcon", profile_start)
+    if profile_start >= 0 and profile_end > profile_start:
+        source = source[:profile_start] + load_profile_block + "    " + source[profile_end:]
+    else:
         source = source.replace(
             "item.repMaximum = rangeMatch ? Number(rangeMatch[2]) : 100;",
-            "item.repMaximum = rangeMatch ? Number(rangeMatch[2]) : 100;\n    const loadDescription = `${item.title} ${item.tracker.closest('article.card')?.querySelector('.machinePill')?.textContent || ''}`.toLocaleLowerCase('es');\n    const loadProfile = /barra libre|barbell/.test(loadDescription) ? { minKg: 0, maxKg: 300, stepKg: 2.5, label: 'barra libre · peso total' } : /prensa|hack squat|hip thrust|bisagra/.test(loadDescription) ? { minKg: 5, maxKg: 300, stepKg: 5, label: 'máquina de fuerza para tren inferior' } : /polea/.test(loadDescription) ? { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'polea' } : /curl femoral|extensión de piernas|abducción|aducción|pantorrilla/.test(loadDescription) ? { minKg: 2.5, maxKg: 160, stepKg: 2.5, label: 'máquina de aislamiento' } : { minKg: 2.5, maxKg: 120, stepKg: 2.5, label: 'máquina de tren superior' };\n    item.performanceLoadProfile = loadProfile;",
+            "item.repMaximum = rangeMatch ? Number(rangeMatch[2]) : 100;\n" + load_profile_block.rstrip(),
             1,
         )
     dialog_helper = """  const confirmMissingPerformance = missing => new Promise(resolve => {
@@ -2884,19 +2912,96 @@ def standardize_series_entry_zone(source: str) -> str:
         raise ValueError("La ayuda de registro todavía presenta como opcionales los datos requeridos")
     source = source.replace(
         "const pounds = item.performanceLoadUnit === 'lb';\n      loadInput.max = pounds ? '2200' : '1000';\n      loadInput.step = pounds ? '5' : '2.5';",
-        "const pounds = item.performanceLoadUnit === 'lb';\n      const factor = pounds ? 1 / 0.45359237 : 1;\n      const unitStep = pounds ? 5 : item.performanceLoadProfile.stepKg;\n      const unitMin = Math.ceil(item.performanceLoadProfile.minKg * factor / unitStep) * unitStep;\n      const unitMax = Math.floor(item.performanceLoadProfile.maxKg * factor / unitStep) * unitStep;\n      loadInput.min = String(unitMin); loadInput.max = String(unitMax); loadInput.step = String(unitStep); loadInput.dataset.loadProfile = item.performanceLoadProfile.label; loadInput.dataset.maxKg = String(item.performanceLoadProfile.maxKg);\n      if (!item.performanceLoadSelected) loadInput.value = String(unitMin);\n      else loadInput.value = String(Math.min(unitMax, Math.max(unitMin, Number(item.performanceLoadExact) || unitMin)));",
+        "const pounds = item.performanceLoadUnit === 'lb';\n      const factor = pounds ? 1 / 0.45359237 : 1;\n      const unitStep = pounds ? 5 : item.performanceLoadProfile.stepKg;\n      const selectedValue = Number(item.performanceLoadExact);\n      const unitMin = Math.ceil(Math.min(item.performanceLoadProfile.minKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.minKg) * factor / unitStep) * unitStep;\n      const unitMax = Math.floor(Math.max(item.performanceLoadProfile.maxKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.maxKg) * factor / unitStep) * unitStep;\n      loadInput.min = String(unitMin); loadInput.max = String(unitMax); loadInput.step = String(unitStep); loadInput.dataset.loadProfile = item.performanceLoadProfile.label; loadInput.dataset.maxKg = String(item.performanceLoadProfile.maxKg);\n      if (!item.performanceLoadSelected) loadInput.value = String(unitMin);\n      else loadInput.value = String(Math.min(unitMax, Math.max(unitMin, selectedValue || unitMin)));",
         1,
+    )
+    source = re.sub(
+        r"const unitMin = Math\.ceil\(item\.performanceLoadProfile\.minKg \* factor / unitStep\) \* unitStep;\r?\n"
+        r"[ \t]*const unitMax = Math\.floor\(item\.performanceLoadProfile\.maxKg \* factor / unitStep\) \* unitStep;\r?\n"
+        r"[ \t]*loadInput\.min = String\(unitMin\); loadInput\.max = String\(unitMax\); loadInput\.step = String\(unitStep\); loadInput\.dataset\.loadProfile = item\.performanceLoadProfile\.label; loadInput\.dataset\.maxKg = String\(item\.performanceLoadProfile\.maxKg\);\r?\n"
+        r"[ \t]*if \(!item\.performanceLoadSelected\) loadInput\.value = String\(unitMin\);\r?\n"
+        r"[ \t]*else loadInput\.value = String\(Math\.min\(unitMax, Math\.max\(unitMin, Number\(item\.performanceLoadExact\) \|\| unitMin\)\)\);",
+        "const selectedValue = Number(item.performanceLoadExact);\n      const unitMin = Math.ceil(Math.min(item.performanceLoadProfile.minKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.minKg) * factor / unitStep) * unitStep;\n      const unitMax = Math.floor(Math.max(item.performanceLoadProfile.maxKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.maxKg) * factor / unitStep) * unitStep;\n      loadInput.min = String(unitMin); loadInput.max = String(unitMax); loadInput.step = String(unitStep); loadInput.dataset.loadProfile = item.performanceLoadProfile.label; loadInput.dataset.maxKg = String(item.performanceLoadProfile.maxKg);\n      if (!item.performanceLoadSelected) loadInput.value = String(unitMin);\n      else loadInput.value = String(Math.min(unitMax, Math.max(unitMin, selectedValue || unitMin)));",
+        source,
+        count=1,
     )
     source = source.replace("editor.min = '0'; editor.max = loadInput.max;", "editor.min = loadInput.min; editor.max = loadInput.max;")
     source = source.replace("entered >= 0 && entered <= Number(loadInput.max)", "entered >= Number(loadInput.min) && entered <= Number(loadInput.max)")
     source = source.replace("item.performanceLoad.value = '0'; updateLoadControl();", "item.performanceLoad.value = item.performanceLoad.min; updateLoadControl();")
     source = source.replace("editor.value = Number(item.performanceLoadExact) > 0 ? String(item.performanceLoadExact) : '';", "editor.value = item.performanceLoadSelected ? String(item.performanceLoadExact) : '';")
-    source = source.replace("item.performanceLoadExact = Math.round(Math.min(nextUnit === 'lb' ? 2200 : 1000, converted) * 10) / 10;\n      item.performanceLoad.value = String(Math.min(nextUnit === 'lb' ? 2200 : 1000, Math.round(converted / nextStep) * nextStep));", "const factor = nextUnit === 'lb' ? 1 / 0.45359237 : 1; const unitStep = nextUnit === 'lb' ? 5 : item.performanceLoadProfile.stepKg; const unitMin = Math.ceil(item.performanceLoadProfile.minKg * factor / unitStep) * unitStep; const unitMax = Math.floor(item.performanceLoadProfile.maxKg * factor / unitStep) * unitStep;\n      item.performanceLoadExact = Math.min(unitMax, Math.max(unitMin, Math.round(converted * factor / unitStep) * unitStep));\n      item.performanceLoad.value = String(item.performanceLoadExact);")
+    source = source.replace(
+        "const factor = nextUnit === 'lb' ? 1 / 0.45359237 : 1; const unitStep = nextUnit === 'lb' ? 5 : item.performanceLoadProfile.stepKg; const unitMin = Math.ceil(item.performanceLoadProfile.minKg * factor / unitStep) * unitStep; const unitMax = Math.floor(item.performanceLoadProfile.maxKg * factor / unitStep) * unitStep;\n      item.performanceLoadExact = Math.min(unitMax, Math.max(unitMin, Math.round(converted * factor / unitStep) * unitStep));\n      item.performanceLoad.value = String(item.performanceLoadExact);",
+        "const factor = nextUnit === 'lb' ? 1 / 0.45359237 : 1; const unitStep = nextUnit === 'lb' ? 5 : item.performanceLoadProfile.stepKg; const rounded = Math.round(converted / unitStep) * unitStep; const unitMin = Math.ceil(Math.min(item.performanceLoadProfile.minKg * factor, item.performanceLoadSelected ? rounded : item.performanceLoadProfile.minKg * factor) / unitStep) * unitStep; const unitMax = Math.floor(Math.max(item.performanceLoadProfile.maxKg * factor, item.performanceLoadSelected ? rounded : item.performanceLoadProfile.maxKg * factor) / unitStep) * unitStep;\n      item.performanceLoadExact = Math.min(unitMax, Math.max(unitMin, rounded));\n      item.performanceLoad.value = String(item.performanceLoadExact);",
+        1,
+    )
     source = source.replace(
         "const previous = history.find(session => session.routineId === routineId && session.sessionId !== currentSessionId && (session.performance || []).some(record => record.exerciseId === String(item.index + 1)));",
         "item.performanceHistory = history.filter(session => session.routineId === routineId && session.sessionId !== currentSessionId && (session.performance || []).some(record => record.exerciseId === String(item.index + 1))).sort((a, b) => Number(b.endedAt || b.updatedAt || 0) - Number(a.endedAt || a.updatedAt || 0)); const previous = item.performanceHistory[0];",
         1,
     )
+    history_anchor = "const previous = item.performanceHistory[0];"
+    history_hydration = """const previous = item.performanceHistory[0];
+      const latestLoadRecord = item.performanceHistory.flatMap(session => (session.performance || []).filter(record => record.exerciseId === String(item.index + 1)).map(record => ({ ...record, _sessionUpdatedAt: Number(session.endedAt || session.updatedAt || 0) }))).filter(record => record.loadSelected !== false && record.load !== null && record.load !== undefined && String(record.load).trim() !== '' && Number.isFinite(Number(record.load))).sort((a, b) => Number(b.updatedAt || b._sessionUpdatedAt || 0) - Number(a.updatedAt || a._sessionUpdatedAt || 0))[0];
+      if (latestLoadRecord) {
+        const storedKg = Number.isFinite(Number(latestLoadRecord.loadKg)) ? Number(latestLoadRecord.loadKg) : latestLoadRecord.loadUnit === 'lb' ? Number(latestLoadRecord.load) * 0.45359237 : Number(latestLoadRecord.load);
+        if (Number.isFinite(storedKg)) item.previousLoadKg = storedKg;
+        if (!savedDraft && !item.performanceLoadSelected && !isExerciseStarted(item) && Number.isFinite(storedKg)) {
+          const factor = item.performanceLoadUnit === 'lb' ? 1 / 0.45359237 : 1;
+          const step = item.performanceLoadUnit === 'lb' ? 5 : item.performanceLoadProfile.stepKg;
+          const min = Math.min(Math.ceil(item.performanceLoadProfile.minKg * factor / step) * step, Math.round(storedKg * factor / step) * step);
+          const max = Math.max(Math.floor(item.performanceLoadProfile.maxKg * factor / step) * step, Math.round(storedKg * factor / step) * step);
+          const restored = Math.min(max, Math.max(min, Math.round(storedKg * factor / step) * step));
+          item.performanceLoadExact = restored; item.performanceLoad.value = String(restored); item.performanceLoadSelected = true; updateLoadControl(); savePerformanceDraft();
+        }
+      }"""
+    if history_anchor in source and "const latestLoadRecord = item.performanceHistory.flatMap" not in source:
+        source = source.replace(history_anchor, history_hydration, 1)
+    source = source.replace(
+        "const records = (previous?.performance || []).filter(record => record.exerciseId === String(item.index + 1)).sort((a, b) => a.setNumber - b.setNumber);",
+        "const records = (previous?.performance || []).filter(record => { const reps = Number(record?.reps); return record && record.exerciseId === String(item.index + 1) && Number.isInteger(reps) && reps >= 1 && reps <= 100; }).sort((a, b) => a.setNumber - b.setNumber);",
+        1,
+    )
+    source = source.replace(
+        "filter(record => record.load !== null && record.load !== undefined && Number.isFinite(Number(record.load)))",
+        "filter(record => record.loadSelected !== false && record.load !== null && record.load !== undefined && String(record.load).trim() !== '' && Number.isFinite(Number(record.load)))",
+    )
+
+    tracker_anchor = "const completed = skipped || done === item.seriesKeys.length;"
+    tracker_lock = """const completed = skipped || done === item.seriesKeys.length;
+    const performancePanel = tracker.closest('article.card')?.querySelector('.performanceEntry');
+    if (performancePanel) {
+      performancePanel.classList.toggle('isLocked', completed);
+      performancePanel.setAttribute('aria-disabled', String(completed));
+      performancePanel.querySelectorAll('input, select, button').forEach(control => { control.disabled = completed; });
+    }"""
+    if tracker_anchor in source and "performancePanel.setAttribute('aria-disabled', String(completed))" not in source:
+        source = source.replace(tracker_anchor, tracker_lock, 1)
+
+    load_anchor = "      state[nextKey] = true;"
+    load_feedback = """      if (load !== null && Number.isFinite(item.previousLoadKg)) {
+        const deltaKg = loadKg - item.previousLoadKg;
+        if (deltaKg > 0.01) window.dispatchEvent(new CustomEvent('gymratik:weight-change', { detail: { direction: 'up', title: item.title, target: item.tracker, load, loadUnit } }));
+        else if (deltaKg < -0.01) window.dispatchEvent(new CustomEvent('gymratik:weight-change', { detail: { direction: 'down', title: item.title, target: item.tracker, load, loadUnit } }));
+        item.previousLoadKg = loadKg;
+      } else if (load !== null) item.previousLoadKg = loadKg;
+      state[nextKey] = true;"""
+    if load_anchor in source and "gymratik:weight-change" not in source:
+        source = source.replace(load_anchor, load_feedback, 1)
+
+    listener_anchor = "  const revealObserver = 'IntersectionObserver' in window ? new IntersectionObserver"
+    weight_listener = """  window.addEventListener('gymratik:weight-change', event => {
+    const detail = event.detail || {};
+    if (detail.direction === 'up') {
+      celebrate(detail.target, 20);
+      encourage(`¡Carga aumentada en ${detail.title}! Serie completada con ${detail.load} ${detail.loadUnit}. Buen progreso; conserva la técnica.`);
+    } else if (detail.direction === 'down') {
+      encourage(`Buen ajuste en ${detail.title}: completaste la serie con menos carga. Prioriza control y rango cómodo; progresar también es entrenar con criterio.`);
+    }
+  });
+
+"""
+    if listener_anchor in source and "window.addEventListener('gymratik:weight-change'" not in source:
+        source = source.replace(listener_anchor, weight_listener + listener_anchor, 1)
     if "Progresión sugerida: alcanzaste al menos" not in source:
         source = source.replace(
             "      recordSeriesTime(item, seriesIndex, completedAt);",

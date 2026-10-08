@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="900" viewBox="0 0 800 900"><defs>
+  <linearGradient id="steel" x2="1" y2="0"><stop stop-color="#59646b"/><stop offset=".2" stop-color="#f0f4f5"/><stop offset=".48" stop-color="#a9b3b8"/><stop offset=".72" stop-color="#f8fafb"/><stop offset="1" stop-color="#657178"/></linearGradient>
+  <linearGradient id="darkSteel" x2="0" y2="1"><stop stop-color="#424b50"/><stop offset=".45" stop-color="#171d20"/><stop offset="1" stop-color="#555f63"/></linearGradient>
+  <linearGradient id="fabric" x2="0" y2="1"><stop stop-color="#313a40"/><stop offset="1" stop-color="#101518"/></linearGradient>
+  <linearGradient id="skin" x2="1" y2="1"><stop stop-color="#ffd09d"/><stop offset=".48" stop-color="#e99a62"/><stop offset="1" stop-color="#b85e3f"/></linearGradient>
+  <linearGradient id="hair" x2=".85" y2="1"><stop stop-color="#303239"/><stop offset=".53" stop-color="#11161b"/><stop offset=".78" stop-color="#087d79"/><stop offset="1" stop-color="#123e47"/></linearGradient>
+  <linearGradient id="tail" x2="1" y2="1"><stop stop-color="#ffbf68"/><stop offset=".5" stop-color="#f27643"/><stop offset="1" stop-color="#d94832"/></linearGradient>
+  <filter id="shadow" x="-.3" y="-.3" width="1.6" height="1.7"><feGaussianBlur stdDeviation="7"/></filter>
+</defs>
+<!-- Cola detrás de la cadera: identidad visual de la mascota. -->
+<path d="M441 493c-58 2-111-19-119-68-5-31 14-59 45-70 28-10 52 1 58 22-19-10-40-5-48 11-13 26 9 49 51 48l44 22z" fill="none" stroke="#9a402b" stroke-width="24" stroke-linecap="round"/>
+<path d="M441 493c-58 2-111-19-119-68-5-31 14-59 45-70 28-10 52 1 58 22-19-10-40-5-48 11-13 26 9 49 51 48l44 22z" fill="none" stroke="url(#tail)" stroke-width="17" stroke-linecap="round"/>
+<!-- Muslos apoyados en el asiento, rodillas flexionadas; pies en el suelo. -->
+<g stroke="#090d10" stroke-width="7" stroke-linejoin="round">
+ <path d="M430 481q-48 4-67 39l10 59q25 23 70 7l32-43-9-48z" fill="url(#fabric)"/>
+ <path d="M478 484q50-5 77 31l-8 66q-28 18-72 2l-29-42 9-42z" fill="url(#fabric)"/>
+ <path d="M380 567q-4 62-17 128l7 24q27 12 56 0l8-22q-9-68 8-112l-29-24z" fill="url(#fabric)"/>
+ <path d="M528 566q9 67 25 127l-7 25q-27 12-56 0l-9-21q9-67-8-112l27-23z" fill="url(#fabric)"/>
+ <!-- Zapatillas estables apoyadas; suela y puntera legibles. -->
+ <path d="M365 713q18-7 42 0l13 26q28 3 40 20v15h-97q-13-7-9-21z" fill="#20272c"/>
+ <path d="M490 713q18-7 42 0l13 26q28 3 40 20v15h-97q-13-7-9-21z" fill="#20272c"/>
+ <path d="M357 760h105v14H357q-9-5 0-14zm125 0h105v14H482q-9-5 0-14z" fill="#f0f2ef" stroke-width="4"/>
+ <path d="M385 727l22 13m-13-18 20 12m92-7 22 13m-12-18 20 12" fill="none" stroke="#eef1ed" stroke-width="4"/>
+ <path d="M397 738l14 8m103-8 14 8" fill="none" stroke="#e64d3f" stroke-width="6"/>
+</g></svg>

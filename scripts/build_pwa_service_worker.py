@@ -180,6 +180,9 @@ def build_precache() -> list[str]:
     base = [
         "./",
         "./index.html",
+        "./records.html",
+        "./records.css",
+        "./records.js",
         "./manifest.webmanifest",
         *manifest_icons,
         "./assets/branding/gymratik-cover-seated-breath-30fps.webp",

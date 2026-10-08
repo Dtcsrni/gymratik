@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="900" viewBox="0 0 800 900"><defs>
+  <linearGradient id="steel" x2="1" y2="0"><stop stop-color="#59646b"/><stop offset=".2" stop-color="#f0f4f5"/><stop offset=".48" stop-color="#a9b3b8"/><stop offset=".72" stop-color="#f8fafb"/><stop offset="1" stop-color="#657178"/></linearGradient>
+  <linearGradient id="darkSteel" x2="0" y2="1"><stop stop-color="#424b50"/><stop offset=".45" stop-color="#171d20"/><stop offset="1" stop-color="#555f63"/></linearGradient>
+  <linearGradient id="fabric" x2="0" y2="1"><stop stop-color="#313a40"/><stop offset="1" stop-color="#101518"/></linearGradient>
+  <linearGradient id="skin" x2="1" y2="1"><stop stop-color="#ffd09d"/><stop offset=".48" stop-color="#e99a62"/><stop offset="1" stop-color="#b85e3f"/></linearGradient>
+  <linearGradient id="hair" x2=".85" y2="1"><stop stop-color="#303239"/><stop offset=".53" stop-color="#11161b"/><stop offset=".78" stop-color="#087d79"/><stop offset="1" stop-color="#123e47"/></linearGradient>
+  <linearGradient id="tail" x2="1" y2="1"><stop stop-color="#ffbf68"/><stop offset=".5" stop-color="#f27643"/><stop offset="1" stop-color="#d94832"/></linearGradient>
+  <filter id="shadow" x="-.3" y="-.3" width="1.6" height="1.7"><feGaussianBlur stdDeviation="7"/></filter>
+</defs><g transform="translate(0 175)" stroke="#171c20" stroke-linejoin="round">
+ <path d="M309 213q-14 7 0 14l24 15m274-29q14 7 0 14l-24 15" fill="none" stroke="#111619" stroke-width="16" stroke-linecap="round"/>
+ <path d="M330 220h280" fill="none" stroke="#b9c3c7" stroke-width="15" stroke-linecap="round"/>
+ <path d="M332 217h276" fill="none" stroke="#f5f7f7" stroke-width="2"/>
+ <path d="M345 209v22m12-22v22m230-22v22m12-22v22" stroke="#20282d" stroke-width="4"/>
+ <circle cx="470" cy="220" r="10" fill="#68747a" stroke-width="3"/>
+ </g></svg>

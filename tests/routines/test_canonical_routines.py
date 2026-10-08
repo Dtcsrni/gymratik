@@ -5,6 +5,7 @@ import re
 import json
 import tempfile
 import unittest
+from html import unescape
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote
@@ -68,7 +69,7 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
         self.assertEqual(result.count('class="techStep warning"'), 1)
         self.assertNotIn('class="techStep control"', result)
         self.assertIn("Movimiento", result)
-        self.assertIn("Exhala al tirar", result)
+        self.assertIn("Lleva los codos hacia abajo", result)
         self.assertEqual(standardize_technique_guidance(result), result)
 
     def test_summary_navigation_preserves_free_scroll_and_clicks_to_exercise(self) -> None:
@@ -588,7 +589,8 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertIn("createPerformanceIcon('repeat-2')", source)
                 self.assertIn("const repFeedbackZone = value =>", source)
                 self.assertIn("data-zone=\"below\"", source)
-                self.assertIn("const loadProfile = /prensa|hack squat|hip thrust|bisagra/", source)
+                self.assertIn("const loadProfiles = [", source)
+                self.assertIn("if (!loadProfile) throw new Error(`Falta un perfil de carga revisado para: ${item.title}`)", source)
                 self.assertIn("dataset.maxKg = String(item.performanceLoadProfile.maxKg)", source)
                 self.assertIn("Elige ${minPossible}–${maxPossible}; objetivo ${item.repMinimum}–${item.repMaximum}", reps_logic)
                 self.assertIn("repsClear.addEventListener('click'", source)
@@ -612,6 +614,32 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertEqual(source.count("const activeRest = Boolean("), 1)
                 self.assertIn("button:not(:disabled):active", source)
                 self.assertNotIn("Number(item.performanceReps.value) > 0 ?", source)
+
+    def test_all_26_exercises_have_explicit_equipment_appropriate_load_ranges(self) -> None:
+        source = (ROOT / "scripts" / "standardize_muscle_visuals.py").read_text(encoding="utf-8")
+        profile_start = source.index("    load_profile_block = \"\"\"")
+        profile_end = source.index('"""', profile_start + len('    load_profile_block = """'))
+        profile_block = source[profile_start:profile_end]
+        patterns = [re.compile(pattern.removesuffix("$"), re.I) for pattern in re.findall(r"\[/\^(.+?)/, \{ minKg:", profile_block)]
+        self.assertEqual(len(patterns), 24)
+        exercise_count = 0
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            html = path.read_text(encoding="utf-8")
+            titles = re.findall(r'<div class="exTitle">([^<]+)</div>', html)
+            exercise_count += len(titles)
+            self.assertEqual(html.count("const loadProfiles = ["), 1, path.name)
+            for title in titles:
+                with self.subTest(day=path.name, exercise=title):
+                    self.assertEqual(sum(bool(pattern.search(title.lower())) for pattern in patterns), 1)
+        self.assertEqual(exercise_count, 26)
+        self.assertIn("{ minKg: 10, maxKg: 250, stepKg: 2.5, label: 'barra libre · peso total con barra", profile_block)
+        self.assertIn("{ minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'curl femoral", profile_block)
+        self.assertNotIn("maxKg: 160", profile_block)
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            html = path.read_text(encoding="utf-8")
+            self.assertIn("item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue", html)
+            self.assertIn("const rounded = Math.round(converted / unitStep) * unitStep", html)
+            self.assertNotIn("Math.round(converted * factor / unitStep)", html)
 
     def test_all_routines_use_persistent_fifteen_second_preparation_before_timing(self) -> None:
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
@@ -663,6 +691,23 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertIn("}, 10000);", source)
                 self.assertIn("state.__skippedExercises[key] = true", source)
                 self.assertIn("row.skipped ? '↷ Omitido'", source)
+
+    def test_saved_load_is_restored_and_completed_exercise_inputs_are_locked(self) -> None:
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            source = path.read_text(encoding="utf-8")
+            with self.subTest(path=path.name):
+                self.assertIn("const latestLoadRecord = item.performanceHistory.flatMap", source)
+                self.assertIn("record.loadSelected !== false && record.load !== null && record.load !== undefined && String(record.load).trim() !== ''", source)
+                self.assertIn("!savedDraft && !item.performanceLoadSelected && !isExerciseStarted(item)", source)
+                self.assertIn("item.performanceLoadExact = restored; item.performanceLoad.value = String(restored); item.performanceLoadSelected = true", source)
+                self.assertIn("item.previousLoadKg = storedKg", source)
+                self.assertIn("performancePanel.setAttribute('aria-disabled', String(completed))", source)
+                self.assertIn("performancePanel.querySelectorAll('input, select, button').forEach(control => { control.disabled = completed; })", source)
+                self.assertIn("gymratik:weight-change", source)
+                self.assertIn("direction: 'up'", source)
+                self.assertIn("direction: 'down'", source)
+                self.assertIn("¡Carga aumentada en ${detail.title}!", source)
+                self.assertIn("Buen ajuste en ${detail.title}", source)
 
     def test_editable_load_value_persists_decimal_independently_of_slider_step(self) -> None:
         source = (CANONICAL / "Rutina_Dia_1_Espalda_Biceps_V1.html").read_text(encoding="utf-8")
@@ -869,10 +914,22 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertNotIn('id="fitnessQuotesPayload"', source)
 
     def test_shared_technique_template_is_compact_and_identical_across_all_days(self) -> None:
+        seen_titles: set[str] = set()
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
             with self.subTest(path=path.name):
                 source = path.read_text(encoding="utf-8")
                 card_count = len(re.findall(r'<article class="card', source))
+                cards = re.findall(r'<article class="card\b.*?</article>', source, re.S)
+                for card in cards:
+                    raw_title = re.search(r'<div class="exTitle">(.*?)</div>', card, re.S)
+                    self.assertIsNotNone(raw_title, f"{path.name}: tarjeta sin título")
+                    title = unescape(re.sub(r"<[^>]+>", "", raw_title.group(1))).strip()
+                    self.assertIn(title, TECHNIQUE_CUES, f"{path.name}: guía no definida para {title}")
+                    self.assertNotIn(title, seen_titles, f"Ejercicio duplicado en rutinas: {title}")
+                    seen_titles.add(title)
+                    actual_cues = re.findall(r'<div class="techStepText">(.*?)</div>', card, re.S)
+                    self.assertEqual(actual_cues, list(TECHNIQUE_CUES[title]), f"{path.name}: guía desactualizada para {title}")
+                    self.assertTrue(all(len(cue) <= 75 for cue in actual_cues), f"{path.name}: indicación extensa para {title}")
                 for step_class in ("setup", "move", "warning"):
                     self.assertEqual(source.count(f'class="techStep {step_class}"'), card_count)
                 self.assertNotIn('class="techStep control"', source)
@@ -886,6 +943,7 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertNotIn("new MutationObserver(scheduleAlignment)", source)
                 self.assertIn("scrollIntoView({behavior:'smooth', block:'start'})", source)
                 self.assertIn("width:82px!important;height:82px!important", source)
+        self.assertEqual(seen_titles, set(TECHNIQUE_CUES))
 
     def test_day_four_uses_free_barbell_romanian_deadlift_and_owned_local_media(self) -> None:
         path = CANONICAL / "Rutina_Dia_4_Pierna_Equilibrio_V1.html"
@@ -895,7 +953,7 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
         self.assertIn("PESO MUERTO RUMANO CON BARRA", source)
         self.assertIn("barbell-rdl-v1.gif", source)
         self.assertIn("Lleva la cadera atrás", source)
-        self.assertIn("barra pegada a las piernas", source)
+        self.assertIn("barra cerca de las piernas", source)
         self.assertIn("barra libre y discos", source)
         self.assertNotIn("PESO MUERTO EN MÁQUINA", source)
         self.assertNotIn("0578-GUT8I22", source)
@@ -1110,6 +1168,18 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                     )
                 self.assertIn('data-enhancement="warmup-motion-zoom-v2"', source)
                 self.assertIn("object-fit:contain!important}", source)
+
+    def test_null_or_empty_repetitions_are_never_rendered_as_history_or_timer_text(self) -> None:
+        home = (ROOT / "index.html").read_text(encoding="utf-8")
+        self.assertIn("Number.isInteger(reps) && reps >= 1 && reps <= 100", home)
+        self.assertIn("record.exerciseId || 'sin identificar'", home)
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            source = path.read_text(encoding="utf-8")
+            with self.subTest(routine=path.name):
+                self.assertIn("Number.isInteger(reps) && reps >= 1 && reps <= 100", source)
+                self.assertIn("Number.isInteger(repsValue) && repsValue >= 1 && repsValue <= 100", source)
+        builder = (ROOT / "scripts" / "standardize_muscle_visuals.py").read_text(encoding="utf-8")
+        self.assertIn("Number.isInteger(repsValue) && repsValue >= 1 && repsValue <= 100", builder)
 
 
 if __name__ == "__main__":
