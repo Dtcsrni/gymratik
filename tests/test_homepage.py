@@ -24,8 +24,8 @@ class HomepageContractTests(unittest.TestCase):
         self.assertEqual(self.manifest["name"], "Gymratik: Rutinas y progreso")
         self.assertEqual(self.manifest["short_name"], "Gymratik")
         self.assertIn("Gymratik: Rutinas y progreso", self.html)
-        self.assertIn('aria-label="Gymratik v0.4.6, inicio"', self.html)
-        self.assertIn('class="brand-version" aria-label="Versión 0.4.6">v0.4.6', self.html)
+        self.assertIn('aria-label="Gymratik v0.4.7, inicio"', self.html)
+        self.assertIn('class="brand-version" aria-label="Versión 0.4.7">v0.4.7', self.html)
         self.assertIn('<span class="brand-mark" aria-hidden="true"><img src="./assets/branding/gymratik-mascots-mark-v2.png" alt=""></span>', self.html)
         self.assertIn("background:rgba(11,16,23,.72)", self.html)
         self.assertIn(".hero-strength-stage", self.html)
@@ -180,13 +180,15 @@ class HomepageContractTests(unittest.TestCase):
         self.assertEqual(int(estimate["imageBytes"]), actual_images)
         self.assertEqual(int(estimate["applicationBytes"]), actual_total - actual_images)
 
-    def test_cellular_update_is_manual_and_detected_version_uses_the_mascot_animation(self):
+    def test_cellular_update_is_temporarily_forced_and_detected_version_uses_the_mascot_animation(self):
         self.assertIn('id="updateNotice" class="update-notice"', self.html)
         self.assertIn('id="updateNoticeArt"', self.html)
         self.assertIn('id="manualUpdateButton"', self.html)
         self.assertIn('data-motion-src="./assets/branding/gymratik-cover-seated-breath-30fps.webp"', self.html)
         self.assertIn("connectionType === 'cellular'", self.html)
         self.assertIn("preference === 'always' || isWifi", self.html)
+        self.assertIn("networkPreference.value = 'always';", self.html)
+        self.assertIn("networkPreference.disabled = true;", self.html)
         self.assertNotIn("preference === 'ask' && !isCellular", self.html)
         self.assertIn("(!firstInstall && isManualReload)", self.html)
         self.assertIn("consumeManualUpdateRequest()", self.html)
@@ -195,7 +197,7 @@ class HomepageContractTests(unittest.TestCase):
         self.assertIn("showUpdateDetectedAnimation()", self.html)
         self.assertIn("if (!document.documentElement.classList.contains('gymratik-loading'))", self.html)
         self.assertIn("updateNotice.dataset.detected = 'true'", self.html)
-        self.assertIn("arrastrando hacia abajo desde el borde superior", self.html)
+        self.assertIn("Actualización automática temporalmente habilitada también con datos móviles.", self.html)
         self.assertIn(".app-splash.update-detected .splash-mascot-poses", self.html)
         self.assertIn("prefers-reduced-motion:reduce", self.html)
 

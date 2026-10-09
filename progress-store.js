@@ -663,9 +663,14 @@
   function dashboardFrom(data) {
     const currentWeek = trainingWeekKey();
     const currentWeekProgress = data.progress.filter((record) => {
-      const belongsToCurrentWeek = (record.weekKey || trainingWeekKey(record.sessionStartedAt || record.updatedAt)) === currentWeek;
-      const isUnfinishedSession = Number(record.sessionStartedAt) > 0 && Number(record.sessionEndedAt) < Number(record.sessionStartedAt);
-      return belongsToCurrentWeek || isUnfinishedSession;
+      // Prefer the original session date: older app versions could recapture
+      // a historical snapshot and incorrectly rewrite weekKey as current.
+      const sessionStartedAt = Number(record.sessionStartedAt) || 0;
+      const recordedWeek = sessionStartedAt > 0
+        ? trainingWeekKey(sessionStartedAt)
+        : (record.weekKey || trainingWeekKey(record.updatedAt));
+      const belongsToCurrentWeek = recordedWeek === currentWeek;
+      return belongsToCurrentWeek;
     });
     const progressByRoutine = new Map(currentWeekProgress.map((record) => [record.routineId, record]));
     const sessionsById = new Map(data.sessions.map((session) => [session.sessionId, session]));
@@ -738,13 +743,48 @@
     };
   }
 
-  async function restoreMissingRoutineProgress() {
+  async function rolloverStaleRoutineSnapshots() {
+    requireInstalledApp();
+    const currentWeek = trainingWeekKey();
+    let resetCount = 0;
+    for (const routineId of Object.keys(ROUTINES)) {
+      const storageKey = `fitlovers-${routineId}-series-v1`;
+      let state;
+      try {
+        state = JSON.parse(window.localStorage.getItem(storageKey) || 'null');
+      } catch (_) {
+        state = null;
+      }
+      if (!state || typeof state !== 'object' || Array.isArray(state)) continue;
+      const startedAt = Number(state.__timing?.sessionStartedAt) || 0;
+      const recordedWeek = startedAt > 0
+        ? trainingWeekKey(startedAt)
+        : (typeof state.__routineWeek === 'string' ? state.__routineWeek : '');
+      const hasProgress = Object.entries(state).some(([key, value]) => (/^e\d+s\d+$/.test(key) || /^w\d+$/.test(key)) && value === true)
+        || Object.keys(state.__skippedExercises || {}).length > 0
+        || Boolean(state.__timing?.warmup?.phase === 'done' || startedAt);
+      if (!hasProgress || !recordedWeek || recordedWeek >= currentWeek) continue;
+      try {
+        window.localStorage.setItem(storageKey, JSON.stringify({}));
+      } catch (error) {
+        emit('training-storage-error', { error });
+        continue;
+      }
+      // Replace only the current-progress snapshot. Session/activity history
+      // remains untouched; a session started this week is never reset here.
+      await capture({ routineId, state: {} });
+      resetCount += 1;
+    }
+    return resetCount;
+  }
+
+  async function reconcileLocalRoutineProgress() {
     requireInstalledApp();
     const existing = await readDatabase();
-    const knownRoutines = new Set(existing.progress.map((record) => record?.routineId));
-    let restored = 0;
+    const progressByRoutine = new Map(existing.progress.map((record) => [record?.routineId, record]));
+    const currentWeek = trainingWeekKey();
+    let reconciled = 0;
     for (const routineId of Object.keys(ROUTINES)) {
-      if (knownRoutines.has(routineId)) continue;
       let state;
       try {
         state = JSON.parse(window.localStorage.getItem(`fitlovers-${routineId}-series-v1`) || 'null');
@@ -752,19 +792,32 @@
         state = null;
       }
       if (!state || typeof state !== 'object' || Array.isArray(state)) continue;
-      const hasSavedProgress = Object.entries(state).some(([key, value]) => /^e\d+s\d+$/.test(key) && value === true)
-        || Number(state.__timing?.sessionStartedAt) > 0
+      const metrics = stateMetrics(state, ROUTINES[routineId]);
+      const hasSavedProgress = metrics.doneSeries > 0 || metrics.sessionStartedAt > 0
         || Number(state.__timing?.warmup?.preparationEndsAt) > 0;
       if (!hasSavedProgress) continue;
+      const localWeek = metrics.sessionStartedAt > 0
+        ? trainingWeekKey(metrics.sessionStartedAt)
+        : (typeof state.__routineWeek === 'string' ? state.__routineWeek : '');
+      if (localWeek !== currentWeek) continue;
+      const previous = progressByRoutine.get(routineId);
+      const needsReconcile = !previous
+        || Number(previous.sessionStartedAt) !== metrics.sessionStartedAt
+        || nonNegativeNumber(previous.doneSeries) !== metrics.doneSeries
+        || nonNegativeNumber(previous.completedExercises) !== metrics.completedExercises
+        || nonNegativeNumber(previous.sessionEndedAt) !== metrics.sessionEndedAt
+        || previous.weekKey !== currentWeek;
+      if (!needsReconcile) continue;
       await capture({ routineId, state });
-      restored += 1;
+      reconciled += 1;
     }
-    return restored;
+    return reconciled;
   }
 
   async function getDashboard() {
     requireInstalledApp();
-    await restoreMissingRoutineProgress();
+    await rolloverStaleRoutineSnapshots();
+    await reconcileLocalRoutineProgress();
     const data = await backfillActivity(await readDatabase());
     return dashboardFrom(data);
   }

@@ -2151,24 +2151,23 @@ SUMMARY_NAVIGATION_STYLE = '''<style data-enhancement="summary-free-navigation-v
 
 
 def standardize_weekly_progress_reset(source: str) -> str:
-    """Scope current routine progress to the local Monday-based week and expose reset in the floating panel."""
+    """Scope routine progress to the local week and show reset clearly at page end."""
     weekly_reset_logic = """  const routineWeekKey = timestamp => { const date = new Date(timestamp); date.setHours(0, 0, 0, 0); date.setDate(date.getDate() - ((date.getDay() + 6) % 7)); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; };
   const resetPreviousWeekProgress = () => {
     const startedAt = Number(state.__timing?.sessionStartedAt) || 0;
-    const endedAt = Number(state.__timing?.sessionEndedAt) || 0;
-    const abandonedAt = Number(state.__timing?.sessionAbandonedAt) || 0;
     const recordedWeek = startedAt ? routineWeekKey(startedAt) : typeof state.__routineWeek === 'string' ? state.__routineWeek : '';
-    const completedRoutine = exerciseItems.length > 0 && exerciseItems.every(item => item.seriesKeys.every(key => state[key] === true) || state.__skippedExercises?.[String(item.index + 1)] === true);
-    const unfinishedSession = startedAt > 0 && endedAt < startedAt && !abandonedAt && !completedRoutine;
     const hasProgress = Object.entries(state).some(([key, value]) => (/^e\\d+s\\d+$/.test(key) || /^w\\d+$/.test(key)) && value === true)
       || Object.keys(state.__skippedExercises || {}).length > 0
       || Boolean(state.__timing?.warmup?.phase === 'done' || startedAt);
-    if (!hasProgress || unfinishedSession || !recordedWeek || recordedWeek >= routineWeekKey(Date.now())) return false;
+    if (!hasProgress || !recordedWeek || recordedWeek >= routineWeekKey(Date.now())) return false;
     state = {};
     return true;
   };"""
     routine_week_key = weekly_reset_logic.split("\n", 1)[0]
     reset_helper = weekly_reset_logic.split("\n", 1)[1]
+    # A snapshot must never be published to the shared store before weekly
+    # normalization; otherwise an old completed day can be recaptured as current.
+    source = source.replace("  publishProgress();\n  const pulse = button => {", "  const pulse = button => {", 1)
     first_week_key = source.find(routine_week_key)
     if first_week_key >= 0:
         key_end = first_week_key + len(routine_week_key)
@@ -2181,7 +2180,7 @@ def standardize_weekly_progress_reset(source: str) -> str:
         )
         if "const resetPreviousWeekProgress = () =>" not in source:
             raise ValueError("No se encontró el contrato temporal para reiniciar progreso semanal")
-        source = source.replace("  migrateTimingState();", "  if (resetPreviousWeekProgress()) save();\n  migrateTimingState();", 1)
+        source = source.replace("  migrateTimingState();", "  if (resetPreviousWeekProgress()) save();\n  migrateTimingState();\n  publishProgress();", 1)
     else:
         source, reset_count = re.subn(
             r"  const resetPreviousWeekProgress = \(\) => \{.*?\n  \};",
@@ -2192,6 +2191,8 @@ def standardize_weekly_progress_reset(source: str) -> str:
         )
         if reset_count != 1:
             raise ValueError("No se pudo actualizar la regla semanal ya instalada")
+        if "  migrateTimingState();\n  publishProgress();" not in source:
+            source = source.replace("  migrateTimingState();", "  migrateTimingState();\n  publishProgress();", 1)
     if "state.__routineWeek = routineWeekKey(Date.now())" not in source:
         source, save_count = re.subn(
             r"(const save = \(\) => \{\s*if \(!window\.GymratikInstallGate\?\.isInstalled\(\)\) return;)",
@@ -2228,13 +2229,21 @@ def standardize_weekly_progress_reset(source: str) -> str:
     source = re.sub(r'<style data-enhancement="footer-reset-v1">.*?</style>\s*', "", source, count=1, flags=re.S)
     source = re.sub(r'<style data-enhancement="weekly-routine-reset-v1">.*?</style>\s*', "", source, count=1, flags=re.S)
     reset_style = '''<style data-enhancement="weekly-routine-reset-v1">
-#resetSession{display:block;width:min(100%,38rem);min-height:48px;margin:1rem auto calc(9rem + env(safe-area-inset-bottom,0px));padding:.72rem 1rem;border:1px solid rgba(255,157,162,.62);border-radius:.8rem;background:linear-gradient(110deg,rgba(113,44,61,.3),rgba(38,35,68,.42));color:#ffc1c5;font:inherit;font-size:.9rem;font-weight:850;cursor:pointer}
+.sessionFooter{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(10rem,18rem)!important;align-items:center!important;gap:.8rem!important;width:min(100%,62rem)!important;margin:1.5rem auto calc(10rem + env(safe-area-inset-bottom,0px))!important;padding:1rem!important;border:1px solid rgba(255,157,162,.4)!important;border-radius:1rem!important;background:linear-gradient(115deg,rgba(37,32,49,.96),rgba(17,38,54,.96))!important;box-shadow:0 12px 34px rgba(0,0,0,.2)!important;visibility:visible!important;opacity:1!important}
+.sessionResetCopy{display:grid;gap:.2rem;min-width:0;color:#f4fbff}.sessionResetCopy strong{font-size:.9rem}.sessionResetCopy span{color:#b8cbd4;font-size:.76rem;line-height:1.4}
+#resetSession{display:block!important;visibility:visible!important;opacity:1!important;width:100%;min-height:52px;margin:0;padding:.72rem 1rem;border:1px solid rgba(255,157,162,.72);border-radius:.8rem;background:linear-gradient(110deg,rgba(113,44,61,.58),rgba(64,42,73,.68));color:#ffe4e6;font:inherit;font-size:.9rem;font-weight:850;cursor:pointer}
 #resetSession::before{content:"↻";margin-right:.5rem;font-size:1.1rem}
 #resetSession:focus-visible{outline:3px solid #72dcff;outline-offset:3px}
 @media(prefers-reduced-motion:no-preference){#resetSession{transition:background-color .2s ease,border-color .2s ease,transform .2s ease}#resetSession:hover{border-color:#ffb6bb;background-color:rgba(145,53,70,.38);transform:translateY(-1px)}}
 @media(prefers-reduced-motion:reduce){#resetSession{transition:none!important}}
+@media(max-width:520px){.sessionFooter{grid-template-columns:1fr!important;gap:.55rem!important;padding:.75rem!important}.sessionResetCopy strong{font-size:.82rem}.sessionResetCopy span{font-size:.7rem}}
 </style>'''
     source = source.replace("</head>", reset_style + "\n</head>", 1)
+    source = source.replace(
+        '<footer class="sessionFooter" aria-label="Acciones del día"><button type="button" id="resetSession">Reiniciar día</button></footer>',
+        '<footer class="sessionFooter" aria-label="Acciones del día"><div class="sessionResetCopy"><strong>¿Quieres empezar este día de nuevo?</strong><span>Se reinicia solo el progreso de este día; tu historial y perfil se conservan.</span></div><button type="button" id="resetSession">Reiniciar día</button></footer>',
+        1,
+    )
     source = source.replace('aria-label="Acciones del día"><button type="button" class="summaryReset" id="resetSession">Reiniciar día</button>', 'aria-label="Acciones del día"><button type="button" id="resetSession">Reiniciar día</button>')
     return source
 

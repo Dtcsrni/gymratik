@@ -9,6 +9,43 @@ STORE = ROOT / "progress-store.js"
 
 
 class ProgressStoreRuntimeTests(unittest.TestCase):
+    def test_home_dashboard_rolls_previous_week_state_but_preserves_a_session_started_today(self):
+        script = r"""
+const fs = require('fs'), vm = require('vm'), assert = require('assert');
+const source = fs.readFileSync(process.argv[1], 'utf8');
+const today = Date.now();
+const oldStartedAt = today - 8 * 24 * 60 * 60 * 1000;
+const oldSessionId = `day2:${oldStartedAt}`;
+const week = new Date(); week.setHours(0,0,0,0); week.setDate(week.getDate()-((week.getDay()+6)%7));
+const currentWeek = `${week.getFullYear()}-${String(week.getMonth()+1).padStart(2,'0')}-${String(week.getDate()).padStart(2,'0')}`;
+const snapshots = {
+  'fitlovers-day2-series-v1': JSON.stringify({ e1s1: true, __routineWeek: currentWeek, __timing: { sessionStartedAt: oldStartedAt, sessionEndedAt: oldStartedAt + 3600000, warmup: { phase: 'done' } } }),
+  'fitlovers-day3-series-v1': JSON.stringify({ e1s1: true, __timing: { sessionStartedAt: today, sessionEndedAt: 0, warmup: { phase: 'done' } } })
+};
+let fallback = JSON.stringify({ progress: {
+  day2: { routineId: 'day2', doneSeries: 20, totalSeries: 20, sessionStartedAt: oldStartedAt, sessionEndedAt: oldStartedAt + 3600000, updatedAt: oldStartedAt + 3600000 },
+  day3: { routineId: 'day3', weekKey: currentWeek, doneSeries: 15, totalSeries: 22, sessionStartedAt: oldStartedAt, sessionEndedAt: 0, updatedAt: Date.now() }
+}, sessions: { [oldSessionId]: { sessionId: oldSessionId, routineId: 'day2', startedAt: oldStartedAt, endedAt: oldStartedAt + 3600000, completedSeries: 20, totalSeries: 20, status: 'completed', updatedAt: oldStartedAt + 3600000 } }, activity: {} });
+const window = { GymratikInstallGate: { isInstalled() { return true; } },
+  CustomEvent: class CustomEvent { constructor(name, init) { this.name = name; this.detail = init?.detail; } }, dispatchEvent() {},
+  localStorage: { getItem(key) { return key === 'entrenamiento-progress-fallback-v3' ? fallback : snapshots[key] ?? null; }, setItem(key, value) { if (key === 'entrenamiento-progress-fallback-v3') fallback = value; else snapshots[key] = value; } }
+};
+const context = { window, CustomEvent: window.CustomEvent, localStorage: window.localStorage, navigator: {}, console, Date, setTimeout, clearTimeout };
+vm.runInNewContext(source, context);
+(async () => {
+  const dashboard = await window.TrainingProgressStore.getDashboard();
+  assert.deepStrictEqual(JSON.parse(snapshots['fitlovers-day2-series-v1']), {}, 'homepage rollover must clear the previous-week local day state');
+  assert.strictEqual(JSON.parse(snapshots['fitlovers-day3-series-v1']).e1s1, true, 'a session started today must be preserved');
+  assert.strictEqual(dashboard.routines.find(row => row.routineId === 'day2').doneSeries, 0);
+  assert.strictEqual(dashboard.routines.find(row => row.routineId === 'day3').doneSeries, 1);
+  assert.ok((await window.TrainingProgressStore.exportData()).data.sessions.some(session => session.sessionId === oldSessionId), 'completed history must remain intact');
+  console.log(JSON.stringify({ ok: true }));
+})().catch(error => { console.error(error); process.exit(1); });
+"""
+        result = subprocess.run(["node", "-e", script, str(STORE)], cwd=ROOT, check=False, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), {"ok": True})
+
     def test_previous_week_progress_is_excluded_from_current_plan_without_deleting_history(self):
         script = r"""
 const fs = require('fs'), vm = require('vm'), assert = require('assert');
@@ -21,9 +58,9 @@ const currentWeek = new Date(); currentWeek.setHours(0,0,0,0); currentWeek.setDa
 const weekKey = `${currentWeek.getFullYear()}-${String(currentWeek.getMonth()+1).padStart(2,'0')}-${String(currentWeek.getDate()).padStart(2,'0')}`;
 const fallback = JSON.stringify({
   progress: {
-    day1: { routineId: 'day1', sessionId: oldSession, doneSeries: 20, totalSeries: 20, sessionStartedAt: startedAt, sessionEndedAt: endedAt, updatedAt: Date.now() },
+    day1: { routineId: 'day1', sessionId: oldSession, weekKey, doneSeries: 20, totalSeries: 20, sessionStartedAt: startedAt, sessionEndedAt: endedAt, updatedAt: Date.now() },
     day2: { routineId: 'day2', weekKey, doneSeries: 2, totalSeries: 20, sessionStartedAt: currentStartedAt, sessionEndedAt: 0, updatedAt: Date.now() },
-    day3: { routineId: 'day3', sessionId: `day3:${startedAt}`, doneSeries: 1, totalSeries: 20, sessionStartedAt: startedAt, sessionEndedAt: 0, updatedAt: Date.now() }
+    day3: { routineId: 'day3', sessionId: `day3:${startedAt}`, weekKey, doneSeries: 1, totalSeries: 20, sessionStartedAt: startedAt, sessionEndedAt: 0, updatedAt: Date.now() }
   },
   sessions: { [oldSession]: { sessionId: oldSession, routineId: 'day1', startedAt, endedAt, status: 'completed', completedSeries: 20, totalSeries: 20, updatedAt: endedAt } },
   activity: {}
@@ -37,10 +74,10 @@ vm.runInNewContext(source, context);
 window.TrainingProgressStore.getDashboard().then(dashboard => {
   assert.strictEqual(dashboard.routines.find(row => row.routineId === 'day1').doneSeries, 0);
   assert.strictEqual(dashboard.routines.find(row => row.routineId === 'day2').doneSeries, 2);
-  assert.strictEqual(dashboard.routines.find(row => row.routineId === 'day3').doneSeries, 1, 'an unfinished previous-week session remains recoverable');
-  assert.strictEqual(dashboard.currentSeries, 3);
+  assert.strictEqual(dashboard.routines.find(row => row.routineId === 'day3').doneSeries, 0, 'an unfinished previous-week session must roll off with the week');
+  assert.strictEqual(dashboard.currentSeries, 2);
   assert.strictEqual(dashboard.sessionsCompleted, 1);
-  assert.strictEqual(dashboard.recordedSeries, 23, 'completed history and unfinished session remain recorded');
+  assert.strictEqual(dashboard.recordedSeries, 22, 'only completed history and this-week progress count; old incomplete work is rolled off');
   console.log(JSON.stringify({ ok: true }));
 }).catch(error => { console.error(error); process.exit(1); });
 """
