@@ -44,8 +44,12 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
         self.assertLess(result.index('id="resetSession"'), result.rindex('</body>'))
         self.assertIn('el historial de entrenamientos se conservará', result)
         self.assertIn('resetPreviousWeekProgress()', result)
-        self.assertIn('const unfinishedSession = startedAt > 0 && endedAt < startedAt && !abandonedAt;', result)
+        self.assertIn('const unfinishedSession = startedAt > 0 && endedAt < startedAt && !abandonedAt && !completedRoutine;', result)
+        self.assertIn("const recordedWeek = startedAt ? routineWeekKey(startedAt) : typeof state.__routineWeek === 'string' ? state.__routineWeek : '';", result)
+        self.assertIn('const completedRoutine = exerciseItems.length > 0 && exerciseItems.every(item => item.seriesKeys.every(key => state[key] === true)', result)
+        self.assertIn('!abandonedAt && !completedRoutine', result)
         self.assertIn("state.__routineWeek = routineWeekKey(Date.now())", result)
+        self.assertIn('margin:1rem auto calc(9rem + env(safe-area-inset-bottom,0px))', result)
         self.assertNotIn('clearRoutine?.(routineId)', result)
         self.assertEqual(standardize_weekly_progress_reset(result), result)
 

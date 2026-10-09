@@ -2157,8 +2157,9 @@ def standardize_weekly_progress_reset(source: str) -> str:
     const startedAt = Number(state.__timing?.sessionStartedAt) || 0;
     const endedAt = Number(state.__timing?.sessionEndedAt) || 0;
     const abandonedAt = Number(state.__timing?.sessionAbandonedAt) || 0;
-    const recordedWeek = typeof state.__routineWeek === 'string' ? state.__routineWeek : startedAt ? routineWeekKey(startedAt) : '';
-    const unfinishedSession = startedAt > 0 && endedAt < startedAt && !abandonedAt;
+    const recordedWeek = startedAt ? routineWeekKey(startedAt) : typeof state.__routineWeek === 'string' ? state.__routineWeek : '';
+    const completedRoutine = exerciseItems.length > 0 && exerciseItems.every(item => item.seriesKeys.every(key => state[key] === true) || state.__skippedExercises?.[String(item.index + 1)] === true);
+    const unfinishedSession = startedAt > 0 && endedAt < startedAt && !abandonedAt && !completedRoutine;
     const hasProgress = Object.entries(state).some(([key, value]) => (/^e\\d+s\\d+$/.test(key) || /^w\\d+$/.test(key)) && value === true)
       || Object.keys(state.__skippedExercises || {}).length > 0
       || Boolean(state.__timing?.warmup?.phase === 'done' || startedAt);
@@ -2227,7 +2228,7 @@ def standardize_weekly_progress_reset(source: str) -> str:
     source = re.sub(r'<style data-enhancement="footer-reset-v1">.*?</style>\s*', "", source, count=1, flags=re.S)
     source = re.sub(r'<style data-enhancement="weekly-routine-reset-v1">.*?</style>\s*', "", source, count=1, flags=re.S)
     reset_style = '''<style data-enhancement="weekly-routine-reset-v1">
-#resetSession{display:block;width:min(100%,38rem);min-height:48px;margin:1rem auto 2rem;padding:.72rem 1rem;border:1px solid rgba(255,157,162,.62);border-radius:.8rem;background:linear-gradient(110deg,rgba(113,44,61,.3),rgba(38,35,68,.42));color:#ffc1c5;font:inherit;font-size:.9rem;font-weight:850;cursor:pointer}
+#resetSession{display:block;width:min(100%,38rem);min-height:48px;margin:1rem auto calc(9rem + env(safe-area-inset-bottom,0px));padding:.72rem 1rem;border:1px solid rgba(255,157,162,.62);border-radius:.8rem;background:linear-gradient(110deg,rgba(113,44,61,.3),rgba(38,35,68,.42));color:#ffc1c5;font:inherit;font-size:.9rem;font-weight:850;cursor:pointer}
 #resetSession::before{content:"↻";margin-right:.5rem;font-size:1.1rem}
 #resetSession:focus-visible{outline:3px solid #72dcff;outline-offset:3px}
 @media(prefers-reduced-motion:no-preference){#resetSession{transition:background-color .2s ease,border-color .2s ease,transform .2s ease}#resetSession:hover{border-color:#ffb6bb;background-color:rgba(145,53,70,.38);transform:translateY(-1px)}}

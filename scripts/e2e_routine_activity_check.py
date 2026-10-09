@@ -1310,9 +1310,15 @@ def validate_weekly_progress_rollover(page, name: str) -> dict[str, bool]:
     reset = page.locator("#resetSession")
     if reset.count() != 1 or reset.locator("xpath=ancestor::*[@id='summaryBody']").count():
         raise AssertionError(f"{name}: Reiniciar día debe ser único y estar fuera del resumen flotante")
-    reset.scroll_into_view_if_needed()
+    if summary.get_attribute("aria-expanded") == "true":
+        click_control(summary)
+    page.evaluate("window.scrollTo(0, document.documentElement.scrollHeight)")
+    page.wait_for_timeout(80)
     if not reset.is_visible() or "reiniciar día" not in reset.inner_text().lower():
         raise AssertionError(f"{name}: el botón Reiniciar día no está visible al final de la rutina")
+    reset_geometry = reset.evaluate("element => { const button=element.getBoundingClientRect(); const overlay=document.querySelector('#floatingSessionSummary')?.getBoundingClientRect(); return {button:{top:button.top,bottom:button.bottom},overlay:overlay?{top:overlay.top,bottom:overlay.bottom}:null}; }")
+    if reset_geometry["button"]["top"] < 0 or reset_geometry["button"]["bottom"] > page.viewport_size["height"] or reset_geometry["overlay"] and reset_geometry["button"]["bottom"] > reset_geometry["overlay"]["top"]:
+        raise AssertionError(f"{name}: la barra fija tapa el botón Reiniciar día al final de la página: {reset_geometry!r}")
 
     page.evaluate("storageKey => { const startedAt = Date.now() - 8 * 24 * 60 * 60 * 1000; const tracker = document.querySelector('.exerciseTracker[data-series-keys]'); const key = tracker.dataset.seriesKeys.trim().split(/\\s+/)[0]; const state = { [key]: true, __timing: { sessionStartedAt: startedAt, sessionEndedAt: 0, warmup: { phase: 'done' }, exercises: { '1': { startedAt, seriesStartedAt: startedAt, seriesTimes: [53000] } } }, __performance: { '1': { [key]: { title: document.querySelector('.exTitle')?.textContent.trim() || 'Ejercicio', reps: 10, load: 40, loadUnit: 'kg', durationMs: 53000, updatedAt: startedAt } } } }; localStorage.setItem(storageKey, JSON.stringify(state)); }", storage_key)
     page.reload(wait_until="networkidle")
@@ -1326,6 +1332,12 @@ def validate_weekly_progress_rollover(page, name: str) -> dict[str, bool]:
     if not re.fullmatch(r"1/\d+", active_progress) or not re.search(r"S1 · 10r · 40kg", active_marker, re.IGNORECASE):
         raise AssertionError(f"{name}: recargar una sesión activa de la semana previa perdió su registro: {active_progress!r}, {active_marker!r}")
 
+    page.evaluate("storageKey => { const startedAt = Date.now() - 8 * 24 * 60 * 60 * 1000; const week = new Date(); week.setHours(0,0,0,0); week.setDate(week.getDate()-((week.getDay()+6)%7)); const state = {}; document.querySelectorAll('.exerciseTracker[data-series-keys]').forEach(tracker => tracker.dataset.seriesKeys.trim().split(/\\s+/).filter(Boolean).forEach(key => { state[key] = true; })); state.__routineWeek = `${week.getFullYear()}-${String(week.getMonth()+1).padStart(2,'0')}-${String(week.getDate()).padStart(2,'0')}`; state.__timing = { sessionStartedAt: startedAt, sessionEndedAt: 0, warmup: { phase: 'done' }, exercises: {} }; localStorage.setItem(storageKey, JSON.stringify(state)); }", storage_key)
+    page.reload(wait_until="networkidle")
+    page.wait_for_function("() => [...document.querySelectorAll('.exerciseProgress')].length > 0 && [...document.querySelectorAll('.exerciseProgress')].every(node => /^0\\//.test(node.textContent.trim()))")
+    if page.locator("#sessionCompletionPanel").is_visible():
+        raise AssertionError(f"{name}: una rutina completada sin marca histórica de cierre no debe quedar pegada a semanas futuras")
+
     page.evaluate("storageKey => { const endedAt = Date.now() - 60_000; const state = {}; document.querySelectorAll('.exerciseTracker[data-series-keys]').forEach(tracker => tracker.dataset.seriesKeys.trim().split(/\\s+/).filter(Boolean).forEach(key => { state[key] = true; })); state.__timing = { sessionStartedAt: endedAt - 45 * 60 * 1000, sessionEndedAt: endedAt, warmup: { phase: 'done' }, exercises: {} }; localStorage.setItem(storageKey, JSON.stringify(state)); }", storage_key)
     page.reload(wait_until="networkidle")
     page.wait_for_function("() => [...document.querySelectorAll('.exerciseProgress')].length > 0 && [...document.querySelectorAll('.exerciseProgress')].every(node => !/^0\\//.test(node.textContent.trim()))")
@@ -1337,7 +1349,7 @@ def validate_weekly_progress_rollover(page, name: str) -> dict[str, bool]:
     page.wait_for_function("() => [...document.querySelectorAll('.exerciseProgress')].length > 0 && [...document.querySelectorAll('.exerciseProgress')].every(node => /^0\\//.test(node.textContent.trim()))")
     if page.locator("#summaryToggle").get_attribute("aria-expanded") == "true":
         click_control(page.locator("#summaryToggle"))
-    return {"previousWeekRolledToZero": True, "unfinishedSessionPreservedOnReload": True, "currentWeekCompletionPreserved": retained_current_week, "resetButtonVisibleAtRoutineEnd": True}
+    return {"previousWeekRolledToZero": True, "unfinishedSessionPreservedOnReload": True, "completedLegacySessionWithoutEndTimestampRolledToZero": True, "currentWeekCompletionPreserved": retained_current_week, "resetButtonVisibleAtRoutineEnd": True, "resetButtonNotCoveredByFloatingSummary": True}
 
 
 def validate_approximation_moves_to_first_available(browser, name: str, sex: str) -> None:
