@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "description": "Animaciones de técnica Gymratik a 25 fps, generadas desde cuatro poses anatómicas mediante interpolación de flujo óptico.",
+  "frameSize": 256,
+  "fps": 25,
+  "frameDurationMs": 40,
+  "records": [
+    {
+      "exerciseId": "day1-exercise01",
+      "sourceSheet": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/mascot_exercise_motion/day1-exercise01-lat-pulldown-sheet.png",
+      "gif": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/mascot_exercise_motion/day1-exercise01-lat-pulldown-25fps.gif",
+      "poster": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/mascot_exercise_motion/day1-exercise01-lat-pulldown-25fps-poster.webp",
+      "finalPoster": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/mascot_exercise_motion/day1-exercise01-lat-pulldown-25fps-final-poster.webp",
+      "keyframes": 4,
+      "frames": 96,
+      "width": 256,
+      "height": 256,
+      "frameDurationMs": 40,
+      "fps": 25,
+      "cycleDurationMs": 3840,
+      "gifBytes": 2776132,
+      "sha256": "658a278db2695bad28a145d1710f7d326fe342676b8fcea5178c3fd754a7b253"
+    },
+    {
+      "exerciseId": "day3-exercise07",
+      "sourceSheet": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/mascot_exercise_motion/day3-exercise07-overhead-triceps-sheet.png",
+      "gif": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/mascot_exercise_motion/day3-exercise07-overhead-triceps-25fps.gif",
+      "poster": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/mascot_exercise_motion/day3-exercise07-overhead-triceps-25fps-poster.webp",
+      "finalPoster": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/mascot_exercise_motion/day3-exercise07-overhead-triceps-25fps-final-poster.webp",
+      "keyframes": 4,
+      "frames": 96,
+      "width": 256,
+      "height": 256,
+      "frameDurationMs": 40,
+      "fps": 25,
+      "cycleDurationMs": 3840,
+      "gifBytes": 1940832,
+      "sha256": "f0584659ef529e1f1d411a328c407faf25c5faae1b157f63026f5fe4c0e5af4d"
+    }
+  ]
+}

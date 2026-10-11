@@ -23,6 +23,14 @@ HEADING_DEFINITION_PATTERN = re.compile(
 TABLE_DEFINITION_PATTERN = re.compile(
     r"^\s*\|\s*((?:RISK|SPIKE)-\d{3})\s*\|"
 )
+SRS_REQUIREMENT_PATTERN = re.compile(
+    r"^\s*- \*\*((?:FUN|NFR)-[A-Z]+-\d{3}) · P[012]:\*\*",
+    re.MULTILINE,
+)
+TRACEABILITY_ROW_PATTERN = re.compile(
+    r"^\| ((?:FUN|NFR)-[A-Z]+-\d{3}) \|",
+    re.MULTILINE,
+)
 
 
 def markdown_files() -> list[Path]:
@@ -64,6 +72,40 @@ def validate_markdown_links(errors: list[str]) -> None:
                 errors.append(
                     f"Enlace local roto: {path.relative_to(ROOT)} -> {target}"
                 )
+
+
+def validate_requirement_traceability(
+    errors: list[str], srs: str | None = None, traceability: str | None = None
+) -> None:
+    if srs is None:
+        srs = (ROOT / "docs" / "01-requirements" / "SRS.md").read_text(encoding="utf-8")
+    if traceability is None:
+        traceability = (ROOT / "docs" / "00-governance" / "TRACEABILITY.md").read_text(
+            encoding="utf-8"
+        )
+    # Only the first matrix is normative here; later tables trace SDDs and evidence.
+    traceability = traceability.split("## Serie TDD/SDD", 1)[0]
+    requirements = SRS_REQUIREMENT_PATTERN.findall(srs)
+    matrix_rows = TRACEABILITY_ROW_PATTERN.findall(traceability)
+    requirement_counts: dict[str, int] = defaultdict(int)
+    row_counts: dict[str, int] = defaultdict(int)
+    for requirement in requirements:
+        requirement_counts[requirement] += 1
+    for requirement in matrix_rows:
+        row_counts[requirement] += 1
+
+    for requirement, count in sorted(requirement_counts.items()):
+        if count != 1:
+            errors.append(f"Requisito SRS definido {count} veces: {requirement}")
+        if row_counts[requirement] == 0:
+            errors.append(f"Requisito SRS sin fila en TRACEABILITY.md: {requirement}")
+        elif row_counts[requirement] > 1:
+            errors.append(
+                f"Requisito duplicado en TRACEABILITY.md: {requirement} "
+                f"({row_counts[requirement]} filas)"
+            )
+    for requirement in sorted(set(row_counts) - set(requirement_counts)):
+        errors.append(f"Requisito en TRACEABILITY.md sin definición SRS: {requirement}")
 
 
 def validate_identifiers(errors: list[str]) -> None:
@@ -128,6 +170,7 @@ def main() -> int:
     errors: list[str] = []
     validate_json(errors)
     validate_markdown_links(errors)
+    validate_requirement_traceability(errors)
     validate_identifiers(errors)
     validate_sensitive_names(errors)
     validate_routine_media(errors)

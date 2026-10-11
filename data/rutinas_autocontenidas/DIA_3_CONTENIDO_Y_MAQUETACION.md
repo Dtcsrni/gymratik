@@ -33,6 +33,8 @@ Los siete ejercicios usan recursos locales del inventario `evidencia/dia3_media_
 
 Las vistas aisladas de máquina (`*-machine-only.webp`) son ediciones visuales basadas en la referencia local: eliminan a la persona del recuadro de máquina y conservan la geometría visible como apoyo, pero no prueban por sí solas la identidad exacta del equipo instalado. Los recursos de movimiento se muestran como demostraciones visuales del patrón y tampoco prueban por sí solos la prescripción ni la superioridad de una máquina. La ficha conserva imágenes estáticas de inicio/final para reducción de movimiento o fallo de carga.
 
+El 2026-10-09 se revisaron los siete pares Inicio/Final y se muestrearon cuatro cuadros de cada uno de los siete GIF. En la PWA local, las siete animaciones también se pausaron con su poster bajo `prefers-reduced-motion` y reanudaron con avance de cuadros. Véanse el [registro por ejercicio](../../docs/05-quality/evidence/pwa-exercise-verification-2026-10-09.md) y los mosaicos de evidencia vinculados allí. Esto no confirma la máquina física ni el despliegue publicado.
+
 ## Criterios de aceptación
 
 - El encabezado, resumen, dashboard y progreso reportan `22` series efectivas.

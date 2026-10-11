@@ -2825,13 +2825,15 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 <style data-fix="day4-static-and-gif-layout">
 .phaseRow .day4StaticFrame{object-fit:contain!important;background:#fff!important}.gifProof{margin-top:12px;padding:10px 12px;border:1px solid rgba(45,97,121,.55);border-radius:14px;background:rgba(12,24,34,.68)}.gifProofTitle{font-size:12px;font-weight:900;letter-spacing:.6px;color:#72D4F0;margin-bottom:7px}.gifPreview{max-width:240px;margin:0 auto;aspect-ratio:1/1}.gifPreview img.day4ExerciseGif{object-fit:contain!important}.gifProof .videoProof{margin-top:7px!important}@media(max-width:700px){.gifPreview{max-width:220px}}
 </style><style data-enhancement="weekly-routine-reset-v1">
-.sessionFooter{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(10rem,18rem)!important;align-items:center!important;gap:.8rem!important;width:min(100%,62rem)!important;margin:1.5rem auto calc(10rem + env(safe-area-inset-bottom,0px))!important;padding:1rem!important;border:1px solid rgba(255,157,162,.4)!important;border-radius:1rem!important;background:linear-gradient(115deg,rgba(37,32,49,.96),rgba(17,38,54,.96))!important;box-shadow:0 12px 34px rgba(0,0,0,.2)!important;visibility:visible!important;opacity:1!important}
+.sessionFooter{display:grid!important;grid-template-columns:minmax(0,1fr) repeat(2,minmax(9rem,12rem))!important;align-items:center!important;gap:.8rem!important;width:min(100%,62rem)!important;margin:1.5rem auto calc(10rem + env(safe-area-inset-bottom,0px))!important;padding:1rem!important;border:1px solid rgba(255,157,162,.4)!important;border-radius:1rem!important;background:linear-gradient(115deg,rgba(37,32,49,.96),rgba(17,38,54,.96))!important;box-shadow:0 12px 34px rgba(0,0,0,.2)!important;visibility:visible!important;opacity:1!important}
 .sessionResetCopy{display:grid;gap:.2rem;min-width:0;color:#f4fbff}.sessionResetCopy strong{font-size:.9rem}.sessionResetCopy span{color:#b8cbd4;font-size:.76rem;line-height:1.4}
 #resetSession{display:block!important;visibility:visible!important;opacity:1!important;width:100%;min-height:52px;margin:0;padding:.72rem 1rem;border:1px solid rgba(255,157,162,.72);border-radius:.8rem;background:linear-gradient(110deg,rgba(113,44,61,.58),rgba(64,42,73,.68));color:#ffe4e6;font:inherit;font-size:.9rem;font-weight:850;cursor:pointer}
+#finishDay{display:block!important;visibility:visible!important;opacity:1!important;width:100%;min-height:52px;margin:0;padding:.72rem 1rem;border:1px solid rgba(101,242,221,.58);border-radius:.8rem;background:linear-gradient(110deg,rgba(18,112,100,.58),rgba(19,78,93,.68));color:#dffff9;font:inherit;font-size:.9rem;font-weight:850;cursor:pointer}
+#finishDay::before{content:"✓";margin-right:.5rem;font-size:1rem}
 #resetSession::before{content:"↻";margin-right:.5rem;font-size:1.1rem}
-#resetSession:focus-visible{outline:3px solid #72dcff;outline-offset:3px}
-@media(prefers-reduced-motion:no-preference){#resetSession{transition:background-color .2s ease,border-color .2s ease,transform .2s ease}#resetSession:hover{border-color:#ffb6bb;background-color:rgba(145,53,70,.38);transform:translateY(-1px)}}
-@media(prefers-reduced-motion:reduce){#resetSession{transition:none!important}}
+ #resetSession:focus-visible,#finishDay:focus-visible{outline:3px solid #72dcff;outline-offset:3px}
+@media(prefers-reduced-motion:no-preference){#resetSession,#finishDay{transition:background-color .2s ease,border-color .2s ease,transform .2s ease}#resetSession:hover{border-color:#ffb6bb;background-color:rgba(145,53,70,.38);transform:translateY(-1px)}#finishDay:hover{border-color:#8bffeb;background-color:rgba(35,145,126,.4);transform:translateY(-1px)}}
+@media(prefers-reduced-motion:reduce){#resetSession,#finishDay{transition:none!important}}
 @media(max-width:520px){.sessionFooter{grid-template-columns:1fr!important;gap:.55rem!important;padding:.75rem!important}.sessionResetCopy strong{font-size:.82rem}.sessionResetCopy span{font-size:.7rem}}
 </style>
 </head><body><svg id="gymratikLucideSprite" class="gymratikIconSprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
@@ -2958,7 +2960,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 </section>
 <!-- data-enhancement="canonical-card-contract-v1" -->
 <main class="cards">
-<article class="card" data-exercise-index="1">
+<article class="card" data-exercise-index="1" data-media-mode="GIF">
 <div aria-hidden="true" class="cardGlow"></div>
 <div class="meta"><div class="metaTop"><div class="num">1</div></div><div class="exTitle">PRENSA UNILATERAL ALTERNA</div><div class="zone">PIERNA · CUÁDRICEPS</div><div class="chipRow"><span class="infoChip chipExercise">Ejercicio 1</span><span class="infoChip">PIERNA</span><span class="infoChip">CUÁDRICEPS</span></div><div class="machinePill"><span class="pillIcon" aria-hidden="true"><svg class="lucide lucide-dumbbell gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-dumbbell"></use></svg></span><span class="pillText">prensa de piernas con plataforma y apoyo estable</span></div></div>
 <div class="visual"><div class="referenceRow"><div class="machineRefBox"><img alt="Referencia visual del patrón prensa unilateral alterna" src="../medios_publicados/rutinas_autocontenidas/dia4_media_generated/2287-V07qpXy-machine-reference.png" loading="lazy"/><span class="refTag">REFERENCIA VISUAL · NO CONFIRMA EQUIPO</span></div><div class="muscleRefBox"><div class="muscleInfo"><span class="primary"><span class="muscleTag">ENFOQUE</span> Cuádriceps; asisten isquiosurales y glúteos</span><span class="secondary">La referencia ayuda a identificar el patrón; no confirma la identidad del equipo instalado.</span></div></div></div>
@@ -2967,7 +2969,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 <div class="coach"><div class="coachRibbon"><span class="coachRibbonIcon" aria-hidden="true"><svg class="lucide lucide-list-checks gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-list-checks"></use></svg></span><span>Checklist técnico</span></div><div class="coachHeader">Técnica clave</div><div class="exerciseQuickSummary" data-exercise-quick-summary aria-label="Resumen del ejercicio"></div><div class="metrics"><div class="metric series"><div class="metricText"><div class="metricLabel">Series</div><div class="metricVal">3 series</div></div></div><div class="metric reps"><div class="metricText"><div class="metricLabel">Repeticiones</div><div class="metricVal">8–12 por lado repeticiones</div></div></div><div class="metric rest"><div class="metricText"><div class="metricLabel">Descanso</div><div class="metricVal"><strong class="timeCue">2–3 min</strong></div></div></div><div class="metric duration"><div class="metricText"><div class="metricLabel">Duración aprox.</div><div class="metricVal"><strong class="timeCue">10–13 min</strong></div></div></div></div>
 <div class="exerciseTracker" data-exercise="1" data-series-keys="e1s1 e1s2 e1s3"><div class="exerciseTrackerHead"><span>Contador de series</span><span class="exerciseTrackerMeta"><strong class="exerciseProgress">0/3</strong><span class="exerciseStatus" hidden><span class="completionMark" aria-hidden="true">✓</span> Completado</span></span></div><div class="exerciseSetButtons" role="group" aria-label="Contador de series del ejercicio 1"><p class="exerciseWarmupHint" id="exerciseWarmupHint" hidden aria-live="polite">Aproximación: usa una carga ligera y recorrido controlado; se registra aparte y no suma al volumen de trabajo.</p><button type="button" class="setButton warmupSet" data-key="w1" aria-pressed="false" hidden aria-hidden="true" tabindex="-1">Calentamiento</button><button type="button" class="completeSetButton" aria-label="Completar serie 1 de 3" aria-describedby="exerciseWarmupHint">Completar serie 1 de 3</button><button type="button" class="machinePendingToggle" data-pending-key="p1" aria-pressed="false">⚠ Máquina ocupada</button><div class="nextExerciseRow"><button type="button" class="nextExerciseCue" data-next="2" hidden><span class="nextArrow" aria-hidden="true">↓</span> Siguiente: Peso Muerto Rumano Con Barra</button></div></div></div>
 <details class="techAccordion" data-enhancement="technique-accordion-v1"><summary>Técnica esencial</summary><div class="techSteps"><div class="techStep setup"><div class="techStepTitle"><svg class="lucide lucide-settings-2 gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-settings-2"></use></svg><span>Posición</span></div><div class="techStepText">Pelvis apoyada; trabaja un lado a la vez.</div></div><div class="techStep move"><div class="techStepTitle"><svg class="lucide lucide-move-up-right gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-move-up-right"></use></svg><span>Movimiento</span></div><div class="techStepText">Empuja con un pie; cambia de lado sin bloquear la rodilla.</div></div><div class="techStep warning"><div class="techStepTitle"><svg class="lucide lucide-triangle-alert gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-triangle-alert"></use></svg><span>Evita</span></div><div class="techStepText">No levantes la pelvis ni hundas la rodilla hacia dentro.</div></div></div></details></div></article>
-<article class="card" data-exercise-index="2">
+<article class="card" data-exercise-index="2" data-media-mode="GIF">
 <div aria-hidden="true" class="cardGlow"></div>
 <div class="meta"><div class="metaTop"><div class="num">2</div></div><div class="exTitle">PESO MUERTO RUMANO CON BARRA</div><div class="zone">CADERA · GLÚTEOS E ISQUIOSURALES</div><div class="chipRow"><span class="infoChip chipExercise">Ejercicio 2</span><span class="infoChip">CADERA</span><span class="infoChip">GLÚTEOS E ISQUIOSURALES</span></div><div class="machinePill"><span class="pillIcon" aria-hidden="true"><svg class="lucide lucide-dumbbell gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-dumbbell"></use></svg></span><span class="pillText">barra libre y discos · bisagra de cadera</span></div></div>
 <div class="visual"><div class="referenceRow"><div class="machineRefBox"><img alt="Referencia visual del patrón peso muerto rumano con barra" src="../medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-machine-reference.png" loading="lazy"/><span class="refTag">REFERENCIA VISUAL · NO CONFIRMA EQUIPO</span></div><div class="muscleRefBox"><div class="muscleInfo"><span class="primary"><span class="muscleTag">ENFOQUE</span> Glúteos e isquiosurales; bisagra de cadera</span><span class="secondary">La referencia ayuda a identificar el patrón; no confirma la identidad del equipo instalado.</span></div></div></div>
@@ -2976,7 +2978,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 <div class="coach"><div class="coachRibbon"><span class="coachRibbonIcon" aria-hidden="true"><svg class="lucide lucide-list-checks gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-list-checks"></use></svg></span><span>Checklist técnico</span></div><div class="coachHeader">Técnica clave</div><div class="exerciseQuickSummary" data-exercise-quick-summary aria-label="Resumen del ejercicio"></div><div class="metrics"><div class="metric series"><div class="metricText"><div class="metricLabel">Series</div><div class="metricVal">3 series</div></div></div><div class="metric reps"><div class="metricText"><div class="metricLabel">Repeticiones</div><div class="metricVal">8–12 repeticiones</div></div></div><div class="metric rest"><div class="metricText"><div class="metricLabel">Descanso</div><div class="metricVal"><strong class="timeCue">2–3 min</strong></div></div></div><div class="metric duration"><div class="metricText"><div class="metricLabel">Duración aprox.</div><div class="metricVal"><strong class="timeCue">10–13 min</strong></div></div></div></div>
 <div class="exerciseTracker" data-exercise="2" data-series-keys="e2s1 e2s2 e2s3"><div class="exerciseTrackerHead"><span>Contador de series</span><span class="exerciseTrackerMeta"><strong class="exerciseProgress">0/3</strong><span class="exerciseStatus" hidden><span class="completionMark" aria-hidden="true">✓</span> Completado</span></span></div><div class="exerciseSetButtons" role="group" aria-label="Contador de series del ejercicio 2"><button type="button" class="completeSetButton" aria-label="Completar serie 1 de 3">Completar serie 1 de 3</button><button type="button" class="machinePendingToggle" data-pending-key="p2" aria-pressed="false">⚠ Máquina ocupada</button><div class="nextExerciseRow"><button type="button" class="nextExerciseCue" data-next="3" hidden><span class="nextArrow" aria-hidden="true">↓</span> Siguiente: Curl Femoral Tumbado</button></div></div></div>
 <details class="techAccordion" data-enhancement="technique-accordion-v1"><summary>Técnica esencial</summary><div class="techSteps"><div class="techStep setup"><div class="techStepTitle"><svg class="lucide lucide-settings-2 gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-settings-2"></use></svg><span>Posición</span></div><div class="techStepText">Pies al ancho de cadera; barra cerca de las piernas.</div></div><div class="techStep move"><div class="techStepTitle"><svg class="lucide lucide-move-up-right gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-move-up-right"></use></svg><span>Movimiento</span></div><div class="techStepText">Lleva la cadera atrás; sube apretando glúteos.</div></div><div class="techStep warning"><div class="techStepTitle"><svg class="lucide lucide-triangle-alert gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-triangle-alert"></use></svg><span>Evita</span></div><div class="techStepText">No redondees la espalda ni alejes la barra.</div></div></div></details></div></article>
-<article class="card" data-exercise-index="3">
+<article class="card" data-exercise-index="3" data-media-mode="GIF">
 <div aria-hidden="true" class="cardGlow"></div>
 <div class="meta"><div class="metaTop"><div class="num">3</div></div><div class="exTitle">CURL FEMORAL TUMBADO</div><div class="zone">PIERNA · ISQUIOSURALES</div><div class="chipRow"><span class="infoChip chipExercise">Ejercicio 3</span><span class="infoChip">PIERNA</span><span class="infoChip">ISQUIOSURALES</span></div><div class="machinePill"><span class="pillIcon" aria-hidden="true"><svg class="lucide lucide-dumbbell gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-dumbbell"></use></svg></span><span class="pillText">máquina de curl femoral tumbado</span></div></div>
 <div class="visual"><div class="referenceRow"><div class="machineRefBox"><img alt="Referencia visual del patrón curl femoral tumbado" src="../medios_publicados/rutinas_autocontenidas/dia4_media_generated/0586-17lJ1kr-machine-reference.png" loading="lazy"/><span class="refTag">REFERENCIA VISUAL · NO CONFIRMA EQUIPO</span></div><div class="muscleRefBox"><div class="muscleInfo"><span class="primary"><span class="muscleTag">ENFOQUE</span> Isquiosurales; pantorrilla como sinergista</span><span class="secondary">La referencia ayuda a identificar el patrón; no confirma la identidad del equipo instalado.</span></div></div></div>
@@ -2985,7 +2987,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 <div class="coach"><div class="coachRibbon"><span class="coachRibbonIcon" aria-hidden="true"><svg class="lucide lucide-list-checks gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-list-checks"></use></svg></span><span>Checklist técnico</span></div><div class="coachHeader">Técnica clave</div><div class="exerciseQuickSummary" data-exercise-quick-summary aria-label="Resumen del ejercicio"></div><div class="metrics"><div class="metric series"><div class="metricText"><div class="metricLabel">Series</div><div class="metricVal">4 series</div></div></div><div class="metric reps"><div class="metricText"><div class="metricLabel">Repeticiones</div><div class="metricVal">8–12 repeticiones</div></div></div><div class="metric rest"><div class="metricText"><div class="metricLabel">Descanso</div><div class="metricVal"><strong class="timeCue">90–120 s</strong></div></div></div><div class="metric duration"><div class="metricText"><div class="metricLabel">Duración aprox.</div><div class="metricVal"><strong class="timeCue">10–12 min</strong></div></div></div></div>
 <div class="exerciseTracker" data-exercise="3" data-series-keys="e3s1 e3s2 e3s3 e3s4"><div class="exerciseTrackerHead"><span>Contador de series</span><span class="exerciseTrackerMeta"><strong class="exerciseProgress">0/4</strong><span class="exerciseStatus" hidden><span class="completionMark" aria-hidden="true">✓</span> Completado</span></span></div><div class="exerciseSetButtons" role="group" aria-label="Contador de series del ejercicio 3"><button type="button" class="completeSetButton" aria-label="Completar serie 1 de 4">Completar serie 1 de 4</button><button type="button" class="machinePendingToggle" data-pending-key="p3" aria-pressed="false">⚠ Máquina ocupada</button><div class="nextExerciseRow"><button type="button" class="nextExerciseCue" data-next="4" hidden><span class="nextArrow" aria-hidden="true">↓</span> Siguiente: Abducción De Cadera Sentada</button></div></div></div>
 <details class="techAccordion" data-enhancement="technique-accordion-v1"><summary>Técnica esencial</summary><div class="techSteps"><div class="techStep setup"><div class="techStepTitle"><svg class="lucide lucide-settings-2 gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-settings-2"></use></svg><span>Posición</span></div><div class="techStepText">Cadera apoyada y rodilla alineada con el eje.</div></div><div class="techStep move"><div class="techStepTitle"><svg class="lucide lucide-move-up-right gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-move-up-right"></use></svg><span>Movimiento</span></div><div class="techStepText">Lleva los talones hacia los glúteos; baja despacio.</div></div><div class="techStep warning"><div class="techStepTitle"><svg class="lucide lucide-triangle-alert gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-triangle-alert"></use></svg><span>Evita</span></div><div class="techStepText">No levantes la cadera ni uses impulso.</div></div></div></details></div></article>
-<article class="card" data-exercise-index="4">
+<article class="card" data-exercise-index="4" data-media-mode="GIF">
 <div aria-hidden="true" class="cardGlow"></div>
 <div class="meta"><div class="metaTop"><div class="num">4</div></div><div class="exTitle">ABDUCCIÓN DE CADERA SENTADA</div><div class="zone">CADERA · ABDUCTORES</div><div class="chipRow"><span class="infoChip chipExercise">Ejercicio 4</span><span class="infoChip">CADERA</span><span class="infoChip">ABDUCTORES</span></div><div class="machinePill"><span class="pillIcon" aria-hidden="true"><svg class="lucide lucide-dumbbell gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-dumbbell"></use></svg></span><span class="pillText">máquina de abducción de cadera sentada</span></div></div>
 <div class="visual"><div class="referenceRow"><div class="machineRefBox"><img alt="Referencia visual del patrón abducción de cadera sentada" src="../medios_publicados/rutinas_autocontenidas/dia4_media_generated/0597-CHpahtl-machine-reference.png" loading="lazy"/><span class="refTag">REFERENCIA VISUAL · NO CONFIRMA EQUIPO</span></div><div class="muscleRefBox"><div class="muscleInfo"><span class="primary"><span class="muscleTag">ENFOQUE</span> Abductores y glúteo medio; glúteo mayor como asistente</span><span class="secondary">La referencia ayuda a identificar el patrón; no confirma la identidad del equipo instalado.</span></div></div></div>
@@ -2994,7 +2996,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 <div class="coach"><div class="coachRibbon"><span class="coachRibbonIcon" aria-hidden="true"><svg class="lucide lucide-list-checks gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-list-checks"></use></svg></span><span>Checklist técnico</span></div><div class="coachHeader">Técnica clave</div><div class="exerciseQuickSummary" data-exercise-quick-summary aria-label="Resumen del ejercicio"></div><div class="metrics"><div class="metric series"><div class="metricText"><div class="metricLabel">Series</div><div class="metricVal">2 series</div></div></div><div class="metric reps"><div class="metricText"><div class="metricLabel">Repeticiones</div><div class="metricVal">12–20 repeticiones</div></div></div><div class="metric rest"><div class="metricText"><div class="metricLabel">Descanso</div><div class="metricVal"><strong class="timeCue">60–90 s</strong></div></div></div><div class="metric duration"><div class="metricText"><div class="metricLabel">Duración aprox.</div><div class="metricVal"><strong class="timeCue">6–8 min</strong></div></div></div></div>
 <div class="exerciseTracker" data-exercise="4" data-series-keys="e4s1 e4s2"><div class="exerciseTrackerHead"><span>Contador de series</span><span class="exerciseTrackerMeta"><strong class="exerciseProgress">0/2</strong><span class="exerciseStatus" hidden><span class="completionMark" aria-hidden="true">✓</span> Completado</span></span></div><div class="exerciseSetButtons" role="group" aria-label="Contador de series del ejercicio 4"><button type="button" class="completeSetButton" aria-label="Completar serie 1 de 2">Completar serie 1 de 2</button><button type="button" class="machinePendingToggle" data-pending-key="p4" aria-pressed="false">⚠ Máquina ocupada</button><div class="nextExerciseRow"><button type="button" class="nextExerciseCue" data-next="5" hidden><span class="nextArrow" aria-hidden="true">↓</span> Siguiente: Aducción De Cadera Sentada</button></div></div></div>
 <details class="techAccordion" data-enhancement="technique-accordion-v1"><summary>Técnica esencial</summary><div class="techSteps"><div class="techStep setup"><div class="techStepTitle"><svg class="lucide lucide-settings-2 gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-settings-2"></use></svg><span>Posición</span></div><div class="techStepText">Espalda apoyada y pelvis estable.</div></div><div class="techStep move"><div class="techStepTitle"><svg class="lucide lucide-move-up-right gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-move-up-right"></use></svg><span>Movimiento</span></div><div class="techStepText">Separa las rodillas; vuelve lentamente.</div></div><div class="techStep warning"><div class="techStepTitle"><svg class="lucide lucide-triangle-alert gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-triangle-alert"></use></svg><span>Evita</span></div><div class="techStepText">No rebotes ni inclines el torso.</div></div></div></details></div></article>
-<article class="card" data-exercise-index="5">
+<article class="card" data-exercise-index="5" data-media-mode="GIF">
 <div aria-hidden="true" class="cardGlow"></div>
 <div class="meta"><div class="metaTop"><div class="num">5</div></div><div class="exTitle">ADUCCIÓN DE CADERA SENTADA</div><div class="zone">CADERA · ADUCTORES</div><div class="chipRow"><span class="infoChip chipExercise">Ejercicio 5</span><span class="infoChip">CADERA</span><span class="infoChip">ADUCTORES</span></div><div class="machinePill"><span class="pillIcon" aria-hidden="true"><svg class="lucide lucide-dumbbell gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-dumbbell"></use></svg></span><span class="pillText">máquina de aducción de cadera sentada</span></div></div>
 <div class="visual"><div class="referenceRow"><div class="machineRefBox"><img alt="Referencia visual del patrón aducción de cadera sentada" src="../medios_publicados/rutinas_autocontenidas/dia4_media_generated/0598-oHsrypV-machine-reference.png" loading="lazy"/><span class="refTag">REFERENCIA VISUAL · NO CONFIRMA EQUIPO</span></div><div class="muscleRefBox"><div class="muscleInfo"><span class="primary"><span class="muscleTag">ENFOQUE</span> Aductores; glúteos e isquiosurales como estabilizadores</span><span class="secondary">La referencia ayuda a identificar el patrón; no confirma la identidad del equipo instalado.</span></div></div></div>
@@ -3003,7 +3005,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 <div class="coach"><div class="coachRibbon"><span class="coachRibbonIcon" aria-hidden="true"><svg class="lucide lucide-list-checks gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-list-checks"></use></svg></span><span>Checklist técnico</span></div><div class="coachHeader">Técnica clave</div><div class="exerciseQuickSummary" data-exercise-quick-summary aria-label="Resumen del ejercicio"></div><div class="metrics"><div class="metric series"><div class="metricText"><div class="metricLabel">Series</div><div class="metricVal">2 series</div></div></div><div class="metric reps"><div class="metricText"><div class="metricLabel">Repeticiones</div><div class="metricVal">12–20 repeticiones</div></div></div><div class="metric rest"><div class="metricText"><div class="metricLabel">Descanso</div><div class="metricVal"><strong class="timeCue">60–90 s</strong></div></div></div><div class="metric duration"><div class="metricText"><div class="metricLabel">Duración aprox.</div><div class="metricVal"><strong class="timeCue">6–8 min</strong></div></div></div></div>
 <div class="exerciseTracker" data-exercise="5" data-series-keys="e5s1 e5s2"><div class="exerciseTrackerHead"><span>Contador de series</span><span class="exerciseTrackerMeta"><strong class="exerciseProgress">0/2</strong><span class="exerciseStatus" hidden><span class="completionMark" aria-hidden="true">✓</span> Completado</span></span></div><div class="exerciseSetButtons" role="group" aria-label="Contador de series del ejercicio 5"><button type="button" class="completeSetButton" aria-label="Completar serie 1 de 2">Completar serie 1 de 2</button><button type="button" class="machinePendingToggle" data-pending-key="p5" aria-pressed="false">⚠ Máquina ocupada</button><div class="nextExerciseRow"><button type="button" class="nextExerciseCue" data-next="6" hidden><span class="nextArrow" aria-hidden="true">↓</span> Siguiente: Elevación De Pantorrilla Sentada</button></div></div></div>
 <details class="techAccordion" data-enhancement="technique-accordion-v1"><summary>Técnica esencial</summary><div class="techSteps"><div class="techStep setup"><div class="techStepTitle"><svg class="lucide lucide-settings-2 gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-settings-2"></use></svg><span>Posición</span></div><div class="techStepText">Espalda apoyada y piernas simétricas.</div></div><div class="techStep move"><div class="techStepTitle"><svg class="lucide lucide-move-up-right gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-move-up-right"></use></svg><span>Movimiento</span></div><div class="techStepText">Junta las rodillas; vuelve lentamente.</div></div><div class="techStep warning"><div class="techStepTitle"><svg class="lucide lucide-triangle-alert gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-triangle-alert"></use></svg><span>Evita</span></div><div class="techStepText">No muevas la pelvis ni fuerces la apertura.</div></div></div></details></div></article>
-<article class="card" data-exercise-index="6">
+<article class="card" data-exercise-index="6" data-media-mode="GIF">
 <div aria-hidden="true" class="cardGlow"></div>
 <div class="meta"><div class="metaTop"><div class="num">6</div></div><div class="exTitle">ELEVACIÓN DE PANTORRILLA SENTADA</div><div class="zone">PIERNA · PANTORRILLA</div><div class="chipRow"><span class="infoChip chipExercise">Ejercicio 6</span><span class="infoChip">PIERNA</span><span class="infoChip">PANTORRILLA</span></div><div class="machinePill"><span class="pillIcon" aria-hidden="true"><svg class="lucide lucide-dumbbell gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-dumbbell"></use></svg></span><span class="pillText">máquina de elevación de pantorrilla sentada</span></div></div>
 <div class="visual"><div class="referenceRow"><div class="machineRefBox"><img alt="Referencia visual del patrón elevación de pantorrilla sentada" src="../medios_publicados/rutinas_autocontenidas/dia4_media_generated/0594-bOOdeyc-machine-reference.png" loading="lazy"/><span class="refTag">REFERENCIA VISUAL · NO CONFIRMA EQUIPO</span></div><div class="muscleRefBox"><div class="muscleInfo"><span class="primary"><span class="muscleTag">ENFOQUE</span> Tríceps sural; énfasis práctico en sóleo</span><span class="secondary">La referencia ayuda a identificar el patrón; no confirma la identidad del equipo instalado.</span></div></div></div>
@@ -3012,7 +3014,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 <div class="coach"><div class="coachRibbon"><span class="coachRibbonIcon" aria-hidden="true"><svg class="lucide lucide-list-checks gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-list-checks"></use></svg></span><span>Checklist técnico</span></div><div class="coachHeader">Técnica clave</div><div class="exerciseQuickSummary" data-exercise-quick-summary aria-label="Resumen del ejercicio"></div><div class="metrics"><div class="metric series"><div class="metricText"><div class="metricLabel">Series</div><div class="metricVal">3 series</div></div></div><div class="metric reps"><div class="metricText"><div class="metricLabel">Repeticiones</div><div class="metricVal">10–15 repeticiones</div></div></div><div class="metric rest"><div class="metricText"><div class="metricLabel">Descanso</div><div class="metricVal"><strong class="timeCue">60–90 s</strong></div></div></div><div class="metric duration"><div class="metricText"><div class="metricLabel">Duración aprox.</div><div class="metricVal"><strong class="timeCue">7–9 min</strong></div></div></div></div>
 <div class="exerciseTracker" data-exercise="6" data-series-keys="e6s1 e6s2 e6s3"><div class="exerciseTrackerHead"><span>Contador de series</span><span class="exerciseTrackerMeta"><strong class="exerciseProgress">0/3</strong><span class="exerciseStatus" hidden><span class="completionMark" aria-hidden="true">✓</span> Completado</span></span></div><div class="exerciseSetButtons" role="group" aria-label="Contador de series del ejercicio 6"><button type="button" class="completeSetButton" aria-label="Completar serie 1 de 3">Completar serie 1 de 3</button><button type="button" class="machinePendingToggle" data-pending-key="p6" aria-pressed="false">⚠ Máquina ocupada</button><div class="nextExerciseRow"><button type="button" class="nextExerciseCue" data-next="7" hidden><span class="nextArrow" aria-hidden="true">↓</span> Siguiente: Crunch Con Elevación De Piernas Sentada</button></div></div></div>
 <details class="techAccordion" data-enhancement="technique-accordion-v1"><summary>Técnica esencial</summary><div class="techSteps"><div class="techStep setup"><div class="techStepTitle"><svg class="lucide lucide-settings-2 gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-settings-2"></use></svg><span>Posición</span></div><div class="techStepText">Antepié apoyado y almohadilla sobre los muslos.</div></div><div class="techStep move"><div class="techStepTitle"><svg class="lucide lucide-move-up-right gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-move-up-right"></use></svg><span>Movimiento</span></div><div class="techStepText">Eleva los talones; baja lentamente.</div></div><div class="techStep warning"><div class="techStepTitle"><svg class="lucide lucide-triangle-alert gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-triangle-alert"></use></svg><span>Evita</span></div><div class="techStepText">No rebotes ni ayudes con las rodillas.</div></div></div></details></div></article>
-<article class="card" data-exercise-index="7">
+<article class="card" data-exercise-index="7" data-media-mode="GIF">
 <div aria-hidden="true" class="cardGlow"></div>
 <div class="meta"><div class="metaTop"><div class="num">7</div></div><div class="exTitle">CRUNCH CON ELEVACIÓN DE PIERNAS SENTADA</div><div class="zone">CORE · ABDOMINALES</div><div class="chipRow"><span class="infoChip chipExercise">Ejercicio 7</span><span class="infoChip">CORE</span><span class="infoChip">ABDOMINALES</span></div><div class="machinePill"><span class="pillIcon" aria-hidden="true"><svg class="lucide lucide-dumbbell gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-dumbbell"></use></svg></span><span class="pillText">máquina de crunch con apoyo de piernas</span></div></div>
 <div class="visual"><div class="referenceRow"><div class="machineRefBox"><img alt="Referencia visual del patrón crunch con elevación de piernas sentada" src="../medios_publicados/rutinas_autocontenidas/dia4_media_generated/0600-PQ2AtC3-machine-reference.png" loading="lazy"/><span class="refTag">REFERENCIA VISUAL · NO CONFIRMA EQUIPO</span></div><div class="muscleRefBox"><div class="muscleInfo"><span class="primary"><span class="muscleTag">ENFOQUE</span> Abdominales; flexores de cadera como asistentes</span><span class="secondary">La referencia ayuda a identificar el patrón; no confirma la identidad del equipo instalado.</span></div></div></div>
@@ -3031,7 +3033,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 <button type="button" class="summaryToggle" id="summaryToggle" aria-expanded="false" aria-controls="summaryBody"><span id="summaryActivityIcon" aria-hidden="true"><svg class="lucide lucide-activity gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-activity"></use></svg></span><span id="summaryHeadline">0/7 ejercicios · 0/20 series</span><span id="summaryActivityHeadline">¡Vamos a entrenar!</span><span class="summaryMascotWrap"><img id="summaryActivityMascot" class="summaryActivityMascot" src="../../../data/profile/mascot-motion/neutral-exercise-still.webp" alt="Mascotas Gymratik animando el inicio de la rutina" decoding="async"></span><span class="summaryChevron" aria-hidden="true">⌃</span></button>
 <div class="summaryBody" id="summaryBody" hidden><div class="summaryTotals"><span id="summaryPending">20 pendientes</span></div><div class="summaryActivityStatus isIdle" id="summaryActivityStatus" data-activity="idle" aria-live="polite"><span class="summaryActivityIndicator" aria-hidden="true"></span><span class="summaryActivityLabel" id="summaryActivityLabel">¡Vamos a entrenar!</span><span class="summaryActivityClock" id="summaryActivityClock">Iniciar</span></div><div class="summaryProgressTrack" id="summaryOverallProgress" role="progressbar" aria-label="Progreso total de series" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="Sin series completadas" data-state="empty"><span id="summaryProgressFill"></span></div><div class="summaryTime" id="summaryElapsed" aria-live="polite">⏱ Total de rutina: —</div><ul class="sessionSummaryList" id="sessionSummaryList"></ul></div>
 </aside>
-<footer class="sessionFooter" aria-label="Acciones del día"><div class="sessionResetCopy"><strong>¿Quieres empezar este día de nuevo?</strong><span>Se reinicia solo el progreso de este día; tu historial y perfil se conservan.</span></div><button type="button" id="resetSession">Reiniciar día</button></footer>
+<footer class="sessionFooter" aria-label="Acciones del día"><div class="sessionResetCopy"><strong>¿Quieres empezar este día de nuevo?</strong><span>«Terminar día» guarda las series registradas; «Reiniciar día» borra solo el progreso semanal de este día.</span></div><button type="button" id="finishDay">Terminar día</button><button type="button" id="resetSession">Reiniciar día</button></footer>
 </div>
 <script>
 (function(){
@@ -3377,7 +3379,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
   const plannedSeries = trackers.reduce((sum, tracker) => sum + (tracker.dataset.seriesKeys || '').trim().split(/\s+/).filter(Boolean).length, 0);
   const publishProgress = () => {
     if (!window.GymratikInstallGate?.isInstalled()) return;
-    window.TrainingProgressStore?.capture({
+    return window.TrainingProgressStore?.capture({
       routineId,
       state,
       totalExercises: trackers.length,
@@ -3389,7 +3391,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     state.__routineWeek = routineWeekKey(Date.now());
     try { localStorage.setItem(storageKey, JSON.stringify(state)); }
     catch (error) { window.dispatchEvent(new CustomEvent('training-storage-error', { detail: { error } })); }
-    publishProgress();
+    return publishProgress();
   };
   const pulse = button => {
     button.classList.remove('seriesPulse');
@@ -3557,35 +3559,36 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     const rangeMatch = metricRange.match(/(\d+)\s*[–-]\s*(\d+)/);
     item.repMinimum = rangeMatch ? Number(rangeMatch[1]) : 1;
     item.repMaximum = rangeMatch ? Number(rangeMatch[2]) : 100;
-                            const loadDescription = item.title.toLocaleLowerCase('es');
+    const loadDescription = item.title.toLocaleLowerCase('es');
     const loadProfiles = [
-      [/^jalón al pecho$/, { minKg: 2.5, maxKg: 150, stepKg: 2.5, label: 'jalón · torre de polea (rango orientativo)' }],
-      [/^remo alto unilateral$/, { minKg: 2.5, maxKg: 120, stepKg: 2.5, label: 'remo unilateral · discos por brazo (rango orientativo)' }],
-      [/^remo horizontal en máquina$/, { minKg: 2.5, maxKg: 120, stepKg: 2.5, label: 'remo sentado · rango orientativo' }],
-      [/^apertura inversa en máquina$/, { minKg: 2.5, maxKg: 80, stepKg: 2.5, label: 'apertura inversa · rango orientativo' }],
-      [/^curl de bíceps/, { minKg: 2.5, maxKg: 80, stepKg: 2.5, label: 'curl de bíceps · rango orientativo' }],
-      [/^hack squat$/, { minKg: 5, maxKg: 300, stepKg: 5, label: 'hack squat · carga externa total (rango orientativo)' }],
-      [/^hip thrust$/, { minKg: 5, maxKg: 250, stepKg: 5, label: 'hip thrust · discos totales (rango orientativo)' }],
-      [/^prensa de piernas$/, { minKg: 5, maxKg: 300, stepKg: 5, label: 'prensa bilateral · carga externa total (rango orientativo)' }],
-      [/^prensa unilateral alterna$/, { minKg: 5, maxKg: 200, stepKg: 5, label: 'prensa unilateral · carga externa total (rango orientativo)' }],
-      [/^curl femoral/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'curl femoral · rango orientativo' }],
-      [/^extensión de piernas$/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'extensión de piernas · rango orientativo' }],
-      [/^pantorrillas de pie$/, { minKg: 2.5, maxKg: 150, stepKg: 2.5, label: 'pantorrilla de pie · rango orientativo' }],
-      [/^press de pecho sentado/, { minKg: 2.5, maxKg: 120, stepKg: 2.5, label: 'press de pecho · rango orientativo' }],
-      [/^press inclinado convergente/, { minKg: 2.5, maxKg: 120, stepKg: 2.5, label: 'press inclinado · rango orientativo' }],
-      [/^pec deck/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'pec deck · rango orientativo' }],
-      [/^press de hombro/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'press de hombro · rango orientativo' }],
-      [/^elevación lateral/, { minKg: 2.5, maxKg: 60, stepKg: 2.5, label: 'elevación lateral · rango orientativo' }],
-      [/^jalón de tríceps/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'tríceps en polea · rango orientativo' }],
-      [/^extensión de tríceps sobre cabeza/, { minKg: 2.5, maxKg: 80, stepKg: 2.5, label: 'tríceps con cuerda · rango orientativo' }],
-      [/^peso muerto rumano con barra$/, { minKg: 10, maxKg: 250, stepKg: 2.5, label: 'barra libre · peso total con barra (rango orientativo)' }],
-      [/^abducción de cadera/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'abducción de cadera · rango orientativo' }],
-      [/^aducción de cadera/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'aducción de cadera · rango orientativo' }],
-      [/^elevación de pantorrilla sentada$/, { minKg: 2.5, maxKg: 150, stepKg: 2.5, label: 'pantorrilla sentada · rango orientativo' }],
-      [/^crunch con elevación de piernas sentada$/, { minKg: 2.5, maxKg: 80, stepKg: 2.5, label: 'crunch sentado · rango orientativo' }]
+      [/^jalón al pecho$/, { referenceKg: 40, stepKg: 2.5, label: 'jalón · torre de polea · estimación orientativa ±25%' }],
+      [/^remo alto unilateral$/, { referenceKg: 25, stepKg: 2.5, label: 'remo unilateral · discos por brazo · estimación orientativa ±25%' }],
+      [/^remo horizontal en máquina$/, { referenceKg: 40, stepKg: 2.5, label: 'remo sentado · estimación orientativa ±25%' }],
+      [/^apertura inversa en máquina$/, { referenceKg: 25, stepKg: 2.5, label: 'apertura inversa · estimación orientativa ±25%' }],
+      [/^curl de bíceps/, { referenceKg: 15, stepKg: 2.5, label: 'curl de bíceps · estimación orientativa ±25%' }],
+      [/^hack squat$/, { referenceKg: 100, stepKg: 5, label: 'hack squat · carga externa total · estimación orientativa ±25%' }],
+      [/^hip thrust$/, { referenceKg: 80, stepKg: 5, label: 'hip thrust · discos totales · estimación orientativa ±25%' }],
+      [/^prensa de piernas$/, { referenceKg: 120, stepKg: 5, label: 'prensa bilateral · carga externa total · estimación orientativa ±25%' }],
+      [/^prensa unilateral alterna$/, { referenceKg: 50, stepKg: 5, label: 'prensa unilateral · carga externa total · estimación orientativa ±25%' }],
+      [/^curl femoral/, { referenceKg: 30, stepKg: 2.5, label: 'curl femoral · estimación orientativa ±25%' }],
+      [/^extensión de piernas$/, { referenceKg: 40, stepKg: 2.5, label: 'extensión de piernas · estimación orientativa ±25%' }],
+      [/^pantorrillas de pie$/, { referenceKg: 60, stepKg: 2.5, label: 'pantorrilla de pie · estimación orientativa ±25%' }],
+      [/^press de pecho sentado/, { referenceKg: 40, stepKg: 2.5, label: 'press de pecho · estimación orientativa ±25%' }],
+      [/^press inclinado convergente/, { referenceKg: 35, stepKg: 2.5, label: 'press inclinado · estimación orientativa ±25%' }],
+      [/^pec deck/, { referenceKg: 30, stepKg: 2.5, label: 'pec deck · estimación orientativa ±25%' }],
+      [/^press de hombro/, { referenceKg: 25, stepKg: 2.5, label: 'press de hombro · estimación orientativa ±25%' }],
+      [/^elevación lateral/, { referenceKg: 10, stepKg: 2.5, label: 'elevación lateral · estimación orientativa ±25%' }],
+      [/^jalón de tríceps/, { referenceKg: 20, stepKg: 2.5, label: 'tríceps en polea · estimación orientativa ±25%' }],
+      [/^extensión de tríceps sobre cabeza/, { referenceKg: 15, stepKg: 2.5, label: 'tríceps con cuerda · estimación orientativa ±25%' }],
+      [/^peso muerto rumano con barra$/, { referenceKg: 50, stepKg: 2.5, label: 'barra libre · peso total con barra · estimación orientativa ±25%' }],
+      [/^abducción de cadera/, { referenceKg: 40, stepKg: 2.5, label: 'abducción de cadera · estimación orientativa ±25%' }],
+      [/^aducción de cadera/, { referenceKg: 40, stepKg: 2.5, label: 'aducción de cadera · estimación orientativa ±25%' }],
+      [/^elevación de pantorrilla sentada$/, { referenceKg: 40, stepKg: 2.5, label: 'pantorrilla sentada · estimación orientativa ±25%' }],
+      [/^crunch con elevación de piernas sentada$/, { referenceKg: 30, stepKg: 2.5, label: 'crunch sentado · estimación orientativa ±25%' }]
     ];
-    const loadProfile = loadProfiles.find(([pattern]) => pattern.test(loadDescription))?.[1];
-    if (!loadProfile) throw new Error(`Falta un perfil de carga revisado para: ${item.title}`);
+    const loadProfileBase = loadProfiles.find(([pattern]) => pattern.test(loadDescription))?.[1];
+    if (!loadProfileBase) throw new Error(`Falta un perfil de carga revisado para: ${item.title}`);
+    const loadProfile = { ...loadProfileBase, minKg: loadProfileBase.referenceKg * 0.75, maxKg: loadProfileBase.referenceKg * 1.25 };
     item.performanceLoadProfile = loadProfile;
     const createPerformanceIcon = name => {
       const icons = {
@@ -3638,8 +3641,8 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       const factor = pounds ? 1 / 0.45359237 : 1;
       const unitStep = pounds ? 5 : item.performanceLoadProfile.stepKg;
       const selectedValue = Number(item.performanceLoadExact);
-      const unitMin = Math.ceil(Math.min(item.performanceLoadProfile.minKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.minKg) * factor / unitStep) * unitStep;
-      const unitMax = Math.floor(Math.max(item.performanceLoadProfile.maxKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.maxKg) * factor / unitStep) * unitStep;
+      const unitMin = Math.min(item.performanceLoadProfile.minKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.minKg) * factor;
+      const unitMax = Math.max(item.performanceLoadProfile.maxKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.maxKg) * factor;
       loadInput.min = String(unitMin); loadInput.max = String(unitMax); loadInput.step = String(unitStep); loadInput.dataset.loadProfile = item.performanceLoadProfile.label; loadInput.dataset.maxKg = String(item.performanceLoadProfile.maxKg);
       if (!item.performanceLoadSelected) loadInput.value = String(unitMin);
       else loadInput.value = String(Math.min(unitMax, Math.max(unitMin, selectedValue || unitMin)));
@@ -3706,7 +3709,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       const converted = nextUnit === 'lb' ? kilograms / 0.45359237 : kilograms;
       const nextStep = nextUnit === 'lb' ? 5 : 2.5;
       item.performanceLoadUnit = nextUnit;
-      const factor = nextUnit === 'lb' ? 1 / 0.45359237 : 1; const unitStep = nextUnit === 'lb' ? 5 : item.performanceLoadProfile.stepKg; const rounded = Math.round(converted / unitStep) * unitStep; const unitMin = Math.ceil(Math.min(item.performanceLoadProfile.minKg * factor, item.performanceLoadSelected ? rounded : item.performanceLoadProfile.minKg * factor) / unitStep) * unitStep; const unitMax = Math.floor(Math.max(item.performanceLoadProfile.maxKg * factor, item.performanceLoadSelected ? rounded : item.performanceLoadProfile.maxKg * factor) / unitStep) * unitStep;
+      const factor = nextUnit === 'lb' ? 1 / 0.45359237 : 1; const unitStep = nextUnit === 'lb' ? 5 : item.performanceLoadProfile.stepKg; const rounded = Math.round(converted / unitStep) * unitStep; const unitMin = Math.min(item.performanceLoadProfile.minKg * factor, item.performanceLoadSelected ? rounded : item.performanceLoadProfile.minKg * factor); const unitMax = Math.max(item.performanceLoadProfile.maxKg * factor, item.performanceLoadSelected ? rounded : item.performanceLoadProfile.maxKg * factor);
       item.performanceLoadExact = Math.min(unitMax, Math.max(unitMin, rounded));
       item.performanceLoad.value = String(item.performanceLoadExact);
       updateLoadControl();
@@ -3970,10 +3973,18 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       const doneSeries = exerciseItems.reduce((sum, item) => sum + snapshot(item).done, 0);
       const totalSeries = exerciseItems.reduce((sum, item) => sum + item.seriesKeys.length, 0);
       const sessionComplete = doneExercises === exerciseItems.length;
+      const sessionEndedPartial = root?.sessionEndReason === 'partial';
+      const finishDayButton = document.getElementById('finishDay');
+      if (finishDayButton) {
+        finishDayButton.disabled = Boolean(root?.sessionEndedAt);
+        finishDayButton.textContent = root?.sessionEndedAt ? 'Día terminado' : 'Terminar día';
+      }
       const justStarted = Boolean(root?.sessionStartedAt && now - root.sessionStartedAt < 2600);
       const warmupDone = warmup.phase === 'done';
       const displayActivity = sessionComplete
         ? { kind: 'complete', label: 'Rutina completada', clock: '🎉', startedAt: Number(root?.sessionEndedAt) || now }
+        : sessionEndedPartial
+          ? { kind: 'complete', label: 'Día terminado · progreso parcial', clock: 'Guardado', startedAt: Number(root?.sessionEndedAt) || now }
         : currentActivity || (justStarted
           ? { kind: 'start', label: '¡Rutina iniciada!', clock: 'Vamos', startedAt: Number(root.sessionStartedAt) }
           : { kind: warmupDone || doneSeries > 0 || root?.sessionStartedAt ? 'ready' : 'start', label: warmupDone || doneSeries > 0 || root?.sessionStartedAt ? 'Listo para continuar' : '¡Vamos a entrenar!', clock: warmupDone || doneSeries > 0 || root?.sessionStartedAt ? 'Lista' : 'Iniciar', startedAt: 0 });
@@ -4388,8 +4399,22 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     const hasProgress = Object.entries(state).some(([key, value]) => (/^e\d+s\d+$/.test(key) || /^w\d+$/.test(key)) && value === true)
       || Object.keys(state.__skippedExercises || {}).length > 0
       || Boolean(state.__timing?.warmup?.phase === 'done' || startedAt);
-    if (!hasProgress || !recordedWeek || recordedWeek >= routineWeekKey(Date.now())) return false;
-    state = {};
+      // Legacy progress without a trustworthy date must not be adopted as
+      // current-week completion by the next save. Archive before resetting so
+      // ambiguous legacy data is retained. A session timestamp remains authoritative.
+      if (!hasProgress || (recordedWeek && recordedWeek >= routineWeekKey(Date.now()))) return false;
+      if (!recordedWeek) {
+        try {
+          const archiveKey = 'gymratik-legacy-progress-archive-v1';
+          const archive = JSON.parse(localStorage.getItem(archiveKey) || '{}');
+          if (!archive[routineId]) archive[routineId] = { archivedAt: Date.now(), snapshot: state };
+          localStorage.setItem(archiveKey, JSON.stringify(archive));
+        } catch (error) {
+          window.dispatchEvent(new CustomEvent('training-storage-error', { detail: { error } }));
+          return false;
+        }
+      }
+      state = {};
     return true;
   };
   const migrateTimingState = () => {
@@ -4421,13 +4446,17 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       if (timing.warmup.preparationEndsAt) hasStartedExercise = true;
       else { timing.warmup.phase = 'idle'; }
     }
-    if (!hasStartedExercise) { timing.sessionStartedAt = 0; timing.sessionEndedAt = 0; }
+    if (!hasStartedExercise && timing.sessionEndReason !== 'partial') { timing.sessionStartedAt = 0; timing.sessionEndedAt = 0; }
+    if (!['partial', 'complete'].includes(timing.sessionEndReason)) timing.sessionEndReason = '';
     if (timing.sessionStartedAt && timing.sessionEndedAt && timing.sessionEndedAt < timing.sessionStartedAt) timing.sessionEndedAt = 0;
     timing.timingVersion = 5; timing.sessionAbandonedAt = Number.isFinite(timing.sessionAbandonedAt) && timing.sessionAbandonedAt >= 0 ? timing.sessionAbandonedAt : 0;
     save();
   };
   if (resetPreviousWeekProgress()) save();
   migrateTimingState();
+  publishProgress();
+  publishProgress();
+  publishProgress();
   publishProgress();
   const updateCompleteButton = item => {
     const button = item.tracker.querySelector('.completeSetButton');
@@ -4491,7 +4520,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     const doneSeries = rows.reduce((sum, row) => sum + row.done, 0);
     const pendingSeries = rows.reduce((sum, row) => sum + row.remaining, 0);
     const machinePending = rows.filter(row => row.machinePending).length;
-    const activeIndex = exerciseItems.findIndex(entry => { const timing = state.__timing?.exercises?.[String(entry.index + 1)]; return Boolean(timing?.warmupStartedAt || timing?.seriesStartedAt || timing?.restStartedAt || timing?.preparationEndsAt); }); const selectedIndex = Number.isInteger(window.gymratikFocusedExerciseIndex) ? window.gymratikFocusedExerciseIndex : -1; const focusedIndex = activeIndex >= 0 ? activeIndex : selectedIndex >= 0 && selectedIndex < rows.length ? selectedIndex : rows.findIndex(row => !row.complete);
+    const activeIndex = exerciseItems.findIndex(entry => { const timing = state.__timing?.exercises?.[String(entry.index + 1)]; return Boolean(timing?.warmupStartedAt || timing?.seriesStartedAt || timing?.restStartedAt || timing?.preparationEndsAt); }); const selectedIndex = Number.isInteger(window.gymratikFocusedExerciseIndex) ? window.gymratikFocusedExerciseIndex : -1; const focusedIndex = selectedIndex >= 0 && selectedIndex < rows.length ? selectedIndex : activeIndex >= 0 ? activeIndex : rows.findIndex(row => !row.complete);
     if (doneSeries > 0 && summaryToggle && summaryBody && completedExercises !== exerciseItems.length && summaryToggle.getAttribute('aria-expanded') === 'true') { summaryToggle.setAttribute('aria-expanded', 'true'); summaryBody.hidden = false; }
     const headline = document.getElementById('summaryHeadline');
     const sets = document.getElementById('summarySets');
@@ -4503,6 +4532,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       pending.classList.toggle('isAttention', pendingSeries > 0 && completedExercises !== exerciseItems.length);
     }
     renderTimingDisplays();
+    const summaryScrollTop = summaryList.scrollTop;
     summaryList.replaceChildren();
     exerciseItems.forEach((item, index) => {
       const row = rows[index];
@@ -4524,6 +4554,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       li.append(button);
       summaryList.append(li);
     });
+    summaryList.scrollTop = summaryScrollTop;
   };
   const undoLastSeries = item => {
     let lastIndex = -1;
@@ -4535,7 +4566,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     state[item.seriesKeys[lastIndex]] = false;
     if (state.__skippedExercises) delete state.__skippedExercises[String(item.index + 1)];
     const timingRoot = getTimingState();
-    timingRoot.sessionEndedAt = 0;
+    timingRoot.sessionEndedAt = 0; timingRoot.sessionEndReason = ''; timingRoot.sessionEndReason = ''; timingRoot.sessionEndReason = '';
     const timing = timingRoot.exercises?.[String(item.index + 1)];
     if (timing) {
       timing.seriesTimes = (timing.seriesTimes || []).slice(0, lastIndex);
@@ -4555,7 +4586,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     item.seriesKeys.forEach(key => { state[key] = false; });
     if (state.__skippedExercises) delete state.__skippedExercises[String(item.index + 1)];
     const timingRoot = getTimingState();
-    timingRoot.sessionEndedAt = 0;
+    timingRoot.sessionEndedAt = 0; timingRoot.sessionEndReason = ''; timingRoot.sessionEndReason = ''; timingRoot.sessionEndReason = '';
     delete timingRoot.exercises[String(item.index + 1)];
     save();
     updateTracker(item.tracker, false);
@@ -6497,6 +6528,30 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     completionPanel.hidden = true;
     completionPanel.classList.remove('sessionCelebrating');
   });
+  document.addEventListener('click', async event => {
+    const finishDayButton = event.target instanceof Element ? event.target.closest('#finishDay') : null;
+    if (!finishDayButton || state.__timing?.sessionEndedAt) return;
+    if (!window.confirm('¿Terminar este día con el progreso registrado hasta ahora? Las series sin confirmar no se contarán y podrás consultar este avance en tu historial.')) return;
+    finishDayButton.disabled = true;
+    finishDayButton.textContent = 'Guardando…';
+    clearPreparationTimers();
+    const timingRoot = getTimingState();
+    const endedAt = Date.now();
+    if (!timingRoot.sessionStartedAt) timingRoot.sessionStartedAt = endedAt;
+    timingRoot.sessionEndedAt = endedAt;
+    timingRoot.sessionEndReason = 'partial';
+    Object.values(timingRoot.exercises || {}).forEach(timing => {
+      timing.preparationEndsAt = 0;
+      timing.seriesStartedAt = 0;
+      timing.restStartedAt = 0;
+      timing.restNotifiedAt = 0; timing.restReminderNotifiedAt = 0;});
+    if (timingRoot.warmup?.phase === 'preparing') timingRoot.warmup.phase = 'paused';
+    const saved = await save();
+    finishDayButton.textContent = 'Día terminado';
+    finishDayButton.setAttribute('aria-label', 'Día terminado. Progreso guardado en este dispositivo.');
+    if (!saved) window.dispatchEvent(new CustomEvent('training-storage-error', { detail: { message: 'El cierre parcial no pudo confirmarse en el almacén local.' } }));
+    render();
+  });
   summaryToggle?.addEventListener('click', () => {
     const expanded = summaryToggle.getAttribute('aria-expanded') !== 'true';
     summaryToggle.setAttribute('aria-expanded', String(expanded));
@@ -7059,6 +7114,7 @@ body{height:auto!important;min-height:100%!important;overflow-x:hidden!important
   const intersecting = new WeakMap();
   const frameVisibility = new WeakMap();
   const imagesByFrame = new WeakMap();
+  const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)') || null;
   const posterFor = image => image.parentElement?.querySelector('.warmupFallback,.gifFallback');
   const posterSourceFor = image => posterFor(image)?.getAttribute('src') || image.dataset.staticSrc || image.getAttribute('data-static-src') || '';
   const sourceFor = image => motionSources.get(image) || image.dataset.batteryMotionSrc || image.getAttribute('src');
@@ -7078,7 +7134,7 @@ body{height:auto!important;min-height:100%!important;overflow-x:hidden!important
     if (image.getAttribute('src') !== source) image.setAttribute('src', source);
   };
   const syncImage = image => {
-    if (document.hidden || !intersecting.get(image)) pauseImage(image);
+    if (document.hidden || reducedMotion?.matches || !intersecting.get(image)) pauseImage(image);
     else resumeImage(image);
   };
   const syncVisibility = () => root.classList.toggle('is-document-hidden', document.hidden);
@@ -7087,15 +7143,11 @@ body{height:auto!important;min-height:100%!important;overflow-x:hidden!important
     motionImages.forEach(syncImage);
   };
   document.addEventListener('visibilitychange', syncAllMotion, { passive: true });
+  reducedMotion?.addEventListener?.('change', syncAllMotion);
+  if (reducedMotion && !reducedMotion.addEventListener) reducedMotion.addListener?.(syncAllMotion);
   syncVisibility();
 
-  if (!('IntersectionObserver' in window)) return;
-  const sections = document.querySelectorAll('.hero,.quickRules,.prep,.routineSummary,.sessionGamification,.sessionDashboard,.notePanel,.cards>.card,.sessionFooter');
-  const observer = new IntersectionObserver(entries => {
-    for (const entry of entries) entry.target.setAttribute('data-motion-paused', String(!entry.isIntersecting));
-  }, { rootMargin: '96px 0px' });
-  sections.forEach(section => observer.observe(section));
-  const mediaObserver = new IntersectionObserver(entries => {
+  const mediaObserver = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
     for (const entry of entries) {
       frameVisibility.set(entry.target, entry.isIntersecting);
       for (const image of imagesByFrame.get(entry.target) || []) {
@@ -7103,7 +7155,14 @@ body{height:auto!important;min-height:100%!important;overflow-x:hidden!important
         syncImage(image);
       }
     }
-  }, { rootMargin: '96px 0px' });
+  }, { rootMargin: '96px 0px' }) : null;
+  if ('IntersectionObserver' in window) {
+    const sections = document.querySelectorAll('.hero,.quickRules,.prep,.routineSummary,.sessionGamification,.sessionDashboard,.notePanel,.cards>.card,.sessionFooter');
+    const observer = new IntersectionObserver(entries => {
+      for (const entry of entries) entry.target.setAttribute('data-motion-paused', String(!entry.isIntersecting));
+    }, { rootMargin: '96px 0px' });
+    sections.forEach(section => observer.observe(section));
+  }
   const observeMotionImage = image => {
     if (!(image instanceof HTMLImageElement) || !image.matches('img.gifMotion,img.warmupGif,img.day3ExerciseGif,img.day4ExerciseGif') || motionImages.has(image)) return;
     const source = image.getAttribute('src');
@@ -7116,7 +7175,9 @@ body{height:auto!important;min-height:100%!important;overflow-x:hidden!important
     frameImages.push(image);
     imagesByFrame.set(frame, frameImages);
     if (frameVisibility.has(frame)) intersecting.set(image, frameVisibility.get(frame));
-    else mediaObserver.observe(frame);
+    else if (mediaObserver) mediaObserver.observe(frame);
+    else intersecting.set(image, true);
+    syncImage(image);
   };
   document.querySelectorAll('img.gifMotion,img.warmupGif,img.day3ExerciseGif,img.day4ExerciseGif').forEach(observeMotionImage);
   const mediaMutationObserver = new MutationObserver(records => {

@@ -27,7 +27,8 @@ class ProgressStoreContractTests(unittest.TestCase):
         self.assertIn("entrenamiento-progress-fallback-v3", self.source)
         self.assertNotIn("deleteObjectStore", self.source)
         self.assertIn("preservedExistingStores: true", self.source)
-        self.assertIn("restoreMissingRoutineProgress", self.source)
+        self.assertIn("reconcileLocalRoutineProgress", self.source)
+        self.assertIn("LEGACY_PROGRESS_ARCHIVE_KEY", self.source)
         self.assertNotIn("migrateLegacyProgress", self.source)
         self.assertNotIn("UNSUPPORTED_DATABASE_VERSION", self.source)
 

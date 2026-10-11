@@ -1,5 +1,5 @@
-const CACHE_NAME = 'entrenamiento-pwa-a6cf7b7c2b4d';
-const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-a6a0a35fa0fc';
+const CACHE_NAME = 'entrenamiento-pwa-5d09d9bf288b';
+const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-0c59575c2aea';
 const PRECACHE = [
   './',
   './index.html',
@@ -231,8 +231,8 @@ const PRECACHE = [
 ];
 const PRECACHE_URLS = new Set(PRECACHE.map((path) => new URL(path, self.registration.scope).href));
 const RESOURCE_BYTES = {
-  './': 109477,
-  './index.html': 109477,
+  './': 110329,
+  './index.html': 110329,
   './records.html': 4092,
   './records.css': 7273,
   './records.js': 9743,
@@ -249,7 +249,7 @@ const RESOURCE_BYTES = {
   './assets/branding/routine-covers/day4.webp': 403468,
   './install-gate.js': 8459,
   './data/profile/mascot-install-phone.webp': 1006568,
-  './progress-store.js': 41987,
+  './progress-store.js': 44714,
   './routine-liquid-glass-v13.css': 8250,
   './data/profile/mouse-female-effort.webp': 1212010,
   './data/profile/mouse-male-effort.webp': 1072538,
@@ -283,10 +283,10 @@ const RESOURCE_BYTES = {
   './data/profile/mascot-motion/states-v1/male-mobility.png': 12451,
   './data/profile/mascot-motion/states-v1/male-rest.png': 15701,
   './data/profile/mascot-motion/states-v1/male-approval.png': 12307,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html': 1067104,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html': 2659903,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html': 646965,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html': 649910,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html': 1071669,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html': 2664538,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html': 651574,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html': 654540,
   './assets/branding/gymratik-mascots-mark-v2.png': 338005,
   './data/rutinas_autocontenidas/frases_fitness/fitness_quotes.js': 14218,
   './data/rutinas_autocontenidas/frases_fitness/retratos/allyson-felix.jpg': 28818,

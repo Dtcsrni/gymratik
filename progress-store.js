@@ -11,6 +11,7 @@
   const DEFAULT_PROFILE_ID = 'local-default';
   const PROFILE_SCHEMA_VERSION = 3;
   const FALLBACK_KEY = 'entrenamiento-progress-fallback-v3';
+  const LEGACY_PROGRESS_ARCHIVE_KEY = 'gymratik-legacy-progress-archive-v1';
   const ROUTINES = {
     day1: { label: 'Día 1 · Espalda + Bíceps', totalExercises: 6, totalSeries: 20 },
     day2: { label: 'Día 2 · Pierna + Glúteo', totalExercises: 6, totalSeries: 20 },
@@ -282,6 +283,7 @@
     const warmupCompleted = timing.warmup?.phase === 'done';
     const sessionStartedAt = Number.isFinite(Number(timing.sessionStartedAt)) ? Number(timing.sessionStartedAt) : 0;
     const sessionEndedAt = Number.isFinite(Number(timing.sessionEndedAt)) ? Number(timing.sessionEndedAt) : 0;
+    const sessionEndReason = sessionEndedAt && timing.sessionEndReason === 'partial' ? 'partial' : (sessionEndedAt ? 'complete' : 'active');
     return {
       totalExercises: routine.totalExercises,
       totalSeries: routine.totalSeries,
@@ -291,6 +293,7 @@
       skippedExerciseCount,
       sessionStartedAt,
       sessionEndedAt,
+      sessionEndReason,
       sessionId: sessionStartedAt ? `${routine.id}:${sessionStartedAt}` : null,
     };
   }
@@ -315,6 +318,7 @@
       skippedExercises: metrics.skippedExerciseCount,
       sessionStartedAt: metrics.sessionStartedAt,
       sessionEndedAt: metrics.sessionEndedAt,
+      sessionEndReason: metrics.sessionEndReason,
       sessionId,
       weekKey: trainingWeekKey(metrics.sessionStartedAt || capturedAt),
       performance: Object.entries(state?.__performance || {}).flatMap(([exerciseId, sets]) =>
@@ -342,6 +346,7 @@
       startedAt: record.sessionStartedAt,
       endedAt: record.sessionEndedAt || 0,
       status: record.sessionEndedAt ? 'completed' : 'active',
+      completionKind: record.sessionEndReason === 'partial' ? 'partial' : (record.sessionEndedAt ? 'complete' : 'active'),
       completedSeries: nonNegativeNumber(record.doneSeries ?? record.completedSeries),
       warmupCompleted: record.warmupCompleted === true,
       completedExercises: nonNegativeNumber(record.completedExercises),
@@ -375,6 +380,7 @@
       totalSeries: nonNegativeNumber(record.totalSeries),
       startedAt: startedAt || 0,
       endedAt: Number(record.endedAt || record.sessionEndedAt) || 0,
+      completionKind: record.completionKind || (record.sessionEndReason === 'partial' ? 'partial' : (record.sessionEndedAt ? 'complete' : undefined)),
       updatedAt: record.updatedAt,
       performance: Array.isArray(record.performance) ? record.performance : [],
     };
@@ -461,6 +467,11 @@
     window.localStorage.setItem(FALLBACK_KEY, JSON.stringify(fallback));
   }
 
+  function clearRoutineSnapshots() {
+    Object.keys(ROUTINES).forEach((routineId) => window.localStorage.removeItem(`fitlovers-${routineId}-series-v1`));
+    window.localStorage.removeItem(LEGACY_PROGRESS_ARCHIVE_KEY);
+  }
+
   async function exportData() {
     requireInstalledApp();
     const profile = await getProfile();
@@ -513,12 +524,14 @@
         tx.objectStore(PROFILE_STORE).put(imported.profile);
         tx.objectStore(META_STORE).put({ key: 'activeProfileId', value: DEFAULT_PROFILE_ID, updatedAt: Date.now() });
       });
+      try { clearRoutineSnapshots(); } catch (error) { emit('training-storage-error', { error, source: 'snapshot-replacement' }); }
       try { exportFallbackData(imported.profile, imported.data); } catch (fallbackError) { emit('training-storage-error', { error: fallbackError, source: 'fallback-mirror' }); }
       emit('training-progress-updated', { source: 'indexeddb', imported: true });
       emit('training-profile-updated', { source: 'indexeddb', profile: imported.profile });
       return { source: 'indexeddb', imported: true, profile: imported.profile, counts: { progress: imported.data.progress.length, sessions: imported.data.sessions.length, activity: imported.data.activity.length } };
     } catch (error) {
       exportFallbackData(imported.profile, imported.data);
+      try { clearRoutineSnapshots(); } catch (snapshotError) { emit('training-storage-error', { error: snapshotError, source: 'snapshot-replacement' }); }
       emit('training-storage-error', { error, fallback: true });
       emit('training-progress-updated', { source: 'localstorage', imported: true });
       emit('training-profile-updated', { source: 'localstorage', profile: imported.profile });
@@ -547,7 +560,7 @@
     }
     try {
       window.localStorage.removeItem(FALLBACK_KEY);
-      Object.keys(ROUTINES).forEach((routineId) => window.localStorage.removeItem(`fitlovers-${routineId}-series-v1`));
+      clearRoutineSnapshots();
     } catch (error) {
       emit('training-storage-error', { error });
       throw error;
@@ -571,6 +584,7 @@
   async function clearRoutine(routineId) {
     requireInstalledApp();
     if (!ROUTINES[routineId]) throw new Error(`Rutina no reconocida: ${routineId}`);
+    if (!window.confirm(`¿Borrar los registros y el snapshot archivado de ${ROUTINES[routineId].label}?`)) return { routineId, cleared: false, cancelled: true };
     await (writeQueues.get(routineId) || Promise.resolve()).catch(() => {});
     let databaseError;
     if ('indexedDB' in window) {
@@ -593,6 +607,9 @@
       Object.keys(fallback.activity).forEach((key) => { if (fallback.activity[key]?.routineId === routineId) delete fallback.activity[key]; });
       window.localStorage.setItem(FALLBACK_KEY, JSON.stringify(fallback));
       window.localStorage.removeItem(`fitlovers-${routineId}-series-v1`);
+      const archive = JSON.parse(window.localStorage.getItem(LEGACY_PROGRESS_ARCHIVE_KEY) || '{}');
+      delete archive[routineId];
+      window.localStorage.setItem(LEGACY_PROGRESS_ARCHIVE_KEY, JSON.stringify(archive));
     } catch (error) {
       emit('training-storage-error', { error });
       throw error;
@@ -675,9 +692,9 @@
     const progressByRoutine = new Map(currentWeekProgress.map((record) => [record.routineId, record]));
     const sessionsById = new Map(data.sessions.map((session) => [session.sessionId, session]));
     const progressBySessionId = new Map(data.progress.filter((record) => record.sessionId).map((record) => [record.sessionId, record]));
-    const sessions = data.sessions.filter((session) => session.status === 'completed');
+    const sessions = data.sessions.filter((session) => session.status === 'completed' && session.completionKind !== 'partial');
     const completedSeries = sessions.reduce((sum, session) => sum + nonNegativeNumber(session.completedSeries), 0);
-    const activeSeries = currentWeekProgress.reduce((sum, record) => sum + (record.sessionEndedAt ? 0 : nonNegativeNumber(record.doneSeries)), 0);
+    const activeSeries = currentWeekProgress.reduce((sum, record) => sum + (!record.sessionEndedAt || record.sessionEndReason === 'partial' ? nonNegativeNumber(record.doneSeries) : 0), 0);
     const currentSeries = currentWeekProgress.reduce((sum, record) => sum + nonNegativeNumber(record.doneSeries), 0);
     const plannedSeries = Object.values(ROUTINES).reduce((sum, routine) => sum + routine.totalSeries, 0);
     const now = Date.now();
@@ -743,6 +760,23 @@
     };
   }
 
+  function archiveRoutineSnapshot(routineId, snapshot, recordedWeek) {
+    const archive = JSON.parse(window.localStorage.getItem(LEGACY_PROGRESS_ARCHIVE_KEY) || '{}');
+    const current = archive[routineId] && typeof archive[routineId] === 'object'
+      ? archive[routineId]
+      : {};
+    const entries = Array.isArray(current.entries) ? current.entries.slice() : [];
+    if (current.snapshot && !entries.some(entry => JSON.stringify(entry.snapshot) === JSON.stringify(current.snapshot))) {
+      entries.push({ archivedAt: Number(current.archivedAt) || Date.now(), recordedWeek: '', snapshot: current.snapshot });
+    }
+    const signature = JSON.stringify(snapshot);
+    if (!entries.some(entry => JSON.stringify(entry.snapshot) === signature)) {
+      entries.push({ archivedAt: Date.now(), recordedWeek: recordedWeek || '', snapshot });
+    }
+    archive[routineId] = { archivedAt: Date.now(), recordedWeek: recordedWeek || '', snapshot, entries };
+    window.localStorage.setItem(LEGACY_PROGRESS_ARCHIVE_KEY, JSON.stringify(archive));
+  }
+
   async function rolloverStaleRoutineSnapshots() {
     requireInstalledApp();
     const currentWeek = trainingWeekKey();
@@ -763,8 +797,11 @@
       const hasProgress = Object.entries(state).some(([key, value]) => (/^e\d+s\d+$/.test(key) || /^w\d+$/.test(key)) && value === true)
         || Object.keys(state.__skippedExercises || {}).length > 0
         || Boolean(state.__timing?.warmup?.phase === 'done' || startedAt);
-      if (!hasProgress || !recordedWeek || recordedWeek >= currentWeek) continue;
+      // A snapshot outside the current week is not current progress. Preserve
+      // every version in the archive before refreshing the operational view.
+      if (!hasProgress || (recordedWeek && recordedWeek >= currentWeek)) continue;
       try {
+        archiveRoutineSnapshot(routineId, state, recordedWeek);
         window.localStorage.setItem(storageKey, JSON.stringify({}));
       } catch (error) {
         emit('training-storage-error', { error });

@@ -1,107 +1,53 @@
-# Plan de desarrollo y ciclo de vida
+# Plan de desarrollo de Gymratik PWA
 
 ## Modelo
 
-Se adopta un ciclo iterativo basado en cortes verticales. Cada incremento debe producir una capacidad observable de extremo a extremo y evidencia verificable.
+Iteraciones pequeñas sobre una PWA estática/local. Cada cambio debe tener criterio observable, trazabilidad cuando afecte un requisito, y evidencia proporcional al comportamiento cambiado.
 
-## Etapas y gates
+## Etapas
 
-### M0 — Definición
+### M0 — Alcance y requisitos
 
-**Entregables:** visión, glosario, requisitos P0, casos de uso, riesgos, wireframes y trazabilidad.
+- Confirmar que el trabajo pertenece a la PWA y a sus cuatro rutinas canónicas.
+- Mantener SRS, casos de uso, riesgos y trazabilidad alineados.
+- **Gate:** cada requisito activo tiene prioridad, aceptación y prueba/evidencia asociada.
 
-**Gate:** todos los requisitos P0 tienen criterio de aceptación y los términos críticos están definidos.
+### M1 — Funcionamiento local
 
-### M1 — Viabilidad técnica
+- Portada, perfil local, sesiones, historial y progreso semanal.
+- Migraciones IndexedDB no destructivas y continuidad de sesión.
+- **Gate:** pruebas sintéticas muestran persistencia, idempotencia y conservación del historial.
 
-| Spike | Pregunta | Evidencia de salida |
-|---|---|---|
-| SPIKE-001 | ¿Puede Amazfit Active ejecutar, persistir y reenviar eventos? | Demostración en reloj real |
-| SPIKE-002 | ¿Puede el teléfono alcanzar Tezkatli desde el gimnasio de forma privada? | Medición de conexión y reconexión |
-| SPIKE-003 | ¿Qué pipeline cabe y rinde en Tezkatli? | VRAM, RAM, latencia y fallos |
-| SPIKE-004 | ¿Qué error se obtiene en porciones personales? | Dataset pesado y reporte |
-| SPIKE-005 | ¿Room/outbox sobrevive a process death? | Prueba automatizada |
-| SPIKE-006 | ¿La detección de gimnasio es útil sin agotar batería? | Falsos positivos y consumo |
+### M2 — Uso offline y actualización
 
-**Gate:** cada riesgo técnico queda viable, condicionado, sustituido o descartado.
+- Inventario offline generado, instalación, política de red y actualización por Service Worker.
+- **Gate:** paquete completo previo permanece utilizable ante descarga incompleta; recursos inventariados abren offline en navegador de prueba.
 
-### M2 — Arquitectura ejecutable
+### M3 — Respaldo y privacidad
 
-- Android instalable.
-- API privada con health check.
-- Base de datos y migración inicial.
-- Contratos compartidos.
-- CI y validación documental.
-- Respaldo/restauración mínimo.
+- Exportación/importación manual JSON v3, mensajes de límites y datos sintéticos para pruebas.
+- **Gate:** restauración fixture v3 verificada; inválidos no modifican el estado.
 
-### M3 — MVP de entrenamiento
+### M4 — Validación de entrega
 
-- Rutinas manuales.
-- Sesión y fases.
-- Registro de series.
-- Descanso, corrección y valores previos.
-- Historial y métricas básicas.
-- Operación totalmente offline.
+- Ejecutar validadores documentales, de rutinas, medios, pruebas y sintaxis que correspondan al cambio.
+- Revisar la interfaz en viewport móvil; ejecutar verificación física solo cuando el dispositivo esté disponible y autorizado.
+- **Gate:** reportar separadamente evidencia local, emulada, navegador publicado y física.
 
-### M4 — Nutrición y suplementos deterministas
+## Fuera del plan vigente
 
-- Catálogo y búsqueda.
-- Texto y código de barras.
-- OCR de etiqueta.
-- Recetas y comidas habituales.
-- Suplementos, dosis, horarios e inventario.
+Nutrición, suplementos, gimnasio/equipo, IA, Android nativo, integraciones, backend y sincronización multi-dispositivo están diferidos. No se crean hitos, dependencias ni estimaciones para esas áreas dentro del plan de la PWA.
 
-### M5 — IA alimentaria
+## Gestión
 
-- Trabajos asíncronos.
-- Pipeline visual.
-- Borradores editables.
-- Incertidumbre y procedencia.
-- Golden set personal y fallback.
-
-### M6 — Recomendación y analítica
-
-- Inventario verificado del gimnasio.
-- Motor de restricciones y puntuación.
-- Progresión explicable.
-- Peso tendencial y balance energético.
-
-### M7 — Integraciones
-
-- Health Connect.
-- Detección contextual del gimnasio.
-- Zepp Device App y Side Service si SPIKE-001 es viable.
-
-### M8 — Endurecimiento
-
-- Seguridad, privacidad, rendimiento, batería y recuperación.
-- Release candidate reproducible.
-
-### M9 — Operación personal
-
-- Despliegue, monitoreo, respaldos, actualización y mantenimiento.
-
-## Gestión del trabajo
-
-- Backlog por capacidades, no por capas técnicas.
-- Ramas breves y `main` siempre construible.
-- ADR para decisiones significativas.
-- Revisión de riesgos al cerrar cada milestone.
-- No asignar fechas hasta medir la velocidad de M0 y M1.
-
-## Definition of Ready
-
-- Necesidad y valor identificados.
-- Criterios de aceptación observables.
-- Dependencias y riesgos conocidos.
-- Tamaño apto para un incremento.
-- Incertidumbre técnica resuelta o spike definido.
+- Backlog por comportamiento observable de la PWA.
+- ADR para decisiones arquitectónicas significativas.
+- Proteger cambios locales existentes; revisar `git status` y diffs antes de integrar.
+- No publicar, desplegar ni cambiar datos personales como parte de validación local.
 
 ## Definition of Done
 
-- Implementación y pruebas aplicables aprobadas.
-- Manejo de fallos y límites cubierto.
-- Documentación y trazabilidad actualizadas.
-- Seguridad y privacidad revisadas.
-- Validación física cuando depende de hardware.
-- Evidencia conservada sin datos personales.
+- Criterios de aceptación y trazabilidad actualizados.
+- Validaciones aplicables ejecutadas y resultados reales reportados.
+- Fallos repetibles corregidos con una protección antirregresión.
+- Documentación distingue implementado, parcial, propuesto y no verificado.

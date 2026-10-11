@@ -14,7 +14,7 @@ from scripts.build_modular_krita_source import build_project
 
 class ModularKritaSourceTests(unittest.TestCase):
     def test_builds_layered_machine_character_and_two_exercise_states(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[1]) as temporary:
             output_dir = Path(temporary)
             ora_path, start_preview = build_project(output_dir)
             finish_preview = output_dir / "preview-pulled.png"

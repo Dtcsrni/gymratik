@@ -1,19 +1,17 @@
 # TDD-005 — PWA, perfil local y verificación E2E
 
 **Estado:** `In progress`
-**Versión:** `0.1`
-**Fecha:** `2026-09-24`
+**Versión:** `0.3`
+**Fecha:** `2026-10-09`
 **Diseño asociado:** [SDD-004](../03-architecture/SDD-004-generacion-validacion-publicacion-pwa.md)
-**Fuentes normativas:** [SRS](../01-requirements/SRS.md), [ADR-013](../03-architecture/adr/ADR-013-perfil-local-y-respaldo-pwa.md), [ADR-014](../03-architecture/adr/ADR-014-progresion-e-horarios-locales-pwa.md), [ADR-015](../03-architecture/adr/ADR-015-base-local-v3-exclusiva.md), [ADR-017](../03-architecture/adr/ADR-017-politica-de-actualizacion-y-cache-pwa.md)
+**Fuentes normativas:** [SRS](../01-requirements/SRS.md), [ADR-013](../03-architecture/adr/ADR-013-perfil-local-y-respaldo-pwa.md), [ADR-014](../03-architecture/adr/ADR-014-progresion-e-horarios-locales-pwa.md), [ADR-015](../03-architecture/adr/ADR-015-base-local-v3-exclusiva.md), [ADR-017](../03-architecture/adr/ADR-017-politica-de-actualizacion-y-cache-pwa.md), [ADR-018](../03-architecture/adr/ADR-018-retencion-manual-de-datos-pwa.md)
 
 ## 1. Objetivo y frontera
 
-Demostrar requisitos PWA y perfil en pruebas automatizadas, navegador y
-dispositivo cuando corresponda. `FUN-TRN-*` solo se cubre en la funcionalidad
-que existe en las fichas web (calentamiento, una acción de serie, descanso,
-deshacer y registro de reps/carga); no implica cierre de la app Android. Quedan
-fuera de esta serie Android/Room, Tezkatli, nutrición, IA, Zepp/Amazfit,
-Health Connect, geofence y hardware.
+Demostrar requisitos PWA, perfil, sesión, historial, respaldo y recursos offline
+en pruebas automatizadas y navegador. `FUN-TRN-010..013` se limita al
+calentamiento, descanso y omisión interactiva en las fichas web. No se afirma
+comportamiento de app Android nativa.
 
 Niveles de evidencia: **A** automatizada, **V** navegador/visual, **H**
 dispositivo/validación humana. Un check estático no equivale a E2E.
@@ -28,14 +26,14 @@ dispositivo/validación humana. Un check estático no equivale a E2E.
 | FUN-PWA-004 | TST-PWA-004 preferencias ask/always/wifi, permiso por apertura y continuar | `test_network_permission_is_explained_and_chosen_inside_the_splash`; `test_cellular_update_is_manual_and_detected_version_uses_the_mascot_animation`; `test_network_defer_reason_distinguishes_cellular_from_data_saver` | elegir las tres políticas, tipo de conexión desconocido, ahorro de datos activo y abrir sin descargar | A+V; API de conexión variable | Parcial |
 | FUN-PWA-005 | TST-PWA-005 cuota/interrupción preserva caché e historial | marcadores de caché, `QuotaExceededError` y lógica de limpieza en pruebas SW | provocar cuota/fallo de red con datos sintéticos; confirmar versión previa | A+V; cuota Android H | Parcial |
 | FUN-PWA-006 | TST-PWA-006 poses diferenciadas y movimiento reducido | `test_homepage_uses_animated_original_pair_outside_install_invitation`; CSS reducido | observar poses, contrastar `prefers-reduced-motion` | A+V; lector de pantalla H | Parcial |
-| FUN-PWA-007 | TST-PWA-029 preservar stores y snapshots locales ante actualización | `test_existing_indexeddb_v1_or_v2_is_upgraded_without_deleting_stores_or_local_routine_state`; `test_missing_central_progress_is_recovered_from_local_routine_snapshot` | `scripts/e2e_routine_activity_check.py`: recarga en preparación y descanso conserva actividad y progreso | A+V; migración con datos reales/Realme GT 6 H | Parcial |
+| FUN-PWA-007 | TST-PWA-029 preservar stores y snapshots locales ante actualización | `test_existing_indexeddb_v1_or_v2_is_upgraded_without_deleting_stores_or_local_routine_state`; `test_missing_central_progress_is_recovered_from_local_routine_snapshot` | `scripts/e2e_routine_activity_check.py`: recarga en preparación y descanso conserva actividad y progreso; estado legado sin fecha queda archivado y fuera del avance semanal | A+V; migración con datos reales/Realme GT 6 H | Parcial |
 | FUN-PWA-008 | TST-PWA-030 mascota local animada por estado/perfil | `tests/test_mascot_motion.py`; `test_service_worker.py` | `scripts/e2e_routine_activity_check.py`: actividad/descanso con perfiles femenino, masculino y neutral; idle/reducido; imagen 128×128, cambio visible de fotogramas, carga offline | A+V; Realme GT 6 H | Parcial |
 | FUN-PWA-009 | TST-PWA-031 actualización versionada, red identificada y caché runtime acotada | `test_detected_pwa_updates_activate_automatically_on_allowed_networks`; `test_updates_are_staged_until_the_application_authorizes_activation`; `test_runtime_cache_is_bounded_to_precache_resources_and_revalidates_http_cache`; fingerprint SW | primera instalación toma control al completar; actualización permanece en espera hasta reapertura o solicitud manual; tipo de red desconocido no autoriza actualización automática; query y rutas fuera de scope no crean caché | A+V; host publicado y Chrome Android H | Parcial |
 | FUN-PWA-010 | TST-PWA-032 iconos 192/512 coherentes e incluidos offline | `test_pwa_icon_is_the_shared_mascot_mark`; `test_pwa_precache_derives_installed_icons_from_manifest`; `test_generated_worker_cache_fingerprint_matches_current_precache` | E2E offline carga y decodifica ambos iconos | A+V; Chrome Android instalado H | Parcial |
 | FUN-PRO-001 | TST-PRO-001 validar/guardar perfil local | `test_profile_is_saved_and_normalized_in_local_fallback`, contrato de campos | editar y recargar cada campo | A+V | Parcial |
 | FUN-PRO-014 | TST-PRO-014 formulario inicial progresivo y redirección solo sin datos | `test_initial_profile_form_is_progressive_and_optional`; `test_profile_editor_closes_and_page_reloads_after_successful_save` | perfil vacío abre formulario simple; perfil existente permanece en portada; extras siguen accesibles | A+V | Parcial |
 | FUN-PRO-015 | TST-PRO-015 resumen de portada e historial estadístico local | `tests/test_records.py`; `test_homepage_exposes_persistent_progress_dashboard` | validar filtros 7/30/todo, conteos, gráfica semanal, cargas por ejercicio y detalles de sesión con fixture local; verificar que refrescar no muta datos | A+V | Parcial |
-| FUN-PRO-002 | TST-PRO-002 asociación al perfil y actualización IndexedDB v3 | `test_existing_indexeddb_v1_or_v2_is_upgraded_without_deleting_stores_or_local_routine_state`, schema tests | crear perfil, abrir base actualizada y comprobar datos previos | A+V; migración/restauración H | Parcial |
+| FUN-PRO-002 | TST-PRO-002 asociación al perfil y migración no destructiva IndexedDB v3 | `test_existing_indexeddb_v1_or_v2_is_upgraded_without_deleting_stores_or_local_routine_state`, schema tests | actualizar desde stores v1/v2 con perfil/sesión/snapshot; verificar mismo contenido y que stores desconocidos no se borran | A+V; migración/restauración H | Parcial |
 | FUN-PRO-003 | TST-PRO-003 sesiones recientes sin duplicación | `test_activity_requires_completed_warmup_and_at_least_one_work_set_for_all_routines`, store runtime | completar/reabrir una sesión | A+V | Parcial |
 | FUN-PRO-004 | TST-PRO-004 backup v3 export/import, inválido no muta | `test_backup_import_round_trip_preserves_profile_and_session_summary`; `test_backup_import_rejects_older_schemas` | exportar, limpiar fixture y restaurar; comparar todo antes/después | A+V; restauración de release H | Parcial |
 | FUN-PRO-005 | TST-PRO-005 avatar por sexo y variante general offline | `test_homepage_derives_effort_mascot_from_profile_sex`, inventario SW | cambiar selector y revisar imagen/alt en viewport móvil | A+V | Parcial |
@@ -45,19 +43,19 @@ dispositivo/validación humana. Un check estático no equivale a E2E.
 | FUN-PRO-009 | TST-PRO-009 días frecuentes y avisos flexibles de primer plano | contratos de perfil/runtime | editar días, descartar, ya entrenado, reabrir portada | A+V; PWA cerrada explícitamente fuera | Parcial |
 | FUN-PRO-010 | TST-PRO-010 nombre local con `textContent` | `test_homepage_exposes_local_profile_and_backup_controls` y análisis de interpolación | nombre con caracteres HTML se presenta como texto | A+V | Parcial |
 | FUN-PRO-011 | TST-PRO-011 gate no instalado/instalado | `test_uninstalled_browser_cannot_read_or_write_profile_or_progress`; homepage gate tests | pestaña: navegar/consultar sin progreso; modo instalado: perfil disponible | A+V; Android H | Parcial |
-| FUN-PRO-012 | TST-PRO-012 reanudar sesión activa y avanzar por última rutina de hoy/ayer | `test_homepage_selects_active_session_or_next_routine_from_latest_activity` | ayer Día 1 → Día 2; sesión activa hoy continúa; Día 4 → Día 1 | A+V; Realme GT 6 H | Parcial |
-| FUN-PRO-013 | TST-PRO-013 edición decimal de carga sincronizada con slider | `test_all_routines_expose_direct_decimal_load_entry_and_hold_feedback`; `test_editable_load_value_persists_decimal_independently_of_slider_step` | kg/lb, límites, decimal, cancelar/guardar y reabrir | A+V; calibración por modelo pendiente | Parcial |
+| FUN-PRO-012 | TST-PRO-012 reanudar sesión activa y avanzar por última rutina de hoy/ayer | `test_homepage_selects_active_session_or_next_routine_from_latest_activity`; `test_homepage_cta_continues_a_session_started_today_even_before_first_set` | ayer Día 1 → Día 2; sesión activa hoy con cero series muestra `Continuar Día N` y abre esa rutina; Día 4 → Día 1 | A+V; Realme GT 6 H | Parcial |
+| FUN-PRO-016 | TST-PRO-016 rollover semanal archiva todas las capturas previas sin duplicarlas | `test_home_dashboard_rolls_previous_week_state_but_preserves_a_session_started_today`; `test_home_dashboard_clears_unscoped_legacy_completion_before_it_can_be_adopted`; `test_unscoped_legacy_completion_is_reset_instead_of_adopted_as_current_week`; `test_previous_week_progress_is_excluded_from_current_plan_without_deleting_history` | avanzar reloj a lunes local, abrir portada repetidamente y luego rutina; archivo previo conserva captura completa y semana de origen; historial terminado y sesión actual persisten | A; E2E móvil y zona horaria H pendientes | Parcial |
+| FUN-PRO-017 | TST-PRO-017 ubicación y formato de datos | prueba de contenido y export/import v3 | verificar en perfil el origen, IndexedDB v3, clave fallback, snapshots/archivo JSON localStorage y JSON `gymratik-backup` esquema 3 | A+V | Partial |
+| FUN-PRO-018 | TST-PRO-018 solo borrar mediante acción manual confirmada | pruebas de llamadas de borrado, importación y reset | instalación/actualización/rotación no borra; reset e importación reemplazante piden confirmación; revisar límites de limpieza externa | A+V; reinstalación física H | Partial |
+| FUN-PRO-013 | TST-PRO-013 edición decimal y rango orientativo ±25% por ejercicio | `test_all_26_exercises_have_explicit_equipment_appropriate_load_ranges`; `test_editable_load_value_persists_decimal_independently_of_slider_step` | comprobar cálculo desde referencia en los 24 perfiles que cubren 26 ejercicios; kg/lb, límites, decimal y que una carga personal fuera del intervalo se conserve | A+V; referencias calibrables por persona/aparato | Parcial |
 | NFR-REL-001 | TST-PWA-012 serie confirmada después de cierre inesperado | persistencia de capture y v3 | cerrar/reabrir tras guardar; no borrar datos del usuario | A+V; process death H | Parcial |
 | FUN-TRN-010 | TST-TRN-010 temporizador de preparación de 15 s, reanudable | contrato de preparación persistente en los cuatro HTML | `scripts/e2e_routine_activity_check.py`: recargar tras 5 s y completar los 10 s restantes antes de iniciar serie | A+V; Realme GT 6 H | Parcial |
 | FUN-TRN-011 | TST-TRN-011 mantener 5 s para omitir descanso | `test_series_flow_uses_one_button_and_enforces_minimum_rest`; `test_all_routines_expose_direct_decimal_load_entry_and_hold_feedback` | feedback visible; liberar temprano; verificar límite mínimo | A+V; Realme GT 6 H | Parcial |
 | FUN-TRN-012 | TST-TRN-012 mantener 10 s para omitir ejercicio sin falsear series | `test_all_routines_expose_direct_decimal_load_entry_and_hold_feedback`; `test_skipped_exercise_advances_completion_without_fabricating_sets` | mantener, liberar temprano, revisar progreso y deshacer | A+V; Realme GT 6 H | Parcial |
+| FUN-TRN-013 | TST-TRN-013 cierre manual parcial preserva progreso | `test_partial_session_capture_is_closed_and_distinguishable`; prueba de contrato del control en las cuatro rutinas | iniciar sesión, confirmar una serie, dejar otra sin confirmar, terminar día y recargar; historial marca «Terminada · parcial», cuenta solo la serie confirmada y conserva la sesión tras reapertura | runtime A+V; dispositivo H | Parcial |
 | NFR-REL-002 | TST-PWA-013 retry idempotente | `test_progress_store_serializes_writes_and_merges_fallback`, temporales | reintentar mismo evento y comprobar una sola fila | A+V | Parcial |
 | NFR-AVA-001 | TST-PWA-014 shell y fichas sin Internet | inventario y cache-first tests | instalar paquete, modo avión, abrir cuatro días | A+V; modo avión H | Pendiente H |
 | NFR-REC-001 | TST-PWA-015 restauración íntegra v3 | round-trip/invalid schema tests | comparar perfil, progreso, sesión, actividad y rendimiento | A+V; gate de release H | Parcial |
-| NFR-PER-001 | TST-PWA-016 persistencia <100 ms, mediana | no hay benchmark físico equivalente | repetir serie N veces en teléfono objetivo; reportar p50/condiciones | H Realme GT 6 | Pendiente H |
-| NFR-PER-002 | TST-PWA-017 TTFD <500 ms | no medible con DOM estático | captura de Performance en sesión activa del teléfono objetivo | H Realme GT 6 | Pendiente H |
-| NFR-PER-003 | TST-PWA-018 UI usable durante comprobación/descarga | paralelo y deadlines en homepage tests | navegar y completar flujo mientras se prepara actualización | A+V | Parcial |
-| NFR-EFF-001 | TST-PWA-019 conectividad y descarga respetan política | pruebas de política ask/wifi | repetir en Wi‑Fi, red móvil y tipo desconocido; medir batería en H | A+V; energía H | Parcial |
 | NFR-SEC-002 | TST-PWA-020 ausencia de secretos | `validate_repository.py` | revisar bundle publicado y consola/logs | A+V | Parcial |
 | NFR-SEC-003 | TST-PWA-021 entradas locales no confiables | import v3 rechaza esquemas inválidos | probar JSON corrupto, grande, mal tipado y nombre HTML | A+V | Parcial |
 | NFR-PRI-001 | TST-PWA-022 retención de imágenes | PWA no captura ni persiste fotos personales | verificar import/export e IndexedDB no guardan fotos | A | Parcial |
@@ -68,10 +66,9 @@ dispositivo/validación humana. Un check estático no equivale a E2E.
 | NFR-MAI-002 | TST-PWA-027 cambio arquitectónico con ADR | revisión de docs/ADR | revisar diff de arquitectura | A | Aplicable si hay cambio arquitectónico |
 | NFR-COM-001 | TST-PWA-028 compatibilidad de contratos/migración | schema v3 y rechazo v1/v2 | importar/actualizar desde bases de fixture | A+V | Parcial |
 
-`NFR-SEC-001`, `NFR-MAI-001` y `NFR-AI-*` son de Tezkatli/Gradle/IA y quedan
-fuera del alcance PWA; no deben contarse como aprobados aquí. `NFR-PRI-001`
-queda como no almacenamiento de fotos, no como prueba de borrado de una
-capacidad que la PWA no tiene.
+Los requisitos y pruebas heredados de Android, servidores, IA, métricas físicas
+y batería quedan fuera de esta matriz. `NFR-PRI-001` limita el alcance: la PWA
+no captura ni persiste fotos personales.
 
 ## 3. Definición de casos
 
@@ -105,6 +102,7 @@ capacidad que la PWA no tiene.
 - **TST-TRN-010 — Preparación reanudable:** calentamiento y preparación de serie requieren 15 s; recarga durante ambos conserva el vencimiento y reanuda el tiempo restante.
 - **TST-TRN-011 — Omisión de descanso:** mantener 5 s muestra llenado; soltar antes cancela; iniciar antes del descanso mínimo solo ocurre tras mantener el tiempo completo.
 - **TST-TRN-012 — Omisión de ejercicio:** mantener 10 s completa la acción, un toque/soltar antes no lo hace; el resumen marca omitido, no aumenta series ni registros de rendimiento y deshacer lo revierte.
+- **TST-TRN-013 — Cierre parcial:** confirmar el diálogo termina la sesión con `completionKind=partial`; una serie no confirmada sigue pendiente; se guarda en el almacén local, se reabre con el mismo estado y el resumen/historial la distingue de una rutina completa. Cancelar el diálogo no altera el estado.
 
 ### Casos no funcionales aplicables
 
@@ -112,10 +110,6 @@ capacidad que la PWA no tiene.
 - **TST-PWA-013 — Idempotencia:** repetir la misma captura y comprobar un registro lógico y estadísticas estables.
 - **TST-PWA-014 — Offline:** servir shell y cuatro rutinas tras precache y modo avión; verificar imágenes esenciales y marcar evidencia H solo en dispositivo real.
 - **TST-PWA-015 — Restauración:** round-trip v3 y comparación exacta de entidades; requiere gate humano de release.
-- **TST-PWA-016 — Latencia de escritura:** medir suficientes escrituras en Realme GT 6; informar distribución y p50, aceptar si <100 ms.
-- **TST-PWA-017 — TTFD sesión activa:** medir en Realme GT 6 bajo escenario reproducible; aceptar si <500 ms.
-- **TST-PWA-018 — UI concurrente:** con descarga/timeout activos, abrir sesión, desplazarse y completar una acción sin bloqueo ni reload.
-- **TST-PWA-019 — Restricción de red/energía:** verificar diferimiento `wifi` sin tipo identificable y registrar consumo/batería por separado en dispositivo.
 - **TST-PWA-020 — Secretos:** escanear repo y recursos servidos; no incluir tokens/contraseñas en source o logs.
 - **TST-PWA-021 — Entrada no confiable:** importar JSON corrupto, estructura profunda/grande y nombre con HTML; rechazar sin cambio parcial ni ejecución.
 - **TST-PWA-022 — Retención de imágenes:** confirmar que PWA no captura ni persiste fotos personales; no atribuirle capacidades de borrado inexistentes.

@@ -1,66 +1,56 @@
-# Gymratik: Rutinas y progreso
+# Gymratik PWA: rutinas y progreso
 
-Sistema personal Android para registrar entrenamiento, alimentación y suplementos, con funcionamiento local-first, integración auxiliar con Amazfit Active e inferencia pesada privada en el equipo Tezkatli.
+Gymratik es una PWA para consultar cuatro rutinas canónicas, registrar sesiones y conservar perfil e historial localmente. Los recursos declarados esenciales pueden prepararse para uso offline. El avance personal no se sincroniza con otros dispositivos.
+
+## Alcance activo
+
+- PWA instalable, portada, Service Worker y paquete offline.
+- Rutinas canónicas, progreso semanal, perfil e historial local.
+- Exportación/restauración manual de respaldo JSON v3.
+- Seguridad y operación del origen PWA.
+
+Nutrición, suplementos, gimnasio/equipo, IA, app Android nativa, integraciones, backend y sincronización multi-dispositivo están fuera del alcance actual. Consulta [el acta](docs/00-governance/PROJECT_CHARTER.md) y [los requisitos diferidos](docs/01-requirements/DEFERRED_SCOPE.md).
 
 ## Estado
 
-**Fase:** definición y viabilidad técnica. No existe todavía una versión funcional ni se han validado en hardware las capacidades del reloj o los modelos de IA.
-
-## Principios
-
-- Android conserva la fuente operativa de los datos confirmados.
-- Las funciones esenciales operan sin red.
-- Tezkatli ejecuta trabajos pesados de forma asíncrona y privada.
-- La IA produce borradores; las reglas validan y el usuario confirma.
-- Todo valor se clasifica como observado, medido, calculado, estimado o confirmado.
-- Las decisiones y resultados deben ser trazables y reproducibles.
+El repositorio contiene una PWA y rutinas canónicas; cada capacidad tiene cobertura y evidencia distintas. La validación local no acredita la publicación, instalación, comportamiento offline en un teléfono ni pruebas físicas. Revisa [la matriz de trazabilidad](docs/00-governance/TRACEABILITY.md) y [la estrategia de prueba](docs/05-quality/TEST_STRATEGY.md).
 
 ## Documentación principal
 
-- [Acta del proyecto](docs/00-governance/PROJECT_CHARTER.md)
-- [Plan de desarrollo](docs/00-governance/DEVELOPMENT_PLAN.md)
-- [Desarrollo asistido por IA](docs/00-governance/AI_ASSISTED_DEVELOPMENT.md)
-- [Especificación de requisitos](docs/01-requirements/SRS.md)
-- [Casos de uso](docs/01-requirements/USE_CASES.md)
-- [Backlog inicial](docs/01-requirements/BACKLOG.md)
-- [Arquitectura](docs/03-architecture/ARCHITECTURE.md)
-- [Modelo de datos](docs/03-architecture/DATA_MODEL.md)
-- [Sincronización e IA](docs/03-architecture/SYNC_AND_AI.md)
+- [Requisitos activos](docs/01-requirements/SRS.md)
+- [Alcance diferido](docs/01-requirements/DEFERRED_SCOPE.md)
+- [Casos de uso PWA](docs/01-requirements/USE_CASES.md)
+- [Arquitectura PWA](docs/03-architecture/ARCHITECTURE.md)
+- [Datos locales y respaldo](docs/03-architecture/DATA_MODEL.md)
+- [Diseño de generación y publicación](docs/03-architecture/SDD-004-generacion-validacion-publicacion-pwa.md)
+- [ADRs](docs/03-architecture/adr/README.md)
 - [Estrategia de pruebas](docs/05-quality/TEST_STRATEGY.md)
-- [Modelo de amenazas](docs/06-security/THREAT_MODEL.md)
-- [Ciclo de vida de IA](docs/07-ai/AI_MLOPS.md)
-- [Runbook operativo](docs/08-operations/RUNBOOK.md)
-- [Fuentes de investigación](docs/09-research/SOURCES.md)
-- [Base de evidencia y protocolo para rutinas](docs/09-research/EVIDENCE_BASE_AND_ROUTINE_PROTOCOL.md)
-- [Matriz de trazabilidad](docs/00-governance/TRACEABILITY.md)
-- [Serie TDD y SDD](docs/00-governance/TDD_SDD_SERIES.md)
-- [Rutina canónica del Día 4](data/rutinas_autocontenidas/DIA_4_CONTENIDO_Y_MAQUETACION.md)
-- [Registro de riesgos](docs/00-governance/RISK_REGISTER.md)
-- [Decisiones arquitectónicas](docs/03-architecture/adr/README.md)
+- [Amenazas y privacidad](docs/06-security/THREAT_MODEL.md)
+- [Runbook PWA](docs/08-operations/RUNBOOK.md)
+- [Uso de PWA en Android](docs/08-operations/PWA_ANDROID.md)
 
-## Estructura prevista
+## Componentes actuales
 
 ```text
-apps/android/             Aplicación Android nativa
-apps/zepp/                Aplicación auxiliar Zepp OS
-services/tezkatli-api/    API y workers privados
-packages/contracts/       OpenAPI y JSON Schema compartidos
-ai/                       Pipelines, evaluaciones y registro de modelos
-data/                     Esquemas, catálogos y datos semilla no personales
-docs/                     Requisitos, diseño, calidad y operación
-infra/                    Configuración reproducible de Tezkatli y red
-scripts/                  Validación y automatización
-tests/                    Pruebas de contrato, E2E, hardware y rendimiento
+index.html                 Portada y perfil local
+progress-store.js          Persistencia local de perfil, sesiones y avance
+manifest.webmanifest       Metadatos e iconos de instalación
+sw.js                      Service Worker generado
+data/rutinas_autocontenidas/ Rutinas canónicas y medios
+scripts/                   Generación y validación
+tests/                     Pruebas automatizadas
 ```
 
 ## Validación local
 
 ```powershell
 python scripts/validate_repository.py
-python scripts/validate_contracts.py
 python -m unittest discover -s tests -p "test_*.py"
+node --check sw.js
 ```
+
+Al modificar un recurso precargado, regenera el worker con `python scripts/build_pwa_service_worker.py` y valida que el fingerprint coincida. Ejecuta las pruebas específicas de rutina/medios cuando corresponda.
 
 ## Privacidad
 
-No se deben incorporar fotografías personales, bases reales, respaldos, pesos de modelos, tokens, claves, APK firmadas ni resultados que contengan información sensible. Consulte [SECURITY.md](SECURITY.md).
+Los datos de usuario residen en IndexedDB `entrenamiento-progress` v3 del origen/perfil del navegador; el fallback `entrenamiento-progress-fallback-v3`, snapshots `fitlovers-dayN-series-v1` y archivo `gymratik-legacy-progress-archive-v1` residen en localStorage. La exportación manual es JSON `gymratik-backup`, esquema 3. La PWA no borra datos al instalar o actualizar; la limpieza del origen por el navegador/sistema operativo y algunos flujos de desinstalación quedan bajo control externo. No incorpores secretos ni datos personales reales al repositorio.

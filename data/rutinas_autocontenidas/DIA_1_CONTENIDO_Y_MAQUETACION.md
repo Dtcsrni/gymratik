@@ -131,7 +131,17 @@ Referencia visual · timestamp
 - Conservar identificador local, minuto/segundo de origen, fecha de consulta y SHA-256 del archivo local.
 - No llamar `foto real`, `máquina exacta` o `técnica correcta` a un recurso que no haya sido comprobado para ese uso.
 
-## Inventario visual local preliminar
+## Inventario visual histórico
+
+Este inventario describe archivos de extracciones anteriores; no describe los
+medios mostrados actualmente por la PWA. En la salida canónica del 9 de octubre
+de 2026, los seis ejercicios usan una pareja estática Inicio/Final
+(`data-media-mode="STATIC_ONLY"`). Los GIF candidatos de este inventario no se
+insertan en esas tarjetas. El calentamiento conserva su visor GIF independiente.
+La revisión de las seis parejas está en la
+[evidencia visual](../../docs/05-quality/evidence/routine-phase-pairs-2026-10-09.jpg).
+
+### Inventario local preliminar de una extracción anterior
 
 La revisión local encontró cinco GIF técnicamente válidos y un marcador vacío:
 
@@ -157,9 +167,9 @@ La extracción del HTML histórico v20 conserva el orden de los medios, pero no 
 
 La conclusión operativa es conservar estos archivos solo como evidencia de extracción y buscar para cada tarjeta un recurso cuya identidad y técnica se puedan verificar independientemente. La apariencia del fotograma no basta para corregir el mapeo del HTML.
 
-### Candidatos de la fuente versionada de ejercicios
+### Candidatos históricos de la fuente versionada de ejercicios
 
-Para la maqueta se localizaron seis candidatos para los ejercicios y dos GIF filmados específicos para el calentamiento en `artifacts/ejercicios-compartido/`. Sus hashes, miniaturas y correspondencia visual están registrados en `evidencia/dia1_media_manifest.json`. La inspección confirma el patrón visual de cada movimiento.
+Para la maqueta se localizaron seis candidatos de ejercicio y dos GIF de calentamiento en `artifacts/ejercicios-compartido/`. Sus hashes y miniaturas son evidencia de origen, no prueba de que estén publicados en las tarjetas actuales.
 
 La tarjeta debe mostrar una referencia visual clara y un fallback estático cuando corresponda.
 
@@ -220,6 +230,7 @@ La tarjeta debe mostrar una referencia visual clara y un fallback estático cuan
 - El resumen muestra exactamente `20 series efectivas`.
 - Cada tarjeta muestra 3 o 4 series y el rango de repeticiones correspondiente.
 - Cada ejercicio tiene GIF o secuencia estática de respaldo con procedencia trazable.
+- Cada tarjeta declara `data-media-mode="STATIC_ONLY"` mientras use su pareja estática; no muestra un rótulo que prometa un GIF inexistente.
 - Ningún medio se presenta como real, exacto o clínicamente validado sin evidencia específica.
 - La composición sigue siendo legible en escritorio y móvil.
 - Se revisan correspondencia visual, integridad y SHA-256 antes de incrustar medios.
@@ -227,7 +238,6 @@ La tarjeta debe mostrar una referencia visual clara y un fallback estático cuan
 
 ## Pendientes
 
-1. Confirmar si cada candidato puede redistribuirse dentro del repositorio y de la futura aplicación.
-2. Integrar los seis GIF y sus miniaturas únicamente después de verificar su correspondencia con el ejercicio.
-3. Revisar visualmente el render final en escritorio y móvil.
-4. Calcular la duración total con una fórmula explícita; `75–95 min` queda como estimación heredada hasta esa revisión.
+1. Confirmar derechos de redistribución antes de publicar medios de terceros.
+2. Verificar el render en la PWA instalada en el GT6 cuando ADB esté disponible; la cobertura local de navegador no sustituye esa comprobación.
+3. Recalcular la duración estimada si cambia la prescripción; `75–95 min` sigue siendo una estimación heredada, no una medición individual.

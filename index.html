@@ -7,7 +7,7 @@
   <meta name="application-name" content="Gymratik">
   <meta name="apple-mobile-web-app-title" content="Gymratik">
   <meta name="description" content="Rutinas visuales para entrenar en el gimnasio con calentamiento, técnica y registro de series.">
-  <meta name="gymratik-resource-estimate" content='{"applicationBytes":"000000005385693","imageBytes":"000000038862641","totalBytes":"000000044248334"}'>
+  <meta name="gymratik-resource-estimate" content='{"applicationBytes":"000000005408563","imageBytes":"000000038862641","totalBytes":"000000044271204"}'>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./assets/branding/gymratik-mascots-mark-v2.png" type="image/png">
   <link rel="apple-touch-icon" sizes="192x192" href="./assets/branding/gymratik-pwa-icon-v8-192.png">
@@ -409,6 +409,7 @@
               <fieldset class="routine-days"><legend>Días habituales y avisos</legend><p id="routineDaySuggestion" class="profile-status">Al guardar sesiones, aquí aparecerán tus días más frecuentes.</p><div class="routine-day-options"><label><input type="checkbox" name="reminderDay" value="1"> Lun</label><label><input type="checkbox" name="reminderDay" value="2"> Mar</label><label><input type="checkbox" name="reminderDay" value="3"> Mié</label><label><input type="checkbox" name="reminderDay" value="4"> Jue</label><label><input type="checkbox" name="reminderDay" value="5"> Vie</label><label><input type="checkbox" name="reminderDay" value="6"> Sáb</label><label><input type="checkbox" name="reminderDay" value="0"> Dom</label></div><label class="reminder-enable"><input id="remindersEnabled" type="checkbox"> Mostrar aviso al abrir la PWA</label><p class="profile-status">El aviso solo aparece al abrir o volver a la portada.</p></fieldset>
             </details>
             <div class="profile-actions"><button class="button" id="saveProfileButton" type="submit">Guardar y continuar</button><p id="profileStatus" class="profile-status" role="status" aria-live="polite"></p></div>
+            <p class="profile-status" id="localDataBackupNotice">Tus datos residen en este origen y perfil del navegador: IndexedDB «entrenamiento-progress» v3; fallback localStorage «entrenamiento-progress-fallback-v3»; snapshots JSON «fitlovers-dayN-series-v1» y archivo «gymratik-legacy-progress-archive-v1». La exportación manual genera JSON «gymratik-backup», esquema 3.</p>
             <div class="data-actions"><button id="exportDataButton" class="button secondary" type="button">Exportar datos</button><label class="button secondary" for="importDataInput">Importar respaldo</label><input id="importDataInput" class="file-input" type="file" accept="application/json,.json"></div>
             </form>
             <fieldset class="routine-days"><legend>Red para actualizaciones</legend><label class="profile-field" for="networkPreference"><span>Descarga automática de versiones y recursos offline</span><select id="networkPreference"><option value="ask">Automática en Wi‑Fi; manual en datos</option><option value="always">Siempre, incluso datos móviles</option><option value="wifi">Solo Wi‑Fi</option></select></label><p id="networkPreferenceStatus" class="profile-status" role="status">Actualización automática temporalmente habilitada también con datos móviles.</p></fieldset>
@@ -696,7 +697,7 @@
         title.textContent = session.label || session.routineId || 'Sesión';
         const status = document.createElement('span');
         status.className = 'history-status';
-        status.textContent = sessionStatusLabels[session.status] || 'Registrada';
+        status.textContent = session.completionKind === 'partial' ? 'Terminada · parcial' : (sessionStatusLabels[session.status] || 'Registrada');
         const detail = document.createElement('span');
         detail.textContent = `${formatLastActivity(session.startedAt || session.updatedAt)} · ${numberOr(session.completedSeries)}/${numberOr(session.totalSeries)} series`;
         const updated = document.createElement('span');
@@ -769,6 +770,9 @@
         && sameLocalDay(Number(session.startedAt))
         && Number(session.completedSeries) < Number(session.totalSeries)
         && byId.has(session.routineId));
+      const activeProgressToday = dashboard.routines.find(routine => sameLocalDay(Number(routine.sessionStartedAt))
+        && !Number(routine.sessionEndedAt)
+        && byId.has(routine.routineId));
       const latestSession = history.find(session => byId.has(session.routineId) && Number(session.startedAt) > 0);
       const latestProgress = [...dashboard.routines]
         .filter(routine => routine.doneSeries > 0 && byId.has(routine.routineId))
@@ -779,6 +783,9 @@
       let continuing = false;
       if (activeToday) {
         selectedIndex = byId.get(activeToday.routineId);
+        continuing = true;
+      } else if (activeProgressToday) {
+        selectedIndex = byId.get(activeProgressToday.routineId);
         continuing = true;
       } else if (latestRoutineId && progressIsNewer) {
         const hasSessionStartedToday = sameLocalDay(latestProgress.sessionStartedAt) && !latestProgress.sessionEndedAt;
@@ -795,8 +802,8 @@
         ? 'Retoma tu sesión.'
         : dashboard.todaySeries > 0
           ? 'Hoy ya avanzaste.'
-          : latestRoutineId
-            ? `Sigue con ${catalog.day}.`
+            : latestRoutineId
+              ? `Tu siguiente sesión es ${catalog.day}.`
             : 'Empieza a tu ritmo.';
       nextSessionKicker.textContent = continuing ? 'Continúa donde te quedaste' : 'Siguiente en tu rotación';
       nextSessionTitle.textContent = `${catalog.day} · ${catalog.title}`;
@@ -931,7 +938,7 @@
       if (!file) return;
       try {
         const payload = JSON.parse(await file.text());
-        const confirmed = window.confirm('Importar reemplazará el perfil y los registros actuales de este dispositivo. ¿Continuar?');
+        const confirmed = window.confirm('Importar reemplazará el perfil, los registros y los snapshots locales actuales de este dispositivo. ¿Continuar?');
         if (!confirmed) return;
         profileStatus.textContent = 'Importando respaldo…';
         await window.TrainingProgressStore.importData(payload);
@@ -944,7 +951,7 @@
     });
     resetAllButton.addEventListener('click', async () => {
       if (!window.GymratikInstallGate?.isInstalled()) return;
-      const confirmed = window.confirm('¿Reiniciar todos los registros? Se borrarán sesiones, series y actividad guardadas en este dispositivo.');
+      const confirmed = window.confirm('¿Reiniciar todos los registros? Se borrarán sesiones, series, actividad y snapshots archivados guardados en este dispositivo.');
       if (!confirmed) return;
       resetAllButton.disabled = true;
       resetNote.textContent = 'Borrando registros…';

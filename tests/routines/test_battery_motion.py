@@ -22,6 +22,9 @@ class BatteryAwareMotionTests(unittest.TestCase):
         self.assertEqual(once, twice)
         self.assertEqual(once.count('data-enhancement="battery-aware-motion-v1"'), 2)
         self.assertIn("document.addEventListener('visibilitychange', syncAllMotion", once)
+        self.assertIn("prefers-reduced-motion: reduce", once)
+        self.assertIn("reducedMotion?.matches", once)
+        self.assertIn("reducedMotion?.addEventListener?.('change', syncAllMotion)", once)
         self.assertIn("new IntersectionObserver(", once)
         self.assertIn("setAttribute('data-motion-paused', String(!entry.isIntersecting))", once)
         self.assertIn("animation-play-state:paused!important", once)
@@ -60,6 +63,8 @@ class BatteryAwareMotionTests(unittest.TestCase):
                 source = path.read_text(encoding="utf-8")
                 self.assertEqual(source.count('data-enhancement="battery-aware-motion-v1"'), 2)
                 self.assertIn("document.addEventListener('visibilitychange', syncAllMotion", source)
+                self.assertIn("prefers-reduced-motion: reduce", source)
+                self.assertIn("reducedMotion?.matches", source)
                 self.assertIn("new IntersectionObserver(", source)
                 self.assertIn("setAttribute('data-motion-paused', String(!entry.isIntersecting))", source)
                 self.assertIn("img.gifMotion,img.warmupGif,img.day3ExerciseGif,img.day4ExerciseGif", source)
@@ -83,6 +88,15 @@ class BatteryAwareMotionTests(unittest.TestCase):
         self.assertEqual(rebuilt.count('data-enhancement="battery-aware-motion-v1"'), 2)
         self.assertIn("mediaMutationObserver.observe(document.documentElement", rebuilt)
         self.assertIn("window.clearInterval(timingInterval)", rebuilt)
+
+    def test_shared_standardizer_is_idempotent_for_all_canonical_days(self) -> None:
+        routines = sorted((ROOT / "data/rutinas_autocontenidas/canonicas").glob("Rutina_Dia_*_V1.html"))
+        for path in routines:
+            with self.subTest(routine=path.name):
+                source = path.read_text(encoding="utf-8")
+                once = standardize_muscle_visuals(source)
+                twice = standardize_muscle_visuals(once)
+                self.assertEqual(once, twice)
 
 
 if __name__ == "__main__":

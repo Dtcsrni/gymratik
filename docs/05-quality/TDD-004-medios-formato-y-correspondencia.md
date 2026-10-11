@@ -20,7 +20,7 @@ Detectar tres clases de defecto que no deben confundirse:
 
 ### TST-MED-001 — Inventario de rutas
 
-Extraer `src` y `data-static-src` de las tres HTML, excluir datos embebidos y
+Extraer `src` y `data-static-src` de las cuatro HTML, excluir datos embebidos y
 recursos remotos no previstos, resolver rutas contra el directorio del HTML y
 rechazar:
 
@@ -82,7 +82,7 @@ El comprobador técnico de rutas es
 rutinas, acepta rutas explícitas, produce salida compacta y devuelve código
 distinto de cero para ausencias o inconsistencias técnicas.
 
-Comando sobre las tres salidas:
+Comando sobre las cuatro salidas:
 
 ```powershell
 python scripts/validate_routine_media.py
@@ -94,8 +94,22 @@ debe marcar `MATCH` por similitud de nombres, tamaño, color o hash.
 
 ## 4. Evidencia y cierre
 
-El comando debe conservar un reporte compacto con inventario, faltantes,
-duplicados, estado por rol y errores. La revisión visual debe conservar el
-resultado por tarjeta. TDD-004 pasa a `Verified` solo cuando no existen faltas
-de formato y todas las correspondencias están en `MATCH` o en una excepción
-`STATIC_ONLY` justificada en el SDD.
+### Resultado PWA ejecutado — 2026-10-09
+
+- Cuatro páginas locales cargaron sus recursos; `validate_routine_media.py`
+  terminó con `ROUTINE_MEDIA_OK routines=4`.
+- Las 26 tarjetas declaran modo: 12 `STATIC_ONLY` y 14 con GIF local.
+- Se revisaron 25 parejas Inicio/Final y la guía hip thrust de tres pasos.
+- Las 14 animaciones mostraron poster con movimiento reducido y reanudaron con
+  avance de cuadros. La evidencia individual está en el
+  [registro de verificación PWA](evidence/pwa-exercise-verification-2026-10-09.md)
+  y sus mosaicos de revisión visual están junto a este documento.
+- La ejecución funcional de 82/82 series se comparte con TDD-002 y cubre la
+  interacción por ejercicio; no certifica el dispositivo físico.
+
+La cobertura de medios servidos y el comportamiento visual del alcance PWA
+quedaron verificados. TDD-004 permanece `In progress` hasta conciliar los
+catálogos históricos de procedencia con las cuatro salidas activas y completar
+el estado de redistribución/licencias. Los catálogos históricos no se usan para
+decidir qué medio renderiza actualmente la PWA; el atributo `data-media-mode`
+declara el contrato activo por tarjeta.

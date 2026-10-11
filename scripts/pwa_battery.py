@@ -18,6 +18,7 @@ BATTERY_MOTION_SCRIPT = r'''<script data-enhancement="battery-aware-motion-v1">
   const intersecting = new WeakMap();
   const frameVisibility = new WeakMap();
   const imagesByFrame = new WeakMap();
+  const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)') || null;
   const posterFor = image => image.parentElement?.querySelector('.warmupFallback,.gifFallback');
   const posterSourceFor = image => posterFor(image)?.getAttribute('src') || image.dataset.staticSrc || image.getAttribute('data-static-src') || '';
   const sourceFor = image => motionSources.get(image) || image.dataset.batteryMotionSrc || image.getAttribute('src');
@@ -37,7 +38,7 @@ BATTERY_MOTION_SCRIPT = r'''<script data-enhancement="battery-aware-motion-v1">
     if (image.getAttribute('src') !== source) image.setAttribute('src', source);
   };
   const syncImage = image => {
-    if (document.hidden || !intersecting.get(image)) pauseImage(image);
+    if (document.hidden || reducedMotion?.matches || !intersecting.get(image)) pauseImage(image);
     else resumeImage(image);
   };
   const syncVisibility = () => root.classList.toggle('is-document-hidden', document.hidden);
@@ -46,15 +47,11 @@ BATTERY_MOTION_SCRIPT = r'''<script data-enhancement="battery-aware-motion-v1">
     motionImages.forEach(syncImage);
   };
   document.addEventListener('visibilitychange', syncAllMotion, { passive: true });
+  reducedMotion?.addEventListener?.('change', syncAllMotion);
+  if (reducedMotion && !reducedMotion.addEventListener) reducedMotion.addListener?.(syncAllMotion);
   syncVisibility();
 
-  if (!('IntersectionObserver' in window)) return;
-  const sections = document.querySelectorAll('.hero,.quickRules,.prep,.routineSummary,.sessionGamification,.sessionDashboard,.notePanel,.cards>.card,.sessionFooter');
-  const observer = new IntersectionObserver(entries => {
-    for (const entry of entries) entry.target.setAttribute('data-motion-paused', String(!entry.isIntersecting));
-  }, { rootMargin: '96px 0px' });
-  sections.forEach(section => observer.observe(section));
-  const mediaObserver = new IntersectionObserver(entries => {
+  const mediaObserver = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
     for (const entry of entries) {
       frameVisibility.set(entry.target, entry.isIntersecting);
       for (const image of imagesByFrame.get(entry.target) || []) {
@@ -62,7 +59,14 @@ BATTERY_MOTION_SCRIPT = r'''<script data-enhancement="battery-aware-motion-v1">
         syncImage(image);
       }
     }
-  }, { rootMargin: '96px 0px' });
+  }, { rootMargin: '96px 0px' }) : null;
+  if ('IntersectionObserver' in window) {
+    const sections = document.querySelectorAll('.hero,.quickRules,.prep,.routineSummary,.sessionGamification,.sessionDashboard,.notePanel,.cards>.card,.sessionFooter');
+    const observer = new IntersectionObserver(entries => {
+      for (const entry of entries) entry.target.setAttribute('data-motion-paused', String(!entry.isIntersecting));
+    }, { rootMargin: '96px 0px' });
+    sections.forEach(section => observer.observe(section));
+  }
   const observeMotionImage = image => {
     if (!(image instanceof HTMLImageElement) || !image.matches('img.gifMotion,img.warmupGif,img.day3ExerciseGif,img.day4ExerciseGif') || motionImages.has(image)) return;
     const source = image.getAttribute('src');
@@ -75,7 +79,9 @@ BATTERY_MOTION_SCRIPT = r'''<script data-enhancement="battery-aware-motion-v1">
     frameImages.push(image);
     imagesByFrame.set(frame, frameImages);
     if (frameVisibility.has(frame)) intersecting.set(image, frameVisibility.get(frame));
-    else mediaObserver.observe(frame);
+    else if (mediaObserver) mediaObserver.observe(frame);
+    else intersecting.set(image, true);
+    syncImage(image);
   };
   document.querySelectorAll('img.gifMotion,img.warmupGif,img.day3ExerciseGif,img.day4ExerciseGif').forEach(observeMotionImage);
   const mediaMutationObserver = new MutationObserver(records => {

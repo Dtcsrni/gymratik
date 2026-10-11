@@ -1,0 +1,523 @@
+{
+  "status": "VERIFIED_LOCAL_PWA_E2E",
+  "date": "2026-10-09",
+  "scope": "Four canonical workout routines in the local PWA browser build; synthetic Playwright/Edge data only.",
+  "counts": {
+    "days": 4,
+    "exercises": 26,
+    "effectiveSeries": 82,
+    "staticOnlyExercises": 12,
+    "animatedExercises": 14,
+    "phasePairs": 25,
+    "intentionalHipThrustGuide": 1,
+    "gifReducedMotionPosterPassed": 14,
+    "gifPlaybackResumePassed": 14
+  },
+  "commands": [
+    "python scripts/validate_repository.py",
+    "python scripts/validate_canonical_routines.py",
+    "python scripts/validate_routine_media.py",
+    "python -m unittest tests.routines.test_canonical_routines tests.routines.test_routine_media tests.routines.test_battery_motion tests.routines.test_day2_hip_thrust_visuals",
+    "python scripts/e2e_routine_activity_check.py --functional-only",
+    "python scripts/e2e_routine_activity_check.py --resources-only"
+  ],
+  "limitations": [
+    "The full unittest suite has 212 passing tests and one environment-blocked Playwright startup test; the focused routine suite has 71 passing tests.",
+    "Local browser evidence does not establish behavior on the installed Realme GT 6 or on the public deployment.",
+    "Visual review confirms local image/movement correspondence at the displayed frame samples; it does not verify the exact physical gym machine or exercise prescription."
+  ],
+  "exercises": [
+    {
+      "day": "Rutina_Dia_1_Espalda_Biceps_V1.html",
+      "exerciseIndex": 1,
+      "exercise": "JALÓN AL PECHO",
+      "effectiveSeries": 4,
+      "seriesKeys": [
+        "e1s1",
+        "e1s2",
+        "e1s3",
+        "e1s4"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "STATIC_ONLY",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": null,
+      "gifPlaybackResumePassed": null
+    },
+    {
+      "day": "Rutina_Dia_1_Espalda_Biceps_V1.html",
+      "exerciseIndex": 2,
+      "exercise": "REMO ALTO UNILATERAL",
+      "effectiveSeries": 4,
+      "seriesKeys": [
+        "e2s1",
+        "e2s2",
+        "e2s3",
+        "e2s4"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "STATIC_ONLY",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": null,
+      "gifPlaybackResumePassed": null
+    },
+    {
+      "day": "Rutina_Dia_1_Espalda_Biceps_V1.html",
+      "exerciseIndex": 3,
+      "exercise": "REMO HORIZONTAL EN MÁQUINA",
+      "effectiveSeries": 3,
+      "seriesKeys": [
+        "e3s1",
+        "e3s2",
+        "e3s3"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "STATIC_ONLY",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": null,
+      "gifPlaybackResumePassed": null
+    },
+    {
+      "day": "Rutina_Dia_1_Espalda_Biceps_V1.html",
+      "exerciseIndex": 4,
+      "exercise": "APERTURA INVERSA EN MÁQUINA",
+      "effectiveSeries": 3,
+      "seriesKeys": [
+        "e4s1",
+        "e4s2",
+        "e4s3"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "STATIC_ONLY",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": null,
+      "gifPlaybackResumePassed": null
+    },
+    {
+      "day": "Rutina_Dia_1_Espalda_Biceps_V1.html",
+      "exerciseIndex": 5,
+      "exercise": "CURL DE BÍCEPS EN MÁQUINA",
+      "effectiveSeries": 3,
+      "seriesKeys": [
+        "e5s1",
+        "e5s2",
+        "e5s3"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "STATIC_ONLY",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": null,
+      "gifPlaybackResumePassed": null
+    },
+    {
+      "day": "Rutina_Dia_1_Espalda_Biceps_V1.html",
+      "exerciseIndex": 6,
+      "exercise": "CURL DE BÍCEPS SENTADO EN MÁQUINA",
+      "effectiveSeries": 3,
+      "seriesKeys": [
+        "e6s1",
+        "e6s2",
+        "e6s3"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "STATIC_ONLY",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": null,
+      "gifPlaybackResumePassed": null
+    },
+    {
+      "day": "Rutina_Dia_2_Pierna_Gluteo_V1.html",
+      "exerciseIndex": 1,
+      "exercise": "HACK SQUAT",
+      "effectiveSeries": 3,
+      "seriesKeys": [
+        "e1s1",
+        "e1s2",
+        "e1s3"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "STATIC_ONLY",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": null,
+      "gifPlaybackResumePassed": null
+    },
+    {
+      "day": "Rutina_Dia_2_Pierna_Gluteo_V1.html",
+      "exerciseIndex": 2,
+      "exercise": "HIP THRUST",
+      "effectiveSeries": 3,
+      "seriesKeys": [
+        "e2s1",
+        "e2s2",
+        "e2s3"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "STATIC_ONLY",
+      "positionPairPresent": false,
+      "intentionalHipThrustGuide": true,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": null,
+      "gifPlaybackResumePassed": null
+    },
+    {
+      "day": "Rutina_Dia_2_Pierna_Gluteo_V1.html",
+      "exerciseIndex": 3,
+      "exercise": "PRENSA DE PIERNAS",
+      "effectiveSeries": 3,
+      "seriesKeys": [
+        "e3s1",
+        "e3s2",
+        "e3s3"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "STATIC_ONLY",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": null,
+      "gifPlaybackResumePassed": null
+    },
+    {
+      "day": "Rutina_Dia_2_Pierna_Gluteo_V1.html",
+      "exerciseIndex": 4,
+      "exercise": "CURL FEMORAL EN MÁQUINA",
+      "effectiveSeries": 4,
+      "seriesKeys": [
+        "e4s1",
+        "e4s2",
+        "e4s3",
+        "e4s4"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "STATIC_ONLY",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": null,
+      "gifPlaybackResumePassed": null
+    },
+    {
+      "day": "Rutina_Dia_2_Pierna_Gluteo_V1.html",
+      "exerciseIndex": 5,
+      "exercise": "EXTENSIÓN DE PIERNAS",
+      "effectiveSeries": 3,
+      "seriesKeys": [
+        "e5s1",
+        "e5s2",
+        "e5s3"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "STATIC_ONLY",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": null,
+      "gifPlaybackResumePassed": null
+    },
+    {
+      "day": "Rutina_Dia_2_Pierna_Gluteo_V1.html",
+      "exerciseIndex": 6,
+      "exercise": "PANTORRILLAS DE PIE",
+      "effectiveSeries": 4,
+      "seriesKeys": [
+        "e6s1",
+        "e6s2",
+        "e6s3",
+        "e6s4"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "STATIC_ONLY",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": null,
+      "gifPlaybackResumePassed": null
+    },
+    {
+      "day": "Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html",
+      "exerciseIndex": 1,
+      "exercise": "PRESS DE PECHO SENTADO EN MÁQUINA",
+      "effectiveSeries": 4,
+      "seriesKeys": [
+        "e1s1",
+        "e1s2",
+        "e1s3",
+        "e1s4"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "GIF",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": true,
+      "gifPlaybackResumePassed": true
+    },
+    {
+      "day": "Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html",
+      "exerciseIndex": 2,
+      "exercise": "PRESS INCLINADO CONVERGENTE EN MÁQUINA",
+      "effectiveSeries": 3,
+      "seriesKeys": [
+        "e2s1",
+        "e2s2",
+        "e2s3"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "GIF",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": true,
+      "gifPlaybackResumePassed": true
+    },
+    {
+      "day": "Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html",
+      "exerciseIndex": 3,
+      "exercise": "PEC DECK / CONTRACTOR DE PECHO",
+      "effectiveSeries": 3,
+      "seriesKeys": [
+        "e3s1",
+        "e3s2",
+        "e3s3"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "GIF",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": true,
+      "gifPlaybackResumePassed": true
+    },
+    {
+      "day": "Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html",
+      "exerciseIndex": 4,
+      "exercise": "PRESS DE HOMBRO EN MÁQUINA",
+      "effectiveSeries": 3,
+      "seriesKeys": [
+        "e4s1",
+        "e4s2",
+        "e4s3"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "GIF",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": true,
+      "gifPlaybackResumePassed": true
+    },
+    {
+      "day": "Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html",
+      "exerciseIndex": 5,
+      "exercise": "ELEVACIÓN LATERAL EN MÁQUINA",
+      "effectiveSeries": 3,
+      "seriesKeys": [
+        "e5s1",
+        "e5s2",
+        "e5s3"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "GIF",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": true,
+      "gifPlaybackResumePassed": true
+    },
+    {
+      "day": "Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html",
+      "exerciseIndex": 6,
+      "exercise": "JALÓN DE TRÍCEPS EN POLEA",
+      "effectiveSeries": 3,
+      "seriesKeys": [
+        "e6s1",
+        "e6s2",
+        "e6s3"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "GIF",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": true,
+      "gifPlaybackResumePassed": true
+    },
+    {
+      "day": "Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html",
+      "exerciseIndex": 7,
+      "exercise": "EXTENSIÓN DE TRÍCEPS SOBRE CABEZA CON CUERDA",
+      "effectiveSeries": 3,
+      "seriesKeys": [
+        "e7s1",
+        "e7s2",
+        "e7s3"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "GIF",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": true,
+      "gifPlaybackResumePassed": true
+    },
+    {
+      "day": "Rutina_Dia_4_Pierna_Equilibrio_V1.html",
+      "exerciseIndex": 1,
+      "exercise": "PRENSA UNILATERAL ALTERNA",
+      "effectiveSeries": 3,
+      "seriesKeys": [
+        "e1s1",
+        "e1s2",
+        "e1s3"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "GIF",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": true,
+      "gifPlaybackResumePassed": true
+    },
+    {
+      "day": "Rutina_Dia_4_Pierna_Equilibrio_V1.html",
+      "exerciseIndex": 2,
+      "exercise": "PESO MUERTO RUMANO CON BARRA",
+      "effectiveSeries": 3,
+      "seriesKeys": [
+        "e2s1",
+        "e2s2",
+        "e2s3"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "GIF",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": true,
+      "gifPlaybackResumePassed": true
+    },
+    {
+      "day": "Rutina_Dia_4_Pierna_Equilibrio_V1.html",
+      "exerciseIndex": 3,
+      "exercise": "CURL FEMORAL TUMBADO",
+      "effectiveSeries": 4,
+      "seriesKeys": [
+        "e3s1",
+        "e3s2",
+        "e3s3",
+        "e3s4"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "GIF",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": true,
+      "gifPlaybackResumePassed": true
+    },
+    {
+      "day": "Rutina_Dia_4_Pierna_Equilibrio_V1.html",
+      "exerciseIndex": 4,
+      "exercise": "ABDUCCIÓN DE CADERA SENTADA",
+      "effectiveSeries": 2,
+      "seriesKeys": [
+        "e4s1",
+        "e4s2"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "GIF",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": true,
+      "gifPlaybackResumePassed": true
+    },
+    {
+      "day": "Rutina_Dia_4_Pierna_Equilibrio_V1.html",
+      "exerciseIndex": 5,
+      "exercise": "ADUCCIÓN DE CADERA SENTADA",
+      "effectiveSeries": 2,
+      "seriesKeys": [
+        "e5s1",
+        "e5s2"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "GIF",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": true,
+      "gifPlaybackResumePassed": true
+    },
+    {
+      "day": "Rutina_Dia_4_Pierna_Equilibrio_V1.html",
+      "exerciseIndex": 6,
+      "exercise": "ELEVACIÓN DE PANTORRILLA SENTADA",
+      "effectiveSeries": 3,
+      "seriesKeys": [
+        "e6s1",
+        "e6s2",
+        "e6s3"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "GIF",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": true,
+      "gifPlaybackResumePassed": true
+    },
+    {
+      "day": "Rutina_Dia_4_Pierna_Equilibrio_V1.html",
+      "exerciseIndex": 7,
+      "exercise": "CRUNCH CON ELEVACIÓN DE PIERNAS SENTADA",
+      "effectiveSeries": 3,
+      "seriesKeys": [
+        "e7s1",
+        "e7s2",
+        "e7s3"
+      ],
+      "allSeriesBehaviorPassed": true,
+      "mediaMode": "GIF",
+      "positionPairPresent": true,
+      "intentionalHipThrustGuide": false,
+      "visualSampleReviewed": true,
+      "gifReducedMotionPosterPassed": true,
+      "gifPlaybackResumePassed": true
+    }
+  ],
+  "testSuite": {
+    "passed": 212,
+    "blocked": 1,
+    "status": "PARTIAL",
+    "blockedTest": "test_image_inventory_skips_decode_for_unrendered_lazy_images",
+    "blockReason": "Windows/Python 3.14 blocks during asyncio._make_self_pipe before browser launch; the resources E2E passed in the same session.",
+    "total": 213
+  },
+  "generatorsIdempotent": {
+    "status": "PASS",
+    "generators": [
+      "scripts/repair_day1_canonical.py",
+      "scripts/build_day2_canonical.py",
+      "scripts/build_day3_canonical.py",
+      "scripts/build_day4_canonical.py",
+      "scripts/build_pwa_service_worker.py"
+    ],
+    "consecutivePasses": 2,
+    "hashedOutputsCompared": 6
+  }
+}

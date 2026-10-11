@@ -17,7 +17,7 @@ class ReverseFlyStillTests(unittest.TestCase):
         self.assertIn("brazos abiertos en línea con el torso", html)
 
     def test_export_uses_stable_full_resolution_end_position(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT) as temporary:
             output = build_final_pose(SOURCE, Path(temporary) / "reverse-fly-final.png")
             with Image.open(SOURCE) as animation, Image.open(output) as still:
                 animation.seek(FINAL_HOLD_FRAME)

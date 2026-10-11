@@ -1,5 +1,6 @@
 import json
 import re
+import subprocess
 import unittest
 from pathlib import Path
 
@@ -295,7 +296,7 @@ class HomepageContractTests(unittest.TestCase):
         self.assertIn("pageTitle.textContent = continuing", self.html)
         self.assertIn("? 'Retoma tu sesión.'", self.html)
         self.assertIn("? 'Hoy ya avanzaste.'", self.html)
-        self.assertIn("`Sigue con ${catalog.day}.`", self.html)
+        self.assertIn("`Tu siguiente sesión es ${catalog.day}.`", self.html)
         self.assertIn('Continúa donde te quedaste', self.html)
         self.assertIn('Calentamiento incluido', self.html)
         self.assertIn('Tres pasos y a entrenar.', self.html)
@@ -495,7 +496,7 @@ class HomepageContractTests(unittest.TestCase):
     def test_homepage_exposes_explicit_reset_at_bottom(self):
         self.assertIn('id="resetAllButton"', self.html)
         self.assertIn('Reiniciar registros', self.html)
-        self.assertIn('Se borrarán sesiones, series y actividad', self.html)
+        self.assertIn('Se borrarán sesiones, series, actividad y snapshots archivados', self.html)
 
     def test_homepage_normalizes_partial_dashboard_data(self):
         self.assertIn('function normalizeDashboard', self.html)
@@ -503,6 +504,78 @@ class HomepageContractTests(unittest.TestCase):
         self.assertIn('Array.isArray(source.routines)', self.html)
         self.assertIn('String(dashboard.todaySeries)', self.html)
         self.assertIn("source.temporal?.sameMinute === true", self.html)
+
+    def test_homepage_cta_continues_a_session_started_today_even_before_first_set(self):
+        script = r"""
+const fs = require('fs'), vm = require('vm'), assert = require('assert');
+const html = fs.readFileSync(process.argv[1], 'utf8');
+const match = html.match(/function renderNextSession\(dashboard, history = recentSessions\) \{[\s\S]*?(?=\n    function renderProgress)/);
+assert.ok(match, 'homepage session CTA renderer must exist');
+const nodes = Object.fromEntries(['pageTitle','nextSessionCta','nextSessionLink','nextSessionImage','nextSessionKicker','nextSessionTitle','nextSessionSummary','nextSessionMeta'].map(id => [id, { textContent: '', href: '', src: '', alt: '' }]));
+const context = {
+  Date,
+  recentSessions: [],
+  routineCatalog: [
+    { routineId: 'day1', day: 'Día 1', title: 'Tirón', summary: '', totalExercises: 6, totalSeries: 20, image: 'day1.webp', href: 'day1.html' },
+    { routineId: 'day2', day: 'Día 2', title: 'Pierna', summary: '', totalExercises: 6, totalSeries: 20, image: 'day2.webp', href: 'day2.html' },
+    { routineId: 'day3', day: 'Día 3', title: 'Empuje', summary: '', totalExercises: 7, totalSeries: 22, image: 'day3.webp', href: 'day3.html' },
+    { routineId: 'day4', day: 'Día 4', title: 'Pierna y core', summary: '', totalExercises: 7, totalSeries: 20, image: 'day4.webp', href: 'day4.html' }
+  ],
+  ...nodes
+};
+vm.createContext(context);
+vm.runInContext(match[0], context);
+const routines = context.routineCatalog.map(item => ({ routineId: item.routineId, doneSeries: 0, updatedAt: 0, sessionStartedAt: 0, sessionEndedAt: 0 }));
+routines[2].sessionStartedAt = Date.now();
+context.renderNextSession({ routines, todaySeries: 0 }, []);
+assert.strictEqual(context.nextSessionCta.textContent, 'Continuar Día 3');
+assert.strictEqual(context.nextSessionCta.href, 'day3.html');
+assert.strictEqual(context.pageTitle.textContent, 'Retoma tu sesión.');
+console.log(JSON.stringify({ ok: true }));
+"""
+        result = subprocess.run(["node", "-e", script, str(INDEX)], cwd=ROOT, check=False, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), {"ok": True})
+
+    def test_homepage_copy_matches_start_cta_when_selecting_next_routine(self):
+        script = r"""
+const fs = require('fs'), vm = require('vm'), assert = require('assert');
+const html = fs.readFileSync(process.argv[1], 'utf8');
+const match = html.match(/function renderNextSession\(dashboard, history = recentSessions\) \{[\s\S]*?(?=\n    function renderProgress)/);
+assert.ok(match, 'homepage session CTA renderer must exist');
+const nodes = Object.fromEntries(['pageTitle','nextSessionCta','nextSessionLink','nextSessionImage','nextSessionKicker','nextSessionTitle','nextSessionSummary','nextSessionMeta'].map(id => [id, { textContent: '', href: '', src: '', alt: '' }]));
+const context = {
+  Date,
+  recentSessions: [],
+  routineCatalog: [
+    { routineId: 'day1', day: 'Día 1', title: 'Tirón', summary: '', totalExercises: 6, totalSeries: 20, image: 'day1.webp', href: 'day1.html' },
+    { routineId: 'day2', day: 'Día 2', title: 'Pierna', summary: '', totalExercises: 6, totalSeries: 20, image: 'day2.webp', href: 'day2.html' },
+    { routineId: 'day3', day: 'Día 3', title: 'Empuje', summary: '', totalExercises: 7, totalSeries: 22, image: 'day3.webp', href: 'day3.html' },
+    { routineId: 'day4', day: 'Día 4', title: 'Pierna y core', summary: '', totalExercises: 7, totalSeries: 20, image: 'day4.webp', href: 'day4.html' }
+  ],
+  ...nodes
+};
+vm.createContext(context);
+vm.runInContext(match[0], context);
+const routines = context.routineCatalog.map(item => ({ routineId: item.routineId, doneSeries: 0, updatedAt: 0, sessionStartedAt: 0, sessionEndedAt: 0 }));
+routines[1] = { ...routines[1], doneSeries: 12, updatedAt: Date.now() - 60000 };
+context.renderNextSession({ routines, todaySeries: 0 }, []);
+assert.strictEqual(context.nextSessionCta.textContent, 'Empezar Día 3');
+assert.strictEqual(context.pageTitle.textContent, 'Tu siguiente sesión es Día 3.');
+console.log(JSON.stringify({ ok: true }));
+"""
+        result = subprocess.run(["node", "-e", script, str(INDEX)], cwd=ROOT, check=False, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), {"ok": True})
+
+    def test_homepage_discloses_local_data_location_and_formats(self):
+        self.assertIn('id="localDataBackupNotice"', self.html)
+        self.assertIn('este origen y perfil del navegador', self.html)
+        self.assertIn('IndexedDB «entrenamiento-progress» v3', self.html)
+        self.assertIn('localStorage «entrenamiento-progress-fallback-v3»', self.html)
+        self.assertIn('snapshots JSON «fitlovers-dayN-series-v1»', self.html)
+        self.assertIn('«gymratik-legacy-progress-archive-v1»', self.html)
+        self.assertIn('JSON «gymratik-backup», esquema 3', self.html)
 
     def test_homepage_reloads_after_service_worker_controller_change(self):
         self.assertIn("addEventListener('controllerchange'", self.html)

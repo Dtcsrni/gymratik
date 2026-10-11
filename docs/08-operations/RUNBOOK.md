@@ -1,81 +1,31 @@
-# Runbook operativo
+# Operación local de la PWA
 
-## Entornos
+## Desarrollo y validación
 
-- `development`: fixtures sintéticos y modelos simulados.
-- `integration`: Android + API/worker local.
-- `release-candidate`: configuración equivalente a producción sin datos reales completos.
-- `personal-production`: teléfono, reloj y Tezkatli reales.
+1. Trabajar con fixtures sintéticos; no copiar perfiles, bases ni respaldos reales al repositorio.
+2. Regenerar `sw.js` con `python scripts/build_pwa_service_worker.py` si cambia un recurso precargado.
+3. Ejecutar `python scripts/validate_repository.py` y las pruebas aplicables al cambio.
+4. Revisar el diff y confirmar que el inventario generado corresponde a los recursos actuales.
 
-## Inicio de Tezkatli
+## Uso sin conexión
 
-Procedimiento definitivo pendiente de SPIKE-003. Debe incluir:
+- La primera preparación requiere conectividad y espacio suficiente.
+- Verificar que el splash marque paquete completo antes de declarar disponibilidad offline.
+- Si la descarga falla, mantener la versión completa previa y reintentar cuando haya conexión/espacio.
+- El Service Worker guarda recursos estáticos; no es una copia de sesiones ni perfil.
 
-1. Validar disco y base.
-2. Iniciar red privada.
-3. Iniciar API en interfaz restringida.
-4. Iniciar worker con límite de concurrencia.
-5. Consultar health/readiness.
-6. Ejecutar trabajo sintético.
+## Exportar y restaurar
 
-## Health checks
+1. Exportar desde la pantalla local de perfil/datos.
+2. Guardar el JSON v3 fuera del almacenamiento del sitio y, de ser necesario, fuera del dispositivo.
+3. Para restaurar, seleccionar el archivo, revisar la confirmación y comprobar perfil e historial.
+4. Ante un archivo inválido, conservar el estado actual; no intentar editar la base manualmente.
 
-- API viva.
-- Base legible/escribible.
-- Cola sin corrupción.
-- Espacio suficiente.
-- Runtime de modelos disponible.
-- Modelo aprobado cargable.
-- Red privada operativa.
+## Incidentes comunes
 
-## Respaldo
+- **Datos locales no disponibles:** no borrar el sitio como primer paso. Revisar soporte de IndexedDB y el origen correcto; si existe un JSON v3 externo, restaurarlo mediante la PWA.
+- **PWA abre una versión anterior:** conectarse, abrir la URL publicada y permitir que el Service Worker complete actualización; no limpiar IndexedDB como medida de caché.
+- **Paquete offline incompleto:** recuperar conexión y reintentar; verificar el inventario y no afirmar disponibilidad offline completa antes del éxito.
+- **Datos borrados por navegador/desinstalación:** recuperar únicamente desde un archivo exportado previamente; la PWA no puede reconstruir almacenamiento eliminado.
 
-Política inicial propuesta:
-
-- Incremental diario.
-- Completo semanal.
-- Cifrado y checksum.
-- Copia fuera de Tezkatli.
-- Restauración de prueba mensual.
-
-La frecuencia final se confirma después de medir tamaño y tiempo.
-
-## Actualización
-
-1. Exportar respaldo.
-2. Verificar checksum.
-3. Ejecutar migración en copia.
-4. Ejecutar pruebas rápidas.
-5. Desplegar backend antes o después del cliente según matriz de compatibilidad.
-6. Observar errores y cola.
-7. Conservar rollback compatible.
-
-## Incidentes
-
-### Tezkatli caído
-
-- Android continúa offline.
-- No borrar outbox.
-- Mostrar trabajos pendientes.
-- Recuperar servicio y observar drenaje idempotente.
-
-### Base Android dañada
-
-- No sobrescribir respaldo válido.
-- Exportar evidencia diagnóstica saneada.
-- Restaurar en ubicación temporal.
-- Validar conteos e integridad.
-
-### Modelo defectuoso
-
-- Marcar versión como retirada.
-- Cancelar trabajos no iniciados.
-- Revertir al modelo aprobado anterior.
-- Reprocesar solo por solicitud explícita; no sobrescribir confirmados.
-
-### Token comprometido
-
-- Revocar token.
-- Generar credencial nueva.
-- Revisar logs saneados y dispositivos.
-- No publicar el valor afectado.
+No hay servicios de backend, workers remotos, colas, credenciales, relojes ni procedimiento de operación de servidor en el alcance vigente.

@@ -30,7 +30,7 @@ class RoutineE2EServerTests(unittest.TestCase):
 
         good = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='teal'/%3E%3C/svg%3E"
         other = good.replace("teal", "navy")
-        markup = f'''<article class="card" data-exercise-index="1"><div class="phaseRow">
+        markup = f'''<article class="card" data-exercise-index="1" data-media-mode="STATIC_ONLY"><div class="phaseRow">
           <div class="phaseCol"><div class="phaseLabel">Inicio</div><div class="photo"><img class="realphoto" style="object-fit:contain" src="{good}" alt="Inicio"></div></div>
           <div class="phaseCol"><div class="phaseLabel">Final</div><div class="photo"><img class="realphoto" style="object-fit:contain" src="{other}" alt="Final"></div></div>
         </div></article>'''
@@ -74,14 +74,15 @@ class RoutineE2EServerTests(unittest.TestCase):
                         src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Crect width='24' height='24' fill='teal'/%3E%3C/svg%3E">
                       <img id="lazy-hidden" alt="hidden lazy fixture" hidden loading="lazy"
                         src="http://127.0.0.1:{server.server_address[1]}/pending.jpg">
-                      <script>
-                        window.__hiddenDecodeCalls = 0;
-                        document.querySelector('#lazy-hidden').decode = () => {{
-                          window.__hiddenDecodeCalls += 1;
-                          return Promise.resolve();
-                        }};
-                      </script>
                     """)
+                    page.evaluate("""() => {
+                      window.__hiddenDecodeCalls = 0;
+                      document.querySelector('#lazy-hidden').decode = () => {
+                        window.__hiddenDecodeCalls += 1;
+                        return Promise.resolve();
+                      };
+                    }""")
+                    self.assertEqual(page.evaluate("window.__hiddenDecodeCalls"), 0)
                     result = assert_image_inventory(page, "fixture de imagen diferida")
                     self.assertEqual(page.evaluate("window.__hiddenDecodeCalls"), 0)
                     self.assertEqual(result["images"], 2)

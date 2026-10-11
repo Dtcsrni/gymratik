@@ -1,6 +1,6 @@
 # SDD-003 — Medios, fallback y procedencia técnica
 
-**Estado:** `In progress`  
+**Estado:** `PWA runtime verified; media provenance pending`
 **Versión:** `0.1`  
 **Fecha:** `2026-09-17`  
 **TDD asociado:** [TDD-004](../05-quality/TDD-004-medios-formato-y-correspondencia.md)
@@ -98,19 +98,23 @@ base64 ni imágenes embebidas. La revisión visual debe guardar capturas o una
 acta con el recurso revisado, el ejercicio, el rol, el resultado y la
 limitación observada.
 
-## 6. Estado actual
+## 6. Estado actual — 2026-10-09
 
-- Las rutas locales referenciadas por las tres HTML canónicas fueron recorridas
-  y no se observaron rutas rotas en esa revisión puntual.
-- Día 1 sigue incompleto en tarjetas; por ello su cobertura visual por
-  ejercicio también es incompleta aunque algunos archivos existan.
-- Día 3 conserva en su manifiesto diferencias entre claves declaradas y claves
-  verificadas; esto demuestra la necesidad de un campo uniforme de identidad y
-  estado, además de la revisión visual.
+- Las cuatro HTML canónicas exponen 26 tarjetas con `data-media-mode`:
+  12 `STATIC_ONLY` (Días 1–2) y 14 `GIF` (Días 3–4).
+- El recorrido de recursos validó 25 parejas estáticas y la guía hip thrust de
+  tres pasos. Las 14 animaciones pausaron con poster bajo movimiento reducido
+  y reanudaron con avance de cuadros.
+- El inventario y la prueba visual por ejercicio están enlazados en
+  [TDD-004](../05-quality/TDD-004-medios-formato-y-correspondencia.md) y el
+  [registro PWA](../05-quality/evidence/pwa-exercise-verification-2026-10-09.md).
+- Los catálogos de procedencia históricos no tienen todavía un esquema
+  uniforme conciliado con las salidas activas; la licencia y redistribución de
+  los medios tampoco se declara cerrada. No se presentan como verificadas.
 
 ## 7. Criterio de aceptación
 
-SDD-003 se considera verificable cuando TDD-004 demuestra, para cada ejercicio,
-roles completos, rutas existentes, GIF válido cuando corresponda, fallback,
-alt, hash y mapeo consistente; además, una revisión visual confirma o rechaza
-explícitamente la correspondencia del recurso con el ejercicio.
+El comportamiento de medios en la PWA local quedó verificado. La procedencia,
+el hash y la conciliación uniforme de catálogos siguen siendo criterios abiertos
+para cerrar la especificación completa; la revisión local no demuestra la
+identidad del equipo físico ni derechos de redistribución.

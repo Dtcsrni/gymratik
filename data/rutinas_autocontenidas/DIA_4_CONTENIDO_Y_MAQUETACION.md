@@ -17,7 +17,7 @@ la identidad de cada estación deben confirmarse en el gimnasio antes de usarla.
 | # | Ejercicio | Series | Repeticiones | Descanso | Función principal |
 |---:|---|---:|---:|---:|---|
 | 1 | Prensa unilateral alterna | 3 | 8–12 por lado | 2–3 min | Extensión de rodilla y cadera; cuádriceps |
-| 2 | Peso muerto en máquina | 3 | 8–12 | 2–3 min | Bisagra de cadera; glúteos e isquiosurales |
+| 2 | Peso muerto rumano con barra | 3 | 8–12 | 2–3 min | Bisagra de cadera; glúteos e isquiosurales |
 | 3 | Curl femoral tumbado | 4 | 8–12 | 90–120 s | Flexión de rodilla; isquiosurales |
 | 4 | Abducción de cadera sentada | 2 | 12–20 | 60–90 s | Abductores y glúteo medio |
 | 5 | Aducción de cadera sentada | 2 | 12–20 | 60–90 s | Aductores |
@@ -78,10 +78,14 @@ bucles y sus cuadros inicial/final contra el patrón mostrado. No es una
 certificación clínica ni una prueba de que exista la máquina exacta en el
 gimnasio.
 
-Los cuadros derivados de inicio y final se usan como fallback estático para
-`prefers-reduced-motion` o fallo de carga. Los medios conservan estado
-`CANDIDATES_PENDING_LICENSE_REVIEW`; no se presenta ninguna licencia ni permiso
-de redistribución como confirmado.
+La revisión integral del 9 de octubre de 2026 confirmó los siete pares Inicio/Final,
+los siete GIF y los cambios visibles entre fotogramas. El caso por ejercicio está
+en [la evidencia visual](../../docs/05-quality/evidence/routine-phase-pairs-2026-10-09.jpg)
+y [la secuencia GIF](../../docs/05-quality/evidence/routine-exercise-gifs-2026-10-09.jpg).
+Los cuadros de inicio sirven como póster estático cuando se prefiere movimiento
+reducido o falla el GIF; la E2E comprueba pausa, póster y reanudación por tarjeta.
+Los medios conservan estado `CANDIDATES_PENDING_LICENSE_REVIEW`; no se presenta
+ninguna licencia ni permiso de redistribución como confirmado.
 
 ## Criterios de aceptación
 

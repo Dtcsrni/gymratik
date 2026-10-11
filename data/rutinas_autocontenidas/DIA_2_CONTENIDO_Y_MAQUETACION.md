@@ -44,11 +44,11 @@ Completa el extremo alto del rango en todas las series con técnica estable y RI
 
 ## Medios y límites de evidencia
 
-La ficha canónica integra secuencias Inicio → Final con fotografías reales embebidas y GIFs de patrón guiado donde existe un recurso de ejercicio pertinente. La revisión visual confirmó correspondencia suficiente para hack squat, prensa, curl femoral, extensión de piernas y pantorrillas. Para el hip thrust se incorporó el panel `CORRECT FORM` de una demostración oficial de Booty Builder: el recorte muestra repeticiones completas en una máquina, con espalda apoyada, pies firmes, extensión de cadera y regreso controlado. Se excluyó por completo el panel `INCORRECT FORM`. Se retiraron las fotos heredadas de barra porque no representaban el equipo prescrito y se añadieron cuadros estáticos de inicio y final extraídos del mismo panel correcto.
+La salida canónica actual ofrece cinco parejas estáticas Inicio/Final y una guía estática de tres pasos para el hip thrust. Las seis tarjetas declaran `data-media-mode="STATIC_ONLY"`; no integran los GIF candidatos de ejercicio que aparecen en el manifiesto histórico. El hip thrust conserva una referencia visual de máquina y una liga opcional a la demostración oficial `CORRECT FORM`; la tarjeta no promete un GIF local. La guía indica apoyo de espalda y cabeza, pies firmes, ajuste del rodillo y flexión/extensión controlada. No se muestra el panel `INCORRECT FORM`.
 
-Los cinco GIFs del repositorio son ilustraciones de 180×180 px, semánticamente coincidentes con hack squat, prensa, curl femoral, extensión de piernas y pantorrillas. El sexto recurso es un recorte de 360×180 px y 8.58 s del panel correcto del video oficial; se conserva la relación panorámica para que se vean simultáneamente la persona, la máquina y el recorrido. Sus cuadros de inicio y final también se usan como imágenes estáticas en la secuencia técnica. El calentamiento incorpora seis GIFs adicionales del repositorio, todos de 180×180 px: tres máquinas de cardio (elíptica, bicicleta fija y caminadora) y tres movimientos de movilidad (cadera/rodilla en cuadrupedia, círculos de tobillo y círculos de rodilla). Todos se muestran como apoyo de patrón junto con la secuencia fotográfica y el checklist. La búsqueda de los 1,324 registros del repositorio por `hip thrust`, `glute bridge`, `glute` e `hip`, restringida a `leverage machine`, no encontró coincidencia exacta; el GIF y sus cuadros del video externo se usan sólo en la copia local personal solicitada.
+Los GIFs de ejercicio registrados en `evidencia/dia2_media_manifest.json` son candidatos históricos y no forman parte del render canónico. El calentamiento tiene su propio visor GIF, separado de las tarjetas. La auditoría visual del 9 de octubre verificó las cinco parejas y la guía de hip thrust; la secuencia está en [la evidencia visual](../../docs/05-quality/evidence/routine-phase-pairs-2026-10-09.jpg).
 
-El calentamiento usa GIFs del repositorio con miniaturas estáticas de respaldo; cada medio tiene texto alternativo específico y mantiene soporte para `prefers-reduced-motion`. La procedencia individual de las fotografías embebidas no está trazada en el HTML fuente; permanece pendiente.
+El visor de calentamiento conserva sus GIF y miniaturas estáticas. La E2E valida la preferencia de movimiento reducido para todos los GIF de técnica existentes en los Días 3 y 4, además de las pausas y reanudaciones del visor de calentamiento. La procedencia individual de algunas imágenes embebidas permanece pendiente.
 
 ## Criterios de aceptación
 
@@ -56,8 +56,8 @@ El calentamiento usa GIFs del repositorio con miniaturas estáticas de respaldo;
 - Las métricas de tarjetas muestran `3, 3, 3, 4, 3, 4` series.
 - La cabecera, guía rápida, calentamiento, resumen, tarjetas y cierre siguen la jerarquía del Día 1.
 - El seguimiento del calentamiento y el progreso de sesión están presentes y conservan los identificadores funcionales del template (`warmupTracker`, `sessionGamification`, `resetSession`).
-- El hip thrust se identifica como ejercicio en máquina; su referencia de equipo y guía estática de fase no mezclan imágenes de barra.
-- Los doce recursos animados de ejercicios y calentamiento tienen ruta local y texto alternativo específico; los seis medios del calentamiento y los seis de las tarjetas se insertan sólo donde el patrón coincide.
-- Los once GIFs del repositorio se renderizan a su resolución nativa de 180×180 px; el recorte de video real del hip thrust se renderiza a 360×180 px. Todos tienen miniatura estática de respaldo si fallan y el manifiesto documenta su procedencia.
+- El hip thrust se identifica como ejercicio en máquina; su referencia de equipo y guía no mezclan imágenes de barra.
+- Las seis tarjetas declaran `STATIC_ONLY`, tienen cinco parejas Inicio/Final y un caso `hipThrustGuide` de tres pasos.
+- Ningún GIF de ejercicio se carga desde estas tarjetas; los GIF del calentamiento se documentan y validan por separado.
 - La ficha conserva alternativas, RIR, progresión, señales de detención y límites de evidencia.
 - Se ejecuta `python scripts/validate_repository.py` y se revisa el render en escritorio y móvil.

@@ -51,7 +51,7 @@ class MascotVisualReviewTests(unittest.TestCase):
             "machineReference": "canonical routine and exact machine photos",
             **{field: True for field in worker.MOTION_REVIEW_FIELDS},
         }
-        with TemporaryDirectory() as temporary:
+        with TemporaryDirectory(dir=ROOT) as temporary:
             review_path = Path(temporary) / "visual-review.json"
             review_path.write_text(json.dumps({"reviews": {"day1-exercise02": entry}}), encoding="utf-8")
             with patch.object(worker, "MOTION_REVIEW", review_path):

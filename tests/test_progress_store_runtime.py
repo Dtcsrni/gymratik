@@ -9,6 +9,39 @@ STORE = ROOT / "progress-store.js"
 
 
 class ProgressStoreRuntimeTests(unittest.TestCase):
+    def test_home_dashboard_clears_unscoped_legacy_completion_before_it_can_be_adopted(self):
+        script = r"""
+const fs = require('fs'), vm = require('vm'), assert = require('assert');
+const source = fs.readFileSync(process.argv[1], 'utf8');
+const snapshots = { 'fitlovers-day3-series-v1': JSON.stringify({ e1s1: true, __timing: { sessionStartedAt: 0, sessionEndedAt: 0 } }) };
+let fallback = JSON.stringify({ progress: {}, sessions: {}, activity: {} });
+const window = { GymratikInstallGate: { isInstalled() { return true; } },
+  CustomEvent: class CustomEvent { constructor(name, init) { this.name = name; this.detail = init?.detail; } }, dispatchEvent() {},
+  localStorage: { getItem(key) { return key === 'entrenamiento-progress-fallback-v3' ? fallback : snapshots[key] ?? null; }, setItem(key, value) { if (key === 'entrenamiento-progress-fallback-v3') fallback = value; else snapshots[key] = value; } }
+};
+const context = { window, CustomEvent: window.CustomEvent, localStorage: window.localStorage, navigator: {}, console, Date, setTimeout, clearTimeout };
+vm.runInNewContext(source, context);
+(async () => {
+  const dashboard = await window.TrainingProgressStore.getDashboard();
+  assert.deepStrictEqual(JSON.parse(snapshots['fitlovers-day3-series-v1']), {}, 'legacy completion without a date must be reset, not stamped as this week');
+  const archive = JSON.parse(snapshots['gymratik-legacy-progress-archive-v1']);
+  assert.strictEqual(archive.day3.snapshot.e1s1, true, 'ambiguous legacy data must be archived before rollover');
+  assert.strictEqual(archive.day3.entries.length, 1, 'archived snapshot must be retained as an entry');
+  assert.strictEqual(dashboard.routines.find(row => row.routineId === 'day3').doneSeries, 0);
+  snapshots['fitlovers-day3-series-v1'] = JSON.stringify({ e1s2: true, __skippedExercises: {}, __timing: { sessionStartedAt: 0 } });
+  await window.TrainingProgressStore.getDashboard();
+  await window.TrainingProgressStore.getDashboard();
+  const repeatedArchive = JSON.parse(snapshots['gymratik-legacy-progress-archive-v1']);
+  assert.strictEqual(repeatedArchive.day3.entries.length, 2, 'later snapshots append without replacing retained data');
+  assert.strictEqual(repeatedArchive.day3.entries[0].snapshot.e1s1, true);
+  assert.strictEqual(repeatedArchive.day3.entries[1].snapshot.e1s2, true);
+  console.log(JSON.stringify({ ok: true }));
+})().catch(error => { console.error(error); process.exit(1); });
+"""
+        result = subprocess.run(["node", "-e", script, str(STORE)], cwd=ROOT, check=False, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), {"ok": True})
+
     def test_home_dashboard_rolls_previous_week_state_but_preserves_a_session_started_today(self):
         script = r"""
 const fs = require('fs'), vm = require('vm'), assert = require('assert');
@@ -20,7 +53,7 @@ const week = new Date(); week.setHours(0,0,0,0); week.setDate(week.getDate()-((w
 const currentWeek = `${week.getFullYear()}-${String(week.getMonth()+1).padStart(2,'0')}-${String(week.getDate()).padStart(2,'0')}`;
 const snapshots = {
   'fitlovers-day2-series-v1': JSON.stringify({ e1s1: true, __routineWeek: currentWeek, __timing: { sessionStartedAt: oldStartedAt, sessionEndedAt: oldStartedAt + 3600000, warmup: { phase: 'done' } } }),
-  'fitlovers-day3-series-v1': JSON.stringify({ e1s1: true, __timing: { sessionStartedAt: today, sessionEndedAt: 0, warmup: { phase: 'done' } } })
+  'fitlovers-day3-series-v1': JSON.stringify({ e1s1: true, e1s2: true, __routineWeek: '2026-09-28', __performance: { '1': { e1s1: { reps: 10, load: 40, loadUnit: 'kg' } } }, __timing: { sessionStartedAt: today, sessionEndedAt: 0, warmup: { phase: 'done' }, exercises: { '1': { startedAt: today, seriesTimes: [45000] } } } })
 };
 let fallback = JSON.stringify({ progress: {
   day2: { routineId: 'day2', doneSeries: 20, totalSeries: 20, sessionStartedAt: oldStartedAt, sessionEndedAt: oldStartedAt + 3600000, updatedAt: oldStartedAt + 3600000 },
@@ -35,9 +68,18 @@ vm.runInNewContext(source, context);
 (async () => {
   const dashboard = await window.TrainingProgressStore.getDashboard();
   assert.deepStrictEqual(JSON.parse(snapshots['fitlovers-day2-series-v1']), {}, 'homepage rollover must clear the previous-week local day state');
-  assert.strictEqual(JSON.parse(snapshots['fitlovers-day3-series-v1']).e1s1, true, 'a session started today must be preserved');
+  const archive = JSON.parse(snapshots['gymratik-legacy-progress-archive-v1']);
+  assert.strictEqual(archive.day2.snapshot.e1s1, true, 'dated prior-week snapshot must be archived before rollover');
+  assert.strictEqual(archive.day2.entries[0].recordedWeek < currentWeek, true, 'archive retains the originating week');
+  const todaySnapshot = JSON.parse(snapshots['fitlovers-day3-series-v1']);
+  assert.strictEqual(todaySnapshot.e1s1, true, 'a session started today must be preserved');
+  assert.strictEqual(todaySnapshot.e1s2, true, 'all completed sets from today must survive homepage rollover');
+  assert.strictEqual(todaySnapshot.__performance['1'].e1s1.load, 40, 'saved performance must survive homepage rollover');
+  assert.strictEqual(todaySnapshot.__timing.exercises['1'].seriesTimes[0], 45000, 'timings must survive homepage rollover');
   assert.strictEqual(dashboard.routines.find(row => row.routineId === 'day2').doneSeries, 0);
-  assert.strictEqual(dashboard.routines.find(row => row.routineId === 'day3').doneSeries, 1);
+  const todayProgress = dashboard.routines.find(row => row.routineId === 'day3');
+  assert.strictEqual(todayProgress.doneSeries, 2);
+  assert.strictEqual(todayProgress.sessionStartedAt, today, 'the local today timestamp must override a stale central summary');
   assert.ok((await window.TrainingProgressStore.exportData()).data.sessions.some(session => session.sessionId === oldSessionId), 'completed history must remain intact');
   console.log(JSON.stringify({ ok: true }));
 })().catch(error => { console.error(error); process.exit(1); });
@@ -499,8 +541,10 @@ async function verify(oldVersion) {
   assert.deepStrictEqual(deletedStores, []);
   assert.deepStrictEqual([...stores.keys()].sort(), ['activity', 'meta', 'oldProfile', 'oldProgress', 'profiles', 'routineProgress', 'sessions']);
   assert.strictEqual(storage.has('entrenamiento-progress-fallback-v1'), true);
+  const archived = JSON.parse(storage.get('gymratik-legacy-progress-archive-v1'));
   for (let day = 1; day <= 4; day += 1) {
-    assert.strictEqual(storage.get(`fitlovers-day${day}-series-v1`), `{"e${day}s1":true}`);
+    assert.strictEqual(storage.get(`fitlovers-day${day}-series-v1`), '{}', 'unknown-week state must not appear as current progress');
+    assert.strictEqual(archived[`day${day}`].snapshot[`e${day}s1`], true, 'legacy snapshot must remain recoverable in local archive');
   }
   assert.strictEqual(events.some(event => event.name === 'training-database-upgraded' && event.detail.previousVersion === oldVersion && event.detail.preservedExistingStores === true), true);
 }
@@ -545,6 +589,29 @@ const source = fs.readFileSync(process.argv[1], 'utf8'); const storage = new Map
 const window = { GymratikInstallGate: { isInstalled() { return true; } }, CustomEvent: class CustomEvent { constructor(name, init) { this.name = name; this.detail = init?.detail; } }, dispatchEvent() {}, localStorage: { getItem(key) { return storage.get(key) ?? null; }, setItem(key, value) { storage.set(key, value); }, removeItem(key) { storage.delete(key); } } };
 vm.runInNewContext(source, { window, CustomEvent: window.CustomEvent, localStorage: window.localStorage, navigator: {}, console, Date, setTimeout, clearTimeout });
 (async () => { const started = Date.now() - 10000; await window.TrainingProgressStore.capture({ routineId: 'day1', state: { e1s1: false, __skippedExercises: { '1': true, '999': true }, __timing: { sessionStartedAt: started, warmup: { phase: 'done' } }, __performance: { '1': { e1s1: { reps: 10, load: 40 } } } } }); const data = await window.TrainingProgressStore.exportData(); const record = data.data.progress.find(item => item.routineId === 'day1'); const session = data.data.sessions.find(item => item.routineId === 'day1'); assert.strictEqual(record.doneSeries, 0); assert.strictEqual(record.completedExercises, 1); assert.strictEqual(record.skippedExercises, 1); assert.strictEqual(record.performance.length, 0); assert.strictEqual(session.completedSeries, 0); assert.strictEqual(session.skippedExercises, 1); console.log(JSON.stringify({ ok: true })); })().catch(error => { console.error(error); process.exit(1); });
+"""
+        result = subprocess.run(
+            ["node", "-e", script, str(STORE)], cwd=ROOT, check=False, capture_output=True, text=True
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), {"ok": True})
+
+    def test_partial_session_capture_is_closed_and_distinguishable(self):
+        script = r"""
+const fs = require('fs'); const vm = require('vm'); const assert = require('assert');
+const source = fs.readFileSync(process.argv[1], 'utf8'); const storage = new Map();
+const window = { GymratikInstallGate: { isInstalled() { return true; } }, CustomEvent: class CustomEvent { constructor(name, init) { this.name = name; this.detail = init?.detail; } }, dispatchEvent() {}, localStorage: { getItem(key) { return storage.get(key) ?? null; }, setItem(key, value) { storage.set(key, value); }, removeItem(key) { storage.delete(key); } } };
+vm.runInNewContext(source, { window, CustomEvent: window.CustomEvent, localStorage: window.localStorage, navigator: {}, console, Date, setTimeout, clearTimeout });
+(async () => {
+  const startedAt = Date.now() - 60000; const endedAt = Date.now();
+  await window.TrainingProgressStore.capture({ routineId: 'day1', state: { e1s1: true, e1s2: false, __timing: { sessionStartedAt: startedAt, sessionEndedAt: endedAt, sessionEndReason: 'partial', warmup: { phase: 'done' } }, __performance: { '1': { e1s1: { title: 'Jalón al pecho', reps: 10, load: 40, loadUnit: 'kg' } } } } });
+  const history = await window.TrainingProgressStore.getHistory(10);
+  assert.strictEqual(history.length, 1); assert.strictEqual(history[0].status, 'completed'); assert.strictEqual(history[0].completionKind, 'partial'); assert.strictEqual(history[0].completedSeries, 1); assert.strictEqual(history[0].performance.length, 1);
+  const dashboard = await window.TrainingProgressStore.getDashboard();
+  assert.strictEqual(dashboard.recordedSeries, 1); assert.strictEqual(dashboard.sessionsCompleted, 0);
+  assert.strictEqual(storage.has('fitlovers-day1-series-v1'), false, 'capture must not create or remove routine snapshots');
+  console.log(JSON.stringify({ ok: true }));
+})().catch(error => { console.error(error); process.exit(1); });
 """
         result = subprocess.run(
             ["node", "-e", script, str(STORE)], cwd=ROOT, check=False, capture_output=True, text=True

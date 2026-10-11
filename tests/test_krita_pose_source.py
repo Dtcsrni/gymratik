@@ -13,7 +13,7 @@ from scripts.build_krita_pose_source import create_project
 
 class KritaPoseSourceTests(unittest.TestCase):
     def test_builds_standard_layered_openraster_document(self) -> None:
-        with tempfile.TemporaryDirectory() as temp_dir:
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[1]) as temp_dir:
             root = Path(temp_dir)
             sheet_path = root / "day9-exercise02-test-sheet.png"
             output_path = root / "editable" / "test.ora"

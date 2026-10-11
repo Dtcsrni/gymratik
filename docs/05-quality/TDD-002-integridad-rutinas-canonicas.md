@@ -1,8 +1,8 @@
 # TDD-002 — Integridad semántica de rutinas canónicas
 
-**Estado:** `In progress`  
-**Versión:** `0.1`  
-**Fecha:** `2026-09-17`  
+**Estado:** `Verified (local PWA)`
+**Versión:** `0.2`
+**Fecha de verificación:** `2026-10-09`
 **Diseño asociado:** [SDD-001](../03-architecture/SDD-001-rutina-canonica-versionado.md)
 
 ## 1. Objetivo
@@ -82,7 +82,7 @@ contenedor de tarjetas, los índices de tarjeta y el footer de acciones.
 - existe exactamente un `<footer class="sessionFooter">`;
 - no se conserva un footer alternativo de la fuente local.
 
-**Resultado esperado:** las tres salidas tienen la misma estructura de página y
+**Resultado esperado:** las cuatro salidas tienen la misma estructura de página y
 solo difieren en prescripción, contenido visual y contrato específico del día.
 
 ## 4. Casos negativos y de frontera
@@ -111,7 +111,7 @@ estándar o una estrategia equivalente estable. Debe:
 5. poder ejecutarse desde PowerShell y desde una prueba Python; y
 6. evitar volcar imágenes embebidas o contenido base64 en la salida.
 
-Comando de ejecución sobre las tres salidas:
+Comando de ejecución sobre las cuatro salidas:
 
 ```powershell
 python scripts/validate_canonical_routines.py
@@ -135,8 +135,22 @@ La prueba automatizada demuestra estructura y aritmética; no demuestra por sí
 sola técnica de ejercicio, exactitud del equipo, experiencia de usuario ni
 validez científica de la prescripción.
 
+### Resultado ejecutado — 2026-10-09
+
+- `validate_canonical_routines.py`: `CANONICAL_ROUTINES_OK routines=4`.
+- Contratos: Día 1 `6/20 (4+4+3+3+3+3)`; Día 2 `6/20
+  (3+3+3+4+3+4)`; Día 3 `7/22 (4+3+3+3+3+3+3)`; Día 4 `7/20
+  (3+3+4+2+2+3+3)`.
+- Pruebas de corrupción e invariantes: batería focalizada aprobada.
+- Recorrido E2E local: 26 ejercicios y 82/82 series completadas con
+  persistencia de clave, repeticiones, carga y duración; véase el
+  [registro por ejercicio y serie](evidence/pwa-exercise-verification-2026-10-09.json).
+- La ejecución es navegador local sintético; no certifica el Realme GT 6 ni
+  el despliegue público.
+
 ## 7. Criterio de cierre
 
-TDD-002 pasa a `Verified` cuando los cuatro días superan TST-CAN-001..004, las
-mutaciones negativas son rechazadas y la evidencia queda enlazada en
-`TRACEABILITY.md`.
+TDD-002 queda `Verified (local PWA)` para los contratos de estructura, series
+y comportamiento sintético descritos en este documento. La validación en el
+dispositivo instalado y en el despliegue público pertenece a TDD-005 y sigue
+separada de esta evidencia.

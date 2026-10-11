@@ -15,8 +15,12 @@ class Day2HipThrustVisualTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.html = PAGE.read_text(encoding="utf-8")
         cls.builder = BUILDER.read_text(encoding="utf-8")
-        start = cls.html.index('<article class="card" data-exercise-index="2">')
-        end = cls.html.index('<article class="card" data-exercise-index="3">', start)
+        start_match = re.search(r'<article\b(?=[^>]*\bdata-exercise-index="2")[^>]*>', cls.html)
+        end_match = re.search(r'<article\b(?=[^>]*\bdata-exercise-index="3")[^>]*>', cls.html)
+        if start_match is None or end_match is None:
+            raise AssertionError("No se encontraron las tarjetas 2 y 3 del Día 2 por data-exercise-index")
+        start = start_match.start()
+        end = end_match.start()
         cls.card = cls.html[start:end]
 
     def test_card_uses_machine_photo_and_does_not_render_mismatched_motion_art(self) -> None:

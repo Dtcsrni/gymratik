@@ -321,9 +321,19 @@ def assert_exercise_phase_pairs(page, routine_name: str) -> dict:
     """
     cards = page.locator("article.card[data-exercise-index]")
     checked = 0
+    static_only = 0
+    animated = 0
     for index in range(cards.count()):
         card = cards.nth(index)
         exercise_number = card.get_attribute("data-exercise-index") or str(index + 1)
+        motion_gifs = card.locator("img.day3ExerciseGif,img.day4ExerciseGif")
+        expected_mode = "GIF" if motion_gifs.count() else "STATIC_ONLY"
+        if card.get_attribute("data-media-mode") != expected_mode:
+            raise AssertionError(f"{routine_name}: ejercicio {exercise_number} modo de medio esperado={expected_mode}; observado={card.get_attribute('data-media-mode')!r}")
+        if expected_mode == "GIF":
+            animated += 1
+        else:
+            static_only += 1
         if routine_name == "Rutina_Dia_2_Pierna_Gluteo_V1.html" and exercise_number == "2":
             guide = card.locator(".hipThrustGuideTitle")
             if guide.count() != 3 or card.locator(".phaseRow .phaseCol").count():
@@ -362,7 +372,7 @@ def assert_exercise_phase_pairs(page, routine_name: str) -> dict:
         if endpoints[0] == endpoints[1]:
             raise AssertionError(f"{routine_name}: ejercicio {exercise_number} repite el mismo recurso para inicio y final")
         checked += 1
-    return {"exercisePairsValidated": checked, "intentionalHipThrustGuide": routine_name == "Rutina_Dia_2_Pierna_Gluteo_V1.html"}
+    return {"exercisePairsValidated": checked, "staticOnlyExercises": static_only, "animatedExercises": animated, "intentionalHipThrustGuide": routine_name == "Rutina_Dia_2_Pierna_Gluteo_V1.html"}
 
 
 def assert_warmup_single_viewers(page, routine_name: str) -> dict:
@@ -951,14 +961,13 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
 
     images = assert_image_inventory(page, name)
     resource_quality = assert_visual_resource_quality(page, name)
-    exercise_gif_locator = page.locator(".day3ExerciseGif:visible,.day4ExerciseGif:visible").first
-    if exercise_gif_locator.count() == 0:
-        exercise_gif_locator = page.locator('img[src*="/videos/"]:visible,img[data-battery-motion-src*="/videos/"]:visible').first
-    if exercise_gif_locator.count() == 0:
+    cards = page.locator("article.card[data-exercise-index]")
+    exercise_gifs = cards.locator("img.day3ExerciseGif,img.day4ExerciseGif")
+    day_number = int(name.split("_")[2])
+    expected_exercise_gifs = 7 if day_number in (3, 4) else 0
+    if exercise_gifs.count() != expected_exercise_gifs:
         context.close()
-        raise AssertionError(f"{name}: no se encontró una animación de ejercicio visible para validar")
-    exercise_gif_locator.scroll_into_view_if_needed()
-    assert_animation_changes(page, exercise_gif_locator)
+        raise AssertionError(f"{name}: GIFs de ejercicio esperados={expected_exercise_gifs}; observados={exercise_gifs.count()}")
     # Reactiva el visor en pantalla: fuera de ella el ahorro de batería oculta
     # el GIF y deja visible el póster estático.
     warmup_viewer = page.locator(".warmupSingleViewer").first
@@ -969,10 +978,17 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
         context.close()
         raise AssertionError(f"{name}: no hay GIF visible para validar pausa/reanudación de ahorro de batería")
     battery_motion = {"warmup": assert_battery_motion_pauses(page, battery_gif, name, "calentamiento")}
-    exercise_motion = page.locator("img.day3ExerciseGif:visible,img.day4ExerciseGif:visible").first
-    if exercise_motion.count():
-        battery_motion["exercise"] = assert_battery_motion_pauses(page, exercise_motion, name, "GIF de técnica")
-    cards = page.locator("article.card[data-exercise-index]")
+    exercise_motion = []
+    for gif_index in range(exercise_gifs.count()):
+        exercise_gif = exercise_gifs.nth(gif_index)
+        exercise_number = exercise_gif.evaluate("image => image.closest('article.card')?.dataset.exerciseIndex || ''")
+        exercise_motion.append(
+            {
+                "exercise": int(exercise_number),
+                **assert_battery_motion_pauses(page, exercise_gif, name, f"GIF de técnica ejercicio {exercise_number}"),
+            }
+        )
+    battery_motion["exerciseGifs"] = exercise_motion
     exercise_count = cards.count()
     reps_inputs = page.locator("input.performanceReps")
     load_inputs = page.locator("input.performanceLoad")
@@ -1634,6 +1650,114 @@ def validate_primary_set_buttons(browser, name: str, sex: str, exercise_limit: i
     return {"primarySetButtonsTested": checked, "exerciseSkipButtonsTested": skipped, "exerciseCompletionRestTested": True, **confirmation}
 
 
+def validate_every_effective_series(browser, name: str, sex: str) -> dict:
+    """Completa y verifica cada serie efectiva de cada ejercicio en contexto aislado."""
+    context = browser.new_context(
+        viewport={"width": 412, "height": 915},
+        device_scale_factor=2,
+        is_mobile=True,
+        has_touch=True,
+        reduced_motion="no-preference",
+        service_workers="block",
+    )
+    context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1', 'true')")
+    page = context.new_page()
+    install_test_clock(page)
+    routine_id = name.split("_")[2]
+    url = f"http://127.0.0.1:{PORT}/data/rutinas_autocontenidas/canonicas/{quote(name)}"
+    validated_sets = 0
+    exercise_results = []
+    try:
+        page.goto(url, wait_until="domcontentloaded")
+        page.wait_for_selector("article.card[data-exercise-index] .completeSetButton")
+        exercise_count = page.locator("article.card[data-exercise-index]").count()
+        for exercise_index in range(exercise_count):
+            awaitable_clear = page.evaluate("async () => { await window.TrainingProgressStore.clearAll(); Object.keys(localStorage).filter(key => /series-v1$/.test(key)).forEach(key => localStorage.removeItem(key)); }")
+            if awaitable_clear is False:
+                raise AssertionError(f"{name}: no se pudo aislar el progreso antes del ejercicio {exercise_index + 1}")
+            page.goto(url, wait_until="domcontentloaded")
+            page.wait_for_selector("article.card[data-exercise-index] .completeSetButton")
+            if sex:
+                page.evaluate("sex => window.TrainingProgressStore.saveProfile({sex})", sex)
+            warmup = page.locator("#warmupAction")
+            click_control(warmup)
+            advance_test_clock(page, 15_000)
+            if warmup.get_attribute("data-phase") != "cardio":
+                raise AssertionError(f"{name}: calentamiento no pasó a cardio antes del ejercicio {exercise_index + 1}")
+            click_control(warmup)
+            click_control(warmup)
+            if warmup.get_attribute("data-phase") != "done":
+                raise AssertionError(f"{name}: calentamiento no concluyó antes del ejercicio {exercise_index + 1}")
+            advance_test_clock(page, 2_600)
+
+            card = page.locator("article.card[data-exercise-index]").nth(exercise_index)
+            exercise_number = exercise_index + 1
+            button = card.locator(".completeSetButton")
+            segments = card.locator(".seriesProgressSegment")
+            series_count = segments.count()
+            keys = card.locator(".exerciseTracker").get_attribute("data-series-keys").split()
+            if len(keys) != series_count or series_count == 0:
+                raise AssertionError(f"{name}: ejercicio {exercise_number} tiene claves/segmentos inconsistentes: {keys}, {series_count}")
+            button.scroll_into_view_if_needed()
+            select_valid_performance(card)
+            if card.locator(".warmupSet").count():
+                click_control(button)
+                if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "approximation":
+                    raise AssertionError(f"{name}: ejercicio {exercise_number} no inició la aproximación separada")
+                advance_test_clock(page, 20_000)
+                click_control(button)
+                warmup_record = page.evaluate(
+                    "exercise => { const state=JSON.parse(localStorage.getItem(`fitlovers-day%s-series-v1`)||'{}'); return state.__warmupPerformance?.[String(exercise)]; }" % routine_id,
+                    exercise_number,
+                )
+                if not warmup_record or not warmup_record.get("durationMs"):
+                    raise AssertionError(f"{name}: ejercicio {exercise_number} no conservó su aproximación por separado")
+                if card.locator(".exerciseProgress").inner_text().strip() != f"0/{series_count}":
+                    raise AssertionError(f"{name}: aproximación contó como serie efectiva en ejercicio {exercise_number}")
+                advance_test_clock(page, 600_000)
+                click_control(button)
+            else:
+                click_control(button)
+            if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "preparing":
+                raise AssertionError(f"{name}: ejercicio {exercise_number} no entró en preparación")
+
+            for series_index, key in enumerate(keys):
+                if series_index and page.locator("#summaryActivityStatus").get_attribute("data-activity") == "rest":
+                    dispatch_touch_hold(page, button, 5_150)
+                if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "preparing":
+                    raise AssertionError(f"{name}: ejercicio {exercise_number}, serie {series_index + 1} no inició preparación")
+                advance_test_clock(page, 15_000)
+                if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "strength":
+                    raise AssertionError(f"{name}: ejercicio {exercise_number}, serie {series_index + 1} no inició actividad")
+                timer = card.locator('.exerciseTimerChip[data-kind="active-set"]')
+                if timer.count() != 1 or not timer.is_visible() or timer.evaluate("element => getComputedStyle(element, '::before').animationName") != "timerActivityPulse":
+                    raise AssertionError(f"{name}: indicador de serie no está visible y animado en ejercicio {exercise_number}, serie {series_index + 1}")
+                select_valid_performance(card)
+                click_control(button)
+                progress = f"{series_index + 1}/{series_count}"
+                if card.locator(".exerciseProgress").inner_text().strip() != progress:
+                    raise AssertionError(f"{name}: contador incorrecto ejercicio {exercise_number}, serie {series_index + 1}: {card.locator('.exerciseProgress').inner_text().strip()!r}")
+                if "is-complete" not in (segments.nth(series_index).get_attribute("class") or ""):
+                    raise AssertionError(f"{name}: segmento de progreso no quedó completo para {key}")
+                saved = page.evaluate(
+                    "key => { const state=JSON.parse(localStorage.getItem(`fitlovers-day%s-series-v1`)||'{}'); return {done:state[key]===true, performance:state.__performance?.['%s']?.[key]}; }" % (routine_id, exercise_number),
+                    key,
+                )
+                record = saved.get("performance") or {}
+                if not saved.get("done") or not record.get("reps") or record.get("load") is None or not record.get("durationMs"):
+                    raise AssertionError(f"{name}: serie {key} no guardó estado, repeticiones, carga y duración: {saved}")
+                if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "rest":
+                    raise AssertionError(f"{name}: completar {key} no inició descanso")
+                rest = card.locator('.exerciseTimerChip[data-kind="active-rest"]')
+                if rest.count() != 1 or not rest.is_visible() or rest.evaluate("element => getComputedStyle(element, '::before').animationName") != "timerActivityPulse":
+                    raise AssertionError(f"{name}: indicador de descanso no está visible y animado tras {key}")
+                validated_sets += 1
+            exercise_results.append({"exercise": exercise_number, "effectiveSeries": series_count, "seriesKeys": keys, "allCompleted": True})
+    finally:
+        context.close()
+    return {"exercisesWithAllSeriesValidated": len(exercise_results), "effectiveSeriesValidated": validated_sets, "seriesResults": exercise_results}
+
+
 def validate_completed_session_celebration(browser, name: str, sex: str, variant: str) -> dict[str, str | bool]:
     """Rehidrata una sesión completada aislada y comprueba su celebración persistente."""
     context = browser.new_context(
@@ -2020,6 +2144,7 @@ def validate_resource_pages(browser) -> list[dict]:
         phase_pairs = assert_exercise_phase_pairs(page, name)
         warmup_viewers = assert_warmup_single_viewers(page, name)
         quality = assert_visual_resource_quality(page, name)
+        reduced_motion = validate_exercise_gifs_reduced_motion(page, name)
         if SCREENSHOT_DIR is not None:
             SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
             page.add_style_tag(content=".card .meta,.card .visual,.card .coach,.phaseRow,.phaseCol,.phaseLabel,.source,.photo,.photo img.realphoto{opacity:1!important;visibility:visible!important;transform:none!important;animation:none!important}.gifMotion{display:none!important}.gifFallback{display:block!important}")
@@ -2038,10 +2163,43 @@ def validate_resource_pages(browser) -> list[dict]:
             if warmup.count():
                 warmup.scroll_into_view_if_needed()
                 warmup.screenshot(path=str(SCREENSHOT_DIR / f"resource-day-{day}-warmup.png"))
-        result = {"routine": name, **inventory, **phase_pairs, "warmupViewers": warmup_viewers, "quality": quality}
+        result = {"routine": name, **inventory, **phase_pairs, "warmupViewers": warmup_viewers, "quality": quality, "reducedMotion": reduced_motion}
         results.append(result)
         context.close()
     return results
+
+
+def validate_exercise_gifs_reduced_motion(page, routine_name: str) -> dict:
+    """Comprueba cada GIF de ejercicio y su póster en reduce/no-preference."""
+    gifs = page.locator("article.card img.day3ExerciseGif,article.card img.day4ExerciseGif")
+    day_number = int(routine_name.split("_")[2])
+    expected = 7 if day_number in (3, 4) else 0
+    if gifs.count() != expected:
+        raise AssertionError(f"{routine_name}: GIFs esperados={expected}; observados={gifs.count()}")
+    page.emulate_media(reduced_motion="reduce")
+    reduced = []
+    for index in range(gifs.count()):
+        image = gifs.nth(index)
+        exercise = int(image.evaluate("element => element.closest('article.card')?.dataset.exerciseIndex || '0'"))
+        image.scroll_into_view_if_needed()
+        page.wait_for_function(
+            "image => { const poster=image.parentElement?.querySelector('.gifFallback')?.getAttribute('src') || image.dataset.staticSrc || image.getAttribute('data-static-src'); return Boolean(poster) && image.dataset.batteryPaused === 'true' && image.getAttribute('src') === poster; }",
+            arg=image.element_handle(),
+        )
+        reduced.append({"exercise": exercise, "poster": image.get_attribute("src"), "paused": True})
+    page.emulate_media(reduced_motion="no-preference")
+    resumed = []
+    for index in range(gifs.count()):
+        image = gifs.nth(index)
+        exercise = int(image.evaluate("element => element.closest('article.card')?.dataset.exerciseIndex || '0'"))
+        image.scroll_into_view_if_needed()
+        page.wait_for_function(
+            "image => image.dataset.batteryPaused !== 'true' && image.getAttribute('src') === image.dataset.batteryMotionSrc",
+            arg=image.element_handle(),
+        )
+        assert_animation_changes(page, image)
+        resumed.append(exercise)
+    return {"gifsPausedWithPoster": reduced, "gifsResumedAndAdvanced": resumed}
 
 
 def main() -> None:
@@ -2078,8 +2236,12 @@ def main() -> None:
                 browser.close()
                 print(json.dumps({"status": "E2E_CELEBRATION_OK", "days": len(results), "results": results}, ensure_ascii=False, indent=2))
                 return
-            print("Sintético: portada y animación de bienvenida", flush=True)
-            cover_animation = validate_home_cover_animation(browser)
+            focused_run = args.resources_only or args.functional_only or args.responsive_only or args.quote_only
+            if focused_run:
+                cover_animation = None
+            else:
+                print("Sintético: portada y animación de bienvenida", flush=True)
+                cover_animation = validate_home_cover_animation(browser)
             if args.cover_only:
                 browser.close()
                 print(json.dumps({"status": "E2E_COVER_OK", "coverAnimation": cover_animation}, ensure_ascii=False, indent=2))
@@ -2104,6 +2266,7 @@ def main() -> None:
                     print(f"Sintético: E2E funcional {name}", flush=True)
                     day_result = validate_day(browser, name, sex, variant)
                     day_result.update(validate_primary_set_buttons(browser, name, sex))
+                    day_result.update(validate_every_effective_series(browser, name, sex))
                     day_result.update(validate_completed_session_celebration(browser, name, sex, variant))
                     results.append(day_result)
                     print(f"Sintético: día validado {name}", flush=True)

@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 import re
 import json
+import subprocess
 import tempfile
 import unittest
 from html import unescape
@@ -38,13 +39,19 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
         source = '''<html><head></head><body><aside class="floatingSessionSummary"><div class="summaryBody" id="summaryBody"><div class="summaryActivityStatus"></div><div class="summaryProgressTrack" id="summaryOverallProgress"></div><ul id="sessionSummaryList"></ul></div></aside><footer class="sessionFooter" aria-label="Acciones del día"><button type="button" id="resetSession">Reiniciar día</button></footer><script>const save = () => {\n    if (!window.GymratikInstallGate?.isInstalled()) return;\n  };\n  const migrateTimingState = () => {};\n  migrateTimingState(); const confirmed = window.confirm('¿Reiniciar el progreso de esta sesión? Se borrarán marcadores, pendientes y tiempos.');</script></body></html>'''
         result = standardize_weekly_progress_reset(source)
         self.assertEqual(result.count('id="resetSession"'), 1)
+        self.assertEqual(result.count('id="finishDay"'), 1)
         self.assertIn('aria-label="Acciones del día"', result)
         self.assertIn('id="resetSession">Reiniciar día</button>', result)
+        self.assertIn('id="finishDay">Terminar día</button>', result)
+        self.assertIn("closest('#finishDay')", result)
+        self.assertIn("sessionEndReason = 'partial'", result)
+        self.assertIn('Las series sin confirmar no se contarán', result)
+        self.assertIn('await save()', result)
         self.assertGreater(result.index('id="resetSession"'), result.index('id="summaryOverallProgress"'))
         self.assertLess(result.index('id="resetSession"'), result.rindex('</body>'))
         self.assertIn('el historial de entrenamientos se conservará', result)
         self.assertIn('resetPreviousWeekProgress()', result)
-        self.assertIn('if (!hasProgress || !recordedWeek || recordedWeek >= routineWeekKey(Date.now())) return false;', result)
+        self.assertIn('if (!hasProgress || (recordedWeek && recordedWeek >= routineWeekKey(Date.now()))) return false;', result)
         self.assertIn("const recordedWeek = startedAt ? routineWeekKey(startedAt) : typeof state.__routineWeek === 'string' ? state.__routineWeek : '';", result)
         self.assertIn("state.__routineWeek = routineWeekKey(Date.now())", result)
         self.assertIn('margin:1.5rem auto calc(10rem + env(safe-area-inset-bottom,0px))', result)
@@ -53,6 +60,73 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
         self.assertLess(result.index('migrateTimingState();'), result.index('publishProgress();'))
         self.assertNotIn('clearRoutine?.(routineId)', result)
         self.assertEqual(standardize_weekly_progress_reset(result), result)
+
+    def test_finish_day_closes_without_confirming_an_incomplete_series(self) -> None:
+        source = '''<html><head></head><body><aside class="floatingSessionSummary"><div class="summaryBody" id="summaryBody"><div class="summaryActivityStatus"></div><div class="summaryProgressTrack" id="summaryOverallProgress"></div><ul id="sessionSummaryList"></ul></div></aside><footer class="sessionFooter" aria-label="Acciones del día"><button type="button" id="resetSession">Reiniciar día</button></footer><script>
+  const save = () => {
+    if (!window.GymratikInstallGate?.isInstalled()) return;
+    return Promise.resolve({ source: 'indexeddb' });
+  }; const clearPreparationTimers = () => {}; const render = () => {}; const getTimingState = () => state.__timing; const state = { e1s1: true, e1s2: false, __timing: { sessionStartedAt: Date.now() - 60000, exercises: { '1': { seriesStartedAt: Date.now(), restStartedAt: Date.now(), preparationEndsAt: Date.now() + 5000 } } } }; const summaryToggle = null;
+  const migrateTimingState = () => {};
+  migrateTimingState();
+</script></body></html>'''
+        result = standardize_weekly_progress_reset(source)
+        handler = re.search(r"document\.addEventListener\('click', async event => \{\s*const finishDayButton.*?\n  \}\);", result, re.S)
+        self.assertIsNotNone(handler)
+        script = f"""
+const vm = require('vm'), assert = require('assert'); let clickHandler; let saveAttempts = 0; let rendered = false; let accepted = false;
+class Element {{ constructor(target) {{ this.target = target; }} closest(selector) {{ return selector === '#finishDay' ? this.target : null; }} }}
+const button = {{ disabled: false, textContent: 'Terminar día', attributes: {{}}, setAttribute(key, value) {{ this.attributes[key] = value; }} }};
+const state = {{ e1s1: true, e1s2: false, __timing: {{ sessionStartedAt: Date.now() - 60000, exercises: {{ '1': {{ seriesStartedAt: Date.now(), restStartedAt: Date.now(), preparationEndsAt: Date.now() + 5000 }} }} }} }};
+const context = {{ state,
+  window: {{ confirm: () => accepted, dispatchEvent() {{}} }}, document: {{ addEventListener(_name, handler) {{ clickHandler = handler; }} }}, Element, Date,
+  clearPreparationTimers() {{}}, getTimingState: () => state.__timing, async save() {{ saveAttempts += 1; return saveAttempts === 1 ? undefined : {{ source: 'indexeddb' }}; }}, render() {{ rendered = true; }}, CustomEvent: class CustomEvent {{}} }};
+vm.createContext(context); vm.runInContext({json.dumps(handler.group(0))}, context);
+(async () => {{ const untouched = JSON.stringify(context.state); await clickHandler({{ target: new Element(button) }}); assert.strictEqual(JSON.stringify(context.state), untouched, 'cancelar no muta el progreso'); accepted = true; await clickHandler({{ target: new Element(button) }}); assert.strictEqual(saveAttempts, 1); assert.strictEqual(button.disabled, false); assert.strictEqual(button.textContent, 'Reintentar guardado'); assert.strictEqual(rendered, false); assert.strictEqual(context.state.e1s1, true); assert.strictEqual(context.state.e1s2, false); assert.strictEqual(context.state.__timing.sessionEndReason, 'partial'); assert.ok(context.state.__timing.sessionEndedAt > 0); assert.strictEqual(context.state.__timing.exercises['1'].seriesStartedAt, 0); assert.strictEqual(context.state.__timing.exercises['1'].restStartedAt, 0); assert.strictEqual(context.state.__timing.exercises['1'].preparationEndsAt, 0); const endedAt = context.state.__timing.sessionEndedAt; await clickHandler({{ target: new Element(button) }}); assert.strictEqual(saveAttempts, 2); assert.strictEqual(context.state.__timing.sessionEndedAt, endedAt); assert.strictEqual(rendered, true); assert.strictEqual(button.disabled, true); assert.strictEqual(button.textContent, 'Día terminado'); console.log(JSON.stringify({{ ok: true }})); }})().catch(error => {{ console.error(error); process.exit(1); }});
+"""
+        node = subprocess.run(["node", "-e", script], cwd=ROOT, check=False, capture_output=True, text=True)
+        self.assertEqual(node.returncode, 0, node.stderr)
+        self.assertEqual(json.loads(node.stdout), {"ok": True})
+
+    def test_unscoped_legacy_completion_is_reset_instead_of_adopted_as_current_week(self) -> None:
+        source = '''<html><head></head><body><aside class="floatingSessionSummary"><div class="summaryBody" id="summaryBody"><div class="summaryActivityStatus"></div><div class="summaryProgressTrack" id="summaryOverallProgress"></div><ul id="sessionSummaryList"></ul></div></aside><footer class="sessionFooter" aria-label="Acciones del día"><button type="button" id="resetSession">Reiniciar día</button></footer><script>const save = () => {\n    if (!window.GymratikInstallGate?.isInstalled()) return;\n  };\n  const migrateTimingState = () => {\n  };\n  migrateTimingState();</script></body></html>'''
+        result = standardize_weekly_progress_reset(source)
+        helper = re.search(r'const resetPreviousWeekProgress = \(\) => \{.*?\n  \};', result, re.S).group(0)
+        script = f"""
+const vm = require('vm'), assert = require('assert');
+const archive = {{}};
+const context = {{ Date, routineId: 'day1', routineWeekKey: () => '2026-10-05', state: {{ e1s1: true, __timing: {{ sessionStartedAt: 0 }} }}, localStorage: {{ getItem() {{ return JSON.stringify(archive); }}, setItem(_key, value) {{ Object.assign(archive, JSON.parse(value)); }} }}, window: {{ dispatchEvent() {{}} }}, CustomEvent: class CustomEvent {{}} }};
+vm.createContext(context);
+vm.runInContext({json.dumps(helper)} + '\\nglobalThis.__testReset = resetPreviousWeekProgress;', context);
+assert.strictEqual(context.__testReset(), true);
+assert.deepStrictEqual(JSON.parse(JSON.stringify(context.state)), {{}});
+assert.strictEqual(archive.day1.snapshot.e1s1, true);
+console.log(JSON.stringify({{ ok: true }}));
+"""
+        result_node = subprocess.run(["node", "-e", script], cwd=ROOT, check=False, capture_output=True, text=True)
+        self.assertEqual(result_node.returncode, 0, result_node.stderr)
+        self.assertEqual(json.loads(result_node.stdout), {"ok": True})
+
+    def test_current_day_session_wins_over_stale_week_marker(self) -> None:
+        source = CANONICAL / "Rutina_Dia_1_Espalda_Biceps_V1.html"
+        markup = source.read_text(encoding="utf-8")
+        helper = re.search(r"const resetPreviousWeekProgress = \(\) => \{.*?\n  \};", markup, re.S)
+        self.assertIsNotNone(helper)
+        script = f"""
+const vm = require('vm'), assert = require('assert');
+const today = Date.now();
+const context = {{ Date, routineWeekKey: value => value === today ? '2026-10-05' : '2026-09-28', state: {{ e1s1: true, e1s2: true, __routineWeek: '2026-09-28', __performance: {{ '1': {{ e1s1: {{ reps: 10, load: 40 }} }} }}, __timing: {{ sessionStartedAt: today, sessionEndedAt: 0, exercises: {{ '1': {{ seriesTimes: [45000] }} }} }} }} }};
+vm.createContext(context);
+vm.runInContext({json.dumps(helper.group(0))} + '\\nglobalThis.__testReset = resetPreviousWeekProgress;', context);
+assert.strictEqual(context.__testReset(), false, 'a session started today is authoritative over stale week metadata');
+assert.strictEqual(context.state.e1s2, true);
+assert.strictEqual(context.state.__performance['1'].e1s1.load, 40);
+assert.strictEqual(context.state.__timing.exercises['1'].seriesTimes[0], 45000);
+console.log(JSON.stringify({{ ok: true }}));
+"""
+        result = subprocess.run(["node", "-e", script], cwd=ROOT, check=False, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), {"ok": True})
 
     def test_technique_steps_are_collapsed_in_an_accessible_accordion(self) -> None:
         source = '''<html><head></head><body><article><details class="techAccordion" data-enhancement="technique-accordion-v1"><summary>Guía breve de técnica</summary></details><div class="techSteps"><div class="techStep"><div class="techStepTitle">Ajuste</div><div class="techStepText">Postura estable.</div></div><div class="techStep"><div class="techStepTitle">Ejecución</div><div class="techStepText">Controla el recorrido.</div></div></div></article></body></html>'''
@@ -102,6 +176,33 @@ function scheduleAlignment() {}
         self.assertIn('#floatingSessionSummary .sessionSummaryList{max-height:150px!important}', result)
         self.assertIn('#floatingSessionSummary .sessionSummaryList{max-height:78px!important', result)
         self.assertIn('width:82px!important;height:82px!important', result)
+
+    def test_summary_repaint_preserves_manual_scroll_position(self) -> None:
+        source = '''<html><head></head><body><script>
+const focusedIndex = activeIndex >= 0 ? activeIndex : selectedIndex >= 0 && selectedIndex < rows.length ? selectedIndex : rows.findIndex(row => !row.complete);
+const updateSummary = () => {
+    summaryList.replaceChildren();
+    exerciseItems.forEach(item => {
+      const li = document.createElement('li');
+      summaryList.append(li);
+    });
+  };
+</script></body></html>'''
+
+        result = standardize_summary_navigation(source)
+
+        self.assertIn('const summaryScrollTop = summaryList.scrollTop;', result)
+        self.assertIn('summaryList.scrollTop = summaryScrollTop;', result)
+        self.assertIn('const focusedIndex = selectedIndex >= 0 && selectedIndex < rows.length ? selectedIndex : activeIndex >= 0 ?', result)
+        self.assertEqual(standardize_summary_navigation(result), result)
+        partially_standardized = source.replace(
+            '    summaryList.replaceChildren();',
+            '    const summaryScrollTop = summaryList.scrollTop;\n    summaryList.replaceChildren();',
+            1,
+        )
+        self.assertIn('summaryList.scrollTop = summaryScrollTop;', standardize_summary_navigation(partially_standardized))
+        crlf_source = partially_standardized.replace('\n', '\r\n')
+        self.assertIn('summaryList.scrollTop = summaryScrollTop;\r\n  };', standardize_summary_navigation(crlf_source))
 
     def test_warmup_media_groups_become_single_active_viewers_with_accessible_choices(self) -> None:
         source = '''<html><head></head><body><article class="warmupStep cardio">
@@ -355,13 +456,18 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
             source = path.read_text(encoding="utf-8")
             cards = re.findall(
-                r'<article class="card" data-exercise-index="(\d+)">(.*?)</article>',
+                r'<article\b(?=[^>]*\bdata-exercise-index="(\d+)")(?=[^>]*\bdata-media-mode="([^"]+)")[^>]*>(.*?)</article>',
                 source,
                 re.S,
             )
             with self.subTest(routine=path.name):
                 self.assertEqual(len(cards), expected_counts[path.name])
-                for index, card in cards:
+                for index, declared_mode, card in cards:
+                    gif_count = len(re.findall(r'<img\b[^>]*class="[^"]*day[34]ExerciseGif', card))
+                    expected_mode = "GIF" if gif_count else "STATIC_ONLY"
+                    self.assertEqual(declared_mode, expected_mode, f"ejercicio {index}")
+                    if expected_mode == "STATIC_ONLY":
+                        self.assertNotRegex(card, r"GIF LOCAL", f"ejercicio {index} promete un GIF que no contiene")
                     if path.name == "Rutina_Dia_2_Pierna_Gluteo_V1.html" and index == "2":
                         self.assertIn('class="phaseRow hipThrustGuide"', card)
                         self.assertEqual(card.count('class="hipThrustGuideTitle"'), 3)
@@ -374,7 +480,7 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                     self.assertEqual(len(phase_images), 2, f"ejercicio {index}")
                     self.assertTrue(all(re.search(r'<img\b[^>]*class="[^"]*realphoto[^"]*"', phase) for phase in phase_images), f"ejercicio {index}")
                 if path.name == "Rutina_Dia_1_Espalda_Biceps_V1.html":
-                    first = dict(cards)["1"]
+                    first = next(card for index, _mode, card in cards if index == "1")
                     self.assertIn("0197-qdRxqCj-start.jpg", first)
                     self.assertIn("0197-qdRxqCj-final.jpg", first)
                     self.assertNotIn("0577-T0yTjgW", first)
@@ -595,7 +701,7 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertIn("const repFeedbackZone = value =>", source)
                 self.assertIn("data-zone=\"below\"", source)
                 self.assertIn("const loadProfiles = [", source)
-                self.assertIn("if (!loadProfile) throw new Error(`Falta un perfil de carga revisado para: ${item.title}`)", source)
+                self.assertIn("if (!loadProfileBase) throw new Error(`Falta un perfil de carga revisado para: ${item.title}`)", source)
                 self.assertIn("dataset.maxKg = String(item.performanceLoadProfile.maxKg)", source)
                 self.assertIn("Elige ${minPossible}–${maxPossible}; objetivo ${item.repMinimum}–${item.repMaximum}", reps_logic)
                 self.assertIn("repsClear.addEventListener('click'", source)
@@ -625,8 +731,15 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
         profile_start = source.index("    load_profile_block = \"\"\"")
         profile_end = source.index('"""', profile_start + len('    load_profile_block = """'))
         profile_block = source[profile_start:profile_end]
-        patterns = [re.compile(pattern.removesuffix("$"), re.I) for pattern in re.findall(r"\[/\^(.+?)/, \{ minKg:", profile_block)]
-        self.assertEqual(len(patterns), 24)
+        profile_rows = re.findall(r"\[/\^(.+?)/, \{ referenceKg: ([0-9.]+), stepKg: ([0-9.]+),", profile_block)
+        patterns = [re.compile(pattern.removesuffix("$"), re.I) for pattern, _reference, _step in profile_rows]
+        self.assertEqual(len(profile_rows), 24)
+        for _pattern, reference, _step in profile_rows:
+            center = float(reference)
+            self.assertAlmostEqual(center - center * 0.25, center * 0.75)
+            self.assertAlmostEqual(center + center * 0.25, center * 1.25)
+        self.assertIn("minKg: loadProfileBase.referenceKg * 0.75, maxKg: loadProfileBase.referenceKg * 1.25", profile_block)
+        self.assertIn("estimación orientativa ±25%", profile_block)
         exercise_count = 0
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
             html = path.read_text(encoding="utf-8")
@@ -637,13 +750,17 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 with self.subTest(day=path.name, exercise=title):
                     self.assertEqual(sum(bool(pattern.search(title.lower())) for pattern in patterns), 1)
         self.assertEqual(exercise_count, 26)
-        self.assertIn("{ minKg: 10, maxKg: 250, stepKg: 2.5, label: 'barra libre · peso total con barra", profile_block)
-        self.assertIn("{ minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'curl femoral", profile_block)
-        self.assertNotIn("maxKg: 160", profile_block)
+        self.assertIn("{ referenceKg: 50, stepKg: 2.5, label: 'barra libre · peso total con barra", profile_block)
+        self.assertIn("{ referenceKg: 30, stepKg: 2.5, label: 'curl femoral", profile_block)
+        self.assertNotIn("maxKg: 250", profile_block)
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
             html = path.read_text(encoding="utf-8")
             self.assertIn("item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue", html)
             self.assertIn("const rounded = Math.round(converted / unitStep) * unitStep", html)
+            self.assertIn("const unitMin = Math.min(item.performanceLoadProfile.minKg", html)
+            self.assertIn("const unitMax = Math.max(item.performanceLoadProfile.maxKg", html)
+            self.assertNotIn("Math.ceil(Math.min(item.performanceLoadProfile.minKg", html)
+            self.assertNotIn("Math.floor(Math.max(item.performanceLoadProfile.maxKg", html)
             self.assertNotIn("Math.round(converted * factor / unitStep)", html)
 
     def test_all_routines_use_persistent_fifteen_second_preparation_before_timing(self) -> None:
@@ -730,7 +847,12 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
             with self.subTest(path=path.name):
                 self.assertEqual(source.count('<main class="cards">'), 1)
                 self.assertEqual(source.count('<footer class="sessionFooter"'), 1)
+                self.assertEqual(source.count('id="finishDay"'), 1)
                 self.assertIn('id="resetSession">Reiniciar día</button>', source)
+                self.assertIn('id="finishDay">Terminar día</button>', source)
+                self.assertIn("timingRoot.sessionEndReason = 'partial'", source)
+                self.assertIn("sessionEndedPartial", source)
+                self.assertIn("timing.sessionEndReason !== 'partial'", source)
                 self.assertIn('¿Quieres empezar este día de nuevo?', source)
                 self.assertIn('display:block!important;visibility:visible!important;opacity:1!important', source)
                 self.assertGreater(source.index('id="resetSession"'), source.index('id="summaryOverallProgress"'))
@@ -738,7 +860,7 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertNotIn('clearRoutine?.(routineId)', source)
                 self.assertIn('state.__routineWeek = routineWeekKey(Date.now())', source)
                 self.assertNotIn('<footer class="footer">', source)
-                card_indexes = [int(value) for value in re.findall(r'<article class="card" data-exercise-index="(\d+)">', source)]
+                card_indexes = [int(value) for value in re.findall(r'<article\b(?=[^>]*\bdata-exercise-index="(\d+)")[^>]*>', source)]
                 self.assertEqual(card_indexes, list(range(1, expected_cards[path.name] + 1)))
 
     def test_routine_navigation_targets_every_exercise_card_in_the_document(self) -> None:
@@ -1006,7 +1128,7 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
             source = path.read_text(encoding="utf-8")
             cards = re.findall(
-                r'<article class="card" data-exercise-index="\d+">.*?</article>',
+                r'<article\b(?=[^>]*\bdata-exercise-index="\d+")[^>]*>.*?</article>',
                 source,
                 re.S,
             )

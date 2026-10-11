@@ -1,41 +1,21 @@
-# Backlog inicial
+# Backlog activo de Gymratik PWA
 
-No contiene fechas. Las estimaciones se incorporarán después de medir los milestones M0 y M1.
+Solo las tareas de esta lista pertenecen al backlog activo. Un estado pendiente significa que requiere evidencia, no que ya esté implementado.
 
-## P0 — Fundamentos
+## P0 — Continuidad y datos locales
 
-- [ ] SPIKE-001 Validar Amazfit Active en dispositivo real.
-- [ ] SPIKE-002 Validar acceso privado a Tezkatli desde red móvil.
-- [ ] SPIKE-003 Medir capacidad actual de Tezkatli para IA.
-- [ ] SPIKE-004 Construir muestra alimentaria pesada.
-- [ ] SPIKE-005 Validar Room, process death y outbox.
-- [ ] Crear esqueleto Gradle y aplicación Android mínima.
-- [x] Crear liveness server local; readiness, red privada y workers quedan pendientes de SPIKE-002/SPIKE-003.
-- [ ] Crear backend y health check privado.
-- [x] Implementar contratos y validación de esquemas.
-- [ ] Implementar `WorkoutSession` y máquina de estados.
-- [ ] Implementar registro de series local.
-- [ ] Implementar respaldo/restauración mínimo.
+- [ ] Cerrar pruebas de progreso semanal: nuevo lunes, zona horaria local, snapshot sin fecha y sesión iniciada hoy con cero series.
+- [ ] Verificar migración y restauración IndexedDB con fixtures sintéticos v1/v2/v3 sin borrar stores desconocidos.
+- [ ] Probar exportar/importar JSON v3; archivo inválido no debe mutar datos.
+- [ ] Verificar que interfaz y mensajes expliquen que el respaldo es manual y local.
 
-## P1 — Producto utilizable
+## P1 — Instalación y offline
 
-- [ ] Rutinas, historial, descanso y valores anteriores.
-- [ ] Alimentos manuales, búsqueda y código de barras.
-- [ ] OCR de etiquetas.
-- [ ] Recetas y comidas habituales.
-- [ ] Suplementos, recordatorios e inventario.
-- [ ] Pipeline asíncrono de fotografía.
-- [ ] Catálogo verificado de máquinas del gimnasio.
-- [ ] Motor explicable de rutina.
-- [ ] Health Connect.
-- [ ] Detección contextual del gimnasio.
-- [ ] Aplicación Zepp si la PoC es positiva.
+- [ ] Verificar primera instalación, actualización pendiente y recuperación de cuota en navegador móvil.
+- [ ] Comprobar visualmente portada, cuatro rutinas, iconos y medios declarados esenciales offline.
+- [ ] Medir transferencia real desde el host publicado; el tamaño del inventario local es solo una estimación.
+- [ ] Revisar accesibilidad, movimiento reducido y flujo móvil en un navegador objetivo.
 
-## P2 — Experimentación
+## Diferido
 
-- [ ] Captura multivista y ARCore Depth.
-- [ ] Memoria visual personal.
-- [ ] Conteo asistido de repeticiones.
-- [ ] Recuperación estimada con señales fisiológicas.
-- [ ] LLM ligero en teléfono.
-- [ ] Personalización offline de modelos.
+Nutrición, suplementos, gimnasio/equipo, IA, Android nativo, Amazfit/Zepp, Health Connect, backend y sincronización entre dispositivos. El registro de identificadores heredados está en [DEFERRED_SCOPE.md](DEFERRED_SCOPE.md); no implica autorización o prioridad futura.

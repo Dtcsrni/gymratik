@@ -589,10 +589,18 @@ REST_TIMING_DISPLAY_CONTRACT = '''  const renderTimingDisplays = () => {
       const doneSeries = exerciseItems.reduce((sum, item) => sum + snapshot(item).done, 0);
       const totalSeries = exerciseItems.reduce((sum, item) => sum + item.seriesKeys.length, 0);
       const sessionComplete = doneExercises === exerciseItems.length;
+      const sessionEndedPartial = root?.sessionEndReason === 'partial';
+      const finishDayButton = document.getElementById('finishDay');
+      if (finishDayButton) {
+        finishDayButton.disabled = Boolean(root?.sessionEndedAt);
+        finishDayButton.textContent = root?.sessionEndedAt ? 'Día terminado' : 'Terminar día';
+      }
       const justStarted = Boolean(root?.sessionStartedAt && now - root.sessionStartedAt < 2600);
       const warmupDone = warmup.phase === 'done';
       const displayActivity = sessionComplete
         ? { kind: 'complete', label: 'Rutina completada', clock: '🎉', startedAt: Number(root?.sessionEndedAt) || now }
+        : sessionEndedPartial
+          ? { kind: 'complete', label: 'Día terminado · progreso parcial', clock: 'Guardado', startedAt: Number(root?.sessionEndedAt) || now }
         : currentActivity || (justStarted
           ? { kind: 'start', label: '¡Rutina iniciada!', clock: 'Vamos', startedAt: Number(root.sessionStartedAt) }
           : { kind: warmupDone || doneSeries > 0 || root?.sessionStartedAt ? 'ready' : 'start', label: warmupDone || doneSeries > 0 || root?.sessionStartedAt ? 'Listo para continuar' : '¡Vamos a entrenar!', clock: warmupDone || doneSeries > 0 || root?.sessionStartedAt ? 'Lista' : 'Iniciar', startedAt: 0 });
@@ -1430,6 +1438,10 @@ def standardize_shared_session_contract(source: str) -> str:
         "['sessionStartedAt', 'sessionEndedAt']",
         "['sessionStartedAt', 'sessionEndedAt', 'sessionAbandonedAt']",
     )
+    source = source.replace(
+        "if (!hasStartedExercise) { timing.sessionStartedAt = 0; timing.sessionEndedAt = 0; }",
+        "if (!hasStartedExercise && timing.sessionEndReason !== 'partial') { timing.sessionStartedAt = 0; timing.sessionEndedAt = 0; }\n    if (!['partial', 'complete'].includes(timing.sessionEndReason) || !timing.sessionEndedAt) timing.sessionEndReason = '';",
+    )
     notification_line = "timing.restNotifiedAt = Date.now(); timing.restReminderNotifiedAt = timing.restNotifiedAt; sendBrowserNotification('Descanso listo', `Puedes iniciar ${item.title}.`);"
     source = re.sub(
         r"timing\.restNotifiedAt = Date\.now\(\);\s*(?:timing\.restReminderNotifiedAt = timing\.restNotifiedAt; sendBrowserNotification\('Descanso listo', `Puedes iniciar \$\{item\.title\}\.`,?\);\s*)+",
@@ -2159,8 +2171,22 @@ def standardize_weekly_progress_reset(source: str) -> str:
     const hasProgress = Object.entries(state).some(([key, value]) => (/^e\\d+s\\d+$/.test(key) || /^w\\d+$/.test(key)) && value === true)
       || Object.keys(state.__skippedExercises || {}).length > 0
       || Boolean(state.__timing?.warmup?.phase === 'done' || startedAt);
-    if (!hasProgress || !recordedWeek || recordedWeek >= routineWeekKey(Date.now())) return false;
-    state = {};
+      // Legacy progress without a trustworthy date must not be adopted as
+      // current-week completion by the next save. Archive before resetting so
+      // ambiguous legacy data is retained. A session timestamp remains authoritative.
+      if (!hasProgress || (recordedWeek && recordedWeek >= routineWeekKey(Date.now()))) return false;
+      if (!recordedWeek) {
+        try {
+          const archiveKey = 'gymratik-legacy-progress-archive-v1';
+          const archive = JSON.parse(localStorage.getItem(archiveKey) || '{}');
+          if (!archive[routineId]) archive[routineId] = { archivedAt: Date.now(), snapshot: state };
+          localStorage.setItem(archiveKey, JSON.stringify(archive));
+        } catch (error) {
+          window.dispatchEvent(new CustomEvent('training-storage-error', { detail: { error } }));
+          return false;
+        }
+      }
+      state = {};
     return true;
   };"""
     routine_week_key = weekly_reset_logic.split("\n", 1)[0]
@@ -2212,6 +2238,16 @@ def standardize_weekly_progress_reset(source: str) -> str:
         "",
         1,
     )
+    source = source.replace(
+        "    window.TrainingProgressStore?.capture({\n      routineId,",
+        "    return window.TrainingProgressStore?.capture({\n      routineId,",
+        1,
+    )
+    source = source.replace(
+        "    publishProgress();\n  };\n  const pulse = button => {",
+        "    return publishProgress();\n  };\n  const pulse = button => {",
+        1,
+    )
 
     footer_match = re.search(r'<footer class="sessionFooter"[^>]*>.*?</footer>', source, flags=re.S)
     if not footer_match:
@@ -2229,22 +2265,78 @@ def standardize_weekly_progress_reset(source: str) -> str:
     source = re.sub(r'<style data-enhancement="footer-reset-v1">.*?</style>\s*', "", source, count=1, flags=re.S)
     source = re.sub(r'<style data-enhancement="weekly-routine-reset-v1">.*?</style>\s*', "", source, count=1, flags=re.S)
     reset_style = '''<style data-enhancement="weekly-routine-reset-v1">
-.sessionFooter{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(10rem,18rem)!important;align-items:center!important;gap:.8rem!important;width:min(100%,62rem)!important;margin:1.5rem auto calc(10rem + env(safe-area-inset-bottom,0px))!important;padding:1rem!important;border:1px solid rgba(255,157,162,.4)!important;border-radius:1rem!important;background:linear-gradient(115deg,rgba(37,32,49,.96),rgba(17,38,54,.96))!important;box-shadow:0 12px 34px rgba(0,0,0,.2)!important;visibility:visible!important;opacity:1!important}
+.sessionFooter{display:grid!important;grid-template-columns:minmax(0,1fr) repeat(2,minmax(9rem,12rem))!important;align-items:center!important;gap:.8rem!important;width:min(100%,62rem)!important;margin:1.5rem auto calc(10rem + env(safe-area-inset-bottom,0px))!important;padding:1rem!important;border:1px solid rgba(255,157,162,.4)!important;border-radius:1rem!important;background:linear-gradient(115deg,rgba(37,32,49,.96),rgba(17,38,54,.96))!important;box-shadow:0 12px 34px rgba(0,0,0,.2)!important;visibility:visible!important;opacity:1!important}
 .sessionResetCopy{display:grid;gap:.2rem;min-width:0;color:#f4fbff}.sessionResetCopy strong{font-size:.9rem}.sessionResetCopy span{color:#b8cbd4;font-size:.76rem;line-height:1.4}
 #resetSession{display:block!important;visibility:visible!important;opacity:1!important;width:100%;min-height:52px;margin:0;padding:.72rem 1rem;border:1px solid rgba(255,157,162,.72);border-radius:.8rem;background:linear-gradient(110deg,rgba(113,44,61,.58),rgba(64,42,73,.68));color:#ffe4e6;font:inherit;font-size:.9rem;font-weight:850;cursor:pointer}
+#finishDay{display:block!important;visibility:visible!important;opacity:1!important;width:100%;min-height:52px;margin:0;padding:.72rem 1rem;border:1px solid rgba(101,242,221,.58);border-radius:.8rem;background:linear-gradient(110deg,rgba(18,112,100,.58),rgba(19,78,93,.68));color:#dffff9;font:inherit;font-size:.9rem;font-weight:850;cursor:pointer}
+#finishDay::before{content:"✓";margin-right:.5rem;font-size:1rem}
 #resetSession::before{content:"↻";margin-right:.5rem;font-size:1.1rem}
-#resetSession:focus-visible{outline:3px solid #72dcff;outline-offset:3px}
-@media(prefers-reduced-motion:no-preference){#resetSession{transition:background-color .2s ease,border-color .2s ease,transform .2s ease}#resetSession:hover{border-color:#ffb6bb;background-color:rgba(145,53,70,.38);transform:translateY(-1px)}}
-@media(prefers-reduced-motion:reduce){#resetSession{transition:none!important}}
+ #resetSession:focus-visible,#finishDay:focus-visible{outline:3px solid #72dcff;outline-offset:3px}
+@media(prefers-reduced-motion:no-preference){#resetSession,#finishDay{transition:background-color .2s ease,border-color .2s ease,transform .2s ease}#resetSession:hover{border-color:#ffb6bb;background-color:rgba(145,53,70,.38);transform:translateY(-1px)}#finishDay:hover{border-color:#8bffeb;background-color:rgba(35,145,126,.4);transform:translateY(-1px)}}
+@media(prefers-reduced-motion:reduce){#resetSession,#finishDay{transition:none!important}}
 @media(max-width:520px){.sessionFooter{grid-template-columns:1fr!important;gap:.55rem!important;padding:.75rem!important}.sessionResetCopy strong{font-size:.82rem}.sessionResetCopy span{font-size:.7rem}}
 </style>'''
     source = source.replace("</head>", reset_style + "\n</head>", 1)
     source = source.replace(
         '<footer class="sessionFooter" aria-label="Acciones del día"><button type="button" id="resetSession">Reiniciar día</button></footer>',
-        '<footer class="sessionFooter" aria-label="Acciones del día"><div class="sessionResetCopy"><strong>¿Quieres empezar este día de nuevo?</strong><span>Se reinicia solo el progreso de este día; tu historial y perfil se conservan.</span></div><button type="button" id="resetSession">Reiniciar día</button></footer>',
+        '<footer class="sessionFooter" aria-label="Acciones del día"><div class="sessionResetCopy"><strong>¿Quieres empezar este día de nuevo?</strong><span>«Terminar día» guarda las series registradas; «Reiniciar día» borra solo el progreso semanal de este día.</span></div><button type="button" id="finishDay">Terminar día</button><button type="button" id="resetSession">Reiniciar día</button></footer>',
         1,
     )
+    if 'id="finishDay"' not in source:
+        source = source.replace(
+            '<button type="button" id="resetSession">Reiniciar día</button>',
+            '<button type="button" id="finishDay">Terminar día</button><button type="button" id="resetSession">Reiniciar día</button>',
+            1,
+        )
+    source = re.sub(
+        r'(<div class="sessionResetCopy"><strong>.*?</strong><span>).*?(</span></div>)',
+        r'\1«Terminar día» guarda las series registradas; «Reiniciar día» borra solo el progreso semanal de este día.\2',
+        source,
+        count=1,
+        flags=re.S,
+    )
     source = source.replace('aria-label="Acciones del día"><button type="button" class="summaryReset" id="resetSession">Reiniciar día</button>', 'aria-label="Acciones del día"><button type="button" id="resetSession">Reiniciar día</button>')
+    finish_handler = """  document.addEventListener('click', async event => {
+    const finishDayButton = event.target instanceof Element ? event.target.closest('#finishDay') : null;
+    const isRetry = state.__timing?.sessionEndReason === 'partial' && Number(state.__timing?.sessionEndedAt) > 0;
+    if (!finishDayButton || (state.__timing?.sessionEndedAt && !isRetry)) return;
+    if (!isRetry && !window.confirm('¿Terminar este día con el progreso registrado hasta ahora? Las series sin confirmar no se contarán y podrás consultar este avance en tu historial.')) return;
+    finishDayButton.disabled = true;
+    finishDayButton.textContent = 'Guardando…';
+    clearPreparationTimers();
+    const timingRoot = getTimingState();
+    const endedAt = Number(timingRoot.sessionEndedAt) || Date.now();
+    if (!timingRoot.sessionStartedAt) timingRoot.sessionStartedAt = endedAt;
+    timingRoot.sessionEndedAt = endedAt;
+    timingRoot.sessionEndReason = 'partial';
+    Object.values(timingRoot.exercises || {}).forEach(timing => {
+      timing.preparationEndsAt = 0;
+      timing.seriesStartedAt = 0;
+      timing.restStartedAt = 0;
+      timing.restNotifiedAt = 0;
+      timing.restReminderNotifiedAt = 0;
+    });
+    if (timingRoot.warmup?.phase === 'preparing') timingRoot.warmup.phase = 'paused';
+    let saved;
+    try { saved = await save(); }
+    catch (error) { window.dispatchEvent(new CustomEvent('training-storage-error', { detail: { error } })); }
+    if (!saved?.source) {
+      finishDayButton.disabled = false;
+      finishDayButton.textContent = 'Reintentar guardado';
+      finishDayButton.setAttribute('aria-label', 'No se confirmó el guardado. Pulsa para reintentar.');
+      window.dispatchEvent(new CustomEvent('training-storage-error', { detail: { message: 'El cierre parcial no pudo confirmarse en el almacén local.' } }));
+      return;
+    }
+    finishDayButton.textContent = 'Día terminado';
+    finishDayButton.setAttribute('aria-label', 'Día terminado. Progreso guardado en este dispositivo.');
+    render();
+  });
+"""
+    if "closest('#finishDay')" not in source:
+        if "  summaryToggle?.addEventListener('click', () => {" in source:
+            source = source.replace("  summaryToggle?.addEventListener('click', () => {", finish_handler + "  summaryToggle?.addEventListener('click', () => {", 1)
+        else:
+            source = source.replace("</script>", finish_handler + "</script>", 1)
     return source
 
 
@@ -2253,6 +2345,27 @@ def standardize_summary_navigation(source: str) -> str:
     old_focus = "const focusedIndex = rows.findIndex(row => !row.complete && row.done > 0) >= 0 ? rows.findIndex(row => !row.complete && row.done > 0) : rows.findIndex(row => !row.complete);"
     new_focus = "const activeIndex = exerciseItems.findIndex(entry => { const timing = state.__timing?.exercises?.[String(entry.index + 1)]; return Boolean(timing?.warmupStartedAt || timing?.seriesStartedAt || timing?.restStartedAt || timing?.preparationEndsAt); }); const selectedIndex = Number.isInteger(window.gymratikFocusedExerciseIndex) ? window.gymratikFocusedExerciseIndex : -1; const focusedIndex = selectedIndex >= 0 && selectedIndex < rows.length ? selectedIndex : activeIndex >= 0 ? activeIndex : rows.findIndex(row => !row.complete);"
     source = source.replace(old_focus, new_focus)
+    active_first_focus = "const focusedIndex = activeIndex >= 0 ? activeIndex : selectedIndex >= 0 && selectedIndex < rows.length ? selectedIndex : rows.findIndex(row => !row.complete);"
+    selected_first_focus = "const focusedIndex = selectedIndex >= 0 && selectedIndex < rows.length ? selectedIndex : activeIndex >= 0 ? activeIndex : rows.findIndex(row => !row.complete);"
+    source = source.replace(active_first_focus, selected_first_focus)
+    if "const summaryScrollTop = summaryList.scrollTop;" not in source:
+        source = source.replace(
+            "    summaryList.replaceChildren();",
+            "    const summaryScrollTop = summaryList.scrollTop;\n    summaryList.replaceChildren();",
+            1,
+        )
+    if "summaryList.scrollTop = summaryScrollTop;" not in source:
+        source = re.sub(
+            r"(      summaryList\.append\(li\);\r?\n    \}\);\r?\n)(  \};)",
+            lambda match: (
+                match.group(1)
+                + "    summaryList.scrollTop = summaryScrollTop;"
+                + ("\r\n" if "\r\n" in match.group(1) else "\n")
+                + match.group(2)
+            ),
+            source,
+            count=1,
+        )
     source = source.replace(
         "    new MutationObserver(scheduleAlignment).observe(list, {childList:true, subtree:true});\n",
         "",
@@ -2288,6 +2401,11 @@ def standardize_muscle_visuals(source: str) -> str:
         "if (seriesIndex + 1 < item.seriesKeys.length) timing.restStartedAt = timestamp; else timing.endedAt = timestamp;",
         "if (seriesIndex + 1 < item.seriesKeys.length || exerciseItems.some(entry => !snapshot(entry).complete)) timing.restStartedAt = timestamp; else timing.endedAt = timestamp;",
         1,
+    )
+    source = re.sub(
+        r"timingRoot\.sessionEndedAt = 0;(?!\s*timingRoot\.sessionEndReason)",
+        "timingRoot.sessionEndedAt = 0; timingRoot.sessionEndReason = '';",
+        source,
     )
     grid_match = re.search(r'<div class="muscleDayGrid"[^>]*>.*?</div>\s*</div></div>', source, flags=re.S)
     if not grid_match:
@@ -2588,6 +2706,20 @@ def standardize_muscle_visuals(source: str) -> str:
         return f'<article class="card" data-exercise-index="{index}">'
 
     source = re.sub(r'<article class="card">', add_card_index, source)
+
+    def declare_exercise_media_mode(match: re.Match[str]) -> str:
+        opening, body, closing = match.groups()
+        mode = "GIF" if re.search(r'class=["\'][^"\']*day[34]ExerciseGif', body, re.I) else "STATIC_ONLY"
+        opening = re.sub(r'\sdata-media-mode=["\'][^"\']*["\']', "", opening, flags=re.I)
+        opening = opening[:-1] + f' data-media-mode="{mode}">'
+        return opening + body + closing
+
+    source = re.sub(
+        r'(<article\b[^>]*data-exercise-index=["\']\d+["\'][^>]*>)(.*?)(</article>)',
+        declare_exercise_media_mode,
+        source,
+        flags=re.I | re.S,
+    )
     source = re.sub(
         r'\.sessionCompletionCopy p\{[^}]*\}',
         '.sessionCompletionCopy p{margin:0;max-width:44rem;color:#d8eef5;font-size:clamp(1rem,2.2vw,1.28rem);font-weight:800;line-height:1.35;display:block;overflow:visible;overflow-wrap:anywhere;white-space:normal}',
@@ -2806,39 +2938,41 @@ def standardize_series_entry_zone(source: str) -> str:
     )
     load_profile_block = """    const loadDescription = item.title.toLocaleLowerCase('es');
     const loadProfiles = [
-      [/^jalón al pecho$/, { minKg: 2.5, maxKg: 150, stepKg: 2.5, label: 'jalón · torre de polea (rango orientativo)' }],
-      [/^remo alto unilateral$/, { minKg: 2.5, maxKg: 120, stepKg: 2.5, label: 'remo unilateral · discos por brazo (rango orientativo)' }],
-      [/^remo horizontal en máquina$/, { minKg: 2.5, maxKg: 120, stepKg: 2.5, label: 'remo sentado · rango orientativo' }],
-      [/^apertura inversa en máquina$/, { minKg: 2.5, maxKg: 80, stepKg: 2.5, label: 'apertura inversa · rango orientativo' }],
-      [/^curl de bíceps/, { minKg: 2.5, maxKg: 80, stepKg: 2.5, label: 'curl de bíceps · rango orientativo' }],
-      [/^hack squat$/, { minKg: 5, maxKg: 300, stepKg: 5, label: 'hack squat · carga externa total (rango orientativo)' }],
-      [/^hip thrust$/, { minKg: 5, maxKg: 250, stepKg: 5, label: 'hip thrust · discos totales (rango orientativo)' }],
-      [/^prensa de piernas$/, { minKg: 5, maxKg: 300, stepKg: 5, label: 'prensa bilateral · carga externa total (rango orientativo)' }],
-      [/^prensa unilateral alterna$/, { minKg: 5, maxKg: 200, stepKg: 5, label: 'prensa unilateral · carga externa total (rango orientativo)' }],
-      [/^curl femoral/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'curl femoral · rango orientativo' }],
-      [/^extensión de piernas$/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'extensión de piernas · rango orientativo' }],
-      [/^pantorrillas de pie$/, { minKg: 2.5, maxKg: 150, stepKg: 2.5, label: 'pantorrilla de pie · rango orientativo' }],
-      [/^press de pecho sentado/, { minKg: 2.5, maxKg: 120, stepKg: 2.5, label: 'press de pecho · rango orientativo' }],
-      [/^press inclinado convergente/, { minKg: 2.5, maxKg: 120, stepKg: 2.5, label: 'press inclinado · rango orientativo' }],
-      [/^pec deck/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'pec deck · rango orientativo' }],
-      [/^press de hombro/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'press de hombro · rango orientativo' }],
-      [/^elevación lateral/, { minKg: 2.5, maxKg: 60, stepKg: 2.5, label: 'elevación lateral · rango orientativo' }],
-      [/^jalón de tríceps/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'tríceps en polea · rango orientativo' }],
-      [/^extensión de tríceps sobre cabeza/, { minKg: 2.5, maxKg: 80, stepKg: 2.5, label: 'tríceps con cuerda · rango orientativo' }],
-      [/^peso muerto rumano con barra$/, { minKg: 10, maxKg: 250, stepKg: 2.5, label: 'barra libre · peso total con barra (rango orientativo)' }],
-      [/^abducción de cadera/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'abducción de cadera · rango orientativo' }],
-      [/^aducción de cadera/, { minKg: 2.5, maxKg: 100, stepKg: 2.5, label: 'aducción de cadera · rango orientativo' }],
-      [/^elevación de pantorrilla sentada$/, { minKg: 2.5, maxKg: 150, stepKg: 2.5, label: 'pantorrilla sentada · rango orientativo' }],
-      [/^crunch con elevación de piernas sentada$/, { minKg: 2.5, maxKg: 80, stepKg: 2.5, label: 'crunch sentado · rango orientativo' }]
+      [/^jalón al pecho$/, { referenceKg: 40, stepKg: 2.5, label: 'jalón · torre de polea · estimación orientativa ±25%' }],
+      [/^remo alto unilateral$/, { referenceKg: 25, stepKg: 2.5, label: 'remo unilateral · discos por brazo · estimación orientativa ±25%' }],
+      [/^remo horizontal en máquina$/, { referenceKg: 40, stepKg: 2.5, label: 'remo sentado · estimación orientativa ±25%' }],
+      [/^apertura inversa en máquina$/, { referenceKg: 25, stepKg: 2.5, label: 'apertura inversa · estimación orientativa ±25%' }],
+      [/^curl de bíceps/, { referenceKg: 15, stepKg: 2.5, label: 'curl de bíceps · estimación orientativa ±25%' }],
+      [/^hack squat$/, { referenceKg: 100, stepKg: 5, label: 'hack squat · carga externa total · estimación orientativa ±25%' }],
+      [/^hip thrust$/, { referenceKg: 80, stepKg: 5, label: 'hip thrust · discos totales · estimación orientativa ±25%' }],
+      [/^prensa de piernas$/, { referenceKg: 120, stepKg: 5, label: 'prensa bilateral · carga externa total · estimación orientativa ±25%' }],
+      [/^prensa unilateral alterna$/, { referenceKg: 50, stepKg: 5, label: 'prensa unilateral · carga externa total · estimación orientativa ±25%' }],
+      [/^curl femoral/, { referenceKg: 30, stepKg: 2.5, label: 'curl femoral · estimación orientativa ±25%' }],
+      [/^extensión de piernas$/, { referenceKg: 40, stepKg: 2.5, label: 'extensión de piernas · estimación orientativa ±25%' }],
+      [/^pantorrillas de pie$/, { referenceKg: 60, stepKg: 2.5, label: 'pantorrilla de pie · estimación orientativa ±25%' }],
+      [/^press de pecho sentado/, { referenceKg: 40, stepKg: 2.5, label: 'press de pecho · estimación orientativa ±25%' }],
+      [/^press inclinado convergente/, { referenceKg: 35, stepKg: 2.5, label: 'press inclinado · estimación orientativa ±25%' }],
+      [/^pec deck/, { referenceKg: 30, stepKg: 2.5, label: 'pec deck · estimación orientativa ±25%' }],
+      [/^press de hombro/, { referenceKg: 25, stepKg: 2.5, label: 'press de hombro · estimación orientativa ±25%' }],
+      [/^elevación lateral/, { referenceKg: 10, stepKg: 2.5, label: 'elevación lateral · estimación orientativa ±25%' }],
+      [/^jalón de tríceps/, { referenceKg: 20, stepKg: 2.5, label: 'tríceps en polea · estimación orientativa ±25%' }],
+      [/^extensión de tríceps sobre cabeza/, { referenceKg: 15, stepKg: 2.5, label: 'tríceps con cuerda · estimación orientativa ±25%' }],
+      [/^peso muerto rumano con barra$/, { referenceKg: 50, stepKg: 2.5, label: 'barra libre · peso total con barra · estimación orientativa ±25%' }],
+      [/^abducción de cadera/, { referenceKg: 40, stepKg: 2.5, label: 'abducción de cadera · estimación orientativa ±25%' }],
+      [/^aducción de cadera/, { referenceKg: 40, stepKg: 2.5, label: 'aducción de cadera · estimación orientativa ±25%' }],
+      [/^elevación de pantorrilla sentada$/, { referenceKg: 40, stepKg: 2.5, label: 'pantorrilla sentada · estimación orientativa ±25%' }],
+      [/^crunch con elevación de piernas sentada$/, { referenceKg: 30, stepKg: 2.5, label: 'crunch sentado · estimación orientativa ±25%' }]
     ];
-    const loadProfile = loadProfiles.find(([pattern]) => pattern.test(loadDescription))?.[1];
-    if (!loadProfile) throw new Error(`Falta un perfil de carga revisado para: ${item.title}`);
+    const loadProfileBase = loadProfiles.find(([pattern]) => pattern.test(loadDescription))?.[1];
+    if (!loadProfileBase) throw new Error(`Falta un perfil de carga revisado para: ${item.title}`);
+    const loadProfile = { ...loadProfileBase, minKg: loadProfileBase.referenceKg * 0.75, maxKg: loadProfileBase.referenceKg * 1.25 };
     item.performanceLoadProfile = loadProfile;
 """
     profile_start = source.find("const loadDescription =")
     profile_end = source.find("const createPerformanceIcon", profile_start)
     if profile_start >= 0 and profile_end > profile_start:
-        source = source[:profile_start] + load_profile_block + "    " + source[profile_end:]
+        profile_line_start = source.rfind("\n", 0, profile_start) + 1
+        source = source[:profile_line_start] + load_profile_block + "    " + source[profile_end:]
     else:
         source = source.replace(
             "item.repMaximum = rangeMatch ? Number(rangeMatch[2]) : 100;",
@@ -2922,7 +3056,7 @@ def standardize_series_entry_zone(source: str) -> str:
         raise ValueError("La ayuda de registro todavía presenta como opcionales los datos requeridos")
     source = source.replace(
         "const pounds = item.performanceLoadUnit === 'lb';\n      loadInput.max = pounds ? '2200' : '1000';\n      loadInput.step = pounds ? '5' : '2.5';",
-        "const pounds = item.performanceLoadUnit === 'lb';\n      const factor = pounds ? 1 / 0.45359237 : 1;\n      const unitStep = pounds ? 5 : item.performanceLoadProfile.stepKg;\n      const selectedValue = Number(item.performanceLoadExact);\n      const unitMin = Math.ceil(Math.min(item.performanceLoadProfile.minKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.minKg) * factor / unitStep) * unitStep;\n      const unitMax = Math.floor(Math.max(item.performanceLoadProfile.maxKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.maxKg) * factor / unitStep) * unitStep;\n      loadInput.min = String(unitMin); loadInput.max = String(unitMax); loadInput.step = String(unitStep); loadInput.dataset.loadProfile = item.performanceLoadProfile.label; loadInput.dataset.maxKg = String(item.performanceLoadProfile.maxKg);\n      if (!item.performanceLoadSelected) loadInput.value = String(unitMin);\n      else loadInput.value = String(Math.min(unitMax, Math.max(unitMin, selectedValue || unitMin)));",
+        "const pounds = item.performanceLoadUnit === 'lb';\n      const factor = pounds ? 1 / 0.45359237 : 1;\n      const unitStep = pounds ? 5 : item.performanceLoadProfile.stepKg;\n      const selectedValue = Number(item.performanceLoadExact);\n      const unitMin = Math.min(item.performanceLoadProfile.minKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.minKg) * factor;\n      const unitMax = Math.max(item.performanceLoadProfile.maxKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.maxKg) * factor;\n      loadInput.min = String(unitMin); loadInput.max = String(unitMax); loadInput.step = String(unitStep); loadInput.dataset.loadProfile = item.performanceLoadProfile.label; loadInput.dataset.maxKg = String(item.performanceLoadProfile.maxKg);\n      if (!item.performanceLoadSelected) loadInput.value = String(unitMin);\n      else loadInput.value = String(Math.min(unitMax, Math.max(unitMin, selectedValue || unitMin)));",
         1,
     )
     source = re.sub(
@@ -2931,9 +3065,24 @@ def standardize_series_entry_zone(source: str) -> str:
         r"[ \t]*loadInput\.min = String\(unitMin\); loadInput\.max = String\(unitMax\); loadInput\.step = String\(unitStep\); loadInput\.dataset\.loadProfile = item\.performanceLoadProfile\.label; loadInput\.dataset\.maxKg = String\(item\.performanceLoadProfile\.maxKg\);\r?\n"
         r"[ \t]*if \(!item\.performanceLoadSelected\) loadInput\.value = String\(unitMin\);\r?\n"
         r"[ \t]*else loadInput\.value = String\(Math\.min\(unitMax, Math\.max\(unitMin, Number\(item\.performanceLoadExact\) \|\| unitMin\)\)\);",
-        "const selectedValue = Number(item.performanceLoadExact);\n      const unitMin = Math.ceil(Math.min(item.performanceLoadProfile.minKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.minKg) * factor / unitStep) * unitStep;\n      const unitMax = Math.floor(Math.max(item.performanceLoadProfile.maxKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.maxKg) * factor / unitStep) * unitStep;\n      loadInput.min = String(unitMin); loadInput.max = String(unitMax); loadInput.step = String(unitStep); loadInput.dataset.loadProfile = item.performanceLoadProfile.label; loadInput.dataset.maxKg = String(item.performanceLoadProfile.maxKg);\n      if (!item.performanceLoadSelected) loadInput.value = String(unitMin);\n      else loadInput.value = String(Math.min(unitMax, Math.max(unitMin, selectedValue || unitMin)));",
+        "const selectedValue = Number(item.performanceLoadExact);\n      const unitMin = Math.min(item.performanceLoadProfile.minKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.minKg) * factor;\n      const unitMax = Math.max(item.performanceLoadProfile.maxKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.maxKg) * factor;\n      loadInput.min = String(unitMin); loadInput.max = String(unitMax); loadInput.step = String(unitStep); loadInput.dataset.loadProfile = item.performanceLoadProfile.label; loadInput.dataset.maxKg = String(item.performanceLoadProfile.maxKg);\n      if (!item.performanceLoadSelected) loadInput.value = String(unitMin);\n      else loadInput.value = String(Math.min(unitMax, Math.max(unitMin, selectedValue || unitMin)));",
         source,
         count=1,
+    )
+    source = source.replace(
+        "const selectedValue = Number(item.performanceLoadExact);\n      const unitMin = Math.ceil(Math.min(item.performanceLoadProfile.minKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.minKg) * factor / unitStep) * unitStep;\n      const unitMax = Math.floor(Math.max(item.performanceLoadProfile.maxKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.maxKg) * factor / unitStep) * unitStep;",
+        "const selectedValue = Number(item.performanceLoadExact);\n      const unitMin = Math.min(item.performanceLoadProfile.minKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.minKg) * factor;\n      const unitMax = Math.max(item.performanceLoadProfile.maxKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.maxKg) * factor;",
+        1,
+    )
+    source = source.replace(
+        "const rounded = Math.round(converted / unitStep) * unitStep; const unitMin = Math.ceil(Math.min(item.performanceLoadProfile.minKg * factor, item.performanceLoadSelected ? rounded : item.performanceLoadProfile.minKg * factor) / unitStep) * unitStep; const unitMax = Math.floor(Math.max(item.performanceLoadProfile.maxKg * factor, item.performanceLoadSelected ? rounded : item.performanceLoadProfile.maxKg * factor) / unitStep) * unitStep;",
+        "const rounded = Math.round(converted / unitStep) * unitStep; const unitMin = Math.min(item.performanceLoadProfile.minKg * factor, item.performanceLoadSelected ? rounded : item.performanceLoadProfile.minKg * factor); const unitMax = Math.max(item.performanceLoadProfile.maxKg * factor, item.performanceLoadSelected ? rounded : item.performanceLoadProfile.maxKg * factor);",
+        1,
+    )
+    source = source.replace(
+        "const min = Math.min(Math.ceil(item.performanceLoadProfile.minKg * factor / step) * step, Math.round(storedKg * factor / step) * step);\n          const max = Math.max(Math.floor(item.performanceLoadProfile.maxKg * factor / step) * step, Math.round(storedKg * factor / step) * step);",
+        "const min = Math.min(item.performanceLoadProfile.minKg * factor, storedKg * factor);\n          const max = Math.max(item.performanceLoadProfile.maxKg * factor, storedKg * factor);",
+        1,
     )
     source = source.replace("editor.min = '0'; editor.max = loadInput.max;", "editor.min = loadInput.min; editor.max = loadInput.max;")
     source = source.replace("entered >= 0 && entered <= Number(loadInput.max)", "entered >= Number(loadInput.min) && entered <= Number(loadInput.max)")
@@ -2941,7 +3090,7 @@ def standardize_series_entry_zone(source: str) -> str:
     source = source.replace("editor.value = Number(item.performanceLoadExact) > 0 ? String(item.performanceLoadExact) : '';", "editor.value = item.performanceLoadSelected ? String(item.performanceLoadExact) : '';")
     source = source.replace(
         "const factor = nextUnit === 'lb' ? 1 / 0.45359237 : 1; const unitStep = nextUnit === 'lb' ? 5 : item.performanceLoadProfile.stepKg; const unitMin = Math.ceil(item.performanceLoadProfile.minKg * factor / unitStep) * unitStep; const unitMax = Math.floor(item.performanceLoadProfile.maxKg * factor / unitStep) * unitStep;\n      item.performanceLoadExact = Math.min(unitMax, Math.max(unitMin, Math.round(converted * factor / unitStep) * unitStep));\n      item.performanceLoad.value = String(item.performanceLoadExact);",
-        "const factor = nextUnit === 'lb' ? 1 / 0.45359237 : 1; const unitStep = nextUnit === 'lb' ? 5 : item.performanceLoadProfile.stepKg; const rounded = Math.round(converted / unitStep) * unitStep; const unitMin = Math.ceil(Math.min(item.performanceLoadProfile.minKg * factor, item.performanceLoadSelected ? rounded : item.performanceLoadProfile.minKg * factor) / unitStep) * unitStep; const unitMax = Math.floor(Math.max(item.performanceLoadProfile.maxKg * factor, item.performanceLoadSelected ? rounded : item.performanceLoadProfile.maxKg * factor) / unitStep) * unitStep;\n      item.performanceLoadExact = Math.min(unitMax, Math.max(unitMin, rounded));\n      item.performanceLoad.value = String(item.performanceLoadExact);",
+        "const factor = nextUnit === 'lb' ? 1 / 0.45359237 : 1; const unitStep = nextUnit === 'lb' ? 5 : item.performanceLoadProfile.stepKg; const rounded = Math.round(converted / unitStep) * unitStep; const unitMin = Math.min(item.performanceLoadProfile.minKg * factor, item.performanceLoadSelected ? rounded : item.performanceLoadProfile.minKg * factor); const unitMax = Math.max(item.performanceLoadProfile.maxKg * factor, item.performanceLoadSelected ? rounded : item.performanceLoadProfile.maxKg * factor);\n      item.performanceLoadExact = Math.min(unitMax, Math.max(unitMin, rounded));\n      item.performanceLoad.value = String(item.performanceLoadExact);",
         1,
     )
     source = source.replace(
@@ -2958,8 +3107,8 @@ def standardize_series_entry_zone(source: str) -> str:
         if (!savedDraft && !item.performanceLoadSelected && !isExerciseStarted(item) && Number.isFinite(storedKg)) {
           const factor = item.performanceLoadUnit === 'lb' ? 1 / 0.45359237 : 1;
           const step = item.performanceLoadUnit === 'lb' ? 5 : item.performanceLoadProfile.stepKg;
-          const min = Math.min(Math.ceil(item.performanceLoadProfile.minKg * factor / step) * step, Math.round(storedKg * factor / step) * step);
-          const max = Math.max(Math.floor(item.performanceLoadProfile.maxKg * factor / step) * step, Math.round(storedKg * factor / step) * step);
+          const min = Math.min(item.performanceLoadProfile.minKg * factor, storedKg * factor);
+          const max = Math.max(item.performanceLoadProfile.maxKg * factor, storedKg * factor);
           const restored = Math.min(max, Math.max(min, Math.round(storedKg * factor / step) * step));
           item.performanceLoadExact = restored; item.performanceLoad.value = String(restored); item.performanceLoadSelected = true; updateLoadControl(); savePerformanceDraft();
         }
@@ -3128,7 +3277,7 @@ def standardize_series_entry_zone(source: str) -> str:
       updateRangeFill(item.performanceReps);
       repsDown.disabled = selected && value <= minPossible;
       repsUp.disabled = selected && value >= maxPossible;
-      if (!selected) item.progressionCue.textContent = `Registra repeticiones y carga. Objetivo: ${item.repMinimum}–${item.repMaximum} repeticiones; el margen adicional no cambia el objetivo. Rango de carga sugerido para ${item.performanceLoadProfile.label}: ${item.performanceLoadProfile.minKg}–${item.performanceLoadProfile.maxKg} kg.`;
+      if (!selected) item.progressionCue.textContent = `Registra repeticiones y carga. Objetivo: ${item.repMinimum}–${item.repMaximum} repeticiones; el margen adicional no cambia el objetivo. Intervalo orientativo para ${item.performanceLoadProfile.label}: ${item.performanceLoadProfile.minKg}–${item.performanceLoadProfile.maxKg} kg.`;
       else if (zone === 'below' || zone === 'low') item.progressionCue.textContent = `Rango bajo (${minPossible}–${item.repMinimum + 1}). Si la técnica se deterioró, prueba reducir un incremento (${item.performanceLoadProfile.stepKg} kg); si completaste el objetivo con control, conserva la carga.`;
       else if (zone === 'mid') item.progressionCue.textContent = `Buen rango (${item.repMinimum + 2}–${item.repMaximum - 2}). Mantén esta carga y un recorrido controlado.`;
       else if (zone === 'high') item.progressionCue.textContent = `Parte alta del objetivo (${item.repMaximum - 1}–${item.repMaximum}). Conserva la carga; progresar requiere superar el tope por 1–2 repeticiones, con técnica estable.`;

@@ -1,22 +1,22 @@
-# Política de seguridad
+# Seguridad y privacidad de Gymratik PWA
 
-## Alcance sensible
+## Alcance
 
-El sistema tratará datos de entrenamiento, nutrición, suplementos, ubicación, fotografías y telemetría de dispositivos. Estos datos son privados aunque el proyecto sea de uso personal.
+Esta política cubre la PWA estática, sus recursos, el origen del navegador y los archivos locales de respaldo. No hay backend, cuentas ni integraciones en el alcance vigente.
 
-## Reporte de vulnerabilidades
+## Reglas
 
-No publicar secretos ni muestras personales en incidencias. Registrar inicialmente el hallazgo en un documento local privado y crear una incidencia saneada únicamente cuando no exponga información sensible.
+- No incluir secretos, datos personales reales, historiales reales ni respaldos de usuarios en Git, fixtures o logs.
+- Tratar texto, nombres, enlaces y archivos importados como entradas no confiables; validar antes de representar o persistir.
+- Mostrar contenido del usuario como texto y evitar inserción HTML insegura.
+- Validar versión, tipo, tamaño y esquema de los respaldos antes de cambiar datos.
+- No guardar tokens ni credenciales: la PWA no implementa autenticación.
+- Mantener dependencias y avisos de licencia identificados; revisar cambios del Service Worker y su inventario.
+- Mantener el perfil, historial y backups locales; no transmitirlos a servicios remotos.
+- Limitar los diagnósticos a información técnica sin contenido personal.
 
-## Reglas obligatorias
+## Límites
 
-- No almacenar credenciales en Git, APK, imágenes, fixtures ni logs.
-- Usar Android Keystore para secretos del cliente.
-- Exponer Tezkatli solo mediante red privada y autenticación de aplicación.
-- Validar tipo, tamaño, dimensiones y contenido de archivos recibidos.
-- Tratar OCR, imágenes y texto del usuario como entrada no confiable.
-- Mantener dependencias inventariadas y revisar sus licencias.
-- Cifrar respaldos y verificar su restauración.
-- Aplicar mínimo privilegio a permisos Android, servicios y archivos.
+El almacenamiento del navegador no equivale a una cuenta ni a cifrado integral. Un XSS o dispositivo comprometido puede exponer datos locales. La PWA conserva datos durante instalación, actualización y migración; el borrado de datos del origen y los efectos de desinstalación dependen del navegador/sistema operativo y quedan fuera de su control. La interfaz identifica el origen y formatos de almacenamiento.
 
-La estrategia detallada está en [docs/06-security/THREAT_MODEL.md](docs/06-security/THREAT_MODEL.md).
+El modelo de amenazas PWA está en [docs/06-security/THREAT_MODEL.md](docs/06-security/THREAT_MODEL.md). Reporta vulnerabilidades sin publicar datos sensibles ni archivos de usuario.

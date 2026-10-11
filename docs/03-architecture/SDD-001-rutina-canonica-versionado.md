@@ -1,8 +1,8 @@
 # SDD-001 — Modelo de rutina canónica y versionado
 
-**Estado:** `In progress`  
-**Versión:** `0.1`  
-**Fecha:** `2026-09-17`  
+**Estado:** `Verified (local PWA)`
+**Versión:** `0.2`
+**Fecha de verificación:** `2026-10-09`
 **TDD asociado:** [TDD-002](../05-quality/TDD-002-integridad-rutinas-canonicas.md)
 
 ## 1. Objetivo
@@ -116,16 +116,18 @@ La implementación futura debe convertirlas en un contrato versionado.
 
 La inspección del estado actual confirmó:
 
+- Día 1 conserva seis ejercicios y la distribución `4 + 4 + 3 + 3 + 3 + 3`.
 - Día 2 conserva seis ejercicios y la distribución `3 + 3 + 3 + 4 + 3 + 4`.
 - Día 3 conserva siete ejercicios y la distribución `4 + 3 + 3 + 3 + 3 + 3 + 3`.
 - Día 4 conserva siete ejercicios y la distribución `3 + 3 + 4 + 2 + 2 + 3 + 3`.
 
-SDD-001 queda pendiente de cierre formal hasta ejecutar TDD-002 sobre las cuatro
-salidas y conservar su evidencia junto con la revisión visual independiente.
+Las cuatro salidas canónicas superaron TDD-002 el 2026-10-09. La evidencia de
+conteo, series y recorrido funcional local está enlazada desde
+[`TRACEABILITY.md`](../00-governance/TRACEABILITY.md) y el
+[registro por ejercicio](../05-quality/evidence/pwa-exercise-verification-2026-10-09.md).
 
 ## 8. Criterio de aceptación
 
-SDD-001 se considera verificable cuando TDD-002 demuestra, para cada día,
-conteo de tarjetas, índices contiguos, claves completas, suma de series y
-coincidencia entre contenido y HTML. El resultado debe guardarse como
-artefacto reproducible y enlazarse desde `TRACEABILITY.md`.
+La estructura, los índices, las claves, los totales y el recorrido local por
+serie quedaron verificados para los cuatro días. La compatibilidad física y
+publicada se mantiene como evidencia independiente de esta especificación.

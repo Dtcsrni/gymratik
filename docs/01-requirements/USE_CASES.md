@@ -1,86 +1,49 @@
-# Casos de uso
+# Casos de uso activos de Gymratik PWA
 
-## UC-TRN-001 — Registrar entrenamiento
+## Consultar rutinas sin conexión
 
 **Actor:** usuario.
-**Precondición:** existe una rutina o se inicia sesión vacía.
 
-Flujo principal:
+1. El usuario abre Gymratik en navegador compatible.
+2. La PWA muestra por separado el estado de lectura local y preparación de recursos.
+3. Cuando el paquete requerido está guardado, el usuario abre cualquiera de las cuatro rutinas sin red.
+4. Si un recurso falta, la PWA identifica el error y permite reintentar al recuperar conexión.
 
-1. El usuario inicia la sesión.
-2. El sistema muestra cardio inicial, fuerza y cardio final configurados.
-3. El usuario completa series; cada una se guarda localmente.
-4. El sistema inicia descanso y precarga el objetivo siguiente.
-5. El usuario corrige o sustituye ejercicios cuando sea necesario.
-6. El usuario revisa y finaliza.
-7. El sistema calcula métricas versionadas y programa sincronización.
+## Registrar y continuar una sesión
 
-Alternativas:
+**Actor:** usuario con PWA instalada.
 
-- Sin red: la sesión continúa sin degradar el registro.
-- Cierre del proceso: se reconstruye desde Room.
-- Tezkatli ausente: analítica pesada queda pendiente.
-- Máquina ocupada: se propone sustitución sin alterar el catálogo.
+1. La portada propone continuar la sesión de hoy o el siguiente día de la rotación.
+2. El usuario registra calentamiento y series en la rutina elegida.
+3. Cada cambio confirmado se guarda en el almacenamiento local.
+4. Si el usuario vuelve a portada, recarga o actualiza, puede continuar la sesión activa.
+5. Una semana nueva renueva el avance operativo sin eliminar sesiones terminadas del historial.
 
-## UC-NUT-001 — Registrar plato por fotografía
+## Exportar respaldo
 
-1. El usuario selecciona captura rápida o precisa.
-2. Se evalúa calidad de imagen localmente.
-3. Se detecta si existe código, etiqueta o plato.
-4. Se crea un trabajo remoto si es necesario.
-5. Tezkatli ejecuta segmentación, identificación, geometría y normalización.
-6. El teléfono recibe un borrador con componentes, cantidades y supuestos.
-7. El usuario corrige y confirma.
-8. Solo entonces se incorpora al diario.
+**Actor:** usuario.
 
-Excepciones:
+1. El usuario solicita exportación desde la interfaz.
+2. La PWA valida el estado local y genera un archivo JSON v3.
+3. El usuario guarda el archivo en una ubicación fuera del almacenamiento del sitio.
 
-- El archivo no es una imagen válida.
-- No existe conexión.
-- El modelo no identifica componentes.
-- La cantidad no puede estimarse con utilidad.
-- La respuesta llega después de que el usuario confirmó manualmente.
+## Restaurar respaldo
 
-## UC-NUT-002 — Registrar por texto
+**Actor:** usuario.
 
-1. El usuario escribe o dicta una descripción.
-2. El parser extrae alimentos, cantidades y unidades.
-3. Se resuelven candidatos contra catálogos y memoria personal.
-4. Las ambigüedades se muestran para corrección.
-5. El usuario confirma.
+1. El usuario elige un archivo de respaldo.
+2. La PWA valida tipo, versión y contenido antes de modificar los datos.
+3. Si es válido, presenta confirmación de reemplazo.
+4. Tras confirmar, importa el archivo y presenta el resultado.
+5. Si falla la validación, se conserva intacto el estado previo.
 
-## UC-SUP-001 — Confirmar suplemento
+## Instalar y actualizar
 
-1. Se muestra recordatorio local.
-2. El usuario confirma, pospone u omite.
-3. Se registra el evento con la hora real.
-4. Se actualiza inventario.
-5. La IA no cambia la dosis programada.
+**Actor:** usuario.
 
-## UC-GYM-001 — Llegada al gimnasio
+1. El usuario abre la URL publicada y sigue la opción de instalación que ofrece el navegador.
+2. La PWA prepara el inventario offline según la preferencia de red.
+3. Una nueva versión se guarda completa antes de reemplazar la activa.
+4. Si el usuario continúa sin descargar, la actualización queda pendiente.
 
-1. Una geofence genera señal de entrada.
-2. El sistema combina horario, movimiento y señales disponibles.
-3. Tras histéresis, muestra una sugerencia.
-4. El usuario confirma o descarta.
-5. Solo una confirmación crea la sesión.
-
-## UC-WEA-001 — Completar serie desde reloj
-
-1. El reloj muestra la serie actual.
-2. El usuario confirma resultado o ajusta un dato simple.
-3. Se crea un evento durable con ID y secuencia.
-4. Side Service intenta enviarlo.
-5. Android/Tezkatli confirma recepción idempotente.
-6. El reloj marca el evento como entregado.
-
-Este caso de uso queda condicionado por SPIKE-001.
-
-## UC-REC-001 — Restaurar datos
-
-1. El usuario selecciona un respaldo cifrado compatible.
-2. El sistema valida integridad, versión y espacio.
-3. Restaura en una ubicación temporal.
-4. Ejecuta migraciones y verificaciones.
-5. Sustituye el almacenamiento activo de forma atómica.
-6. Presenta un reporte de restauración.
+No se definen casos de uso de nutrición, suplementos, IA, gimnasio/equipo, integraciones ni sincronización entre dispositivos dentro del alcance vigente.

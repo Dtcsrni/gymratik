@@ -1,75 +1,36 @@
-# Modelo de amenazas
+# Modelo de amenazas de la PWA
 
 ## Activos
 
-- Historial de salud y rendimiento.
-- Alimentación y suplementos.
-- Fotografías y metadatos.
-- Ubicación y horarios.
-- Tokens, claves y respaldos.
-- Modelos, prompts y datos de evaluación.
+- Progreso, sesiones, perfil y archivo de respaldo.
+- Integridad de rutinas, portada, manifiesto y Service Worker.
+- Disponibilidad de la versión offline completa.
 
 ## Límites de confianza
 
-1. Usuario ↔ Android.
-2. Android ↔ sistema operativo/Health Connect.
-3. Android ↔ red privada ↔ Tezkatli.
-4. Amazfit ↔ Zepp App/Side Service.
-5. Side Service ↔ Tezkatli.
-6. Tezkatli ↔ catálogos/modelos importados.
+1. Usuario ↔ interfaz PWA.
+2. Origen PWA ↔ navegador y almacenamiento local.
+3. Archivo JSON elegido ↔ validador de importación.
+4. Recursos publicados ↔ Service Worker/Cache API.
 
-## Amenazas STRIDE y mitigaciones
+No existe flujo de datos hacia Android nativo, Tezkatli, un proveedor de IA ni servicios de integración en el alcance actual.
 
-| Categoría | Ejemplo | Control inicial |
+## Amenazas y controles
+
+| Amenaza | Ejemplo | Control PWA |
 |---|---|---|
-| Spoofing | cliente falso accede a Tezkatli | identidad VPN + token de app |
-| Tampering | evento o respaldo modificado | TLS, hashes, validación y revisiones |
-| Repudiation | corrección sin procedencia | auditoría selectiva y timestamps |
-| Information disclosure | fotos en logs/backups | minimización, cifrado y retención |
-| Denial of service | imagen agota RAM/VRAM | límites y cola con concurrencia acotada |
-| Elevation of privilege | texto visual induce herramientas | LLM sin herramientas y salida esquemática |
+| Suplantación de contenido | sitio/origen incorrecto | servir mediante HTTPS; validar origen y manifest en entrega |
+| Manipulación | JSON alterado | validar versión, tamaño y esquema; confirmar reemplazo |
+| Divulgación | XSS lee perfil local | insertar usuario como texto, evitar HTML inseguro y revisar dependencias |
+| Pérdida | limpieza del navegador/sistema operativo o desinstalación elimina almacenamiento del origen | no borrar desde el ciclo de vida de la PWA; identificar el origen y formatos; describir el límite de control externo |
+| Indisponibilidad | actualización incompleta/cuota | conservar paquete completo anterior y no activar parcial |
+| Contenido malicioso | texto o archivo importado | validar y limitar entradas antes de usarlas |
 
-## Validación de archivos
+## Verificación
 
-- Tamaño máximo de solicitud y píxeles.
-- MIME verificado por contenido.
-- Decodificación aislada y límites de memoria.
-- Nombres generados internamente.
-- Sin rutas proporcionadas por cliente.
-- EXIF eliminado salvo necesidad explícita.
-- TTL de temporales.
+- Pruebas sintéticas de importación válida/inválida y persistencia.
+- Revisión del código que representa texto de usuario y procesa archivos.
+- Prueba de actualización/recuperación en navegador compatible.
+- Validación de recursos y enlaces del repositorio.
 
-## Seguridad móvil
-
-- Permisos mínimos y solicitados en contexto.
-- Android Keystore para claves.
-- Network Security Config restrictiva.
-- Componentes no exportados salvo necesidad.
-- Intents y deep links validados.
-- Datos sensibles fuera de notificaciones y screenshots cuando se decida.
-- Verificación guiada por OWASP MASVS.
-
-## Cadena de suministro
-
-- Dependencias fijadas mediante lockfiles/catálogos.
-- Procedencia y licencia de modelos/datasets.
-- Hashes de pesos.
-- SBOM para releases.
-- Escaneo de secretos y vulnerabilidades.
-- Actualizaciones revisadas, no automáticas a producción.
-
-## Privacidad
-
-- Procesamiento local por defecto.
-- Consentimiento separado para Health Connect y ubicación.
-- Retención configurable.
-- Exportación y eliminación.
-- Telemetría local sin contenido personal.
-- No reutilizar datos personales para otros fines.
-
-## Pendientes
-
-- DFD detallado al existir endpoints.
-- Análisis MASVS del APK release.
-- Prueba de exposición de Tezkatli.
-- Decisión final de cifrado de base local.
+Estas comprobaciones no prueban la seguridad integral del navegador o del dispositivo. No se declara certificación ni cumplimiento de un estándar móvil para esta PWA.
