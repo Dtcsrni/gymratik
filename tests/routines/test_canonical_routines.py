@@ -726,19 +726,25 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertIn("button:not(:disabled):active", source)
                 self.assertNotIn("Number(item.performanceReps.value) > 0 ?", source)
 
-    def test_all_26_exercises_have_explicit_equipment_appropriate_load_ranges(self) -> None:
+    def test_all_26_exercises_have_explicit_orientative_load_profiles(self) -> None:
         source = (ROOT / "scripts" / "standardize_muscle_visuals.py").read_text(encoding="utf-8")
         profile_start = source.index("    load_profile_block = \"\"\"")
         profile_end = source.index('"""', profile_start + len('    load_profile_block = """'))
         profile_block = source[profile_start:profile_end]
         profile_rows = re.findall(r"\[/\^(.+?)/, \{ referenceKg: ([0-9.]+), stepKg: ([0-9.]+),", profile_block)
         patterns = [re.compile(pattern.removesuffix("$"), re.I) for pattern, _reference, _step in profile_rows]
-        self.assertEqual(len(profile_rows), 24)
+        self.assertEqual(len(profile_rows), 25)
         for _pattern, reference, _step in profile_rows:
             center = float(reference)
-            self.assertAlmostEqual(center - center * 0.25, center * 0.75)
-            self.assertAlmostEqual(center + center * 0.25, center * 1.25)
-        self.assertIn("minKg: loadProfileBase.referenceKg * 0.75, maxKg: loadProfileBase.referenceKg * 1.25", profile_block)
+            suggested_min = center * 0.75
+            suggested_max = center * 1.25
+            self.assertAlmostEqual(suggested_min * 0.9, center * 0.675)
+            self.assertAlmostEqual(suggested_max * 1.1, center * 1.375)
+        self.assertIn("minKg: loadProfileBase.referenceKg * 0.75 * 0.9", profile_block)
+        self.assertIn("maxKg: loadProfileBase.referenceKg * 1.25 * 1.1", profile_block)
+        self.assertIn("guideMinKg: loadProfileBase.referenceKg * 0.75", profile_block)
+        self.assertIn("guideMaxKg: loadProfileBase.referenceKg * 1.25", profile_block)
+        self.assertIn("margen de registro ±10%", profile_block)
         self.assertIn("estimación orientativa ±25%", profile_block)
         exercise_count = 0
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
@@ -751,17 +757,45 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                     self.assertEqual(sum(bool(pattern.search(title.lower())) for pattern in patterns), 1)
         self.assertEqual(exercise_count, 26)
         self.assertIn("{ referenceKg: 50, stepKg: 2.5, label: 'barra libre · peso total con barra", profile_block)
+        self.assertIn("/^curl de bíceps sentado en máquina$/, { referenceKg: 25, stepKg: 5, discreteStepKg: true, label: 'curl alterno Panatta · pila selectorizada en kg · incrementos de 5 kg' }", profile_block)
         self.assertIn("{ referenceKg: 30, stepKg: 2.5, label: 'curl femoral", profile_block)
         self.assertNotIn("maxKg: 250", profile_block)
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
             html = path.read_text(encoding="utf-8")
-            self.assertIn("item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue", html)
-            self.assertIn("const rounded = Math.round(converted / unitStep) * unitStep", html)
-            self.assertIn("const unitMin = Math.min(item.performanceLoadProfile.minKg", html)
-            self.assertIn("const unitMax = Math.max(item.performanceLoadProfile.maxKg", html)
-            self.assertNotIn("Math.ceil(Math.min(item.performanceLoadProfile.minKg", html)
-            self.assertNotIn("Math.floor(Math.max(item.performanceLoadProfile.maxKg", html)
-            self.assertNotIn("Math.round(converted * factor / unitStep)", html)
+            self.assertEqual(html.count("const loadMath = {"), 1, path.name)
+            self.assertIn("const selectedKg = item.performanceLoadSelected && Number.isFinite(selectedValue) ? loadMath.toKg(selectedValue, unit) : NaN", html)
+            self.assertIn("const { min: profileMin, max: profileMax, step: unitStep, factor } = loadMath.bounds(item.performanceLoadProfile, unit)", html)
+            self.assertIn("loadMath.normalizeKg(loadMath.toKg(entered, item.performanceLoadUnit), item.performanceLoadProfile)", html)
+            self.assertIn("const kilograms = loadMath.toKg(currentLoad, previousUnit)", html)
+            self.assertIn("loadMath.normalizeKg(loadMath.toKg(load, item.performanceLoadUnit), item.performanceLoadProfile)", html)
+            self.assertIn("const loadKg = load === null ? null : loadMath.normalizeKg(loadMath.toKg(load, loadUnit), item.performanceLoadProfile);", html)
+            self.assertNotIn("const unitStep = pounds ? 5", html)
+            self.assertNotIn("Number(record.load)}${record.loadUnit", html)
+
+    def test_machine_load_conversion_keeps_real_stack_steps_and_saved_kilograms(self) -> None:
+        source = (CANONICAL / "Rutina_Dia_1_Espalda_Biceps_V1.html").read_text(encoding="utf-8")
+        helper = re.search(r"const loadMath = (\{.*?\n    \});", source, re.S)
+        self.assertIsNotNone(helper)
+        script = f"""
+const assert = require('assert');
+const loadMath = {helper.group(1)};
+const panatta = {{ stepKg: 5, discreteStepKg: true, minKg: 16.875, maxKg: 34.375 }};
+const kg = loadMath.bounds(panatta, 'kg');
+const lb = loadMath.bounds(panatta, 'lb');
+assert.deepStrictEqual(kg, {{ min: 15, max: 35, step: 5, factor: 1 }});
+assert.ok(Math.abs(lb.min - 33.0693393277) < 1e-8);
+assert.ok(Math.abs(lb.max - 77.1617917653) < 1e-8);
+assert.ok(Math.abs(lb.step - 11.0231131092) < 1e-8);
+const selectedLb = loadMath.toDisplay(30, 'lb');
+assert.ok(Math.abs(loadMath.toKg(selectedLb, 'lb') - 30) < 1e-10);
+assert.strictEqual(loadMath.normalizeKg(loadMath.toKg(154.802004495799, 'lb'), panatta), 70);
+assert.strictEqual(loadMath.normalizeKg(30.4, panatta), 30);
+assert.strictEqual(loadMath.normalizeKg(19.23, {{ stepKg: 2.5 }}), 19.2);
+console.log(JSON.stringify({{ savedLoadKg: loadMath.normalizeKg(loadMath.toKg(selectedLb, 'lb'), panatta), labelLb: selectedLb.toFixed(1) }}));
+"""
+        result = subprocess.run(["node", "-e", script], cwd=ROOT, capture_output=True, text=True, check=False)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), {"savedLoadKg": 30, "labelLb": "66.1"})
 
     def test_all_routines_use_persistent_fifteen_second_preparation_before_timing(self) -> None:
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
@@ -802,7 +836,7 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertIn("loadOutput.addEventListener('click'", source)
                 self.assertIn("editor.step = '0.1'", source)
                 self.assertIn("entered <= Number(loadInput.max)", source)
-                self.assertIn("item.performanceLoadExact = Math.round(entered * 10) / 10", source)
+                self.assertIn("item.performanceLoadExact = loadMath.toDisplay(loadMath.normalizeKg(loadMath.toKg(entered, item.performanceLoadUnit), item.performanceLoadProfile), item.performanceLoadUnit)", source)
                 self.assertIn("load: item.performanceLoadSelected ? String(item.performanceLoadExact) : ''", source)
                 self.assertIn("loadSelected: item.performanceLoadSelected", source)
                 self.assertIn("item.tracker.append(performancePanel)", source)
@@ -833,12 +867,40 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
 
     def test_editable_load_value_persists_decimal_independently_of_slider_step(self) -> None:
         source = (CANONICAL / "Rutina_Dia_1_Espalda_Biceps_V1.html").read_text(encoding="utf-8")
-        self.assertIn("item.performanceLoadExact = Math.round(entered * 10) / 10", source)
+        self.assertIn("item.performanceLoadExact = loadMath.toDisplay(loadMath.normalizeKg(loadMath.toKg(entered, item.performanceLoadUnit), item.performanceLoadProfile), item.performanceLoadUnit)", source)
         self.assertIn("load: item.performanceLoadSelected ? String(item.performanceLoadExact) : ''", source)
         self.assertIn("item.performanceLoadSelected = true", source)
         self.assertIn("item.performanceLoadSelected = false", source)
         self.assertIn("const loadValue = Number(item.performanceLoadExact)", source)
         self.assertIn("editor.addEventListener('blur', () => queueMicrotask(() => finish(true))", source)
+
+    def test_enter_only_commits_load_and_celebration_requires_a_recorded_series(self) -> None:
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            source = path.read_text(encoding="utf-8")
+            manual_entry = source[
+                source.index("editor.addEventListener('keydown'") : source.index(
+                    "editor.addEventListener('blur'", source.index("editor.addEventListener('keydown'")
+                )
+            ]
+            series_logic = source[
+                source.index("tracker.querySelector('.completeSetButton')?.addEventListener('click', async") : source.index(
+                    "item.undoSeriesButton?.addEventListener", source.index("tracker.querySelector('.completeSetButton')?.addEventListener('click', async")
+                )
+            ]
+            celebration_logic = source[
+                source.index("const totalSeries = trackers.reduce") : source.index("badges.forEach(badge =>", source.index("const totalSeries = trackers.reduce"))
+            ]
+            with self.subTest(routine=path.name):
+                self.assertIn("event.preventDefault(); finish(true); event.stopPropagation()", manual_entry)
+                self.assertNotIn("gymratik:series-completed", manual_entry)
+                self.assertIn("await confirmMissingPerformance(missingPerformance)", series_logic)
+                self.assertIn("if (state[nextKey] === true) return", series_logic)
+                self.assertIn("state[nextKey] = true", series_logic)
+                self.assertIn("gymratik:series-completed", series_logic)
+                self.assertNotIn("document.addEventListener('click', event =>", celebration_logic)
+                self.assertIn("window.addEventListener('gymratik:series-completed'", celebration_logic)
+                self.assertIn("celebrate(target,", celebration_logic)
+                self.assertIn("doneSeries === 1", celebration_logic)
 
     def test_all_routines_share_the_canonical_page_layout_contract(self) -> None:
         expected_cards = {"Rutina_Dia_1_Espalda_Biceps_V1.html": 6, "Rutina_Dia_2_Pierna_Gluteo_V1.html": 6, "Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html": 7, "Rutina_Dia_4_Pierna_Equilibrio_V1.html": 7}

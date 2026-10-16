@@ -36,6 +36,7 @@ Cada requisito funcional/no funcional del SRS aparece una sola vez. `Partial` in
 | FUN-TRN-011 | RISK-004 | SDD-001 | TST-TRN-011 | Partial |
 | FUN-TRN-012 | RISK-004 | SDD-001 | TST-TRN-012 | Partial |
 | FUN-TRN-013 | RISK-004 | SDD-001 | TST-TRN-013 | Partial |
+| FUN-TRN-014 | RISK-004 | SDD-001 | TST-TRN-014 | Partial |
 | NFR-REL-001 | RISK-004 | ADR-013, ADR-015 | TST-PWA-012 | Partial |
 | NFR-REL-002 | RISK-004 | ADR-015 | TST-PWA-013 | Partial |
 | NFR-AVA-001 | RISK-011 | ADR-017 | TST-PWA-014 | Partial; navegador físico pendiente |
@@ -56,6 +57,6 @@ Cada requisito funcional/no funcional del SRS aparece una sola vez. `Partial` in
 |---|---|---|---|
 | SDD-001 · Rutinas canónicas | Cuatro rutinas y contratos compartidos | [TDD-002](../05-quality/TDD-002-integridad-rutinas-canonicas.md), [evidencia por ejercicio/serie](../05-quality/evidence/pwa-exercise-verification-2026-10-09.md) | Verified (local PWA; physical/public pending) |
 | SDD-003 · Medios y procedencia | Recursos visuales locales de rutinas | [TDD-004](../05-quality/TDD-004-medios-formato-y-correspondencia.md), [evidencia visual](../05-quality/evidence/pwa-exercise-verification-2026-10-09.md) | PWA runtime verified; provenance pending |
-| [SDD-004](../03-architecture/SDD-004-generacion-validacion-publicacion-pwa.md) · PWA local/offline | FUN-PWA-*, FUN-PRO-*, FUN-TRN-010..013 y NFR activos | [TDD-005](../05-quality/TDD-005-pwa-perfil-e2e.md) | In progress |
+| [SDD-004](../03-architecture/SDD-004-generacion-validacion-publicacion-pwa.md) · PWA local/offline | FUN-PWA-*, FUN-PRO-*, FUN-TRN-010..014 y NFR activos | [TDD-005](../05-quality/TDD-005-pwa-perfil-e2e.md) | In progress |
 
 Los diseños Android, sincronización de backend, nutrición/IA e integraciones permanecen diferidos; consulta [DEFERRED_SCOPE.md](../01-requirements/DEFERRED_SCOPE.md). Los ADR históricos se conservan como decisiones previas, no amplían el alcance activo.

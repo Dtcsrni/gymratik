@@ -7,7 +7,7 @@
   <meta name="application-name" content="Gymratik">
   <meta name="apple-mobile-web-app-title" content="Gymratik">
   <meta name="description" content="Rutinas visuales para entrenar en el gimnasio con calentamiento, técnica y registro de series.">
-  <meta name="gymratik-resource-estimate" content='{"applicationBytes":"000000005408563","imageBytes":"000000038862641","totalBytes":"000000044271204"}'>
+  <meta name="gymratik-resource-estimate" content='{"applicationBytes":"000000005416541","imageBytes":"000000038862641","totalBytes":"000000044279182"}'>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./assets/branding/gymratik-mascots-mark-v2.png" type="image/png">
   <link rel="apple-touch-icon" sizes="192x192" href="./assets/branding/gymratik-pwa-icon-v8-192.png">
@@ -762,6 +762,19 @@
       routineReminderText.textContent = 'Hoy suele ser uno de tus días de entrenamiento. Si te viene bien, elige cualquier sesión.';
     }
 
+    function latestSessionInCurrentWeek(history, routineIds, now = new Date()) {
+      const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
+      const nextWeekStart = new Date(weekStart);
+      nextWeekStart.setDate(nextWeekStart.getDate() + 7);
+      return history.filter(session => {
+        const startedAt = Number(session.startedAt) || 0;
+        return routineIds.has(session.routineId)
+          && startedAt >= weekStart.getTime()
+          && startedAt < nextWeekStart.getTime();
+      }).sort((left, right) => Number(right.startedAt) - Number(left.startedAt))[0] || null;
+    }
+
     function renderNextSession(dashboard, history = recentSessions) {
       const now = new Date();
       const sameLocalDay = timestamp => timestamp > 0 && new Date(timestamp).toDateString() === now.toDateString();
@@ -773,7 +786,7 @@
       const activeProgressToday = dashboard.routines.find(routine => sameLocalDay(Number(routine.sessionStartedAt))
         && !Number(routine.sessionEndedAt)
         && byId.has(routine.routineId));
-      const latestSession = history.find(session => byId.has(session.routineId) && Number(session.startedAt) > 0);
+      const latestSession = latestSessionInCurrentWeek(history, new Set(byId.keys()), now);
       const latestProgress = [...dashboard.routines]
         .filter(routine => routine.doneSeries > 0 && byId.has(routine.routineId))
         .sort((left, right) => right.updatedAt - left.updatedAt)[0];

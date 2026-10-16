@@ -3880,13 +3880,27 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     const rangeMatch = metricRange.match(/(\d+)\s*[–-]\s*(\d+)/);
     item.repMinimum = rangeMatch ? Number(rangeMatch[1]) : 1;
     item.repMaximum = rangeMatch ? Number(rangeMatch[2]) : 100;
+    const loadMath = {
+      toKg(value, unit) { const numeric = Number(value); return unit === 'lb' ? numeric * 0.45359237 : numeric; },
+      toDisplay(kg, unit) { return unit === 'lb' ? kg / 0.45359237 : kg; },
+      snapKg(kg, stepKg) { return Math.round(Number(kg) / Number(stepKg)) * Number(stepKg); },
+      normalizeKg(kg, profile) { return profile.discreteStepKg ? this.snapKg(kg, profile.stepKg) : Math.round(Number(kg) * 10) / 10; },
+      bounds(profile, unit) {
+        const factor = unit === 'lb' ? 1 / 0.45359237 : 1;
+        const step = Number(profile.stepKg);
+        const minKg = Math.floor(profile.minKg / step + 1e-9) * step;
+        const maxKg = Math.ceil(profile.maxKg / step - 1e-9) * step;
+        return { min: minKg * factor, max: maxKg * factor, step: step * factor, factor };
+      }
+    };
     const loadDescription = item.title.toLocaleLowerCase('es');
     const loadProfiles = [
       [/^jalón al pecho$/, { referenceKg: 40, stepKg: 2.5, label: 'jalón · torre de polea · estimación orientativa ±25%' }],
       [/^remo alto unilateral$/, { referenceKg: 25, stepKg: 2.5, label: 'remo unilateral · discos por brazo · estimación orientativa ±25%' }],
       [/^remo horizontal en máquina$/, { referenceKg: 40, stepKg: 2.5, label: 'remo sentado · estimación orientativa ±25%' }],
       [/^apertura inversa en máquina$/, { referenceKg: 25, stepKg: 2.5, label: 'apertura inversa · estimación orientativa ±25%' }],
-      [/^curl de bíceps/, { referenceKg: 15, stepKg: 2.5, label: 'curl de bíceps · estimación orientativa ±25%' }],
+      [/^curl de bíceps sentado en máquina$/, { referenceKg: 25, stepKg: 5, discreteStepKg: true, label: 'curl alterno Panatta · pila selectorizada en kg · incrementos de 5 kg' }],
+      [/^curl de bíceps en máquina$/, { referenceKg: 15, stepKg: 2.5, label: 'curl preacher en máquina · estimación orientativa ±25%' }],
       [/^hack squat$/, { referenceKg: 100, stepKg: 5, label: 'hack squat · carga externa total · estimación orientativa ±25%' }],
       [/^hip thrust$/, { referenceKg: 80, stepKg: 5, label: 'hip thrust · discos totales · estimación orientativa ±25%' }],
       [/^prensa de piernas$/, { referenceKg: 120, stepKg: 5, label: 'prensa bilateral · carga externa total · estimación orientativa ±25%' }],
@@ -3909,7 +3923,14 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     ];
     const loadProfileBase = loadProfiles.find(([pattern]) => pattern.test(loadDescription))?.[1];
     if (!loadProfileBase) throw new Error(`Falta un perfil de carga revisado para: ${item.title}`);
-    const loadProfile = { ...loadProfileBase, minKg: loadProfileBase.referenceKg * 0.75, maxKg: loadProfileBase.referenceKg * 1.25 };
+    const loadProfile = {
+      ...loadProfileBase,
+      guideMinKg: loadProfileBase.referenceKg * 0.75,
+      guideMaxKg: loadProfileBase.referenceKg * 1.25,
+      minKg: loadProfileBase.referenceKg * 0.75 * 0.9,
+      maxKg: loadProfileBase.referenceKg * 1.25 * 1.1,
+      label: `${loadProfileBase.label} · margen de registro ±10%`
+    };
     item.performanceLoadProfile = loadProfile;
     const createPerformanceIcon = name => {
       const icons = {
@@ -3958,18 +3979,19 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     const updateRangeFill = input => { const min = Number(input.min) || 0; const max = Number(input.max) || 100; const value = Number(input.value) || 0; input.style.setProperty('--range-progress', `${Math.max(0, Math.min(100, (value - min) / Math.max(1, max - min) * 100))}%`); };
     item.performanceRangeFill = updateRangeFill;
     const updateLoadControl = () => {
-      const pounds = item.performanceLoadUnit === 'lb';
-      const factor = pounds ? 1 / 0.45359237 : 1;
-      const unitStep = pounds ? 5 : item.performanceLoadProfile.stepKg;
+      const unit = item.performanceLoadUnit;
+      const { min: profileMin, max: profileMax, step: unitStep, factor } = loadMath.bounds(item.performanceLoadProfile, unit);
       const selectedValue = Number(item.performanceLoadExact);
-      const unitMin = Math.min(item.performanceLoadProfile.minKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.minKg) * factor;
-      const unitMax = Math.max(item.performanceLoadProfile.maxKg, item.performanceLoadSelected && Number.isFinite(selectedValue) ? selectedValue : item.performanceLoadProfile.maxKg) * factor;
+      const selectedKg = item.performanceLoadSelected && Number.isFinite(selectedValue) ? loadMath.toKg(selectedValue, unit) : NaN;
+      const selectedInUnit = Number.isFinite(selectedKg) ? selectedKg * factor : NaN;
+      const unitMin = Math.min(profileMin, Number.isFinite(selectedInUnit) ? selectedInUnit : profileMin);
+      const unitMax = Math.max(profileMax, Number.isFinite(selectedInUnit) ? selectedInUnit : profileMax);
       loadInput.min = String(unitMin); loadInput.max = String(unitMax); loadInput.step = String(unitStep); loadInput.dataset.loadProfile = item.performanceLoadProfile.label; loadInput.dataset.maxKg = String(item.performanceLoadProfile.maxKg);
-      if (!item.performanceLoadSelected) loadInput.value = String(unitMin);
-      else loadInput.value = String(Math.min(unitMax, Math.max(unitMin, selectedValue || unitMin)));
-      loadUnitSelect.value = item.performanceLoadUnit;
+      if (!item.performanceLoadSelected) loadInput.value = String(profileMin);
+      else loadInput.value = String(Math.min(unitMax, Math.max(unitMin, selectedValue || profileMin)));
+      loadUnitSelect.value = unit;
       const value = Number(item.performanceLoadExact) || 0;
-      loadOutput.textContent = item.performanceLoadSelected ? `${Number.isInteger(value) ? value : value.toFixed(1)} ${item.performanceLoadUnit}` : 'Sin registrar · toca para añadir'; loadOutput.dataset.selected = String(item.performanceLoadSelected); loadClear.hidden = !item.performanceLoadSelected; updateRangeFill(loadInput);
+      loadOutput.textContent = item.performanceLoadSelected ? `${Number.isInteger(value) ? value : value.toFixed(1)} ${unit}` : 'Sin registrar · toca para añadir'; loadOutput.dataset.selected = String(item.performanceLoadSelected); loadClear.hidden = !item.performanceLoadSelected; updateRangeFill(loadInput);
     };
     const savePerformanceDraft = () => {
       if (!state.__performanceDraft) state.__performanceDraft = {};
@@ -4017,8 +4039,8 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     loadOutput.addEventListener('click', () => {
       if (loadLabel.querySelector('.performanceLoadDirect')) return;
       const editor = document.createElement('input'); editor.type = 'number'; editor.inputMode = 'decimal'; editor.min = loadInput.min; editor.max = loadInput.max; editor.step = '0.1'; editor.className = 'performanceLoadDirect'; editor.setAttribute('aria-label', `Introducir carga exacta en ${item.performanceLoadUnit}`); editor.value = item.performanceLoadSelected ? String(item.performanceLoadExact) : ''; loadOutput.replaceWith(editor); editor.focus(); editor.select();
-      const finish = commit => { if (!editor.isConnected) return; if (commit && editor.value === '') { item.performanceLoadSelected = false; item.performanceLoadExact = 0; loadInput.value = '0'; } else if (commit) { const entered = Number(editor.value); if (Number.isFinite(entered) && entered >= Number(loadInput.min) && entered <= Number(loadInput.max)) { item.performanceLoadExact = Math.round(entered * 10) / 10; item.performanceLoadSelected = true; loadInput.value = String(item.performanceLoadExact); } } editor.replaceWith(loadOutput); updateLoadControl(); savePerformanceDraft(); };
-      editor.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); finish(true); } if (event.key === 'Escape') { event.preventDefault(); finish(false); } });
+      const finish = commit => { if (!editor.isConnected) return; if (commit && editor.value === '') { item.performanceLoadSelected = false; item.performanceLoadExact = 0; loadInput.value = '0'; } else if (commit) { const entered = Number(editor.value); if (Number.isFinite(entered) && entered >= Number(loadInput.min) && entered <= Number(loadInput.max)) { item.performanceLoadExact = loadMath.toDisplay(loadMath.normalizeKg(loadMath.toKg(entered, item.performanceLoadUnit), item.performanceLoadProfile), item.performanceLoadUnit); item.performanceLoadSelected = true; loadInput.value = String(item.performanceLoadExact); } } editor.replaceWith(loadOutput); updateLoadControl(); savePerformanceDraft(); };
+      editor.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); finish(true); event.stopPropagation(); } if (event.key === 'Escape') { event.preventDefault(); finish(false); } });
       editor.addEventListener('blur', () => queueMicrotask(() => finish(true)), { once: true });
     });
     loadUnitSelect.addEventListener('change', () => {
@@ -4026,12 +4048,13 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       const nextUnit = loadUnitSelect.value === 'lb' ? 'lb' : 'kg';
       item.performanceLoadUnitTouched = true;
       const currentLoad = Number(item.performanceLoadExact) || 0;
-      const kilograms = previousUnit === 'lb' ? currentLoad * 0.45359237 : currentLoad;
-      const converted = nextUnit === 'lb' ? kilograms / 0.45359237 : kilograms;
-      const nextStep = nextUnit === 'lb' ? 5 : 2.5;
+      const kilograms = loadMath.toKg(currentLoad, previousUnit);
       item.performanceLoadUnit = nextUnit;
-      const factor = nextUnit === 'lb' ? 1 / 0.45359237 : 1; const unitStep = nextUnit === 'lb' ? 5 : item.performanceLoadProfile.stepKg; const rounded = Math.round(converted / unitStep) * unitStep; const unitMin = Math.min(item.performanceLoadProfile.minKg * factor, item.performanceLoadSelected ? rounded : item.performanceLoadProfile.minKg * factor); const unitMax = Math.max(item.performanceLoadProfile.maxKg * factor, item.performanceLoadSelected ? rounded : item.performanceLoadProfile.maxKg * factor);
-      item.performanceLoadExact = Math.min(unitMax, Math.max(unitMin, rounded));
+      const { min: profileMin, max: profileMax } = loadMath.bounds(item.performanceLoadProfile, nextUnit);
+      const rounded = loadMath.toDisplay(loadMath.normalizeKg(kilograms, item.performanceLoadProfile), nextUnit);
+      const unitMin = Math.min(profileMin, item.performanceLoadSelected ? rounded : profileMin);
+      const unitMax = Math.max(profileMax, item.performanceLoadSelected ? rounded : profileMax);
+      item.performanceLoadExact = item.performanceLoadSelected ? Math.min(unitMax, Math.max(unitMin, rounded)) : profileMin;
       item.performanceLoad.value = String(item.performanceLoadExact);
       updateLoadControl();
       savePerformanceDraft();
@@ -4052,7 +4075,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
           const step = item.performanceLoadUnit === 'lb' ? 5 : item.performanceLoadProfile.stepKg;
           const min = Math.ceil(item.performanceLoadProfile.minKg * factor / step) * step;
           const max = Math.floor(item.performanceLoadProfile.maxKg * factor / step) * step;
-          const restored = Math.min(max, Math.max(min, Math.round(storedKg * factor / step) * step));
+          const restored = loadMath.toDisplay(loadMath.snapKg(storedKg, item.performanceLoadProfile.stepKg), item.performanceLoadUnit);
           item.performanceLoadExact = restored; item.performanceLoad.value = String(restored); item.performanceLoadSelected = true; updateLoadControl(); savePerformanceDraft();
         }
       }
@@ -4168,7 +4191,8 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
           const record = state.__performance?.[String(item.index + 1)]?.[item.seriesKeys[index]];
           const repsValue = Number(record?.reps);
           const reps = Number.isInteger(repsValue) && repsValue >= 1 && repsValue <= 100 ? `${repsValue}r` : null;
-          const load = record?.load !== null && record?.load !== undefined && Number.isFinite(Number(record.load)) ? `${Number(record.load)}${record.loadUnit || 'kg'}` : null;
+          const loadValue = Number(record?.load);
+          const load = record?.load !== null && record?.load !== undefined && Number.isFinite(loadValue) ? `${Number.isInteger(loadValue) ? loadValue : loadValue.toFixed(1)} ${record.loadUnit || 'kg'}` : null;
           const details = [reps, load].filter(Boolean).join(' · ') || 'sin datos';
           entries.push({ key: `set-${index + 1}`, label: `S${index + 1} · ${details}`, value: formatElapsed(duration), kind: 'set' });
         }
@@ -4779,6 +4803,16 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
   publishProgress();
   publishProgress();
   publishProgress();
+  publishProgress();
+  publishProgress();
+  publishProgress();
+  publishProgress();
+  publishProgress();
+  publishProgress();
+  publishProgress();
+  publishProgress();
+  publishProgress();
+  publishProgress();
   const updateCompleteButton = item => {
     const button = item.tracker.querySelector('.completeSetButton');
     if (!button) return;
@@ -5020,7 +5054,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
         if (missingPerformance.length && !(await confirmMissingPerformance(missingPerformance))) return;
         const completedAt = Date.now();
         if (!state.__warmupPerformance) state.__warmupPerformance = {};
-        state.__warmupPerformance[warmupKey] = { reps: repsSelected ? reps : null, load: loadSelected ? load : null, loadUnit: item.performanceLoadUnit, loadKg: loadSelected ? item.performanceLoadUnit === 'lb' ? load * 0.45359237 : load : null, durationMs: Math.min(MAX_TIMING_MS, Math.max(0, completedAt - timing.warmupStartedAt)), completedAt };
+        state.__warmupPerformance[warmupKey] = { reps: repsSelected ? reps : null, load: loadSelected ? load : null, loadUnit: item.performanceLoadUnit, loadKg: loadSelected ? loadMath.normalizeKg(loadMath.toKg(load, item.performanceLoadUnit), item.performanceLoadProfile) : null, durationMs: Math.min(MAX_TIMING_MS, Math.max(0, completedAt - timing.warmupStartedAt)), completedAt };
         timing.warmupStartedAt = 0; timing.warmupDurationMs = state.__warmupPerformance[warmupKey].durationMs; timing.restStartedAt = completedAt; timing.restPhase = 'warmup'; state[warmup.dataset.key] = true;
         save(); pulse(item.startSeriesButton); playFeedback('series'); updateTracker(tracker, false); return;
       }
@@ -5054,16 +5088,17 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       const loadSelected = item.performanceLoadSelected && Number.isFinite(Number(item.performanceLoadExact)) && Number(item.performanceLoadExact) >= Number(item.performanceLoad.min) && Number(item.performanceLoadExact) <= Number(item.performanceLoad.max);
       const missingPerformance = [...(!repsSelected ? ['repeticiones'] : []), ...(!loadSelected ? ['carga'] : [])];
       if (missingPerformance.length && !(await confirmMissingPerformance(missingPerformance))) return;
+      if (state[nextKey] === true) return;
       const seriesIndex = item.seriesKeys.indexOf(nextKey);
       const completedAt = Date.now();
       const loadValue = Number(item.performanceLoadExact);
       const loadUnit = item.performanceLoadUnit === 'lb' ? 'lb' : 'kg';
       const load = item.performanceLoadSelected && Number.isFinite(loadValue) && loadValue >= 0 ? loadValue : null;
-      const loadKg = load === null ? null : loadUnit === 'lb' ? load * 0.45359237 : load;
+      const loadKg = load === null ? null : loadMath.normalizeKg(loadMath.toKg(load, loadUnit), item.performanceLoadProfile);
       if (!state.__performance) state.__performance = {};
       if (!state.__performance[String(item.index + 1)]) state.__performance[String(item.index + 1)] = {};
       state.__performance[String(item.index + 1)][nextKey] = { title: item.title, reps: repsSelected ? reps : null, load: loadSelected ? load : null, loadUnit, loadKg: loadSelected ? loadKg : null, durationMs: Math.min(MAX_TIMING_MS, Math.max(0, completedAt - Number(activeTiming.seriesStartedAt || completedAt))), updatedAt: completedAt };
-      if (load !== null && item.performanceLoadOutput) item.performanceLoadOutput.textContent = loadUnit === 'lb' ? `${load} lb (${loadKg.toFixed(1)} kg)` : `${load} kg`;
+      if (load !== null && item.performanceLoadOutput) item.performanceLoadOutput.textContent = loadUnit === 'lb' ? `${Number.isInteger(load) ? load : load.toFixed(1)} lb (${loadKg.toFixed(1)} kg)` : `${Number.isInteger(load) ? load : load.toFixed(1)} kg`;
       item.performanceReps.value = String(item.repMinimum);
       item.performanceReps.dataset.selected = 'false';
       item.performanceRepsOutput.textContent = `Sin registrar · ${item.repMinimum}–${item.repMaximum + 4} posibles`; item.performanceRepsOutput.dataset.selected = 'false'; item.performanceRepsClear.hidden = true; item.performanceRangeFill?.(item.performanceReps);
@@ -5075,6 +5110,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
         item.previousLoadKg = loadKg;
       } else if (load !== null) item.previousLoadKg = loadKg;
       state[nextKey] = true;
+      window.dispatchEvent(new CustomEvent('gymratik:series-completed', { detail: { target: item.tracker } }));
       recordSeriesTime(item, seriesIndex, completedAt);
       if (snapshot(item).complete) {
         const toKg = record => record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load);
@@ -7379,7 +7415,6 @@ body{height:auto!important;min-height:100%!important;overflow-x:hidden!important
   window.addEventListener('gymratik:weight-change', event => {
     const detail = event.detail || {};
     if (detail.direction === 'up') {
-      celebrate(detail.target, 20);
       encourage(`¡Carga aumentada en ${detail.title}! Serie completada con ${detail.load} ${detail.loadUnit}. Buen progreso; conserva la técnica.`);
     } else if (detail.direction === 'down') {
       encourage(`Buen ajuste en ${detail.title}: completaste la serie con menos carga. Prioriza control y rango cómodo; progresar también es entrenar con criterio.`);
@@ -7437,12 +7472,14 @@ body{height:auto!important;min-height:100%!important;overflow-x:hidden!important
   }
 
   const totalSeries = trackers.reduce((sum, tracker) => sum + (tracker.dataset.seriesKeys || '').trim().split(/\s+/).filter(Boolean).length, 0);
-  document.addEventListener('click', event => {
-    if (!(event.target instanceof Element) || !event.target.closest('.completeSetButton')) return;
+  window.addEventListener('gymratik:series-completed', event => {
+    const target = event.detail?.target;
+    if (!target) return;
     window.requestAnimationFrame(() => {
       const doneSeries = trackers.reduce((sum, tracker) => sum + (Number.parseInt((tracker.querySelector('.exerciseProgress')?.textContent || '0/0').split('/')[0], 10) || 0), 0);
-      if (doneSeries === 1) { celebrate(event.target.closest('.exerciseTracker'), 9); encourage('Primera serie registrada. Ya pusiste el entrenamiento en marcha.'); }
-      else if (doneSeries === Math.ceil(totalSeries / 2)) { celebrate(event.target.closest('.exerciseTracker'), 14); encourage('Vas a mitad de la rutina. Mantén el ritmo y cuida cada repetición.'); }
+      if (doneSeries === 1) { celebrate(target, 14); encourage('Primera serie registrada. Ya pusiste el entrenamiento en marcha.'); }
+      else if (doneSeries === Math.ceil(totalSeries / 2)) { celebrate(target, 14); encourage('Vas a mitad de la rutina. Mantén el ritmo y cuida cada repetición.'); }
+      else celebrate(target, 9);
     });
   });
 

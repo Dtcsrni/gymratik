@@ -463,7 +463,8 @@ REST_TIMING_DISPLAY_CONTRACT = '''  const renderTimingDisplays = () => {
           const record = state.__performance?.[String(item.index + 1)]?.[item.seriesKeys[index]];
           const repsValue = Number(record?.reps);
           const reps = Number.isInteger(repsValue) && repsValue >= 1 && repsValue <= 100 ? `${repsValue}r` : null;
-          const load = record?.load !== null && record?.load !== undefined && Number.isFinite(Number(record.load)) ? `${Number(record.load)}${record.loadUnit || 'kg'}` : null;
+          const loadValue = Number(record?.load);
+          const load = record?.load !== null && record?.load !== undefined && Number.isFinite(loadValue) ? `${Number.isInteger(loadValue) ? loadValue : loadValue.toFixed(1)} ${record.loadUnit || 'kg'}` : null;
           const details = [reps, load].filter(Boolean).join(' · ') || 'sin datos';
           entries.push({ key: `set-${index + 1}`, label: `S${index + 1} · ${details}`, value: formatElapsed(duration), kind: 'set' });
         }
@@ -1108,6 +1109,7 @@ def sanitize_canonical_metadata(source: str) -> str:
         "if (window.fitnessQuotesData?.quotes?.length) motivationalQuotes = window.fitnessQuotesData.quotes.map(item => ({ content: item.quoteEs || item.quoteOriginal, author: item.author || '', context: item.authorContext || fallbackAuthorContext(item), portrait: item.portrait ? `../frases_fitness/${item.portrait}` : '', quoteLink: item.sourceUrl || '', photoLink: item.photoSourceUrl || '', photoLine: item.photoCredit || '' }));\n    const phrase = motivationalQuotes[motivationIndex % motivationalQuotes.length];",
         source,
         count=1,
+        flags=re.S,
     )
     source = re.sub(
         r"(if \(window\.fitnessQuotesData\?\.quotes\?\.length\) motivationalQuotes = window\.fitnessQuotesData\.quotes\.map\(item => \(\{.*?portrait: item\.portrait \? `\.\./frases_fitness/\$\{item\.portrait\}` : '')( \}\)\);)",
@@ -1681,7 +1683,7 @@ def standardize_shared_session_contract(source: str) -> str:
           reps: repsSelected ? reps : null,
           load: loadSelected ? load : null,
           loadUnit: item.performanceLoadUnit,
-          loadKg: loadSelected ? item.performanceLoadUnit === 'lb' ? load * 0.45359237 : load : null,
+          loadKg: loadSelected ? loadMath.normalizeKg(loadMath.toKg(load, item.performanceLoadUnit), item.performanceLoadProfile) : null,
           durationMs: Math.min(MAX_TIMING_MS, Math.max(0, completedAt - timing.warmupStartedAt)),
           completedAt
         };
@@ -1723,7 +1725,7 @@ def standardize_shared_session_contract(source: str) -> str:
         if (missingPerformance.length && !(await confirmMissingPerformance(missingPerformance))) return;
         const completedAt = Date.now();
         if (!state.__warmupPerformance) state.__warmupPerformance = {};
-        state.__warmupPerformance[warmupKey] = { reps: repsSelected ? reps : null, load: loadSelected ? load : null, loadUnit: item.performanceLoadUnit, loadKg: loadSelected ? item.performanceLoadUnit === 'lb' ? load * 0.45359237 : load : null, durationMs: Math.min(MAX_TIMING_MS, Math.max(0, completedAt - timing.warmupStartedAt)), completedAt };
+        state.__warmupPerformance[warmupKey] = { reps: repsSelected ? reps : null, load: loadSelected ? load : null, loadUnit: item.performanceLoadUnit, loadKg: loadSelected ? loadMath.normalizeKg(loadMath.toKg(load, item.performanceLoadUnit), item.performanceLoadProfile) : null, durationMs: Math.min(MAX_TIMING_MS, Math.max(0, completedAt - timing.warmupStartedAt)), completedAt };
         timing.warmupStartedAt = 0; timing.warmupDurationMs = state.__warmupPerformance[warmupKey].durationMs; timing.restStartedAt = completedAt; timing.restPhase = 'warmup'; state[warmup.dataset.key] = true;
         save(); pulse(item.startSeriesButton); playMilestoneSound('series'); updateTracker(tracker, false); return;
       }
@@ -2584,6 +2586,7 @@ def standardize_muscle_visuals(source: str) -> str:
         1,
     )
     source = standardize_series_entry_zone(source)
+    source = standardize_series_celebrations(source)
     source = re.sub(
         r'<div class="warmupTrackerActions">.*?</div>',
         '<div class="warmupTrackerActions"><button type="button" id="warmupAction" aria-describedby="warmupInstructions">▶ Iniciar calentamiento</button></div>',
@@ -2782,6 +2785,61 @@ def standardize_motivational_toast(source: str) -> str:
     return source
 
 
+def standardize_series_celebrations(source: str) -> str:
+    """Celebrate only after a set is confirmed, never on a button attempt."""
+    enter_handler = (
+        "editor.addEventListener('keydown', event => { if (event.key === 'Enter') "
+        "{ event.preventDefault(); finish(true); event.stopPropagation(); } "
+        "if (event.key === 'Escape') { event.preventDefault(); finish(false); } });"
+    )
+    source = re.sub(
+        r"editor\.addEventListener\('keydown', event => \{ if \(event\.key === 'Enter'\) \{ event\.preventDefault\(\); finish\(true\); ?\} if \(event\.key === 'Escape'\) \{ event\.preventDefault\(\); finish\(false\); \} \}\);",
+        enter_handler,
+        source,
+        count=1,
+    )
+
+    completion_marker = "      state[nextKey] = true;"
+    completion_event = (
+        completion_marker
+        + "\n      window.dispatchEvent(new CustomEvent('gymratik:series-completed', { detail: { target: item.tracker } }));"
+    )
+    if completion_marker in source and "gymratik:series-completed'" not in source:
+        source = source.replace(completion_marker, completion_event, 1)
+
+    source, listener_count = re.subn(
+        r"  document\.addEventListener\('click', event => \{\n"
+        r"    if \(!\(event\.target instanceof Element\).*?\n"
+        r"  \}\);(?=\n\n  badges\.forEach\(badge => \{)",
+        """  window.addEventListener('gymratik:series-completed', event => {
+    const target = event.detail?.target;
+    if (!target) return;
+    window.requestAnimationFrame(() => {
+      const doneSeries = trackers.reduce((sum, tracker) => sum + (Number.parseInt((tracker.querySelector('.exerciseProgress')?.textContent || '0/0').split('/')[0], 10) || 0), 0);
+      if (doneSeries === 1) { celebrate(target, 14); encourage('Primera serie registrada. Ya pusiste el entrenamiento en marcha.'); }
+      else if (doneSeries === Math.ceil(totalSeries / 2)) { celebrate(target, 14); encourage('Vas a mitad de la rutina. Mantén el ritmo y cuida cada repetición.'); }
+      else celebrate(target, 9);
+    });
+  });""",
+        source,
+        count=1,
+        flags=re.S,
+    )
+    old_click_milestone = "document.addEventListener('click', event => {\n    if (!(event.target instanceof Element) || !event.target.closest('.completeSetButton')) return;"
+    if old_click_milestone in source:
+        if listener_count != 1:
+            raise ValueError("No se pudo vincular la celebración a la confirmación de la serie")
+
+    source = source.replace(
+        "      celebrate(detail.target, 20);\n      encourage(`¡Carga aumentada",
+        "      encourage(`¡Carga aumentada",
+        1,
+    )
+    if "gymratik:series-completed" in source and old_click_milestone in source:
+        raise ValueError("La celebración todavía depende del intento de clic, no del registro confirmado")
+    return source
+
+
 def standardize_visual_language(source: str) -> str:
     """Apply a consistent Lucide icon language and trim repeated instructions."""
     if 'id="gymratikLucideSprite"' not in source:
@@ -2936,13 +2994,27 @@ def standardize_series_entry_zone(source: str) -> str:
         "if (doneSeries > 0 && summaryToggle && summaryBody && completedExercises !== exerciseItems.length && summaryToggle.getAttribute('aria-expanded') === 'true') { summaryToggle.setAttribute('aria-expanded', 'true'); summaryBody.hidden = false; }",
         1,
     )
-    load_profile_block = """    const loadDescription = item.title.toLocaleLowerCase('es');
+    load_profile_block = """    const loadMath = {
+      toKg(value, unit) { const numeric = Number(value); return unit === 'lb' ? numeric * 0.45359237 : numeric; },
+      toDisplay(kg, unit) { return unit === 'lb' ? kg / 0.45359237 : kg; },
+      snapKg(kg, stepKg) { return Math.round(Number(kg) / Number(stepKg)) * Number(stepKg); },
+      normalizeKg(kg, profile) { return profile.discreteStepKg ? this.snapKg(kg, profile.stepKg) : Math.round(Number(kg) * 10) / 10; },
+      bounds(profile, unit) {
+        const factor = unit === 'lb' ? 1 / 0.45359237 : 1;
+        const step = Number(profile.stepKg);
+        const minKg = Math.floor(profile.minKg / step + 1e-9) * step;
+        const maxKg = Math.ceil(profile.maxKg / step - 1e-9) * step;
+        return { min: minKg * factor, max: maxKg * factor, step: step * factor, factor };
+      }
+    };
+    const loadDescription = item.title.toLocaleLowerCase('es');
     const loadProfiles = [
       [/^jalón al pecho$/, { referenceKg: 40, stepKg: 2.5, label: 'jalón · torre de polea · estimación orientativa ±25%' }],
       [/^remo alto unilateral$/, { referenceKg: 25, stepKg: 2.5, label: 'remo unilateral · discos por brazo · estimación orientativa ±25%' }],
       [/^remo horizontal en máquina$/, { referenceKg: 40, stepKg: 2.5, label: 'remo sentado · estimación orientativa ±25%' }],
       [/^apertura inversa en máquina$/, { referenceKg: 25, stepKg: 2.5, label: 'apertura inversa · estimación orientativa ±25%' }],
-      [/^curl de bíceps/, { referenceKg: 15, stepKg: 2.5, label: 'curl de bíceps · estimación orientativa ±25%' }],
+      [/^curl de bíceps sentado en máquina$/, { referenceKg: 25, stepKg: 5, discreteStepKg: true, label: 'curl alterno Panatta · pila selectorizada en kg · incrementos de 5 kg' }],
+      [/^curl de bíceps en máquina$/, { referenceKg: 15, stepKg: 2.5, label: 'curl preacher en máquina · estimación orientativa ±25%' }],
       [/^hack squat$/, { referenceKg: 100, stepKg: 5, label: 'hack squat · carga externa total · estimación orientativa ±25%' }],
       [/^hip thrust$/, { referenceKg: 80, stepKg: 5, label: 'hip thrust · discos totales · estimación orientativa ±25%' }],
       [/^prensa de piernas$/, { referenceKg: 120, stepKg: 5, label: 'prensa bilateral · carga externa total · estimación orientativa ±25%' }],
@@ -2965,9 +3037,31 @@ def standardize_series_entry_zone(source: str) -> str:
     ];
     const loadProfileBase = loadProfiles.find(([pattern]) => pattern.test(loadDescription))?.[1];
     if (!loadProfileBase) throw new Error(`Falta un perfil de carga revisado para: ${item.title}`);
-    const loadProfile = { ...loadProfileBase, minKg: loadProfileBase.referenceKg * 0.75, maxKg: loadProfileBase.referenceKg * 1.25 };
+    const loadProfile = {
+      ...loadProfileBase,
+      guideMinKg: loadProfileBase.referenceKg * 0.75,
+      guideMaxKg: loadProfileBase.referenceKg * 1.25,
+      minKg: loadProfileBase.referenceKg * 0.75 * 0.9,
+      maxKg: loadProfileBase.referenceKg * 1.25 * 1.1,
+      label: `${loadProfileBase.label} · margen de registro ±10%`
+    };
     item.performanceLoadProfile = loadProfile;
 """
+    source = re.sub(
+        r"(?:[ \t]*const loadMath = \{.*?\r?\n[ \t]*\};\r?\n)+(?=[ \t]*const loadDescription =)",
+        "",
+        source,
+        count=1,
+        flags=re.S,
+    )
+    source = source.replace(
+        "loadMath.toDisplay(loadMath.snapKg(loadMath.toKg(entered, item.performanceLoadUnit), item.performanceLoadProfile.stepKg), item.performanceLoadUnit)",
+        "loadMath.toDisplay(loadMath.normalizeKg(loadMath.toKg(entered, item.performanceLoadUnit), item.performanceLoadProfile), item.performanceLoadUnit)",
+    )
+    source = source.replace(
+        "loadKg: loadSelected ? item.performanceLoadUnit === 'lb' ? load * 0.45359237 : load : null",
+        "loadKg: loadSelected ? loadMath.normalizeKg(loadMath.toKg(load, item.performanceLoadUnit), item.performanceLoadProfile) : null",
+    )
     profile_start = source.find("const loadDescription =")
     profile_end = source.find("const createPerformanceIcon", profile_start)
     if profile_start >= 0 and profile_end > profile_start:
@@ -3105,16 +3199,17 @@ def standardize_series_entry_zone(source: str) -> str:
         const storedKg = Number.isFinite(Number(latestLoadRecord.loadKg)) ? Number(latestLoadRecord.loadKg) : latestLoadRecord.loadUnit === 'lb' ? Number(latestLoadRecord.load) * 0.45359237 : Number(latestLoadRecord.load);
         if (Number.isFinite(storedKg)) item.previousLoadKg = storedKg;
         if (!savedDraft && !item.performanceLoadSelected && !isExerciseStarted(item) && Number.isFinite(storedKg)) {
-          const factor = item.performanceLoadUnit === 'lb' ? 1 / 0.45359237 : 1;
-          const step = item.performanceLoadUnit === 'lb' ? 5 : item.performanceLoadProfile.stepKg;
-          const min = Math.min(item.performanceLoadProfile.minKg * factor, storedKg * factor);
-          const max = Math.max(item.performanceLoadProfile.maxKg * factor, storedKg * factor);
-          const restored = Math.min(max, Math.max(min, Math.round(storedKg * factor / step) * step));
+          const restored = loadMath.toDisplay(loadMath.normalizeKg(storedKg, item.performanceLoadProfile), item.performanceLoadUnit);
           item.performanceLoadExact = restored; item.performanceLoad.value = String(restored); item.performanceLoadSelected = true; updateLoadControl(); savePerformanceDraft();
         }
       }"""
     if history_anchor in source and "const latestLoadRecord = item.performanceHistory.flatMap" not in source:
         source = source.replace(history_anchor, history_hydration, 1)
+    source = source.replace(
+        "const restored = Math.min(max, Math.max(min, Math.round(storedKg * factor / step) * step));",
+        "const restored = loadMath.toDisplay(loadMath.normalizeKg(storedKg, item.performanceLoadProfile), item.performanceLoadUnit);",
+        1,
+    )
     source = source.replace(
         "const records = (previous?.performance || []).filter(record => record.exerciseId === String(item.index + 1)).sort((a, b) => a.setNumber - b.setNumber);",
         "const records = (previous?.performance || []).filter(record => { const reps = Number(record?.reps); return record && record.exerciseId === String(item.index + 1) && Number.isInteger(reps) && reps >= 1 && reps <= 100; }).sort((a, b) => a.setNumber - b.setNumber);",
@@ -3227,6 +3322,11 @@ def standardize_series_entry_zone(source: str) -> str:
             1,
         )
     source = source.replace(
+        "if (missingPerformance.length && !(await confirmMissingPerformance(missingPerformance))) return;\n      const seriesIndex = item.seriesKeys.indexOf(nextKey);",
+        "if (missingPerformance.length && !(await confirmMissingPerformance(missingPerformance))) return;\n      if (state[nextKey] === true) return;\n      const seriesIndex = item.seriesKeys.indexOf(nextKey);",
+        1,
+    )
+    source = source.replace(
         "      if (item.performanceReps?.dataset.selected === 'true' && Number.isInteger(reps) && reps >= item.repMinimum && reps <= item.repMaximum + 4) {\n        if (!state.__performance) state.__performance = {};\n        if (!state.__performance[String(item.index + 1)]) state.__performance[String(item.index + 1)] = {};\n        state.__performance[String(item.index + 1)][nextKey] = { title: item.title, reps, load, loadUnit, loadKg, updatedAt: completedAt };\n      }",
         "      if (!state.__performance) state.__performance = {};\n      if (!state.__performance[String(item.index + 1)]) state.__performance[String(item.index + 1)] = {};\n      state.__performance[String(item.index + 1)][nextKey] = { title: item.title, reps: repsSelected ? reps : null, load: loadSelected ? load : null, loadUnit, loadKg: loadSelected ? loadKg : null, durationMs: Math.min(MAX_TIMING_MS, Math.max(0, completedAt - Number(activeTiming.seriesStartedAt || completedAt))), updatedAt: completedAt };",
         1,
@@ -3248,9 +3348,77 @@ def standardize_series_entry_zone(source: str) -> str:
         "loadOutput.textContent = item.performanceLoadSelected ? `${Number.isInteger(value) ? value : value.toFixed(1)} ${item.performanceLoadUnit}` : 'Sin registrar · toca para añadir'; loadOutput.dataset.selected = String(item.performanceLoadSelected); loadClear.hidden = !item.performanceLoadSelected; updateRangeFill(loadInput);",
         1,
     )
+    load_control = """    const updateLoadControl = () => {
+      const unit = item.performanceLoadUnit;
+      const { min: profileMin, max: profileMax, step: unitStep, factor } = loadMath.bounds(item.performanceLoadProfile, unit);
+      const selectedValue = Number(item.performanceLoadExact);
+      const selectedKg = item.performanceLoadSelected && Number.isFinite(selectedValue) ? loadMath.toKg(selectedValue, unit) : NaN;
+      const selectedInUnit = Number.isFinite(selectedKg) ? selectedKg * factor : NaN;
+      const unitMin = Math.min(profileMin, Number.isFinite(selectedInUnit) ? selectedInUnit : profileMin);
+      const unitMax = Math.max(profileMax, Number.isFinite(selectedInUnit) ? selectedInUnit : profileMax);
+      loadInput.min = String(unitMin); loadInput.max = String(unitMax); loadInput.step = String(unitStep); loadInput.dataset.loadProfile = item.performanceLoadProfile.label; loadInput.dataset.maxKg = String(item.performanceLoadProfile.maxKg);
+      if (!item.performanceLoadSelected) loadInput.value = String(profileMin);
+      else loadInput.value = String(Math.min(unitMax, Math.max(unitMin, selectedValue || profileMin)));
+      loadUnitSelect.value = unit;
+      const value = Number(item.performanceLoadExact) || 0;
+      loadOutput.textContent = item.performanceLoadSelected ? `${Number.isInteger(value) ? value : value.toFixed(1)} ${unit}` : 'Sin registrar · toca para añadir'; loadOutput.dataset.selected = String(item.performanceLoadSelected); loadClear.hidden = !item.performanceLoadSelected; updateRangeFill(loadInput);
+    };"""
+    source, load_control_count = re.subn(
+        r"[ \t]*const updateLoadControl = \(\) => \{.*?(?=\n[ \t]*const savePerformanceDraft =)",
+        load_control,
+        source,
+        count=1,
+        flags=re.S,
+    )
+    if load_control_count != 1 and "const updateLoadControl = () => {};" not in source:
+        raise ValueError("No se pudo corregir el control de carga por unidades y pasos del equipo")
+    source = source.replace(
+        "item.performanceLoadExact = Math.round(entered * 10) / 10; item.performanceLoadSelected = true; loadInput.value = String(item.performanceLoadExact);",
+        "item.performanceLoadExact = loadMath.toDisplay(loadMath.normalizeKg(loadMath.toKg(entered, item.performanceLoadUnit), item.performanceLoadProfile), item.performanceLoadUnit); item.performanceLoadSelected = true; loadInput.value = String(item.performanceLoadExact);",
+        1,
+    )
+    source, unit_listener_count = re.subn(
+        r"[ \t]*loadUnitSelect\.addEventListener\('change', \(\) => \{.*?\n[ \t]*\}\);",
+        """    loadUnitSelect.addEventListener('change', () => {
+      const previousUnit = item.performanceLoadUnit;
+      const nextUnit = loadUnitSelect.value === 'lb' ? 'lb' : 'kg';
+      item.performanceLoadUnitTouched = true;
+      const currentLoad = Number(item.performanceLoadExact) || 0;
+      const kilograms = loadMath.toKg(currentLoad, previousUnit);
+      item.performanceLoadUnit = nextUnit;
+      const { min: profileMin, max: profileMax } = loadMath.bounds(item.performanceLoadProfile, nextUnit);
+      const rounded = loadMath.toDisplay(loadMath.normalizeKg(kilograms, item.performanceLoadProfile), nextUnit);
+      const unitMin = Math.min(profileMin, item.performanceLoadSelected ? rounded : profileMin);
+      const unitMax = Math.max(profileMax, item.performanceLoadSelected ? rounded : profileMax);
+      item.performanceLoadExact = item.performanceLoadSelected ? Math.min(unitMax, Math.max(unitMin, rounded)) : profileMin;
+      item.performanceLoad.value = String(item.performanceLoadExact);
+      updateLoadControl();
+      savePerformanceDraft();
+    });""",
+        source,
+        count=1,
+        flags=re.S,
+    )
+    if unit_listener_count != 1 and "loadUnitSelect.addEventListener('change'" in source:
+        raise ValueError("No se encontró el cambio de unidad para convertir con los incrementos de la máquina")
+    source = source.replace(
+        "const loadKg = load === null ? null : loadUnit === 'lb' ? load * 0.45359237 : load;",
+        "const loadKg = load === null ? null : loadMath.normalizeKg(loadMath.toKg(load, loadUnit), item.performanceLoadProfile);",
+        1,
+    )
+    source = source.replace(
+        "const loadKg = load === null ? null : loadMath.snapKg(loadMath.toKg(load, loadUnit), item.performanceLoadProfile.stepKg);",
+        "const loadKg = load === null ? null : loadMath.normalizeKg(loadMath.toKg(load, loadUnit), item.performanceLoadProfile);",
+        1,
+    )
     source = source.replace(
         "item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden = !selected; repsDown.disabled",
         "item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden = !selected; updateRangeFill(item.performanceReps); repsDown.disabled",
+        1,
+    )
+    source = source.replace(
+        "if (load !== null && item.performanceLoadOutput) item.performanceLoadOutput.textContent = loadUnit === 'lb' ? `${load} lb (${loadKg.toFixed(1)} kg)` : `${load} kg`;",
+        "if (load !== null && item.performanceLoadOutput) item.performanceLoadOutput.textContent = loadUnit === 'lb' ? `${Number.isInteger(load) ? load : load.toFixed(1)} lb (${loadKg.toFixed(1)} kg)` : `${Number.isInteger(load) ? load : load.toFixed(1)} kg`;",
         1,
     )
     if "const repFeedbackZone = value =>" not in source:

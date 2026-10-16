@@ -402,6 +402,33 @@ class HomepageContractTests(unittest.TestCase):
         self.assertIn('const dashboard = await window.TrainingProgressStore.getDashboard();', self.html)
         self.assertIn('const history = await window.TrainingProgressStore.getHistory(100);', self.html)
 
+    def test_homepage_weekly_rotation_ignores_previous_week_history(self):
+        marker = "function latestSessionInCurrentWeek"
+        self.assertIn(marker, self.html, "La rotación debe tener una regla de semana local que se pueda probar")
+        start = self.html.index(marker)
+        end = self.html.index("\n    function ", start + len(marker))
+        helper = self.html[start:end]
+        script = f"""
+const assert = require('assert');
+{helper}
+const tuesday = new Date(2026, 9, 13, 9, 0, 0);
+const previousSaturday = new Date(2026, 9, 10, 18, 0, 0).getTime();
+const oldHistory = [{{ routineId: 'day1', startedAt: previousSaturday }}];
+assert.strictEqual(latestSessionInCurrentWeek(oldHistory, new Set(['day1','day2','day3','day4']), tuesday), null,
+  'Tuesday with only a previous-week workout must restart the rotation at Day 1');
+const thisMonday = new Date(2026, 9, 12, 8, 0, 0).getTime();
+const currentWeekHistory = [
+  {{ routineId: 'day1', startedAt: previousSaturday }},
+  {{ routineId: 'day3', startedAt: thisMonday }}
+];
+assert.strictEqual(latestSessionInCurrentWeek(currentWeekHistory, new Set(['day1','day2','day3','day4']), tuesday), currentWeekHistory[1],
+  'the latest workout within this week remains the basis for rotation');
+console.log(JSON.stringify({{ok:true}}));
+"""
+        result = subprocess.run(["node", "-e", script], cwd=ROOT, check=False, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), {"ok": True})
+
     def test_homepage_exposes_local_profile_and_backup_controls(self):
         for marker in (
             'id="profile"',
@@ -511,6 +538,8 @@ const fs = require('fs'), vm = require('vm'), assert = require('assert');
 const html = fs.readFileSync(process.argv[1], 'utf8');
 const match = html.match(/function renderNextSession\(dashboard, history = recentSessions\) \{[\s\S]*?(?=\n    function renderProgress)/);
 assert.ok(match, 'homepage session CTA renderer must exist');
+const weeklyRotation = html.match(/function latestSessionInCurrentWeek\([\s\S]*?(?=\n    function renderNextSession)/);
+assert.ok(weeklyRotation, 'weekly session filter must exist');
 const nodes = Object.fromEntries(['pageTitle','nextSessionCta','nextSessionLink','nextSessionImage','nextSessionKicker','nextSessionTitle','nextSessionSummary','nextSessionMeta'].map(id => [id, { textContent: '', href: '', src: '', alt: '' }]));
 const context = {
   Date,
@@ -524,7 +553,7 @@ const context = {
   ...nodes
 };
 vm.createContext(context);
-vm.runInContext(match[0], context);
+vm.runInContext(`${weeklyRotation[0]}\n${match[0]}`, context);
 const routines = context.routineCatalog.map(item => ({ routineId: item.routineId, doneSeries: 0, updatedAt: 0, sessionStartedAt: 0, sessionEndedAt: 0 }));
 routines[2].sessionStartedAt = Date.now();
 context.renderNextSession({ routines, todaySeries: 0 }, []);
@@ -543,6 +572,8 @@ const fs = require('fs'), vm = require('vm'), assert = require('assert');
 const html = fs.readFileSync(process.argv[1], 'utf8');
 const match = html.match(/function renderNextSession\(dashboard, history = recentSessions\) \{[\s\S]*?(?=\n    function renderProgress)/);
 assert.ok(match, 'homepage session CTA renderer must exist');
+const weeklyRotation = html.match(/function latestSessionInCurrentWeek\([\s\S]*?(?=\n    function renderNextSession)/);
+assert.ok(weeklyRotation, 'weekly session filter must exist');
 const nodes = Object.fromEntries(['pageTitle','nextSessionCta','nextSessionLink','nextSessionImage','nextSessionKicker','nextSessionTitle','nextSessionSummary','nextSessionMeta'].map(id => [id, { textContent: '', href: '', src: '', alt: '' }]));
 const context = {
   Date,
@@ -556,12 +587,22 @@ const context = {
   ...nodes
 };
 vm.createContext(context);
-vm.runInContext(match[0], context);
+vm.runInContext(`${weeklyRotation[0]}\n${match[0]}`, context);
 const routines = context.routineCatalog.map(item => ({ routineId: item.routineId, doneSeries: 0, updatedAt: 0, sessionStartedAt: 0, sessionEndedAt: 0 }));
 routines[1] = { ...routines[1], doneSeries: 12, updatedAt: Date.now() - 60000 };
 context.renderNextSession({ routines, todaySeries: 0 }, []);
 assert.strictEqual(context.nextSessionCta.textContent, 'Empezar Día 3');
 assert.strictEqual(context.pageTitle.textContent, 'Tu siguiente sesión es Día 3.');
+const thisMonday = new Date();
+thisMonday.setHours(0, 0, 0, 0);
+thisMonday.setDate(thisMonday.getDate() - ((thisMonday.getDay() + 6) % 7));
+const lastSaturday = new Date(thisMonday);
+lastSaturday.setDate(lastSaturday.getDate() - 2);
+context.renderNextSession({ routines: context.routineCatalog.map(item => ({ routineId: item.routineId, doneSeries: 0, updatedAt: 0, sessionStartedAt: 0, sessionEndedAt: 0 })), todaySeries: 0 }, [
+  { routineId: 'day1', startedAt: lastSaturday.getTime(), completedSeries: 20, totalSeries: 20 }
+]);
+assert.strictEqual(context.nextSessionCta.textContent, 'Empezar Día 1', 'last week history must not carry the rotation into this week');
+assert.strictEqual(context.nextSessionCta.href, 'day1.html');
 console.log(JSON.stringify({ ok: true }));
 """
         result = subprocess.run(["node", "-e", script, str(INDEX)], cwd=ROOT, check=False, capture_output=True, text=True)
