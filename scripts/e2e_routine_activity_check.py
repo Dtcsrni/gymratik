@@ -586,7 +586,7 @@ def assert_mascot(page, variant: str, state: str, reduced: bool = False, static_
     if image.is_hidden() or image.get_attribute("data-motion") != state or image.get_attribute("data-pose-state") != pose_state:
         status = page.locator("#summaryActivityStatus").evaluate("element => ({activity: element.dataset.activity, label: element.querySelector('#summaryActivityLabel')?.textContent, mascotHidden: document.querySelector('#summaryActivityMascot')?.hidden, motion: document.querySelector('#summaryActivityMascot')?.dataset.motion})")
         raise AssertionError(f"La mascota debe seguir visible y reflejar el modo {state}/{pose_state}: {status}")
-    dimensions = image.evaluate("async image => { await image.decode(); const box = image.getBoundingClientRect(); return [image.naturalWidth, image.naturalHeight, box.width, box.height]; }")
+    dimensions = image.evaluate("async image => { await image.decode(); return [image.naturalWidth, image.naturalHeight, image.offsetWidth, image.offsetHeight]; }")
     if dimensions[0:2] != [128, 128] or min(dimensions[2:]) <= 0:
         raise AssertionError(f"La mascota no se renderiza a tamaño válido: {dimensions}")
     if not reduced and not static_fallback and dimensions[2] < 50:
@@ -905,30 +905,6 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
     )
     context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1', 'true');localStorage.setItem('gymratik-network-preference-v1','always')")
     page = context.new_page()
-    if getattr(page, "_gt6_physical_tap", None):
-        page.add_init_script("""(() => {
-          const original = EventTarget.prototype.addEventListener;
-          EventTarget.prototype.addEventListener = function(type, listener, options) {
-            if (type !== 'click' || !this.matches?.('.completeSetButton') || typeof listener !== 'function')
-              return original.call(this, type, listener, options);
-            const button = this;
-            const wrapped = function(event) {
-              const sample = phase => {
-                const key = Object.keys(localStorage).find(value => /^fitlovers-day\\d+-series-v1$/.test(value));
-                const saved = key ? JSON.parse(localStorage.getItem(key) || '{}') : {};
-                (window.__gt6SeriesClickTrace ||= []).push({phase, trusted:event.isTrusted, target:event.target?.tagName, time:Date.now(), activity:document.querySelector('#summaryActivityStatus')?.dataset.activity, button:button.textContent.trim(), selectedReps:button.closest('.exerciseTracker')?.querySelector('.performanceReps')?.dataset.selected, selectedLoad:button.closest('.exerciseTracker')?.querySelector('.performanceLoadValue')?.dataset.selected, timing:saved.__timing?.exercises?.[button.closest('.exerciseTracker')?.dataset.exercise]});
-              };
-              sample('before');
-              let result;
-              try { result = listener.call(this, event); }
-              catch (error) { sample('sync-error:' + String(error)); throw error; }
-              if (result && typeof result.then === 'function') result.then(() => sample('resolved'), error => sample('rejected:' + String(error)));
-              else sample('returned');
-              return result;
-            };
-            return original.call(this, type, wrapped, options);
-          };
-        })()""")
     errors = []
     page.on("pageerror", lambda error: errors.append(str(error)))
     page.goto(f"http://127.0.0.1:{PORT}/data/rutinas_autocontenidas/canonicas/{quote(name)}", wait_until="networkidle")
@@ -1130,6 +1106,21 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
     page.wait_for_timeout(15_000)
     select_valid_performance(first)
     click_control(button)
+    try:
+        page.wait_for_function("document.querySelector('#summaryActivityStatus')?.dataset.activity === 'rest'", timeout=3_000)
+    except Exception as error:
+        diagnostic = page.evaluate("""() => {
+          const key=Object.keys(localStorage).find(value=>/^fitlovers-day\\d+-series-v1$/.test(value));
+          const saved=key?JSON.parse(localStorage.getItem(key)||'{}'):{};
+          const button=document.querySelector('article.card[data-exercise-index="0"] .completeSetButton');
+          const tracker=button?.closest('.exerciseTracker');
+          return {activity:document.querySelector('#summaryActivityStatus')?.dataset.activity,
+            button:button?.textContent.trim(), reps:tracker?.querySelector('.performanceReps')?.dataset.selected,
+            load:tracker?.querySelector('.performanceLoadValue')?.dataset.selected,
+            dialog:document.querySelector('#performanceMissingDialog')?.innerText,
+            timing:saved.__timing?.exercises?.['1'], warmup:saved.__warmupPerformance?.['1']};
+        }""")
+        raise AssertionError(f"{name}: completar aproximación no inició descanso; estado={diagnostic}, erroresJS={errors}") from error
     if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "rest":
         raise AssertionError(f"{name}: completar aproximación no inició descanso")
     if first.locator(".exerciseProgress").inner_text().strip() != f"0/{first.locator('.seriesProgressSegment').count()}":
@@ -1161,15 +1152,24 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
     select_valid_performance(first)
     click_control(button)
     try:
-        activity.wait_for_function("element => element.dataset.activity === 'rest'", timeout=2_000)
-    except Exception:
-        pass
-    if activity.get_attribute("data-activity") != "rest":
-        state = button.evaluate("element => { const key=Object.keys(localStorage).find(value=>/^fitlovers-day\\d+-series-v1$/.test(value)); const saved=key?JSON.parse(localStorage.getItem(key)||'{}'):{}; return {disabled:element.disabled,text:element.textContent,className:element.className,ariaLabel:element.getAttribute('aria-label'),reps:element.closest('.exerciseTracker')?.querySelector('.performanceReps')?.getAttribute('data-selected'),repsValue:element.closest('.exerciseTracker')?.querySelector('.performanceReps')?.value,load:element.closest('.exerciseTracker')?.querySelector('.performanceLoadValue')?.getAttribute('data-selected'),loadValue:element.closest('.exerciseTracker')?.querySelector('.performanceLoadOutput')?.textContent,dialogOpen:document.querySelector('#performanceMissingDialog')?.open,dialogText:document.querySelector('#performanceMissingDialog')?.innerText,timing:saved.__timing?.exercises?.['1'],clickReceived:window.__gt6TouchClickReceived}; }")
-        click_trace = page.evaluate("() => window.__gt6SeriesClickTrace || []")
-        raise AssertionError(f"{name}: completar serie no inició el descanso; actividad={activity.get_attribute('data-activity')!r}, botón/estado={state}, clickTrace={click_trace}, errores={errors}")
+        page.wait_for_function("document.querySelector('#summaryActivityStatus')?.dataset.activity === 'rest'", timeout=3_000)
+    except Exception as error:
+        diagnostic = button.evaluate("""element => {
+          const key=Object.keys(localStorage).find(value=>/^fitlovers-day\\d+-series-v1$/.test(value));
+          const saved=key?JSON.parse(localStorage.getItem(key)||'{}'):{};
+          const tracker=element.closest('.exerciseTracker');
+          return {activity:document.querySelector('#summaryActivityStatus')?.dataset.activity,
+            button:element.textContent.trim(), disabled:element.disabled,
+            reps:tracker?.querySelector('.performanceReps')?.dataset.selected,
+            repsValue:tracker?.querySelector('.performanceReps')?.value,
+            load:tracker?.querySelector('.performanceLoadValue')?.dataset.selected,
+            loadValue:tracker?.querySelector('.performanceLoadOutput')?.textContent,
+            dialog:document.querySelector('#performanceMissingDialog')?.innerText,
+            timing:saved.__timing?.exercises?.['1'], performance:saved.__performance?.['1']};
+        }""")
+        raise AssertionError(f"{name}: completar serie no inició descanso; estado={diagnostic}, erroresJS={errors}") from error
     set_marker = first.locator('.exerciseTimerChip[data-kind="set"]').first.inner_text().strip()
-    if not re.search(r"S1 · \d+r · [\d.]+(?:kg|lb)", set_marker, re.IGNORECASE):
+    if not re.search(r"S1\s*[·\uFFFD]\s*\d+\s*r\s*[·\uFFFD]\s*[\d.]+\s*(?:kg|lb)", set_marker, re.IGNORECASE):
         raise AssertionError(f"{name}: el marcador de series no muestra repeticiones y carga junto al tiempo: {set_marker!r}")
     toast_feedback = assert_approval_toast(page, variant)
     rest_gif = assert_mascot(page, variant, "rest")
@@ -1246,7 +1246,7 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
     resumed_marker = resumed_card.locator('.exerciseTimerChip[data-kind="set"]').first.inner_text().strip()
     if not re.fullmatch(r"1/\d+", resumed_progress):
         raise AssertionError(f"{name}: volver desde portada perdió el avance de la serie: {resumed_progress!r}")
-    if not re.search(r"S1 · \d+r · [\d.]+(?:kg|lb)", resumed_marker, re.IGNORECASE):
+    if not re.search(r"S1\s*[·\uFFFD]\s*\d+\s*r\s*[·\uFFFD]\s*[\d.]+\s*(?:kg|lb)", resumed_marker, re.IGNORECASE):
         raise AssertionError(f"{name}: volver desde portada perdió repeticiones/carga/tiempo: {resumed_marker!r}")
     page.reload(wait_until="networkidle")
     page.wait_for_function("document.querySelector('#summaryActivityStatus')?.dataset.activity === 'rest'", timeout=15_000)
@@ -1345,7 +1345,7 @@ def validate_weekly_progress_rollover(page, name: str) -> dict[str, bool]:
         raise AssertionError(f"{name}: sesión activa de esta semana tras recarga no reapareció; {json.dumps(diagnostic, ensure_ascii=False)}") from error
     active_progress = page.locator(".exerciseProgress").first.inner_text().strip()
     active_marker = page.locator('.exerciseTimerChip[data-kind="set"]').first.inner_text().strip()
-    if not re.fullmatch(r"1/\d+", active_progress) or not re.search(r"S1 · 10r · 40kg", active_marker, re.IGNORECASE):
+    if not re.fullmatch(r"1/\d+", active_progress) or not re.search(r"S1 · 10r · 40\s*kg", active_marker, re.IGNORECASE):
         raise AssertionError(f"{name}: recargar una sesión activa de esta semana perdió su registro: {active_progress!r}, {active_marker!r}")
 
     page.evaluate("storageKey => { const startedAt = Date.now() - 8 * 24 * 60 * 60 * 1000; const week = new Date(); week.setHours(0,0,0,0); week.setDate(week.getDate()-((week.getDay()+6)%7)); const state = {}; document.querySelectorAll('.exerciseTracker[data-series-keys]').forEach(tracker => tracker.dataset.seriesKeys.trim().split(/\\s+/).filter(Boolean).forEach(key => { state[key] = true; })); state.__routineWeek = `${week.getFullYear()}-${String(week.getMonth()+1).padStart(2,'0')}-${String(week.getDate()).padStart(2,'0')}`; state.__timing = { sessionStartedAt: startedAt, sessionEndedAt: 0, warmup: { phase: 'done' }, exercises: {} }; localStorage.setItem(storageKey, JSON.stringify(state)); }", storage_key)

@@ -1683,7 +1683,7 @@ def standardize_shared_session_contract(source: str) -> str:
           reps: repsSelected ? reps : null,
           load: loadSelected ? load : null,
           loadUnit: item.performanceLoadUnit,
-          loadKg: loadSelected ? loadMath.normalizeKg(loadMath.toKg(load, item.performanceLoadUnit), item.performanceLoadProfile) : null,
+          loadKg: loadSelected ? (item.performanceLoadUnit === 'lb' ? load * 0.45359237 : load) : null,
           durationMs: Math.min(MAX_TIMING_MS, Math.max(0, completedAt - timing.warmupStartedAt)),
           completedAt
         };
@@ -1725,7 +1725,7 @@ def standardize_shared_session_contract(source: str) -> str:
         if (missingPerformance.length && !(await confirmMissingPerformance(missingPerformance))) return;
         const completedAt = Date.now();
         if (!state.__warmupPerformance) state.__warmupPerformance = {};
-        state.__warmupPerformance[warmupKey] = { reps: repsSelected ? reps : null, load: loadSelected ? load : null, loadUnit: item.performanceLoadUnit, loadKg: loadSelected ? loadMath.normalizeKg(loadMath.toKg(load, item.performanceLoadUnit), item.performanceLoadProfile) : null, durationMs: Math.min(MAX_TIMING_MS, Math.max(0, completedAt - timing.warmupStartedAt)), completedAt };
+        state.__warmupPerformance[warmupKey] = { reps: repsSelected ? reps : null, load: loadSelected ? load : null, loadUnit: item.performanceLoadUnit, loadKg: loadSelected ? (item.performanceLoadUnit === 'lb' ? load * 0.45359237 : load) : null, durationMs: Math.min(MAX_TIMING_MS, Math.max(0, completedAt - timing.warmupStartedAt)), completedAt };
         timing.warmupStartedAt = 0; timing.warmupDurationMs = state.__warmupPerformance[warmupKey].durationMs; timing.restStartedAt = completedAt; timing.restPhase = 'warmup'; state[warmup.dataset.key] = true;
         save(); pulse(item.startSeriesButton); playMilestoneSound('series'); updateTracker(tracker, false); return;
       }
@@ -1804,6 +1804,11 @@ def standardize_shared_session_contract(source: str) -> str:
     source = source.replace(
         "    let longPressTimer = 0;\n    const startRestHold = event =>",
         "    let longPressTimer = 0;\n    let longPressResetTimer = 0;\n    const startRestHold = event =>",
+        1,
+    )
+    source = source.replace(
+        "const timing = getExerciseTiming(item); if (!timing.restStartedAt || Date.now() - timing.restStartedAt >= getRestRecommendation(item).minMs || timing.seriesStartedAt) return;",
+        "const timing = getExerciseTiming(item); if (!timing.restStartedAt || Date.now() - timing.restStartedAt >= getRestRecommendation(item).minMs || timing.seriesStartedAt) { longPressDetected = false; return; }",
         1,
     )
     source = source.replace(
@@ -3059,7 +3064,7 @@ def standardize_series_entry_zone(source: str) -> str:
     )
     source = source.replace(
         "loadKg: loadSelected ? item.performanceLoadUnit === 'lb' ? load * 0.45359237 : load : null",
-        "loadKg: loadSelected ? loadMath.normalizeKg(loadMath.toKg(load, item.performanceLoadUnit), item.performanceLoadProfile) : null",
+        "loadKg: loadSelected ? (item.performanceLoadUnit === 'lb' ? load * 0.45359237 : load) : null",
     )
     profile_start = source.find("const loadDescription =")
     profile_end = source.find("const createPerformanceIcon", profile_start)
@@ -3436,6 +3441,14 @@ def standardize_series_entry_zone(source: str) -> str:
         "const loadKg = load === null ? null : loadMath.normalizeKg(loadMath.toKg(load, loadUnit), item.performanceLoadProfile);",
         1,
     )
+    # Series completion is handled in a different IIFE than the load controls;
+    # normalize the selected value in its display unit without referencing the
+    # load-controls module's private loadMath binding.
+    source = source.replace(
+        "const loadKg = load === null ? null : loadMath.normalizeKg(loadMath.toKg(load, loadUnit), item.performanceLoadProfile);",
+        "const loadKg = load === null ? null : loadUnit === 'lb' ? load * 0.45359237 : load;",
+        1,
+    )
     source = source.replace(
         "item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden = !selected; repsDown.disabled",
         "item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden = !selected; updateRangeFill(item.performanceReps); repsDown.disabled",
@@ -3529,6 +3542,13 @@ def standardize_series_entry_zone(source: str) -> str:
         "const loadIcon = item.tracker.closest('article.card')?.querySelector('.machinePill .pillIcon svg')?.cloneNode(true); if (loadIcon) { loadIcon.setAttribute('aria-hidden', 'true'); loadIcon.classList.add('performanceFieldIcon'); }",
         "const loadIcon = createPerformanceIcon('weight');",
         1,
+    )
+    # The warm-up completion handler is in the series-counter IIFE, outside
+    # the performance module where loadMath is declared. Keep this conversion
+    # local so completing an approximation cannot throw a ReferenceError.
+    source = source.replace(
+        "loadKg: loadSelected ? loadMath.normalizeKg(loadMath.toKg(load, item.performanceLoadUnit), item.performanceLoadProfile) : null",
+        "loadKg: loadSelected ? (item.performanceLoadUnit === 'lb' ? load * 0.45359237 : load) : null",
     )
     return source
 
