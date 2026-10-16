@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from validate_canonical_routines import validate_path  # noqa: E402
-from build_fitness_quotes_js import compact_payload  # noqa: E402
+from build_fitness_quotes_js import EDITORIAL_QUOTES, compact_payload  # noqa: E402
 from standardize_muscle_visuals import (  # noqa: E402
     close_unterminated_segmented_progress_style,
     standardize_offline_image_sources,
@@ -764,15 +764,17 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
             html = path.read_text(encoding="utf-8")
             self.assertEqual(html.count("const loadMath = {"), 1, path.name)
-            self.assertIn("const selectedKg = item.performanceLoadSelected && Number.isFinite(selectedValue) ? loadMath.toKg(selectedValue, unit) : NaN", html)
-            self.assertIn("const { min: profileMin, max: profileMax, step: unitStep, factor } = loadMath.bounds(item.performanceLoadProfile, unit)", html)
+            self.assertIn("const { min: profileMin, max: profileMax, step: unitStep } = loadMath.bounds(item.performanceLoadProfile, unit)", html)
             self.assertIn("loadMath.normalizeKg(loadMath.toKg(entered, item.performanceLoadUnit), item.performanceLoadProfile)", html)
             self.assertIn("const kilograms = loadMath.toKg(currentLoad, previousUnit)", html)
             self.assertIn("loadMath.normalizeKg(loadMath.toKg(load, item.performanceLoadUnit), item.performanceLoadProfile)", html)
             self.assertIn("const loadKg = load === null ? null : loadMath.normalizeKg(loadMath.toKg(load, loadUnit), item.performanceLoadProfile);", html)
-            self.assertIn("const updateLoadControl = (preserveSliderBounds = false) => {", html)
-            self.assertIn("if (!preserveSliderBounds) {", html)
-            self.assertIn("item.performanceLoadSelected = true; updateLoadControl(true); savePerformanceDraft();", html)
+            self.assertIn("const updateLoadControl = () => {", html)
+            self.assertIn("loadInput.min = String(profileMin); loadInput.max = String(profileMax);", html)
+            self.assertIn("savedLoadKg >= item.performanceLoadProfile.minKg && savedLoadKg <= item.performanceLoadProfile.maxKg", html)
+            self.assertIn("historyLoadIsValid(record)", html)
+            self.assertIn("Number.isFinite(kg) && kg >= item.performanceLoadProfile.minKg && kg <= item.performanceLoadProfile.maxKg", html)
+            self.assertIn("item.performanceLoadSelected = Number.isFinite(enteredKg); updateLoadControl(); savePerformanceDraft();", html)
             self.assertNotIn("const unitStep = pounds ? 5", html)
             self.assertNotIn("Number(record.load)}${record.loadUnit", html)
 
@@ -794,14 +796,14 @@ const selectedLb = loadMath.toDisplay(30, 'lb');
 assert.ok(Math.abs(loadMath.toKg(selectedLb, 'lb') - 30) < 1e-10);
 assert.strictEqual(loadMath.normalizeKg(loadMath.toKg(154.802004495799, 'lb'), panatta), 70);
 assert.strictEqual(loadMath.normalizeKg(30.4, panatta), 30);
-assert.strictEqual(loadMath.normalizeKg(19.23, {{ stepKg: 2.5 }}), 19.2);
+assert.strictEqual(loadMath.normalizeKg(19.23, {{ stepKg: 2.5, minKg: 0, maxKg: 50 }}), 19.2);
 console.log(JSON.stringify({{ savedLoadKg: loadMath.normalizeKg(loadMath.toKg(selectedLb, 'lb'), panatta), labelLb: selectedLb.toFixed(1) }}));
 """
         result = subprocess.run(["node", "-e", script], cwd=ROOT, capture_output=True, text=True, check=False)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads(result.stdout), {"savedLoadKg": 30, "labelLb": "66.1"})
 
-    def test_orientative_load_range_is_150kg_each_side_and_slider_bounds_stay_fixed_during_drag(self) -> None:
+    def test_orientative_load_range_is_150kg_each_side_and_corrupt_values_cannot_expand_slider(self) -> None:
         source = (CANONICAL / "Rutina_Dia_1_Espalda_Biceps_V1.html").read_text(encoding="utf-8")
         helper = re.search(r"const loadMath = (\{.*?\n    \});", source, re.S)
         self.assertIsNotNone(helper)
@@ -827,12 +829,14 @@ for (const base of profiles) {{
     const bounds = loadMath.bounds(profile,unit);
     const factor = unit === 'lb' ? 1/0.45359237 : 1;
     const step = base.stepKg;
-    const expectedMinKg = Math.floor(profile.minKg/step+1e-9)*step;
-    const expectedMaxKg = Math.ceil(profile.maxKg/step-1e-9)*step;
+    const expectedMinKg = profile.minKg;
+    const expectedMaxKg = profile.maxKg;
     assert.ok(Math.abs(bounds.min-expectedMinKg*factor)<1e-8);
     assert.ok(Math.abs(bounds.max-expectedMaxKg*factor)<1e-8);
     assert.ok(Math.abs(bounds.step-step*factor)<1e-8);
     assert.ok(bounds.min>=0);
+    assert.strictEqual(loadMath.normalizeKg(6.377053202642387e25,profile),profile.maxKg);
+    assert.strictEqual(loadMath.normalizeKg(-1e20,profile),profile.minKg);
   }}
 }}
 console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
@@ -846,8 +850,9 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 start = html.index("item.performanceLoad.addEventListener('input'")
                 end = html.index("loadClear.addEventListener('click'", start)
                 handler = html[start:end]
-                self.assertIn("updateLoadControl(true)", handler)
+                self.assertIn("updateLoadControl()", handler)
                 self.assertNotIn("loadInput.max =", handler)
+                self.assertNotIn("Math.max(profileMax", html)
 
     def test_all_routines_use_persistent_fifteen_second_preparation_before_timing(self) -> None:
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
@@ -1113,23 +1118,27 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
 
     def test_motivation_quotes_are_compact_credited_and_randomized_across_days(self) -> None:
         bank_path = ROOT / "data" / "rutinas_autocontenidas" / "frases_fitness" / "fitness_quotes.json"
-        bank = json.loads(bank_path.read_text(encoding="utf-8"))
-        compact = compact_payload(bank)
-        self.assertGreaterEqual(compact["count"], 23)
-        self.assertLessEqual(compact["count"], 60)
-        self.assertEqual(len({quote["author"] for quote in compact["quotes"]}), compact["count"] - 2)
+        compact = compact_payload()
+        self.assertEqual(compact["count"], len(EDITORIAL_QUOTES) + 3)
+        self.assertEqual(len({quote["author"] for quote in compact["quotes"]}), 2)
         self.assertTrue(all(len(quote["quoteEs"]) <= 220 for quote in compact["quotes"]))
-        self.assertFalse(any("MTV fue un gran entrenamiento para mí" in quote["quoteEs"] for quote in compact["quotes"]))
-        self.assertFalse(any("Football Manager" in quote["quoteEs"] or "booing" in quote["quoteEs"] for quote in compact["quotes"]))
-        self.assertNotIn("Claire Danes", {quote["author"] for quote in compact["quotes"]})
+        self.assertNotIn("Jerry Ferrara", {quote["author"] for quote in compact["quotes"]})
+        editorial = [quote for quote in compact["quotes"] if quote["author"] == "Gymratik"]
+        self.assertEqual([quote["quoteEs"] for quote in editorial], list(EDITORIAL_QUOTES))
+        self.assertTrue(all("fuerza" in quote["authorContext"].lower() or "entrenamiento" in quote["authorContext"].lower() for quote in editorial))
+        self.assertTrue(all("portrait" not in quote and "sourceUrl" not in quote for quote in editorial))
+        runtime_js = bank_path.with_suffix(".js")
+        runtime = runtime_js.read_text(encoding="utf-8")
+        runtime_payload = json.loads(runtime.removeprefix("window.fitnessQuotesData = ").removesuffix(";\n"))
+        self.assertEqual(runtime_payload, compact)
+        self.assertNotIn("Jerry Ferrara", runtime)
+        self.assertNotIn("Sólo soy un tipo de temporada", runtime)
         portrait_root = bank_path.parent
-        self.assertTrue(all((portrait_root / quote["portrait"]).is_file() for quote in compact["quotes"]))
         arnold = [quote for quote in compact["quotes"] if quote["author"] == "Arnold Schwarzenegger"]
         self.assertEqual(len(arnold), 3)
+        self.assertTrue(all((portrait_root / quote["portrait"]).is_file() for quote in arnold))
         self.assertTrue(all(quote["sourceUrl"].startswith("https://www.schwarzenegger.com/") for quote in arnold))
         self.assertTrue(all(quote["photoCredit"].endswith("CC BY 4.0") for quote in arnold))
-        runtime_js = ROOT / "data" / "rutinas_autocontenidas" / "frases_fitness" / "fitness_quotes.js"
-        runtime = runtime_js.read_text(encoding="utf-8")
         self.assertIn("window.fitnessQuotesData = ", runtime)
         self.assertLess(runtime_js.stat().st_size, 35_000)
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):

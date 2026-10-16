@@ -2066,7 +2066,7 @@ def validate_motivation_card(browser, widths=(320, 360, 412, 530)) -> dict:
         page.on("requestfailed", lambda request: portrait_failures.append({"url": request.url, "failure": request.failure}) if "/frases_fitness/retratos/" in request.url else None)
         page.on("response", lambda response: portrait_responses.append({"url": response.url, "status": response.status}) if "/frases_fitness/retratos/" in response.url else None)
         page.goto(f"http://127.0.0.1:{PORT}/data/rutinas_autocontenidas/canonicas/{quote(ROUTINES[0][0])}", wait_until="domcontentloaded")
-        page.wait_for_function("window.fitnessQuotesData?.quotes?.length === 60")
+        page.wait_for_function("window.fitnessQuotesData?.quotes?.length >= 20")
         page.locator("#sessionCompletionPanel").evaluate("element => { element.hidden = false; }")
         page.locator("#summaryToggle").evaluate("element => element.setAttribute('aria-expanded', 'false')")
         page.locator("#summaryBody").evaluate("element => { element.hidden = true; }")

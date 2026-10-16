@@ -2998,13 +2998,12 @@ def standardize_series_entry_zone(source: str) -> str:
       toKg(value, unit) { const numeric = Number(value); return unit === 'lb' ? numeric * 0.45359237 : numeric; },
       toDisplay(kg, unit) { return unit === 'lb' ? kg / 0.45359237 : kg; },
       snapKg(kg, stepKg) { return Math.round(Number(kg) / Number(stepKg)) * Number(stepKg); },
-      normalizeKg(kg, profile) { return profile.discreteStepKg ? this.snapKg(kg, profile.stepKg) : Math.round(Number(kg) * 10) / 10; },
+      clampKg(kg, profile) { const value = Number(kg); if (!Number.isFinite(value)) return NaN; return Math.min(Number(profile.maxKg), Math.max(Number(profile.minKg), value)); },
+      normalizeKg(kg, profile) { const value = Number(kg); if (!Number.isFinite(value)) return NaN; const normalized = profile.discreteStepKg ? this.snapKg(value, profile.stepKg) : Math.round(value * 10) / 10; return this.clampKg(normalized, profile); },
       bounds(profile, unit) {
         const factor = unit === 'lb' ? 1 / 0.45359237 : 1;
         const step = Number(profile.stepKg);
-        const minKg = Math.floor(profile.minKg / step + 1e-9) * step;
-        const maxKg = Math.ceil(profile.maxKg / step - 1e-9) * step;
-        return { min: minKg * factor, max: maxKg * factor, step: step * factor, factor };
+        return { min: Number(profile.minKg) * factor, max: Number(profile.maxKg) * factor, step: step * factor, factor };
       }
     };
     const loadDescription = item.title.toLocaleLowerCase('es');
@@ -3189,16 +3188,25 @@ def standardize_series_entry_zone(source: str) -> str:
     )
     source = source.replace(
         "const previous = history.find(session => session.routineId === routineId && session.sessionId !== currentSessionId && (session.performance || []).some(record => record.exerciseId === String(item.index + 1)));",
+        "const historyExerciseId = String(item.index + 1); const historyLoadIsValid = record => { if (record.load === null || record.load === undefined || String(record.load).trim() === '') return true; const kg = Number.isFinite(Number(record.loadKg)) ? Number(record.loadKg) : record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load); return record.loadSelected !== false && Number.isFinite(kg) && kg >= item.performanceLoadProfile.minKg && kg <= item.performanceLoadProfile.maxKg; }; item.performanceHistory = history.filter(session => session.routineId === routineId && session.sessionId !== currentSessionId && (session.performance || []).some(record => record.exerciseId === historyExerciseId && historyLoadIsValid(record))).sort((a, b) => Number(b.endedAt || b.updatedAt || 0) - Number(a.endedAt || a.updatedAt || 0)); const previous = item.performanceHistory[0];",
+        1,
+    )
+    source = source.replace(
         "item.performanceHistory = history.filter(session => session.routineId === routineId && session.sessionId !== currentSessionId && (session.performance || []).some(record => record.exerciseId === String(item.index + 1))).sort((a, b) => Number(b.endedAt || b.updatedAt || 0) - Number(a.endedAt || a.updatedAt || 0)); const previous = item.performanceHistory[0];",
+        "const historyExerciseId = String(item.index + 1); const historyLoadIsValid = record => { if (record.load === null || record.load === undefined || String(record.load).trim() === '') return true; const kg = Number.isFinite(Number(record.loadKg)) ? Number(record.loadKg) : record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load); return record.loadSelected !== false && Number.isFinite(kg) && kg >= item.performanceLoadProfile.minKg && kg <= item.performanceLoadProfile.maxKg; }; item.performanceHistory = history.filter(session => session.routineId === routineId && session.sessionId !== currentSessionId && (session.performance || []).some(record => record.exerciseId === historyExerciseId && historyLoadIsValid(record))).sort((a, b) => Number(b.endedAt || b.updatedAt || 0) - Number(a.endedAt || a.updatedAt || 0)); const previous = item.performanceHistory[0];",
         1,
     )
     history_anchor = "const previous = item.performanceHistory[0];"
     history_hydration = """const previous = item.performanceHistory[0];
-      const latestLoadRecord = item.performanceHistory.flatMap(session => (session.performance || []).filter(record => record.exerciseId === String(item.index + 1)).map(record => ({ ...record, _sessionUpdatedAt: Number(session.endedAt || session.updatedAt || 0) }))).filter(record => record.loadSelected !== false && record.load !== null && record.load !== undefined && String(record.load).trim() !== '' && Number.isFinite(Number(record.load))).sort((a, b) => Number(b.updatedAt || b._sessionUpdatedAt || 0) - Number(a.updatedAt || a._sessionUpdatedAt || 0))[0];
+      const latestLoadRecord = item.performanceHistory.flatMap(session => (session.performance || []).filter(record => record.exerciseId === String(item.index + 1)).map(record => ({ ...record, _sessionUpdatedAt: Number(session.endedAt || session.updatedAt || 0) }))).filter(record => {
+        if (record.loadSelected === false || record.load === null || record.load === undefined || String(record.load).trim() === '' || !Number.isFinite(Number(record.load))) return false;
+        const storedKg = Number.isFinite(Number(record.loadKg)) ? Number(record.loadKg) : record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load);
+        return Number.isFinite(storedKg) && storedKg >= item.performanceLoadProfile.minKg && storedKg <= item.performanceLoadProfile.maxKg;
+      }).sort((a, b) => Number(b.updatedAt || b._sessionUpdatedAt || 0) - Number(a.updatedAt || a._sessionUpdatedAt || 0))[0];
       if (latestLoadRecord) {
         const storedKg = Number.isFinite(Number(latestLoadRecord.loadKg)) ? Number(latestLoadRecord.loadKg) : latestLoadRecord.loadUnit === 'lb' ? Number(latestLoadRecord.load) * 0.45359237 : Number(latestLoadRecord.load);
         if (Number.isFinite(storedKg)) item.previousLoadKg = storedKg;
-        if (!savedDraft && !item.performanceLoadSelected && !isExerciseStarted(item) && Number.isFinite(storedKg)) {
+        if ((!savedDraft || savedLoadDraftInvalid) && !item.performanceLoadSelected && !isExerciseStarted(item) && Number.isFinite(storedKg)) {
           const restored = loadMath.toDisplay(loadMath.normalizeKg(storedKg, item.performanceLoadProfile), item.performanceLoadUnit);
           item.performanceLoadExact = restored; item.performanceLoad.value = String(restored); item.performanceLoadSelected = true; updateLoadControl(); savePerformanceDraft();
         }
@@ -3348,19 +3356,16 @@ def standardize_series_entry_zone(source: str) -> str:
         "loadOutput.textContent = item.performanceLoadSelected ? `${Number.isInteger(value) ? value : value.toFixed(1)} ${item.performanceLoadUnit}` : 'Sin registrar · toca para añadir'; loadOutput.dataset.selected = String(item.performanceLoadSelected); loadClear.hidden = !item.performanceLoadSelected; updateRangeFill(loadInput);",
         1,
     )
-    load_control = """    const updateLoadControl = (preserveSliderBounds = false) => {
+    load_control = """    const updateLoadControl = () => {
       const unit = item.performanceLoadUnit;
-      const { min: profileMin, max: profileMax, step: unitStep, factor } = loadMath.bounds(item.performanceLoadProfile, unit);
-      if (!preserveSliderBounds) {
-        const selectedValue = Number(item.performanceLoadExact);
-        const selectedKg = item.performanceLoadSelected && Number.isFinite(selectedValue) ? loadMath.toKg(selectedValue, unit) : NaN;
-        const selectedInUnit = Number.isFinite(selectedKg) ? selectedKg * factor : NaN;
-        const unitMin = Math.min(profileMin, Number.isFinite(selectedInUnit) ? selectedInUnit : profileMin);
-        const unitMax = Math.max(profileMax, Number.isFinite(selectedInUnit) ? selectedInUnit : profileMax);
-        loadInput.min = String(unitMin); loadInput.max = String(unitMax); loadInput.step = String(unitStep); loadInput.dataset.loadProfile = item.performanceLoadProfile.label; loadInput.dataset.maxKg = String(item.performanceLoadProfile.maxKg);
-        if (!item.performanceLoadSelected) loadInput.value = String(profileMin);
-        else loadInput.value = String(Math.min(unitMax, Math.max(unitMin, selectedValue || profileMin)));
-      }
+      const { min: profileMin, max: profileMax, step: unitStep } = loadMath.bounds(item.performanceLoadProfile, unit);
+      const selectedValue = Number(item.performanceLoadExact);
+      const displayedValue = item.performanceLoadSelected && Number.isFinite(selectedValue)
+        ? loadMath.toDisplay(loadMath.normalizeKg(loadMath.toKg(selectedValue, unit), item.performanceLoadProfile), unit)
+        : profileMin;
+      loadInput.min = String(profileMin); loadInput.max = String(profileMax); loadInput.step = String(unitStep); loadInput.dataset.loadProfile = item.performanceLoadProfile.label; loadInput.dataset.maxKg = String(item.performanceLoadProfile.maxKg);
+      if (item.performanceLoadSelected) item.performanceLoadExact = displayedValue;
+      loadInput.value = String(displayedValue);
       loadUnitSelect.value = unit;
       const value = Number(item.performanceLoadExact) || 0;
       loadOutput.textContent = item.performanceLoadSelected ? `${Number.isInteger(value) ? value : value.toFixed(1)} ${unit}` : 'Sin registrar · toca para añadir'; loadOutput.dataset.selected = String(item.performanceLoadSelected); loadClear.hidden = !item.performanceLoadSelected; updateRangeFill(loadInput);
@@ -3375,8 +3380,23 @@ def standardize_series_entry_zone(source: str) -> str:
     if load_control_count != 1 and "const updateLoadControl = () => {};" not in source:
         raise ValueError("No se pudo corregir el control de carga por unidades y pasos del equipo")
     source = source.replace(
+        "item.performanceLoadExact = Number(savedDraft?.load) || 0;\n    item.performanceLoadSelected = savedDraft?.loadSelected === true || Number(savedDraft?.load) > 0;",
+        "const savedLoadValue = Number(savedDraft?.load);\n    const savedLoadKg = loadMath.toKg(savedLoadValue, item.performanceLoadUnit);\n    const savedLoadWasSelected = savedDraft?.loadSelected === true || (savedDraft?.loadSelected !== false && savedLoadValue > 0);\n    const savedLoadIsValid = savedLoadWasSelected && Number.isFinite(savedLoadKg) && savedLoadKg >= item.performanceLoadProfile.minKg && savedLoadKg <= item.performanceLoadProfile.maxKg;\n    const savedLoadDraftInvalid = savedLoadWasSelected && !savedLoadIsValid;\n    item.performanceLoadExact = savedLoadIsValid ? loadMath.toDisplay(loadMath.normalizeKg(savedLoadKg, item.performanceLoadProfile), item.performanceLoadUnit) : 0;\n    item.performanceLoadSelected = savedLoadIsValid;",
+        1,
+    )
+    source = source.replace(
+        "item.performanceLoadExact = Number(savedDraft?.load) || 0;\n    item.performanceLoadSelected = savedDraft?.loadSelected === true || Number(savedDraft?.load) > 0;",
+        "const savedLoadValue = Number(savedDraft?.load);\n    const savedLoadKg = loadMath.toKg(savedLoadValue, item.performanceLoadUnit);\n    const savedLoadWasSelected = savedDraft?.loadSelected === true || (savedDraft?.loadSelected !== false && savedLoadValue > 0);\n    const savedLoadIsValid = savedLoadWasSelected && Number.isFinite(savedLoadKg) && savedLoadKg >= item.performanceLoadProfile.minKg && savedLoadKg <= item.performanceLoadProfile.maxKg;\n    const savedLoadDraftInvalid = savedLoadWasSelected && !savedLoadIsValid;\n    item.performanceLoadExact = savedLoadIsValid ? loadMath.toDisplay(loadMath.normalizeKg(savedLoadKg, item.performanceLoadProfile), item.performanceLoadUnit) : 0;\n    item.performanceLoadSelected = savedLoadIsValid;",
+        1,
+    )
+    source = source.replace(
         "item.performanceLoad.addEventListener('input', () => { item.performanceLoadExact = Number(item.performanceLoad.value) || 0; item.performanceLoadSelected = true; updateLoadControl(); savePerformanceDraft(); });",
+        "item.performanceLoad.addEventListener('input', () => { const enteredKg = loadMath.toKg(item.performanceLoad.value, item.performanceLoadUnit); item.performanceLoadExact = loadMath.toDisplay(loadMath.normalizeKg(enteredKg, item.performanceLoadProfile), item.performanceLoadUnit); item.performanceLoadSelected = Number.isFinite(enteredKg); updateLoadControl(); savePerformanceDraft(); });",
+        1,
+    )
+    source = source.replace(
         "item.performanceLoad.addEventListener('input', () => { item.performanceLoadExact = Number(item.performanceLoad.value) || 0; item.performanceLoadSelected = true; updateLoadControl(true); savePerformanceDraft(); });",
+        "item.performanceLoad.addEventListener('input', () => { const enteredKg = loadMath.toKg(item.performanceLoad.value, item.performanceLoadUnit); item.performanceLoadExact = loadMath.toDisplay(loadMath.normalizeKg(enteredKg, item.performanceLoadProfile), item.performanceLoadUnit); item.performanceLoadSelected = Number.isFinite(enteredKg); updateLoadControl(); savePerformanceDraft(); });",
         1,
     )
     source = source.replace(
@@ -3395,9 +3415,7 @@ def standardize_series_entry_zone(source: str) -> str:
       item.performanceLoadUnit = nextUnit;
       const { min: profileMin, max: profileMax } = loadMath.bounds(item.performanceLoadProfile, nextUnit);
       const rounded = loadMath.toDisplay(loadMath.normalizeKg(kilograms, item.performanceLoadProfile), nextUnit);
-      const unitMin = Math.min(profileMin, item.performanceLoadSelected ? rounded : profileMin);
-      const unitMax = Math.max(profileMax, item.performanceLoadSelected ? rounded : profileMax);
-      item.performanceLoadExact = item.performanceLoadSelected ? Math.min(unitMax, Math.max(unitMin, rounded)) : profileMin;
+      item.performanceLoadExact = item.performanceLoadSelected ? Math.min(profileMax, Math.max(profileMin, rounded)) : profileMin;
       item.performanceLoad.value = String(item.performanceLoadExact);
       updateLoadControl();
       savePerformanceDraft();

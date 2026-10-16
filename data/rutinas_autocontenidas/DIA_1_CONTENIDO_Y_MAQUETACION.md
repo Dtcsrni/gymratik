@@ -28,11 +28,11 @@ La ficha incluye un contador interactivo dentro de cada tarjeta, justo debajo de
 
 Cada serie marcada produce un pulso breve. Al completar todas las series del ejercicio aparece `✓ Completado` a la derecha, se ejecuta una celebración visual amplia y se muestra una flecha animada hacia el siguiente ejercicio; el último muestra `Sesión completada`. Las animaciones se desactivan con `prefers-reduced-motion`.
 
-Al completar los seis ejercicios aparece una celebración global, con una frase motivacional cambiante tomada del banco local de 1,000 frases fitness traducidas al español. Los hitos emiten tonos sintetizados mediante `Web Audio API`, con control para silenciarlos. La celebración global no se reproduce automáticamente al recargar una sesión ya completada.
+Al completar los seis ejercicios aparece una celebración global, con un mensaje motivacional cambiante del catálogo local de entrenamiento de fuerza. Los hitos emiten tonos sintetizados mediante `Web Audio API`, con control para silenciarlos. La celebración global no se reproduce automáticamente al recargar una sesión ya completada.
 
 La ficha incluye además un resumen flotante, plegable y compacto. Muestra ejercicios terminados, series realizadas, series pendientes por ejercicio y permite marcar `Máquina ocupada` cuando una serie queda pendiente por disponibilidad del equipo. Este estado también se conserva localmente. El contador de cada ejercicio usa una única acción secuencial (`Completar serie`), por lo que no permite saltar directamente a una serie posterior.
 
-El mensaje motivacional usa exclusivamente el banco local `frases_fitness/fitness_quotes.json`, con 1,000 frases seleccionadas por vocabulario explícito de ejercicio/deporte. Se cambia de forma secuencial; en pantalla solo aparecen la frase, el autor y, cuando existe una imagen local verificada, ese apoyo visual. No se atribuyen frases a una marca ni se consulta una API de frases aleatorias durante el uso.
+El mensaje motivacional rota entre mensajes originales de Gymratik sobre fuerza, técnica, carga, descanso y constancia, más tres citas de entrenamiento atribuidas y enlazadas a su fuente. No se muestran frases de aficionados a deportes ni citas ajenas al entrenamiento. Solo las citas con retrato local verificado muestran apoyo visual; el resto usa el avatar de iniciales. El catálogo runtime se genera con `scripts/build_fitness_quotes_js.py`; el banco histórico `frases_fitness/fitness_quotes.json` se conserva, pero no se expone directamente a la interfaz.
 
 El banco conserva por registro el texto, autor y temas; `fitness_quotes.js` es la copia embebible generada desde ese JSON para que la ficha siga funcionando sin conexión.
 

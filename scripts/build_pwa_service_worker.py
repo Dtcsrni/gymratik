@@ -107,8 +107,10 @@ def quote_portrait_resources() -> set[str]:
     resources: set[str] = set()
     for quote in quotes:
         portrait = quote.get("portrait") if isinstance(quote, dict) else None
-        if not isinstance(portrait, str) or not portrait:
-            raise SystemExit("Cada frase debe tener un retrato local para el modo offline")
+        if portrait is None or portrait == "":
+            continue
+        if not isinstance(portrait, str):
+            raise SystemExit("La ruta de retrato debe ser texto o estar ausente")
         normalized = PurePosixPath(portrait)
         if normalized.is_absolute() or ".." in normalized.parts or normalized.suffix.lower() not in IMAGE_SUFFIXES:
             raise SystemExit(f"Ruta de retrato no válida en el banco local: {portrait}")

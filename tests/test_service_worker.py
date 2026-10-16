@@ -79,10 +79,10 @@ class ServiceWorkerContractTests(unittest.TestCase):
                 self.assertIn(asset, resources)
                 self.assertIn(asset.removeprefix("./"), self.service_worker)
 
-    def test_every_runtime_quote_portrait_is_precached_offline(self):
+    def test_only_runtime_quote_portraits_are_precached_offline(self):
         portraits = quote_portrait_resources()
         resources = set(build_precache())
-        self.assertEqual(len(portraits), 58)
+        self.assertEqual(len(portraits), 1)
         self.assertTrue(portraits <= resources)
         self.assertTrue(all((ROOT / resource.removeprefix("./")).is_file() for resource in portraits))
         self.assertTrue(all(resource.removeprefix("./") in self.service_worker for resource in portraits))
