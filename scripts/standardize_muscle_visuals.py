@@ -3041,9 +3041,9 @@ def standardize_series_entry_zone(source: str) -> str:
       ...loadProfileBase,
       guideMinKg: loadProfileBase.referenceKg * 0.75,
       guideMaxKg: loadProfileBase.referenceKg * 1.25,
-      minKg: loadProfileBase.referenceKg * 0.75 * 0.9,
-      maxKg: loadProfileBase.referenceKg * 1.25 * 1.1,
-      label: `${loadProfileBase.label} · margen de registro ±10%`
+      minKg: Math.max(0, loadProfileBase.referenceKg - 150),
+      maxKg: loadProfileBase.referenceKg + 150,
+      label: `${loadProfileBase.label} · intervalo de captura orientativo ±150 kg`
     };
     item.performanceLoadProfile = loadProfile;
 """
@@ -3348,23 +3348,25 @@ def standardize_series_entry_zone(source: str) -> str:
         "loadOutput.textContent = item.performanceLoadSelected ? `${Number.isInteger(value) ? value : value.toFixed(1)} ${item.performanceLoadUnit}` : 'Sin registrar · toca para añadir'; loadOutput.dataset.selected = String(item.performanceLoadSelected); loadClear.hidden = !item.performanceLoadSelected; updateRangeFill(loadInput);",
         1,
     )
-    load_control = """    const updateLoadControl = () => {
+    load_control = """    const updateLoadControl = (preserveSliderBounds = false) => {
       const unit = item.performanceLoadUnit;
       const { min: profileMin, max: profileMax, step: unitStep, factor } = loadMath.bounds(item.performanceLoadProfile, unit);
-      const selectedValue = Number(item.performanceLoadExact);
-      const selectedKg = item.performanceLoadSelected && Number.isFinite(selectedValue) ? loadMath.toKg(selectedValue, unit) : NaN;
-      const selectedInUnit = Number.isFinite(selectedKg) ? selectedKg * factor : NaN;
-      const unitMin = Math.min(profileMin, Number.isFinite(selectedInUnit) ? selectedInUnit : profileMin);
-      const unitMax = Math.max(profileMax, Number.isFinite(selectedInUnit) ? selectedInUnit : profileMax);
-      loadInput.min = String(unitMin); loadInput.max = String(unitMax); loadInput.step = String(unitStep); loadInput.dataset.loadProfile = item.performanceLoadProfile.label; loadInput.dataset.maxKg = String(item.performanceLoadProfile.maxKg);
-      if (!item.performanceLoadSelected) loadInput.value = String(profileMin);
-      else loadInput.value = String(Math.min(unitMax, Math.max(unitMin, selectedValue || profileMin)));
+      if (!preserveSliderBounds) {
+        const selectedValue = Number(item.performanceLoadExact);
+        const selectedKg = item.performanceLoadSelected && Number.isFinite(selectedValue) ? loadMath.toKg(selectedValue, unit) : NaN;
+        const selectedInUnit = Number.isFinite(selectedKg) ? selectedKg * factor : NaN;
+        const unitMin = Math.min(profileMin, Number.isFinite(selectedInUnit) ? selectedInUnit : profileMin);
+        const unitMax = Math.max(profileMax, Number.isFinite(selectedInUnit) ? selectedInUnit : profileMax);
+        loadInput.min = String(unitMin); loadInput.max = String(unitMax); loadInput.step = String(unitStep); loadInput.dataset.loadProfile = item.performanceLoadProfile.label; loadInput.dataset.maxKg = String(item.performanceLoadProfile.maxKg);
+        if (!item.performanceLoadSelected) loadInput.value = String(profileMin);
+        else loadInput.value = String(Math.min(unitMax, Math.max(unitMin, selectedValue || profileMin)));
+      }
       loadUnitSelect.value = unit;
       const value = Number(item.performanceLoadExact) || 0;
       loadOutput.textContent = item.performanceLoadSelected ? `${Number.isInteger(value) ? value : value.toFixed(1)} ${unit}` : 'Sin registrar · toca para añadir'; loadOutput.dataset.selected = String(item.performanceLoadSelected); loadClear.hidden = !item.performanceLoadSelected; updateRangeFill(loadInput);
     };"""
     source, load_control_count = re.subn(
-        r"[ \t]*const updateLoadControl = \(\) => \{.*?(?=\n[ \t]*const savePerformanceDraft =)",
+        r"[ \t]*const updateLoadControl = \([^)]*\) => \{.*?(?=\n[ \t]*const savePerformanceDraft =)",
         load_control,
         source,
         count=1,
@@ -3372,6 +3374,11 @@ def standardize_series_entry_zone(source: str) -> str:
     )
     if load_control_count != 1 and "const updateLoadControl = () => {};" not in source:
         raise ValueError("No se pudo corregir el control de carga por unidades y pasos del equipo")
+    source = source.replace(
+        "item.performanceLoad.addEventListener('input', () => { item.performanceLoadExact = Number(item.performanceLoad.value) || 0; item.performanceLoadSelected = true; updateLoadControl(); savePerformanceDraft(); });",
+        "item.performanceLoad.addEventListener('input', () => { item.performanceLoadExact = Number(item.performanceLoad.value) || 0; item.performanceLoadSelected = true; updateLoadControl(true); savePerformanceDraft(); });",
+        1,
+    )
     source = source.replace(
         "item.performanceLoadExact = Math.round(entered * 10) / 10; item.performanceLoadSelected = true; loadInput.value = String(item.performanceLoadExact);",
         "item.performanceLoadExact = loadMath.toDisplay(loadMath.normalizeKg(loadMath.toKg(entered, item.performanceLoadUnit), item.performanceLoadProfile), item.performanceLoadUnit); item.performanceLoadSelected = true; loadInput.value = String(item.performanceLoadExact);",

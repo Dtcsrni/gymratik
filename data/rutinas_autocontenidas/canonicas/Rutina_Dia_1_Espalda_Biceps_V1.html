@@ -3927,9 +3927,9 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       ...loadProfileBase,
       guideMinKg: loadProfileBase.referenceKg * 0.75,
       guideMaxKg: loadProfileBase.referenceKg * 1.25,
-      minKg: loadProfileBase.referenceKg * 0.75 * 0.9,
-      maxKg: loadProfileBase.referenceKg * 1.25 * 1.1,
-      label: `${loadProfileBase.label} · margen de registro ±10%`
+      minKg: Math.max(0, loadProfileBase.referenceKg - 150),
+      maxKg: loadProfileBase.referenceKg + 150,
+      label: `${loadProfileBase.label} · intervalo de captura orientativo ±150 kg`
     };
     item.performanceLoadProfile = loadProfile;
     const createPerformanceIcon = name => {
@@ -3978,17 +3978,19 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     item.performanceLoadSelected = savedDraft?.loadSelected === true || Number(savedDraft?.load) > 0;
     const updateRangeFill = input => { const min = Number(input.min) || 0; const max = Number(input.max) || 100; const value = Number(input.value) || 0; input.style.setProperty('--range-progress', `${Math.max(0, Math.min(100, (value - min) / Math.max(1, max - min) * 100))}%`); };
     item.performanceRangeFill = updateRangeFill;
-    const updateLoadControl = () => {
+    const updateLoadControl = (preserveSliderBounds = false) => {
       const unit = item.performanceLoadUnit;
       const { min: profileMin, max: profileMax, step: unitStep, factor } = loadMath.bounds(item.performanceLoadProfile, unit);
-      const selectedValue = Number(item.performanceLoadExact);
-      const selectedKg = item.performanceLoadSelected && Number.isFinite(selectedValue) ? loadMath.toKg(selectedValue, unit) : NaN;
-      const selectedInUnit = Number.isFinite(selectedKg) ? selectedKg * factor : NaN;
-      const unitMin = Math.min(profileMin, Number.isFinite(selectedInUnit) ? selectedInUnit : profileMin);
-      const unitMax = Math.max(profileMax, Number.isFinite(selectedInUnit) ? selectedInUnit : profileMax);
-      loadInput.min = String(unitMin); loadInput.max = String(unitMax); loadInput.step = String(unitStep); loadInput.dataset.loadProfile = item.performanceLoadProfile.label; loadInput.dataset.maxKg = String(item.performanceLoadProfile.maxKg);
-      if (!item.performanceLoadSelected) loadInput.value = String(profileMin);
-      else loadInput.value = String(Math.min(unitMax, Math.max(unitMin, selectedValue || profileMin)));
+      if (!preserveSliderBounds) {
+        const selectedValue = Number(item.performanceLoadExact);
+        const selectedKg = item.performanceLoadSelected && Number.isFinite(selectedValue) ? loadMath.toKg(selectedValue, unit) : NaN;
+        const selectedInUnit = Number.isFinite(selectedKg) ? selectedKg * factor : NaN;
+        const unitMin = Math.min(profileMin, Number.isFinite(selectedInUnit) ? selectedInUnit : profileMin);
+        const unitMax = Math.max(profileMax, Number.isFinite(selectedInUnit) ? selectedInUnit : profileMax);
+        loadInput.min = String(unitMin); loadInput.max = String(unitMax); loadInput.step = String(unitStep); loadInput.dataset.loadProfile = item.performanceLoadProfile.label; loadInput.dataset.maxKg = String(item.performanceLoadProfile.maxKg);
+        if (!item.performanceLoadSelected) loadInput.value = String(profileMin);
+        else loadInput.value = String(Math.min(unitMax, Math.max(unitMin, selectedValue || profileMin)));
+      }
       loadUnitSelect.value = unit;
       const value = Number(item.performanceLoadExact) || 0;
       loadOutput.textContent = item.performanceLoadSelected ? `${Number.isInteger(value) ? value : value.toFixed(1)} ${unit}` : 'Sin registrar · toca para añadir'; loadOutput.dataset.selected = String(item.performanceLoadSelected); loadClear.hidden = !item.performanceLoadSelected; updateRangeFill(loadInput);
@@ -4034,7 +4036,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     renderPerformanceReps();
     updateLoadControl();
     item.performanceReps.addEventListener('input', () => { item.performanceReps.dataset.selected = 'true'; renderPerformanceReps(); savePerformanceDraft(); });
-    item.performanceLoad.addEventListener('input', () => { item.performanceLoadExact = Number(item.performanceLoad.value) || 0; item.performanceLoadSelected = true; updateLoadControl(); savePerformanceDraft(); });
+    item.performanceLoad.addEventListener('input', () => { item.performanceLoadExact = Number(item.performanceLoad.value) || 0; item.performanceLoadSelected = true; updateLoadControl(true); savePerformanceDraft(); });
     loadClear.addEventListener('click', () => { item.performanceLoadSelected = false; item.performanceLoadExact = 0; item.performanceLoad.value = item.performanceLoad.min; updateLoadControl(); savePerformanceDraft(); });
     loadOutput.addEventListener('click', () => {
       if (loadLabel.querySelector('.performanceLoadDirect')) return;

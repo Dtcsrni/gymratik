@@ -55,7 +55,7 @@ Las capacidades de pila son masa seleccionada en el stack, no una medición univ
 
 ## Cambio de interfaz
 
-Se conserva la banda orientativa existente de ±25% alrededor de cada referencia. La interfaz ahora añade ±10% fuera de ambos extremos y redondea hacia afuera al paso configurado para no perder ese margen al discretizar el deslizador. Este margen facilita registrar cargas cercanas al perfil; **no representa ni sustituye la capacidad física máxima**. Los registros previos siguen ampliando el selector dinámicamente y no se recortan.
+Para los 26 ejercicios (25 perfiles orientativos), el intervalo de captura se deriva de la referencia del perfil: `mínimo = max(0, referenciaKg − 150 kg)` y `máximo = referenciaKg + 150 kg`. En lb ambos extremos se convierten usando `1 kg = 2.20462262185 lb`; los pasos discretos configurados para el equipo se mantienen y el límite se redondea hacia afuera a ese paso. El intervalo amplio permite capturar cargas registradas sin sugerir una capacidad mecánica: **no representa ni sustituye el máximo físico**. Las cargas guardadas o escritas fuera del intervalo no se borran ni recortan; el deslizador no cambia sus propios límites mientras se arrastra.
 
 ## Pendiente para rangos mecánicos confirmados
 

@@ -736,15 +736,16 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
         self.assertEqual(len(profile_rows), 25)
         for _pattern, reference, _step in profile_rows:
             center = float(reference)
-            suggested_min = center * 0.75
-            suggested_max = center * 1.25
-            self.assertAlmostEqual(suggested_min * 0.9, center * 0.675)
-            self.assertAlmostEqual(suggested_max * 1.1, center * 1.375)
-        self.assertIn("minKg: loadProfileBase.referenceKg * 0.75 * 0.9", profile_block)
-        self.assertIn("maxKg: loadProfileBase.referenceKg * 1.25 * 1.1", profile_block)
+            capture_min = max(0, center - 150)
+            capture_max = center + 150
+            self.assertGreaterEqual(capture_min, 0)
+            self.assertAlmostEqual(capture_max - center, 150)
+            self.assertAlmostEqual(center - capture_min, min(150, center))
+        self.assertIn("minKg: Math.max(0, loadProfileBase.referenceKg - 150)", profile_block)
+        self.assertIn("maxKg: loadProfileBase.referenceKg + 150", profile_block)
         self.assertIn("guideMinKg: loadProfileBase.referenceKg * 0.75", profile_block)
         self.assertIn("guideMaxKg: loadProfileBase.referenceKg * 1.25", profile_block)
-        self.assertIn("margen de registro ±10%", profile_block)
+        self.assertIn("intervalo de captura orientativo ±150 kg", profile_block)
         self.assertIn("estimación orientativa ±25%", profile_block)
         exercise_count = 0
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
@@ -769,6 +770,9 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
             self.assertIn("const kilograms = loadMath.toKg(currentLoad, previousUnit)", html)
             self.assertIn("loadMath.normalizeKg(loadMath.toKg(load, item.performanceLoadUnit), item.performanceLoadProfile)", html)
             self.assertIn("const loadKg = load === null ? null : loadMath.normalizeKg(loadMath.toKg(load, loadUnit), item.performanceLoadProfile);", html)
+            self.assertIn("const updateLoadControl = (preserveSliderBounds = false) => {", html)
+            self.assertIn("if (!preserveSliderBounds) {", html)
+            self.assertIn("item.performanceLoadSelected = true; updateLoadControl(true); savePerformanceDraft();", html)
             self.assertNotIn("const unitStep = pounds ? 5", html)
             self.assertNotIn("Number(record.load)}${record.loadUnit", html)
 
@@ -779,12 +783,12 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
         script = f"""
 const assert = require('assert');
 const loadMath = {helper.group(1)};
-const panatta = {{ stepKg: 5, discreteStepKg: true, minKg: 16.875, maxKg: 34.375 }};
+const panatta = {{ stepKg: 5, discreteStepKg: true, minKg: 0, maxKg: 175 }};
 const kg = loadMath.bounds(panatta, 'kg');
 const lb = loadMath.bounds(panatta, 'lb');
-assert.deepStrictEqual(kg, {{ min: 15, max: 35, step: 5, factor: 1 }});
-assert.ok(Math.abs(lb.min - 33.0693393277) < 1e-8);
-assert.ok(Math.abs(lb.max - 77.1617917653) < 1e-8);
+assert.deepStrictEqual(kg, {{ min: 0, max: 175, step: 5, factor: 1 }});
+assert.ok(Math.abs(lb.min - 0) < 1e-8);
+assert.ok(Math.abs(lb.max - (175 / 0.45359237)) < 1e-8);
 assert.ok(Math.abs(lb.step - 11.0231131092) < 1e-8);
 const selectedLb = loadMath.toDisplay(30, 'lb');
 assert.ok(Math.abs(loadMath.toKg(selectedLb, 'lb') - 30) < 1e-10);
@@ -796,6 +800,54 @@ console.log(JSON.stringify({{ savedLoadKg: loadMath.normalizeKg(loadMath.toKg(se
         result = subprocess.run(["node", "-e", script], cwd=ROOT, capture_output=True, text=True, check=False)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads(result.stdout), {"savedLoadKg": 30, "labelLb": "66.1"})
+
+    def test_orientative_load_range_is_150kg_each_side_and_slider_bounds_stay_fixed_during_drag(self) -> None:
+        source = (CANONICAL / "Rutina_Dia_1_Espalda_Biceps_V1.html").read_text(encoding="utf-8")
+        helper = re.search(r"const loadMath = (\{.*?\n    \});", source, re.S)
+        self.assertIsNotNone(helper)
+        profile_start = source.index("    const loadProfiles = [")
+        profile_end = source.index("    ];", profile_start)
+        profile_block = source[profile_start:profile_end]
+        profiles = [
+            {"referenceKg": float(reference), "stepKg": float(step), "discreteStepKg": "discreteStepKg: true" in details}
+            for _pattern, reference, step, details in re.findall(
+                r"\[/\^(.+?)/, \{ referenceKg: ([0-9.]+), stepKg: ([0-9.]+),([^\n]*)",
+                profile_block,
+            )
+        ]
+        self.assertEqual(len(profiles), 25)
+        profile_json = json.dumps(profiles)
+        script = f"""
+const assert = require('assert');
+const loadMath = {helper.group(1)};
+const profiles = {profile_json};
+for (const base of profiles) {{
+  const profile = {{...base,minKg:Math.max(0,base.referenceKg-150),maxKg:base.referenceKg+150}};
+  for (const unit of ['kg','lb']) {{
+    const bounds = loadMath.bounds(profile,unit);
+    const factor = unit === 'lb' ? 1/0.45359237 : 1;
+    const step = base.stepKg;
+    const expectedMinKg = Math.floor(profile.minKg/step+1e-9)*step;
+    const expectedMaxKg = Math.ceil(profile.maxKg/step-1e-9)*step;
+    assert.ok(Math.abs(bounds.min-expectedMinKg*factor)<1e-8);
+    assert.ok(Math.abs(bounds.max-expectedMaxKg*factor)<1e-8);
+    assert.ok(Math.abs(bounds.step-step*factor)<1e-8);
+    assert.ok(bounds.min>=0);
+  }}
+}}
+console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
+"""
+        result = subprocess.run(["node", "-e", script], cwd=ROOT, capture_output=True, text=True, check=False)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), {"profiles": 25, "units": 2})
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            html = path.read_text(encoding="utf-8")
+            with self.subTest(routine=path.name):
+                start = html.index("item.performanceLoad.addEventListener('input'")
+                end = html.index("loadClear.addEventListener('click'", start)
+                handler = html[start:end]
+                self.assertIn("updateLoadControl(true)", handler)
+                self.assertNotIn("loadInput.max =", handler)
 
     def test_all_routines_use_persistent_fifteen_second_preparation_before_timing(self) -> None:
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
