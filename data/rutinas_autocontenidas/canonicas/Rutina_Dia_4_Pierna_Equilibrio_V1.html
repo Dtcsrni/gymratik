@@ -3673,7 +3673,8 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       loadInput.value = String(displayedValue);
       loadUnitSelect.value = unit;
       const value = Number(item.performanceLoadExact) || 0;
-      loadOutput.textContent = item.performanceLoadSelected ? `${Number.isInteger(value) ? value : value.toFixed(1)} ${unit}` : 'Sin registrar · toca para añadir'; loadOutput.dataset.selected = String(item.performanceLoadSelected); loadClear.hidden = !item.performanceLoadSelected; updateRangeFill(loadInput);
+      const displayValue = unit === 'lb' ? String(Math.round(value)) : Number.isInteger(value) ? String(value) : value.toFixed(1);
+      loadOutput.textContent = item.performanceLoadSelected ? `${displayValue} ${unit}` : 'Sin registrar · toca para añadir'; loadOutput.dataset.selected = String(item.performanceLoadSelected); loadClear.hidden = !item.performanceLoadSelected; updateRangeFill(loadInput);
     };
     const savePerformanceDraft = () => {
       if (!state.__performanceDraft) state.__performanceDraft = {};
@@ -3720,7 +3721,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     loadClear.addEventListener('click', () => { item.performanceLoadSelected = false; item.performanceLoadExact = 0; item.performanceLoad.value = item.performanceLoad.min; updateLoadControl(); savePerformanceDraft(); });
     loadOutput.addEventListener('click', () => {
       if (loadLabel.querySelector('.performanceLoadDirect')) return;
-      const editor = document.createElement('input'); editor.type = 'number'; editor.inputMode = 'decimal'; editor.min = loadInput.min; editor.max = loadInput.max; editor.step = '0.1'; editor.className = 'performanceLoadDirect'; editor.setAttribute('aria-label', `Introducir carga exacta en ${item.performanceLoadUnit}`); editor.value = item.performanceLoadSelected ? String(item.performanceLoadExact) : ''; loadOutput.replaceWith(editor); editor.focus(); editor.select();
+      const editor = document.createElement('input'); editor.type = 'number'; editor.inputMode = 'decimal'; editor.min = loadInput.min; editor.max = loadInput.max; editor.step = '0.1'; editor.className = 'performanceLoadDirect'; editor.setAttribute('aria-label', `Introducir carga exacta en ${item.performanceLoadUnit}`); editor.value = item.performanceLoadSelected ? (item.performanceLoadUnit === 'lb' ? String(Math.round(item.performanceLoadExact)) : String(item.performanceLoadExact)) : ''; loadOutput.replaceWith(editor); editor.focus(); editor.select();
       const finish = commit => { if (!editor.isConnected) return; if (commit && editor.value === '') { item.performanceLoadSelected = false; item.performanceLoadExact = 0; loadInput.value = '0'; } else if (commit) { const entered = Number(editor.value); if (Number.isFinite(entered) && entered >= Number(loadInput.min) && entered <= Number(loadInput.max)) { item.performanceLoadExact = loadMath.toDisplay(loadMath.normalizeKg(loadMath.toKg(entered, item.performanceLoadUnit), item.performanceLoadProfile), item.performanceLoadUnit); item.performanceLoadSelected = true; loadInput.value = String(item.performanceLoadExact); } } editor.replaceWith(loadOutput); updateLoadControl(); savePerformanceDraft(); };
       editor.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); finish(true); event.stopPropagation(); } if (event.key === 'Escape') { event.preventDefault(); finish(false); } });
       editor.addEventListener('blur', () => queueMicrotask(() => finish(true)), { once: true });
@@ -3764,7 +3765,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
         return record && record.exerciseId === String(item.index + 1) && Number.isInteger(reps) && reps >= 1 && reps <= 100;
       }).sort((a, b) => a.setNumber - b.setNumber);
       if (!records.length) return;
-      const formatLoad = record => { if (record.load == null) return ''; const unit = record.loadUnit === 'lb' ? 'lb' : 'kg'; const loadKg = Number.isFinite(Number(record.loadKg)) ? Number(record.loadKg) : unit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load); const original = `${Number.isInteger(Number(record.load)) ? Number(record.load) : Number(record.load).toFixed(1)} ${unit}`; return unit === 'lb' ? `${original} (${loadKg.toFixed(1)} kg)` : original; };
+      const formatLoad = record => { if (record.load == null) return ''; const unit = record.loadUnit === 'lb' ? 'lb' : 'kg'; const loadKg = Number.isFinite(Number(record.loadKg)) ? Number(record.loadKg) : unit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load); const original = `${unit === 'lb' ? Math.round(Number(record.load)) : Number.isInteger(Number(record.load)) ? Number(record.load) : Number(record.load).toFixed(1)} ${unit}`; return unit === 'lb' ? `${original} (${loadKg.toFixed(1)} kg)` : original; };
       const summary = records.map(record => `${record.reps} ${record.reps === 1 ? 'repetición' : 'repeticiones'}${record.load == null ? '' : ` · ${formatLoad(record)}`}`).join(' / ');
       const allAtTop = records.length === item.seriesKeys.length && records.every(record => record.reps >= item.repMaximum);
       const kilograms = record => Number.isFinite(Number(record.loadKg)) ? Number(record.loadKg) : record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load);
@@ -3872,7 +3873,8 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
           const repsValue = Number(record?.reps);
           const reps = Number.isInteger(repsValue) && repsValue >= 1 && repsValue <= 100 ? `${repsValue}r` : null;
           const loadValue = Number(record?.load);
-          const load = record?.load !== null && record?.load !== undefined && Number.isFinite(loadValue) ? `${Number.isInteger(loadValue) ? loadValue : loadValue.toFixed(1)} ${record.loadUnit || 'kg'}` : null;
+          const loadUnit = record?.loadUnit || 'kg';
+          const load = record?.load !== null && record?.load !== undefined && Number.isFinite(loadValue) ? `${loadUnit === 'lb' ? Math.round(loadValue) : Number.isInteger(loadValue) ? loadValue : loadValue.toFixed(1)} ${loadUnit}` : null;
           const details = [reps, load].filter(Boolean).join(' · ') || 'sin datos';
           entries.push({ key: `set-${index + 1}`, label: `S${index + 1} · ${details}`, value: formatElapsed(duration), kind: 'set' });
         }
@@ -4778,7 +4780,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       if (!state.__performance) state.__performance = {};
       if (!state.__performance[String(item.index + 1)]) state.__performance[String(item.index + 1)] = {};
       state.__performance[String(item.index + 1)][nextKey] = { title: item.title, reps: repsSelected ? reps : null, load: loadSelected ? load : null, loadUnit, loadKg: loadSelected ? loadKg : null, durationMs: Math.min(MAX_TIMING_MS, Math.max(0, completedAt - Number(activeTiming.seriesStartedAt || completedAt))), updatedAt: completedAt };
-      if (load !== null && item.performanceLoadOutput) item.performanceLoadOutput.textContent = loadUnit === 'lb' ? `${Number.isInteger(load) ? load : load.toFixed(1)} lb (${loadKg.toFixed(1)} kg)` : `${Number.isInteger(load) ? load : load.toFixed(1)} kg`;
+      if (load !== null && item.performanceLoadOutput) item.performanceLoadOutput.textContent = loadUnit === 'lb' ? `${Math.round(load)} lb (${loadKg.toFixed(1)} kg)` : `${Number.isInteger(load) ? load : load.toFixed(1)} kg`;
       item.performanceReps.value = String(item.repMinimum);
       item.performanceReps.dataset.selected = 'false';
       item.performanceRepsOutput.textContent = `Sin registrar · ${item.repMinimum}–${item.repMaximum + 4} posibles`; item.performanceRepsOutput.dataset.selected = 'false'; item.performanceRepsClear.hidden = true; item.performanceRangeFill?.(item.performanceReps);
@@ -7036,7 +7038,8 @@ body{height:auto!important;min-height:100%!important;overflow-x:hidden!important
   window.addEventListener('gymratik:weight-change', event => {
     const detail = event.detail || {};
     if (detail.direction === 'up') {
-      encourage(`¡Carga aumentada en ${detail.title}! Serie completada con ${detail.load} ${detail.loadUnit}. Buen progreso; conserva la técnica.`);
+      const loadValue = Number(detail.load); const displayLoad = detail.loadUnit === 'lb' ? Math.round(loadValue) : Number.isInteger(loadValue) ? loadValue : loadValue.toFixed(1);
+      encourage(`¡Carga aumentada en ${detail.title}! Serie completada con ${displayLoad} ${detail.loadUnit}. Buen progreso; conserva la técnica.`);
     } else if (detail.direction === 'down') {
       encourage(`Buen ajuste en ${detail.title}: completaste la serie con menos carga. Prioriza control y rango cómodo; progresar también es entrenar con criterio.`);
     }

@@ -464,7 +464,8 @@ REST_TIMING_DISPLAY_CONTRACT = '''  const renderTimingDisplays = () => {
           const repsValue = Number(record?.reps);
           const reps = Number.isInteger(repsValue) && repsValue >= 1 && repsValue <= 100 ? `${repsValue}r` : null;
           const loadValue = Number(record?.load);
-          const load = record?.load !== null && record?.load !== undefined && Number.isFinite(loadValue) ? `${Number.isInteger(loadValue) ? loadValue : loadValue.toFixed(1)} ${record.loadUnit || 'kg'}` : null;
+          const loadUnit = record?.loadUnit || 'kg';
+          const load = record?.load !== null && record?.load !== undefined && Number.isFinite(loadValue) ? `${loadUnit === 'lb' ? Math.round(loadValue) : Number.isInteger(loadValue) ? loadValue : loadValue.toFixed(1)} ${loadUnit}` : null;
           const details = [reps, load].filter(Boolean).join(' · ') || 'sin datos';
           entries.push({ key: `set-${index + 1}`, label: `S${index + 1} · ${details}`, value: formatElapsed(duration), kind: 'set' });
         }
@@ -3185,7 +3186,8 @@ def standardize_series_entry_zone(source: str) -> str:
     source = source.replace("editor.min = '0'; editor.max = loadInput.max;", "editor.min = loadInput.min; editor.max = loadInput.max;")
     source = source.replace("entered >= 0 && entered <= Number(loadInput.max)", "entered >= Number(loadInput.min) && entered <= Number(loadInput.max)")
     source = source.replace("item.performanceLoad.value = '0'; updateLoadControl();", "item.performanceLoad.value = item.performanceLoad.min; updateLoadControl();")
-    source = source.replace("editor.value = Number(item.performanceLoadExact) > 0 ? String(item.performanceLoadExact) : '';", "editor.value = item.performanceLoadSelected ? String(item.performanceLoadExact) : '';")
+    source = source.replace("editor.value = Number(item.performanceLoadExact) > 0 ? String(item.performanceLoadExact) : '';", "editor.value = item.performanceLoadSelected ? (item.performanceLoadUnit === 'lb' ? String(Math.round(item.performanceLoadExact)) : String(item.performanceLoadExact)) : '';")
+    source = source.replace("editor.value = item.performanceLoadSelected ? String(item.performanceLoadExact) : '';", "editor.value = item.performanceLoadSelected ? (item.performanceLoadUnit === 'lb' ? String(Math.round(item.performanceLoadExact)) : String(item.performanceLoadExact)) : '';")
     source = source.replace(
         "const factor = nextUnit === 'lb' ? 1 / 0.45359237 : 1; const unitStep = nextUnit === 'lb' ? 5 : item.performanceLoadProfile.stepKg; const unitMin = Math.ceil(item.performanceLoadProfile.minKg * factor / unitStep) * unitStep; const unitMax = Math.floor(item.performanceLoadProfile.maxKg * factor / unitStep) * unitStep;\n      item.performanceLoadExact = Math.min(unitMax, Math.max(unitMin, Math.round(converted * factor / unitStep) * unitStep));\n      item.performanceLoad.value = String(item.performanceLoadExact);",
         "const factor = nextUnit === 'lb' ? 1 / 0.45359237 : 1; const unitStep = nextUnit === 'lb' ? 5 : item.performanceLoadProfile.stepKg; const rounded = Math.round(converted / unitStep) * unitStep; const unitMin = Math.min(item.performanceLoadProfile.minKg * factor, item.performanceLoadSelected ? rounded : item.performanceLoadProfile.minKg * factor); const unitMax = Math.max(item.performanceLoadProfile.maxKg * factor, item.performanceLoadSelected ? rounded : item.performanceLoadProfile.maxKg * factor);\n      item.performanceLoadExact = Math.min(unitMax, Math.max(unitMin, rounded));\n      item.performanceLoad.value = String(item.performanceLoadExact);",
@@ -3260,7 +3262,9 @@ def standardize_series_entry_zone(source: str) -> str:
     const detail = event.detail || {};
     if (detail.direction === 'up') {
       celebrate(detail.target, 20);
-      encourage(`¡Carga aumentada en ${detail.title}! Serie completada con ${detail.load} ${detail.loadUnit}. Buen progreso; conserva la técnica.`);
+      const loadValue = Number(detail.load);
+      const displayLoad = detail.loadUnit === 'lb' ? Math.round(loadValue) : Number.isInteger(loadValue) ? loadValue : loadValue.toFixed(1);
+      encourage(`¡Carga aumentada en ${detail.title}! Serie completada con ${displayLoad} ${detail.loadUnit}. Buen progreso; conserva la técnica.`);
     } else if (detail.direction === 'down') {
       encourage(`Buen ajuste en ${detail.title}: completaste la serie con menos carga. Prioriza control y rango cómodo; progresar también es entrenar con criterio.`);
     }
@@ -3269,6 +3273,10 @@ def standardize_series_entry_zone(source: str) -> str:
 """
     if listener_anchor in source and "window.addEventListener('gymratik:weight-change'" not in source:
         source = source.replace(listener_anchor, weight_listener + listener_anchor, 1)
+    source = source.replace(
+        "encourage(`¡Carga aumentada en ${detail.title}! Serie completada con ${detail.load} ${detail.loadUnit}. Buen progreso; conserva la técnica.`);",
+        "const loadValue = Number(detail.load); const displayLoad = detail.loadUnit === 'lb' ? Math.round(loadValue) : Number.isInteger(loadValue) ? loadValue : loadValue.toFixed(1);\n      encourage(`¡Carga aumentada en ${detail.title}! Serie completada con ${displayLoad} ${detail.loadUnit}. Buen progreso; conserva la técnica.`);",
+    )
     if "Progresión sugerida: alcanzaste al menos" not in source:
         source = source.replace(
             "      recordSeriesTime(item, seriesIndex, completedAt);",
@@ -3373,7 +3381,8 @@ def standardize_series_entry_zone(source: str) -> str:
       loadInput.value = String(displayedValue);
       loadUnitSelect.value = unit;
       const value = Number(item.performanceLoadExact) || 0;
-      loadOutput.textContent = item.performanceLoadSelected ? `${Number.isInteger(value) ? value : value.toFixed(1)} ${unit}` : 'Sin registrar · toca para añadir'; loadOutput.dataset.selected = String(item.performanceLoadSelected); loadClear.hidden = !item.performanceLoadSelected; updateRangeFill(loadInput);
+      const displayValue = unit === 'lb' ? String(Math.round(value)) : Number.isInteger(value) ? String(value) : value.toFixed(1);
+      loadOutput.textContent = item.performanceLoadSelected ? `${displayValue} ${unit}` : 'Sin registrar · toca para añadir'; loadOutput.dataset.selected = String(item.performanceLoadSelected); loadClear.hidden = !item.performanceLoadSelected; updateRangeFill(loadInput);
     };"""
     source, load_control_count = re.subn(
         r"[ \t]*const updateLoadControl = \([^)]*\) => \{.*?(?=\n[ \t]*const savePerformanceDraft =)",
@@ -3455,9 +3464,13 @@ def standardize_series_entry_zone(source: str) -> str:
         1,
     )
     source = source.replace(
-        "if (load !== null && item.performanceLoadOutput) item.performanceLoadOutput.textContent = loadUnit === 'lb' ? `${load} lb (${loadKg.toFixed(1)} kg)` : `${load} kg`;",
         "if (load !== null && item.performanceLoadOutput) item.performanceLoadOutput.textContent = loadUnit === 'lb' ? `${Number.isInteger(load) ? load : load.toFixed(1)} lb (${loadKg.toFixed(1)} kg)` : `${Number.isInteger(load) ? load : load.toFixed(1)} kg`;",
+        "if (load !== null && item.performanceLoadOutput) item.performanceLoadOutput.textContent = loadUnit === 'lb' ? `${Math.round(load)} lb (${loadKg.toFixed(1)} kg)` : `${Number.isInteger(load) ? load : load.toFixed(1)} kg`;",
         1,
+    )
+    source = source.replace(
+        "const original = `${Number.isInteger(Number(record.load)) ? Number(record.load) : Number(record.load).toFixed(1)} ${unit}`;",
+        "const original = `${unit === 'lb' ? Math.round(Number(record.load)) : Number.isInteger(Number(record.load)) ? Number(record.load) : Number(record.load).toFixed(1)} ${unit}`;",
     )
     if "const repFeedbackZone = value =>" not in source:
         source, guidance_count = re.subn(

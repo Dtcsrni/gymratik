@@ -931,6 +931,7 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
         self.assertIn("item.performanceLoadSelected = true", source)
         self.assertIn("item.performanceLoadSelected = false", source)
         self.assertIn("const loadValue = Number(item.performanceLoadExact)", source)
+        self.assertIn("item.performanceLoadUnit === 'lb' ? String(Math.round(item.performanceLoadExact))", source)
         self.assertIn("editor.addEventListener('blur', () => queueMicrotask(() => finish(true))", source)
 
     def test_enter_only_commits_load_and_celebration_requires_a_recorded_series(self) -> None:
@@ -1104,6 +1105,16 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 self.assertIn("item.performanceLoadOutput = loadOutput", source)
                 self.assertIn("item.performanceLoadOutput.textContent = loadUnit", source)
                 self.assertNotIn("loadOutput.textContent = loadUnit", source)
+
+    def test_load_values_use_compact_unit_appropriate_precision(self) -> None:
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            source = path.read_text(encoding="utf-8")
+            with self.subTest(path=path.name):
+                self.assertIn("unit === 'lb' ? String(Math.round(value))", source)
+                self.assertIn("loadUnit === 'lb' ? Math.round(loadValue)", source)
+                self.assertIn("loadUnit === 'lb' ? `${Math.round(load)} lb", source)
+                self.assertIn("unit === 'lb' ? Math.round(Number(record.load))", source)
+                self.assertNotIn("Serie completada con ${detail.load} ${detail.loadUnit}", source)
 
     def test_motivation_button_has_multiple_offline_fallback_phrases(self) -> None:
         fallback_phrases = (
