@@ -1360,12 +1360,32 @@ def validate_weekly_progress_rollover(page, name: str) -> dict[str, bool]:
     retained_current_week = page.locator("#sessionCompletionPanel").is_visible()
     if not retained_current_week:
         raise AssertionError(f"{name}: el reinicio semanal no debe borrar una sesión de esta semana")
+
+    # A rejected manual reset must be a no-op. An accepted reset may clear only
+    # this routine's weekly view; profile, training history, archives, and other
+    # routine snapshots must remain byte-for-byte equivalent in this fixture.
+    other_routine_id = "2" if routine_id != "2" else "1"
+    other_storage_key = f"fitlovers-day{other_routine_id}-series-v1"
+    page.evaluate("key => localStorage.setItem(key, JSON.stringify({e1s1:true,__routineWeek:'fixture-other-day'}))", other_storage_key)
+    before_reset = page.evaluate("async key => ({current:localStorage.getItem(key),other:localStorage.getItem(`fitlovers-day${key.match(/day(\\d+)/)[1] === '2' ? '1' : '2'}-series-v1`),archive:localStorage.getItem('gymratik-legacy-progress-archive-v1'),history:await window.TrainingProgressStore.getHistory(),profile:await window.TrainingProgressStore.getProfile()})", storage_key)
+    page.once("dialog", lambda dialog: dialog.dismiss())
+    click_control(reset)
+    after_cancel = page.evaluate("async key => ({current:localStorage.getItem(key),other:localStorage.getItem(`fitlovers-day${key.match(/day(\\d+)/)[1] === '2' ? '1' : '2'}-series-v1`),archive:localStorage.getItem('gymratik-legacy-progress-archive-v1'),history:await window.TrainingProgressStore.getHistory(),profile:await window.TrainingProgressStore.getProfile()})", storage_key)
+    if before_reset != after_cancel:
+        raise AssertionError(f"{name}: cancelar Reiniciar día modificó datos: antes={before_reset!r}; después={after_cancel!r}")
+
+    page.once("dialog", lambda dialog: dialog.accept())
+    click_control(reset)
+    page.wait_for_function("key => { const state=JSON.parse(localStorage.getItem(key)||'{}'); return Object.keys(state).length===0 || !Object.entries(state).some(([name,value]) => (/^e\\d+s\\d+$/.test(name)||/^w\\d+$/.test(name))&&value===true); }", arg=storage_key)
+    after_confirm = page.evaluate("async key => ({current:localStorage.getItem(key),other:localStorage.getItem(`fitlovers-day${key.match(/day(\\d+)/)[1] === '2' ? '1' : '2'}-series-v1`),archive:localStorage.getItem('gymratik-legacy-progress-archive-v1'),history:await window.TrainingProgressStore.getHistory(),profile:await window.TrainingProgressStore.getProfile()})", storage_key)
+    if after_confirm["other"] != before_reset["other"] or after_confirm["archive"] != before_reset["archive"] or after_confirm["history"] != before_reset["history"] or after_confirm["profile"] != before_reset["profile"]:
+        raise AssertionError(f"{name}: Reiniciar día borró datos ajenos al día actual: antes={before_reset!r}; después={after_confirm!r}")
     page.evaluate("key => localStorage.removeItem(key)", storage_key)
     page.reload(wait_until="networkidle")
     page.wait_for_function("() => [...document.querySelectorAll('.exerciseProgress')].length > 0 && [...document.querySelectorAll('.exerciseProgress')].every(node => /^0\\//.test(node.textContent.trim()))")
     if page.locator("#summaryToggle").get_attribute("aria-expanded") == "true":
         click_control(page.locator("#summaryToggle"))
-    return {"previousWeekCompletionRolledToZero": True, "previousWeekIncompleteSessionRolledToZero": True, "activeSessionPreservedWithinWeek": True, "completedLegacySessionWithoutEndTimestampRolledToZero": True, "currentWeekCompletionPreserved": retained_current_week, "resetButtonVisibleAtRoutineEnd": True, "resetButtonNotCoveredByFloatingSummary": True}
+    return {"previousWeekCompletionRolledToZero": True, "previousWeekIncompleteSessionRolledToZero": True, "activeSessionPreservedWithinWeek": True, "completedLegacySessionWithoutEndTimestampRolledToZero": True, "currentWeekCompletionPreserved": retained_current_week, "cancelledResetIsNoOp": True, "confirmedResetOnlyClearsCurrentRoutine": True, "resetPreservesProfileHistoryArchiveAndOtherRoutine": True, "resetButtonVisibleAtRoutineEnd": True, "resetButtonNotCoveredByFloatingSummary": True}
 
 
 def validate_approximation_moves_to_first_available(browser, name: str, sex: str) -> None:
@@ -1694,11 +1714,42 @@ def validate_every_effective_series(browser, name: str, sex: str) -> dict:
             exercise_number = exercise_index + 1
             button = card.locator(".completeSetButton")
             segments = card.locator(".seriesProgressSegment")
+            # The canonical card format is shared across every exercise/day:
+            # four compact metrics plus one collapsed, three-step technique guide.
+            metrics = card.locator(".coach .metrics .metric")
+            metric_labels = metrics.locator(".metricLabel").all_text_contents()
+            technique = card.locator("details.techAccordion")
+            technique_steps = technique.locator(".techSteps > .techStep")
+            technique_schema = technique_steps.evaluate_all("nodes => nodes.map(node => [...node.classList].find(name => ['setup','move','warning'].includes(name)) || '')") if technique.count() == 1 else []
+            technique_titles = technique.locator(".techStepTitle span").all_text_contents() if technique.count() == 1 else []
+            if metrics.count() != 4 or metric_labels != ["Series", "Repeticiones", "Descanso", "Duración aprox."] or technique.count() != 1 or technique.locator("summary").inner_text().strip() != "Técnica esencial" or technique.get_attribute("open") is not None or technique_schema != ["setup", "move", "warning"] or technique_titles != ["Posición", "Movimiento", "Evita"]:
+                raise AssertionError(f"{name}: formato de tarjeta/técnica no uniforme en ejercicio {exercise_number}: metrics={metric_labels}, technique={technique.count()}, schema={technique_schema}, titles={technique_titles}")
             series_count = segments.count()
             keys = card.locator(".exerciseTracker").get_attribute("data-series-keys").split()
             if len(keys) != series_count or series_count == 0:
                 raise AssertionError(f"{name}: ejercicio {exercise_number} tiene claves/segmentos inconsistentes: {keys}, {series_count}")
             button.scroll_into_view_if_needed()
+            select_valid_performance(card)
+            progress_before_manual_enter = card.locator(".exerciseProgress").inner_text().strip()
+            unit_selector = card.locator("select.performanceLoadUnit")
+            load_display = card.locator(".performanceLoadValue")
+            for unit, pattern in (("kg", r"\d+(?:\.\d)? kg"), ("lb", r"\d+ lb")):
+                unit_selector.select_option(unit)
+                shown = load_display.inner_text().strip()
+                if not re.fullmatch(pattern, shown):
+                    raise AssertionError(f"{name}: formato de carga {unit} inválido en ejercicio {exercise_number}: {shown!r}")
+                click_control(load_display)
+                direct = card.locator("input.performanceLoadDirect")
+                entered = direct.input_value().strip()
+                if not re.fullmatch(r"\d+(?:\.\d)?" if unit == "kg" else r"\d+", entered):
+                    raise AssertionError(f"{name}: editor manual {unit} no usa precisión uniforme en ejercicio {exercise_number}: {entered!r}")
+                direct.press("Enter")
+                if card.locator(".exerciseProgress").inner_text().strip() != progress_before_manual_enter:
+                    raise AssertionError(f"{name}: Enter en la carga registró una serie en ejercicio {exercise_number}")
+                shown = load_display.inner_text().strip()
+                if not re.fullmatch(pattern, shown):
+                    raise AssertionError(f"{name}: Enter dejó formato de carga {unit} inválido en ejercicio {exercise_number}: {shown!r}")
+            unit_selector.select_option("kg")
             select_valid_performance(card)
             if card.locator(".warmupSet").count():
                 click_control(button)
@@ -1752,10 +1803,10 @@ def validate_every_effective_series(browser, name: str, sex: str) -> dict:
                 if rest.count() != 1 or not rest.is_visible() or rest.evaluate("element => getComputedStyle(element, '::before').animationName") != "timerActivityPulse":
                     raise AssertionError(f"{name}: indicador de descanso no está visible y animado tras {key}")
                 validated_sets += 1
-            exercise_results.append({"exercise": exercise_number, "effectiveSeries": series_count, "seriesKeys": keys, "allCompleted": True})
+            exercise_results.append({"exercise": exercise_number, "effectiveSeries": series_count, "seriesKeys": keys, "allCompleted": True, "uniformCardFormat": True, "manualLoadEnterAndUnits": True})
     finally:
         context.close()
-    return {"exercisesWithAllSeriesValidated": len(exercise_results), "effectiveSeriesValidated": validated_sets, "seriesResults": exercise_results}
+    return {"exercisesWithAllSeriesValidated": len(exercise_results), "effectiveSeriesValidated": validated_sets, "uniformCardFormatsValidated": len(exercise_results), "manualLoadFormatsValidated": len(exercise_results), "seriesResults": exercise_results}
 
 
 def validate_completed_session_celebration(browser, name: str, sex: str, variant: str) -> dict[str, str | bool]:

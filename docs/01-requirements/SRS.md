@@ -87,6 +87,8 @@ La compatibilidad efectiva depende del navegador y el sistema operativo. Las pru
   - Aceptación: identifica IndexedDB `entrenamiento-progress` v3, el fallback `entrenamiento-progress-fallback-v3`, los snapshots/archivo JSON de localStorage y la exportación `gymratik-backup` esquema 3.
 - **FUN-PRO-018 · P0:** Gymratik solo eliminará datos de usuario tras una acción manual explícita.
   - Aceptación: los controles de reinicio y reemplazo por importación explican el alcance y requieren confirmación; instalación, inicio, actualización, migración y rotación semanal conservan datos; la documentación distingue el ciclo de vida externo del almacenamiento del navegador/sistema operativo.
+- **FUN-PRO-019 · P0:** todas las fichas de ejercicio mantendrán un formato uniforme y las acciones de reinicio no eliminarán datos ajenos a su alcance confirmado.
+  - Aceptación: en las cuatro rutinas, cada ejercicio presenta las mismas cuatro métricas y el acordeón cerrado de técnica con Posición, Movimiento y Evita; todas las cargas se muestran en kg con máximo un decimal y en lb como entero; Enter confirma la edición de carga sin completar una serie; cancelar un reinicio no muta datos y confirmarlo solo limpia el progreso semanal del día elegido, conservando perfil, historial, archivo y progreso de otros días.
 
 ### 4.3 Interacción de rutina en la PWA
 

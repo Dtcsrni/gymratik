@@ -32,6 +32,7 @@ Cada requisito funcional/no funcional del SRS aparece una sola vez. `Partial` in
 | FUN-PRO-016 | RISK-004, RISK-014 | SDD-004, ADR-015 | TST-PRO-016 | Partial |
 | FUN-PRO-017 | RISK-014 | SDD-004, ADR-013 | TST-PRO-017 | Partial |
 | FUN-PRO-018 | RISK-014 | ADR-018 | TST-PRO-018 | Partial |
+| FUN-PRO-019 | RISK-014 | ADR-018 | TST-PRO-019 | Partial |
 | FUN-TRN-010 | RISK-004 | SDD-001 | TST-TRN-010 | Partial |
 | FUN-TRN-011 | RISK-004 | SDD-001 | TST-TRN-011 | Partial |
 | FUN-TRN-012 | RISK-004 | SDD-001 | TST-TRN-012 | Partial |

@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-26",
+  "release": "0.4.8",
+  "command": "python scripts/e2e_routine_activity_check.py --functional-only",
+  "result": "E2E_ROUTINES_OK",
+  "target": "Microsoft Edge headless; ephemeral loopback server; isolated synthetic browser contexts",
+  "days": [
+    {"day": 1, "exercises": 6, "effectiveSeries": 20},
+    {"day": 2, "exercises": 6, "effectiveSeries": 20},
+    {"day": 3, "exercises": 7, "effectiveSeries": 22},
+    {"day": 4, "exercises": 7, "effectiveSeries": 20}
+  ],
+  "totals": {"exercises": 26, "effectiveSeries": 82},
+  "checks": [
+    "all effective series completed and persisted",
+    "exact metric labels/order and collapsed Posición-Movimiento-Evita guide on every card",
+    "kg one-decimal maximum; lb integer; manual Enter does not complete a set",
+    "weekly rollover and active-session reload/home-return persistence",
+    "cancelled reset is a no-op; confirmed reset preserves profile, history, archive, and other routines",
+    "mascot state, celebration, rest/preparation timing, skip controls, and routine media"
+  ],
+  "automatedSuite": {"command": "python -m unittest discover -s tests -p test*.py", "tests": 221, "result": "OK"},
+  "validators": {
+    "repository": "VALIDATION_OK",
+    "canonicalRoutines": "CANONICAL_ROUTINES_OK routines=4",
+    "routineMedia": "ROUTINE_MEDIA_OK routines=4",
+    "serviceWorkerSyntax": "node --check sw.js passed",
+    "scopeNote": "Functional synthetic E2E only; offline package, installed PWA, public deployment, and physical device were not tested in this run."
+  }
+}

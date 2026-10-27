@@ -67,8 +67,10 @@ class RoutineE2EServerTests(unittest.TestCase):
             with sync_playwright() as playwright:
                 browser = playwright.chromium.launch(channel="msedge", headless=True)
                 try:
-                    page = browser.new_page()
-                    page.goto(f"http://127.0.0.1:{server.server_address[1]}/")
+                    context = browser.new_context(service_workers="block")
+                    page = context.new_page()
+                    hidden_decode_calls = []
+                    page.expose_function("recordHiddenDecode", lambda: hidden_decode_calls.append(True))
                     page.set_content(f"""
                       <img alt="visible fixture" width="24" height="24"
                         src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Crect width='24' height='24' fill='teal'/%3E%3C/svg%3E">
@@ -76,15 +78,13 @@ class RoutineE2EServerTests(unittest.TestCase):
                         src="http://127.0.0.1:{server.server_address[1]}/pending.jpg">
                     """)
                     page.evaluate("""() => {
-                      window.__hiddenDecodeCalls = 0;
                       document.querySelector('#lazy-hidden').decode = () => {
-                        window.__hiddenDecodeCalls += 1;
-                        return Promise.resolve();
+                        return window.recordHiddenDecode();
                       };
                     }""")
-                    self.assertEqual(page.evaluate("window.__hiddenDecodeCalls"), 0)
+                    self.assertEqual(hidden_decode_calls, [])
                     result = assert_image_inventory(page, "fixture de imagen diferida")
-                    self.assertEqual(page.evaluate("window.__hiddenDecodeCalls"), 0)
+                    self.assertEqual(hidden_decode_calls, [])
                     self.assertEqual(result["images"], 2)
                     self.assertEqual(result["rendered"], 1)
                 finally:
