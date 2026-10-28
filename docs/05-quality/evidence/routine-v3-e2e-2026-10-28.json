@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-28",
+  "command": "python scripts/e2e_routine_activity_check.py --functional-only",
+  "status": "E2E_ROUTINES_OK",
+  "environment": "local synthetic browser",
+  "days": 4,
+  "exercises": 28,
+  "effectiveSeriesValidated": 90,
+  "perDay": [
+    { "day": 1, "exercises": 7, "effectiveSeriesValidated": 23, "allCompleted": true },
+    { "day": 2, "exercises": 7, "effectiveSeriesValidated": 23, "allCompleted": true },
+    { "day": 3, "exercises": 7, "effectiveSeriesValidated": 22, "allCompleted": true },
+    { "day": 4, "exercises": 7, "effectiveSeriesValidated": 22, "allCompleted": true }
+  ],
+  "contracts": {
+    "uniformCardFormat": "validated for 28 exercises",
+    "manualLoadEnterAndUnits": "validated for 28 exercises",
+    "completedSessionCelebration": "validated for all four days",
+    "routineExerciseGifs": "7 per day; loaded and validated by E2E",
+    "animatedSvgExerciseDemonstrations": 0
+  },
+  "physicalDevice": "not run",
+  "publicDeployment": "not checked"
+}

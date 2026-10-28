@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 
 from standardize_muscle_visuals import sanitize_canonical_metadata, standardize_muscle_visuals
+from apply_hypertrophy_4day_contract import apply as apply_hypertrophy_contract
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -190,6 +191,17 @@ def build_gif_script(template: str) -> str:
 (function(){
   const media = [
     {
+      gif:"../medios_publicados/rutinas_autocontenidas/dia2_media_generated/hip_thrust_machine_booty_builder_correct_form.gif",
+      thumbnail:"../medios_publicados/rutinas_autocontenidas/dia2_media_generated/hip_thrust_machine_booty_builder_correct_form.jpg",
+      key:"HIP THRUST",
+      kind:"gif",
+      label:"GIF · demostración oficial",
+      alt:"GIF oficial de hip thrust en máquina: espalda apoyada, pies en plataforma y extensión controlada de cadera",
+      note:"Demostración oficial Booty Builder · Correct vs Incorrect Form.",
+      sourceHref:"https://bootybuilder.com/how-to-use-the-booty-builder/",
+      sourceLabel:"Fuente oficial Booty Builder"
+    },
+    {
       gif:"../medios_publicados/ejercicios-compartido/videos/0743-Qa55kX1.gif",
       thumbnail:"../medios_publicados/ejercicios-compartido/images/0743-Qa55kX1.jpg",
       key:"HACK SQUAT",
@@ -245,7 +257,7 @@ def build_gif_script(template: str) -> str:
     box.dataset.gifProof = "true";
     box.dataset.mediaKind = item.kind || "gif";
     const frame = make("div","gifFrame");
-    const motion = make("img","gifMotion");
+    const motion = make("img","gifMotion routineExerciseGif");
     motion.src = item.gif;
     motion.alt = item.alt;
     motion.loading = "lazy";
@@ -263,6 +275,15 @@ def build_gif_script(template: str) -> str:
       make("div","gifNote",item.note || "Animación ilustrada de referencia. Confirma el equipo, el rango y el control con la secuencia fotográfica y el checklist.")
     );
     box.append(frame,copy);
+    if (item.sourceHref) {
+      const sourceLink = make("a","gifSource",item.sourceLabel || "Fuente oficial");
+      sourceLink.href = item.sourceHref;
+      sourceLink.target = "_blank";
+      sourceLink.rel = "noopener noreferrer";
+      sourceLink.setAttribute("aria-label", (item.sourceLabel || "Fuente oficial") + " (abre en una pestaña nueva)");
+      copy.append(sourceLink);
+    }
+    card.dataset.mediaMode = "GIF";
     motion.addEventListener("error", function(){
       motion.hidden = true;
       fallback.hidden = false;
@@ -480,7 +501,7 @@ def main() -> None:
         "</html>",
     ])
     if len(re.findall(r'<article class="card" data-exercise-index="\d+">', body)) != 6:
-        raise ValueError("El HTML canónico debe conservar 6 tarjetas")
+        raise ValueError("El HTML canónico fuente debe conservar 6 tarjetas antes de añadir el ejercicio contractual")
     if sum(card.count('data-exercise-quick-summary') for card in re.findall(r'<article class="card" data-exercise-index="\d+">.*?</article>', body, re.S)) != 6:
         raise ValueError("Cada tarjeta del Día 2 debe conservar un resumen rápido")
     if body.count('<main class="cards">') != 1:
@@ -512,6 +533,7 @@ def main() -> None:
         raise ValueError(f"El HTML canónico conserva metadatos de licencia/atribución: {leaked_metadata}")
     canonical = sanitize_canonical_metadata(standardize_muscle_visuals(head + body))
     OUTPUT.write_text(canonical, encoding="utf-8", newline="\n")
+    apply_hypertrophy_contract()
     print(f"GENERATED {OUTPUT.relative_to(ROOT)} bytes={OUTPUT.stat().st_size}")
 
 

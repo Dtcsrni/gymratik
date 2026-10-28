@@ -1,8 +1,8 @@
 # SDD-001 — Modelo de rutina canónica y versionado
 
-**Estado:** `Verified (local PWA)`
-**Versión:** `0.2`
-**Fecha de verificación:** `2026-10-09`
+**Estado:** `Routine v2 functional E2E verified (local synthetic)`
+**Versión:** `0.4`
+**Fecha de verificación:** `2026-10-27`
 **TDD asociado:** [TDD-002](../05-quality/TDD-002-integridad-rutinas-canonicas.md)
 
 ## 1. Objetivo
@@ -67,11 +67,22 @@ Para cada rutina canónica:
    muestran el mismo total y distribución.
 7. La última tarjeta no ofrece un índice siguiente; las anteriores apuntan a
    `exerciseIndex + 1`.
+11. El contenido v3 mantiene el `routineId` y las claves previas estables; los
+    ejercicios nuevos ocupan índices vacantes, sin reasignar registros anteriores.
+12. Los días base suman 21–24 series y el cuarto día es opcional. Cada rutina
+    tiene hasta siete ejercicios, al menos 3 series por ejercicio y prescribe
+    8–12 repeticiones. Se priorizan máquinas; la bisagra usa Smith. El tiempo
+    de sesión incluye calentamiento y es una estimación de programación.
 8. Una rutina no mezcla en una misma salida los identificadores de otra rutina,
    día o versión.
 9. Las cuatro salidas comparten un único `main.cards`, un `data-exercise-index`
    contiguo por tarjeta y un único `sessionFooter`; las diferencias de contenido
    no deben crear una segunda variante de layout.
+10. El contexto del día (objetivo y anatomía) se mantiene disponible en un
+    desplegable nativo cerrado por defecto. En móvil, las métricas y controles
+    de registro preceden a las referencias visuales; en escritorio, el orden de
+    la ficha no cambia y el contexto expandido presenta sus dos paneles en
+    columnas.
 
 ## 5. Fuente y flujo de construcción
 
@@ -109,22 +120,29 @@ tarjetas faltantes, footers alternativos o referencias obsoletas.
   sustituyen o quedan obsoletas; nunca debe reasignar silenciosamente una serie
   histórica a otro ejercicio.
 
-Estas reglas son propuestas de diseño hasta que exista persistencia Android.
-La implementación futura debe convertirlas en un contrato versionado.
+El atributo `data-routine-content-version="3"` identifica la prescripción v3;
+`routineId=dayN` y los índices/claves previos se conservan por compatibilidad con
+el progreso local. Los ejercicios nuevos se agregan en índices vacantes. El
+cuarto día no participa en la rotación base, pero una sesión opcional iniciada
+hoy conserva el flujo de continuación.
+Las cargas base son orientativas y no representan topes físicos verificados sin
+marca/modelo de la máquina y sus incrementos.
 
 ## 7. Estado actual y discrepancias conocidas
 
-La inspección del estado actual confirmó:
+El contenido v3 declara 7/23, 7/23, 7/22 y 7/22 ejercicios/series,
+respectivamente. Los tres días base suman 68 series; el opcional eleva el máximo
+semanal a 90. El validador ejecutable constituye la fuente del resultado;
+los E2E previos de 2026-10-09 se conservan como evidencia histórica y no
+validan esta nueva distribución.
 
-- Día 1 conserva seis ejercicios y la distribución `4 + 4 + 3 + 3 + 3 + 3`.
-- Día 2 conserva seis ejercicios y la distribución `3 + 3 + 3 + 4 + 3 + 4`.
-- Día 3 conserva siete ejercicios y la distribución `4 + 3 + 3 + 3 + 3 + 3 + 3`.
-- Día 4 conserva siete ejercicios y la distribución `3 + 3 + 4 + 2 + 2 + 3 + 3`.
-
-Las cuatro salidas canónicas superaron TDD-002 el 2026-10-09. La evidencia de
-conteo, series y recorrido funcional local está enlazada desde
+Las cuatro salidas canónicas superaron TDD-002 el 2026-10-09. El cambio de
+jerarquía móvil se validó estáticamente y mediante capturas sintéticas el
+2026-10-26; su recorrido interactivo responsive queda pendiente del arranque
+del driver Playwright. La evidencia de conteo, series y recorrido funcional local está enlazada desde
 [`TRACEABILITY.md`](../00-governance/TRACEABILITY.md) y el
 [registro por ejercicio](../05-quality/evidence/pwa-exercise-verification-2026-10-09.md).
+Las capturas nuevas están en la [auditoría móvil](../05-quality/evidence/ux-audit-2026-10-26/README.md).
 
 ## 8. Criterio de aceptación
 

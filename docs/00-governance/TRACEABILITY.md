@@ -38,6 +38,9 @@ Cada requisito funcional/no funcional del SRS aparece una sola vez. `Partial` in
 | FUN-TRN-012 | RISK-004 | SDD-001 | TST-TRN-012 | Partial |
 | FUN-TRN-013 | RISK-004 | SDD-001 | TST-TRN-013 | Partial |
 | FUN-TRN-014 | RISK-004 | SDD-001 | TST-TRN-014 | Partial |
+| FUN-TRN-015 | RISK-004 | SDD-001 | TST-CAN-005 | Partial |
+| FUN-TRN-016 | RISK-004, RISK-014 | SDD-001 | TST-CAN-006 | Verified (local synthetic; physical/public pending) |
+| FUN-TRN-017 | RISK-004, RISK-014 | SDD-003 | TST-MED-007, E2E de rutinas | Verified (local synthetic; physical/public pending) |
 | NFR-REL-001 | RISK-004 | ADR-013, ADR-015 | TST-PWA-012 | Partial |
 | NFR-REL-002 | RISK-004 | ADR-015 | TST-PWA-013 | Partial |
 | NFR-AVA-001 | RISK-011 | ADR-017 | TST-PWA-014 | Partial; navegador físico pendiente |
@@ -56,7 +59,7 @@ Cada requisito funcional/no funcional del SRS aparece una sola vez. `Partial` in
 
 | Diseño | Alcance | Prueba/evidencia | Estado |
 |---|---|---|---|
-| SDD-001 · Rutinas canónicas | Cuatro rutinas y contratos compartidos | [TDD-002](../05-quality/TDD-002-integridad-rutinas-canonicas.md), [evidencia por ejercicio/serie](../05-quality/evidence/pwa-exercise-verification-2026-10-09.md) | Verified (local PWA; physical/public pending) |
+| SDD-001 · Rutinas canónicas | Cuatro rutinas y contratos compartidos | [TDD-002](../05-quality/TDD-002-integridad-rutinas-canonicas.md), [E2E v2 por día](../05-quality/evidence/routine-v2-e2e-2026-10-27.json), [evidencia histórica por ejercicio/serie](../05-quality/evidence/pwa-exercise-verification-2026-10-09.md) | Verified (v2 functional local synthetic; responsive/offline/physical/public pending) |
 | SDD-003 · Medios y procedencia | Recursos visuales locales de rutinas | [TDD-004](../05-quality/TDD-004-medios-formato-y-correspondencia.md), [evidencia visual](../05-quality/evidence/pwa-exercise-verification-2026-10-09.md) | PWA runtime verified; provenance pending |
 | [SDD-004](../03-architecture/SDD-004-generacion-validacion-publicacion-pwa.md) · PWA local/offline | FUN-PWA-*, FUN-PRO-*, FUN-TRN-010..014 y NFR activos | [TDD-005](../05-quality/TDD-005-pwa-perfil-e2e.md) | In progress |
 

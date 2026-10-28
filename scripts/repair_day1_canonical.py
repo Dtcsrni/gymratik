@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 
 from standardize_muscle_visuals import sanitize_canonical_metadata, standardize_muscle_visuals
+from apply_hypertrophy_4day_contract import apply as apply_hypertrophy_contract
 from pwa_battery import apply_battery_motion as _apply_shared_battery_motion
 
 
@@ -74,6 +75,18 @@ def main() -> None:
     with HTML.open("r", encoding="utf-8", newline="") as handle:
         source = handle.read()
     newline = "\r\n" if "\r\n" in source else "\n"
+    # The contract normalizer serializes cards without their builder markers.
+    # Restore markers from stable card indices so regeneration remains repeatable.
+    for exercise_index in range(1, 7):
+        marker = f"<!-- {exercise_index} -->"
+        if marker not in source:
+            pattern = re.compile(
+                rf'(<article\b(?=[^>]*\bdata-exercise-index=["\']{exercise_index}["\'])[^>]*>)',
+                re.I,
+            )
+            source, count = pattern.subn(lambda match: marker + newline + match.group(1), source, count=1)
+            if count != 1:
+                raise RuntimeError(f"No se pudo restaurar el marcador del ejercicio {exercise_index}")
     first_card_match = re.search(r'<article\b(?=[^>]*\bdata-exercise-index=["\']1["\'])[^>]*>', source)
     next_card_match = re.search(r'<article\b(?=[^>]*\bdata-exercise-index=["\']2["\'])[^>]*>', source)
     if first_card_match is None or next_card_match is None:
@@ -268,6 +281,16 @@ def main() -> None:
         card = card.replace('</button></div></div></div></div>', '</button></div></div></div>', 1)
         source = source[:card_start] + card + source[card_end:]
     source = source.replace('images/0592-b6hQYMb-start.jpg', 'images/0592-b6hQYMb.jpg')
+    # The six manifest-backed GIFs are injected at runtime. Mark them with the
+    # same contract class as statically rendered GIFs so E2E validates all seven.
+    source, gif_class_count = re.subn(
+        r'make\("img",\s*"gifMotion"\)',
+        'make("img","gifMotion routineExerciseGif")',
+        source,
+        count=1,
+    )
+    if gif_class_count != 1 and 'make("img","gifMotion routineExerciseGif")' not in source:
+        raise RuntimeError("No se encontró el inyector de GIFs del Día 1")
     card6_start = source.index('<!-- 6 -->')
     main_end = source.index('</main>', card6_start)
     source = source[:card6_start] + DAY1_CARD6.replace("\n", newline) + newline + source[main_end:]
@@ -319,7 +342,28 @@ def main() -> None:
             count=1,
             flags=re.S,
         )
+    source = source.replace(
+        'Calentamiento · <strong class="timeCue">95–115 min</strong>',
+        'Calentamiento · <strong class="timeCue">8–13 min</strong>',
+        1,
+    )
+    source = source.replace(
+        '<h3>Cardio moderado</h3><p><strong class="timeCue">95–115 min</strong>',
+        '<h3>Cardio moderado</h3><p><strong class="timeCue">5–8 min</strong>',
+        1,
+    )
     source = source.replace(' rep.</div>', ' repeticiones</div>')
+    source = source.replace("'Ejercicio ' + (index + 1) + ' de 6'", "'Ejercicio ' + (index + 1) + ' de 7'", 1)
+    source = source.replace(
+        "const exerciseIndex = Array.from(document.querySelectorAll(\".card\")).indexOf(card); const item = media[exerciseIndex] || media.find(candidate => title.includes(candidate.key));",
+        "const item = media.find(candidate => title.includes(candidate.key));",
+        1,
+    )
+    source = source.replace(
+        'visual.insertBefore(box, visual.querySelector(".videoProof"));',
+        'card.dataset.mediaMode = "GIF";\n    visual.insertBefore(box, visual.querySelector(".videoProof"));',
+        1,
+    )
     # Keep the template-only note block for downstream routine builders; the
     # shared visual stylesheet hides it from users because its guidance is
     # already covered by the quick guide and per-exercise technique.
@@ -339,6 +383,7 @@ def main() -> None:
     source = apply_battery_motion(source, newline)
     with HTML.open("w", encoding="utf-8", newline="") as handle:
         handle.write(source)
+    apply_hypertrophy_contract()
 
 
 if __name__ == "__main__":

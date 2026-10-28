@@ -326,11 +326,26 @@ def assert_exercise_phase_pairs(page, routine_name: str) -> dict:
     for index in range(cards.count()):
         card = cards.nth(index)
         exercise_number = card.get_attribute("data-exercise-index") or str(index + 1)
-        motion_gifs = card.locator("img.day3ExerciseGif,img.day4ExerciseGif")
+        motion_gifs = card.locator("img.routineExerciseGif")
         expected_mode = "GIF" if motion_gifs.count() else "STATIC_ONLY"
         if card.get_attribute("data-media-mode") != expected_mode:
             raise AssertionError(f"{routine_name}: ejercicio {exercise_number} modo de medio esperado={expected_mode}; observado={card.get_attribute('data-media-mode')!r}")
         if expected_mode == "GIF":
+            if motion_gifs.count() != 1:
+                raise AssertionError(f"{routine_name}: ejercicio {exercise_number} debe tener un solo GIF de movimiento")
+            motion = motion_gifs.first
+            motion.scroll_into_view_if_needed()
+            motion_src = motion.get_attribute("src") or ""
+            if not motion_src.split("?", 1)[0].casefold().endswith(".gif"):
+                raise AssertionError(f"{routine_name}: ejercicio {exercise_number} usa un medio animado que no es GIF: {motion_src!r}")
+            motion_alt = (motion.get_attribute("alt") or "").strip()
+            if not motion_alt:
+                raise AssertionError(f"{routine_name}: GIF del ejercicio {exercise_number} sin descripción técnica")
+            page.wait_for_function(
+                "image => image.complete && image.naturalWidth > 0 && image.naturalHeight > 0",
+                arg=motion.element_handle(),
+                timeout=20_000,
+            )
             animated += 1
         else:
             static_only += 1
@@ -874,7 +889,7 @@ def assert_battery_motion_pauses(page, image, routine_name: str, media_name: str
     if not animated_source or not re.search(r"\.gif(?:$|[?#])", animated_source, re.I):
         raise AssertionError(f"{routine_name}: recurso animado {media_name} no usa un GIF cargado: {animated_source!r}")
     assert_animation_changes(page, image)
-    page.evaluate("window.scrollTo(0, document.documentElement.scrollHeight)")
+    page.evaluate("image => { const rect = image.getBoundingClientRect(); const absoluteTop = rect.top + window.scrollY; window.scrollTo(0, Math.max(0, absoluteTop - window.innerHeight - 120)); }", image.element_handle())
     page.wait_for_function("image => image.dataset.batteryPaused === 'true'", arg=image.element_handle())
     poster_source = image.evaluate("image => image.parentElement?.querySelector('.gifFallback,.warmupFallback')?.getAttribute('src') || image.dataset.staticSrc || image.getAttribute('data-static-src')")
     paused_source = image.get_attribute("src")
@@ -924,6 +939,9 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
     page.evaluate("sex => window.TrainingProgressStore.saveProfile({displayName: 'Perfil E2E', sex})", sex)
     page.wait_for_function("expected => window.gymratikMascotVariant === expected", arg=variant)
     page.wait_for_function("document.querySelector('#summaryActivityStatus')?.dataset.activity === 'start'")
+    headline = page.locator("#summaryHeadline").inner_text()
+    if not re.search(r"\b0/7 ejercicios\b", headline):
+        raise AssertionError(f"{name}: contador inicial debe declarar 7 ejercicios; observado={headline!r}")
     start_asset = assert_mascot(page, variant, "start")
     routine_id = name.split("_")[2]
     if SCREENSHOT_DIR:
@@ -938,12 +956,19 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
     images = assert_image_inventory(page, name)
     resource_quality = assert_visual_resource_quality(page, name)
     cards = page.locator("article.card[data-exercise-index]")
-    exercise_gifs = cards.locator("img.day3ExerciseGif,img.day4ExerciseGif")
+    exercise_gifs = cards.locator("img.routineExerciseGif")
     day_number = int(name.split("_")[2])
-    expected_exercise_gifs = 7 if day_number in (3, 4) else 0
-    if exercise_gifs.count() != expected_exercise_gifs:
+    expected_exercise_gifs = {1: 7, 2: 7, 3: 7, 4: 7}[day_number]
+    observed_exercise_gifs = exercise_gifs.count()
+    if observed_exercise_gifs != expected_exercise_gifs:
         context.close()
-        raise AssertionError(f"{name}: GIFs de ejercicio esperados={expected_exercise_gifs}; observados={exercise_gifs.count()}")
+        raise AssertionError(f"{name}: GIFs de ejercicio compartidos esperados={expected_exercise_gifs}; observados={observed_exercise_gifs}")
+    svg_motion_count = page.locator(
+        "article.card svg animate, article.card svg animateTransform, article.card svg animateMotion"
+    ).count()
+    if svg_motion_count:
+        context.close()
+        raise AssertionError(f"{name}: contiene {svg_motion_count} animaciones SVG de ejercicio; se requiere GIF real")
     # Reactiva el visor en pantalla: fuera de ella el ahorro de batería oculta
     # el GIF y deja visible el póster estático.
     warmup_viewer = page.locator(".warmupSingleViewer").first
@@ -1954,7 +1979,7 @@ def validate_installed_offline_package(browser) -> dict:
         inventory = assert_image_inventory(page, name)
         resource_quality = assert_visual_resource_quality(page, name)
         offline_results.append({"routine": name, **inventory, "resourceQuality": resource_quality})
-        offline_gif = page.locator(".day3ExerciseGif:visible,.day4ExerciseGif:visible").first
+        offline_gif = page.locator(".routineExerciseGif:visible").first
         if offline_gif.count() == 0:
             offline_gif = page.locator('img[src*="/videos/"]:visible,img[data-battery-motion-src*="/videos/"]:visible').first
         if offline_gif.count() == 0:
@@ -2015,8 +2040,26 @@ def validate_responsive_layout(browser) -> dict:
               const responsiveElements=[...document.querySelectorAll('.page,.hero,.hero>div,.heroMeta,.heroDetails,.muscleDayGrid,.muscleDayItem,.muscleDayVisual,.performanceFieldTitleRow,.performanceFieldLabel')].slice(0,22).map(element=>{const s=getComputedStyle(element);return {className:String(element.className).slice(0,60),box:rect(element),scrollWidth:element.scrollWidth,clientWidth:element.clientWidth,display:s.display,gridColumns:s.gridTemplateColumns,minWidth:s.minWidth,overflow:s.overflow,text:(element.innerText||'').trim().replace(/\\s+/g,' ').slice(0,70)}});
               const homeLink=document.querySelector('.routine-home-link'), eyebrow=document.querySelector('.hero .eyebrow');
               const headerGap=homeLink&&eyebrow?eyebrow.getBoundingClientRect().top-homeLink.getBoundingClientRect().bottom:null;
-              return {viewport:{width:innerWidth,height:innerHeight},documentWidth:document.documentElement.scrollWidth,bodyWidth:document.body.scrollWidth,entry:rect(entry),card:rect(card),cardGrid:getComputedStyle(card).gridTemplateColumns,cardChildren:[...card.children].map(child=>({className:String(child.className),box:rect(child),gridColumn:getComputedStyle(child).gridColumn})),headerGap,ancestry,controls,offenders,edgeOverflow,responsiveElements};
+              const contextDisclosure=document.querySelector('.routineContextDisclosure');
+              return {viewport:{width:innerWidth,height:innerHeight},documentWidth:document.documentElement.scrollWidth,bodyWidth:document.body.scrollWidth,entry:rect(entry),card:rect(card),cardGrid:getComputedStyle(card).gridTemplateColumns,cardChildren:[...card.children].map(child=>({className:String(child.className),box:rect(child),gridColumn:getComputedStyle(child).gridColumn,order:getComputedStyle(child).order})),contextDisclosure:contextDisclosure?{native:contextDisclosure.tagName==='DETAILS',open:contextDisclosure.open,summary:contextDisclosure.querySelector('summary')?.innerText.trim()}:null,headerGap,ancestry,controls,offenders,edgeOverflow,responsiveElements};
             }""")
+            if not layout["contextDisclosure"] or not layout["contextDisclosure"]["native"] or layout["contextDisclosure"]["open"] or not layout["contextDisclosure"]["summary"]:
+                raise AssertionError(f"{name} {width}x{height}: el contexto debe ser un desplegable nativo, rotulado y cerrado al entrar")
+            card_orders = {child["className"]: child["order"] for child in layout["cardChildren"]}
+            if width <= 820 and not (card_orders.get("meta") == "1" and card_orders.get("coach") == "2" and card_orders.get("visual") == "3"):
+                raise AssertionError(f"{name} {width}x{height}: el registro debe preceder a las referencias en móvil: {card_orders}")
+            if width > 820 and any(card_orders.get(section) != "0" for section in ("meta", "visual", "coach")):
+                raise AssertionError(f"{name} {width}x{height}: el orden de escritorio debe permanecer intacto: {card_orders}")
+            disclosure_summary = page.locator(".routineContextDisclosure > summary")
+            disclosure_summary.focus()
+            page.keyboard.press("Enter")
+            if page.locator(".routineContextDisclosure").get_attribute("open") is None:
+                raise AssertionError(f"{name} {width}x{height}: Enter no expande el contexto")
+            context_columns = page.locator(".routineContextBody").evaluate("element => getComputedStyle(element).gridTemplateColumns.split(/\\s+/).filter(Boolean).length")
+            expected_columns = 1 if width <= 680 else 2
+            if context_columns != expected_columns:
+                raise AssertionError(f"{name} {width}x{height}: columnas del contexto esperado={expected_columns}, observado={context_columns}")
+            page.keyboard.press("Enter")
             visual_audit = page.evaluate("""() => {
               const techniqueAccordions=[...document.querySelectorAll('article.card details.techAccordion')];
               const accordionsCollapsedByDefault=techniqueAccordions.every(details=>!details.open);
@@ -2222,9 +2265,9 @@ def validate_resource_pages(browser) -> list[dict]:
 
 def validate_exercise_gifs_reduced_motion(page, routine_name: str) -> dict:
     """Comprueba cada GIF de ejercicio y su póster en reduce/no-preference."""
-    gifs = page.locator("article.card img.day3ExerciseGif,article.card img.day4ExerciseGif")
+    gifs = page.locator("article.card img.routineExerciseGif")
     day_number = int(routine_name.split("_")[2])
-    expected = 7 if day_number in (3, 4) else 0
+    expected = 7
     if gifs.count() != expected:
         raise AssertionError(f"{routine_name}: GIFs esperados={expected}; observados={gifs.count()}")
     page.emulate_media(reduced_motion="reduce")

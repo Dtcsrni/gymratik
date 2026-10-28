@@ -1,0 +1,66 @@
+{
+  "schema": "gymratik-routine-e2e-summary-v1",
+  "date": "2026-10-27",
+  "command": "python scripts/e2e_routine_activity_check.py --functional-only",
+  "applicationVersion": "0.5.0",
+  "routineContentVersion": 2,
+  "status": "E2E_ROUTINES_OK",
+  "environment": {
+    "browser": "Microsoft Edge headless via Playwright",
+    "data": "isolated ephemeral browser contexts",
+    "physicalDeviceTested": false,
+    "screenshotsSaved": false
+  },
+  "days": [
+    {
+      "day": 1,
+      "exercises": 9,
+      "effectiveSeries": 28,
+      "allExercisesAndSeriesPassed": true
+    },
+    {
+      "day": 2,
+      "exercises": 8,
+      "effectiveSeries": 28,
+      "allExercisesAndSeriesPassed": true
+    },
+    {
+      "day": 3,
+      "exercises": 9,
+      "effectiveSeries": 28,
+      "allExercisesAndSeriesPassed": true
+    },
+    {
+      "day": 4,
+      "exercises": 9,
+      "effectiveSeries": 28,
+      "allExercisesAndSeriesPassed": true
+    }
+  ],
+  "totals": {
+    "exerciseCards": 35,
+    "effectiveSeries": 112,
+    "seriesCompletedAndVerified": 112
+  },
+  "postRunStaticValidation": {
+    "seriesDisplayMatchesTracker": true,
+    "validator": "python scripts/validate_canonical_routines.py"
+  },
+  "checks": [
+    "uniform-card-format",
+    "8-12-rep-range",
+    "manual-load-enter-and-kg-lb-format",
+    "first-available-exercise-approximation",
+    "exercise-skip-and-undo",
+    "series-persistence-and-rest",
+    "celebration",
+    "weekly-rollover-and-reset-preservation",
+    "exercise-gif-pause-and-resume",
+    "Smith-deadlift-media-and-technique"
+  ],
+  "limitations": [
+    "Synthetic browser evidence only; no GT6 or public deployment validation.",
+    "Session duration 95-115 min is a programming estimate, not a measured workout.",
+    "Machine model and Smith counterbalance are unknown; load profiles remain orientative."
+  ]
+}

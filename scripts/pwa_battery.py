@@ -68,7 +68,7 @@ BATTERY_MOTION_SCRIPT = r'''<script data-enhancement="battery-aware-motion-v1">
     sections.forEach(section => observer.observe(section));
   }
   const observeMotionImage = image => {
-    if (!(image instanceof HTMLImageElement) || !image.matches('img.gifMotion,img.warmupGif,img.day3ExerciseGif,img.day4ExerciseGif') || motionImages.has(image)) return;
+    if (!(image instanceof HTMLImageElement) || !image.matches('img.gifMotion,img.warmupGif,img.day3ExerciseGif,img.day4ExerciseGif,img.routineExerciseGif') || motionImages.has(image)) return;
     const source = image.getAttribute('src');
     if (!source) return;
     const frame = image.closest('.warmupVisual,.gifFrame') || image;
@@ -83,18 +83,18 @@ BATTERY_MOTION_SCRIPT = r'''<script data-enhancement="battery-aware-motion-v1">
     else intersecting.set(image, true);
     syncImage(image);
   };
-  document.querySelectorAll('img.gifMotion,img.warmupGif,img.day3ExerciseGif,img.day4ExerciseGif').forEach(observeMotionImage);
+  document.querySelectorAll('img.gifMotion,img.warmupGif,img.day3ExerciseGif,img.day4ExerciseGif,img.routineExerciseGif').forEach(observeMotionImage);
   const mediaMutationObserver = new MutationObserver(records => {
     records.forEach(record => record.addedNodes.forEach(node => {
       if (!(node instanceof Element)) return;
-      if (node.matches('img.gifMotion,img.warmupGif,img.day3ExerciseGif,img.day4ExerciseGif')) observeMotionImage(node);
-      node.querySelectorAll('img.gifMotion,img.warmupGif,img.day3ExerciseGif,img.day4ExerciseGif').forEach(observeMotionImage);
+      if (node.matches('img.gifMotion,img.warmupGif,img.day3ExerciseGif,img.day4ExerciseGif,img.routineExerciseGif')) observeMotionImage(node);
+      node.querySelectorAll('img.gifMotion,img.warmupGif,img.day3ExerciseGif,img.day4ExerciseGif,img.routineExerciseGif').forEach(observeMotionImage);
     }));
   });
   mediaMutationObserver.observe(document.documentElement, { childList: true, subtree: true });
   window.GymratikBatteryMotion = {
     setSource(image, source) {
-      if (!(image instanceof HTMLImageElement) || !image.matches('.gifMotion,.warmupGif,.day3ExerciseGif,.day4ExerciseGif') || !source) return;
+      if (!(image instanceof HTMLImageElement) || !image.matches('.gifMotion,.warmupGif,.day3ExerciseGif,.day4ExerciseGif,.routineExerciseGif') || !source) return;
       motionSources.set(image, source);
       image.dataset.batteryMotionSrc = source;
       syncImage(image);

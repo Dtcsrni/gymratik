@@ -2057,6 +2057,7 @@ TECHNIQUE_CUES = {
     "EXTENSIÓN DE TRÍCEPS SOBRE CABEZA CON CUERDA": ("Codos al frente y abdomen firme.", "Estira y flexiona los codos con control.", "No arquees la espalda ni abras los codos."),
     "PRENSA UNILATERAL ALTERNA": ("Pelvis apoyada; trabaja un lado a la vez.", "Empuja con un pie; cambia de lado sin bloquear la rodilla.", "No levantes la pelvis ni hundas la rodilla hacia dentro."),
     "PESO MUERTO RUMANO CON BARRA": ("Pies al ancho de cadera; barra cerca de las piernas.", "Lleva la cadera atrás; sube apretando glúteos.", "No redondees la espalda ni alejes la barra."),
+    "PESO MUERTO RUMANO EN SMITH": ("Ajusta la barra y los seguros; confirma el contrapeso.", "Lleva la cadera atrás con la barra cerca del cuerpo.", "No redondees la espalda ni bloquees los seguros durante la repetición."),
     "CURL FEMORAL TUMBADO": ("Cadera apoyada y rodilla alineada con el eje.", "Lleva los talones hacia los glúteos; baja despacio.", "No levantes la cadera ni uses impulso."),
     "ABDUCCIÓN DE CADERA SENTADA": ("Espalda apoyada y pelvis estable.", "Separa las rodillas; vuelve lentamente.", "No rebotes ni inclines el torso."),
     "ADUCCIÓN DE CADERA SENTADA": ("Espalda apoyada y piernas simétricas.", "Junta las rodillas; vuelve lentamente.", "No muevas la pelvis ni fuerces la apertura."),
@@ -2401,7 +2402,68 @@ def standardize_summary_navigation(source: str) -> str:
     return source
 
 
+ROUTINE_CONTEXT_DISCLOSURE_STYLE = '''<style data-enhancement="routine-context-disclosure-v1">
+.heroDetails{grid-template-columns:minmax(0,1fr)!important}
+.routineContextDisclosure{grid-column:1/-1;width:100%;min-width:0;border:1px solid rgba(139,221,247,.22);border-radius:16px;background:rgba(6,24,37,.48);overflow:hidden}
+.routineContextDisclosure>summary{display:flex;min-height:48px;align-items:center;justify-content:space-between;gap:.8rem;padding:.7rem .9rem;color:#e6f6fc;font-size:.84rem;font-weight:850;cursor:pointer;list-style:none}
+.routineContextDisclosure>summary::-webkit-details-marker{display:none}
+.routineContextDisclosure>summary::after{content:"＋";flex:none;color:#72dcff;font-size:1.1rem;line-height:1}
+.routineContextDisclosure[open]>summary::after{content:"−"}
+.routineContextDisclosure>summary:focus-visible{outline:2px solid #72dcff;outline-offset:-3px}
+.routineContextHint{color:#8fdfea;font-size:.72rem;font-weight:700;text-align:right}
+.routineContextBody{display:grid;grid-template-columns:minmax(220px,.72fr) minmax(0,1.28fr);gap:12px;padding:0 .75rem .75rem}
+@media(max-width:680px){.routineContextBody{grid-template-columns:minmax(0,1fr);gap:9px}}
+@media(max-width:820px){article.card>.meta{order:1!important}article.card>.coach{order:2!important}article.card>.visual{order:3!important}}
+@media(prefers-reduced-motion:reduce){.routineContextDisclosure>summary::after{transition:none}}
+</style>'''
+
+
+def _matching_div_end(source: str, opening: re.Match[str]) -> int:
+    """Return the end offset of a div, counting nested div elements safely."""
+    depth = 0
+    token_re = re.compile(r"</?div\b[^>]*>", flags=re.I)
+    for token in token_re.finditer(source, opening.start()):
+        if token.group(0).startswith("</"):
+            depth -= 1
+            if depth == 0:
+                return token.end()
+        elif not token.group(0).rstrip().endswith("/>"):
+            depth += 1
+    raise ValueError("No se encontró el cierre del bloque div de contexto de rutina")
+
+
+def standardize_routine_context_disclosure(source: str) -> str:
+    """Place non-essential day overview and anatomy behind a native disclosure."""
+    if 'data-enhancement="routine-context-v1"' not in source:
+        summary_match = re.search(r'<div\b(?=[^>]*\bclass="heroSummary")[^>]*>', source)
+        muscle_match = re.search(r'<div\b(?=[^>]*\bclass="muscleDayPanel")[^>]*>', source)
+        if not summary_match or not muscle_match or summary_match.start() >= muscle_match.start():
+            raise ValueError("No se encontraron en orden los resúmenes de objetivo y músculos del día")
+        muscle_end = _matching_div_end(source, muscle_match)
+        source = (
+            source[:summary_match.start()]
+            + '<details class="routineContextDisclosure" data-enhancement="routine-context-v1">'
+            + '<summary><span>Contexto de la rutina</span><span class="routineContextHint">Objetivo y músculos del día</span></summary>'
+            + '<div class="routineContextBody">'
+            + source[summary_match.start():muscle_end]
+            + '</div></details>'
+            + source[muscle_end:]
+        )
+    if 'data-enhancement="routine-context-disclosure-v1"' in source:
+        source = re.sub(
+            r'<style data-enhancement="routine-context-disclosure-v1">.*?</style>',
+            lambda _: ROUTINE_CONTEXT_DISCLOSURE_STYLE,
+            source,
+            count=1,
+            flags=re.S,
+        )
+    else:
+        source = source.replace('</head>', ROUTINE_CONTEXT_DISCLOSURE_STYLE + '\n</head>', 1)
+    return source
+
+
 def standardize_muscle_visuals(source: str) -> str:
+    source = standardize_routine_context_disclosure(source)
     source = standardize_technique_guidance(source)
     source = standardize_technique_accordion(source)
     source = standardize_quote_portrait_loading(source)
@@ -2464,6 +2526,11 @@ def standardize_muscle_visuals(source: str) -> str:
     else:
         source = re.sub(r'<style data-enhancement="interaction-feedback-v1">.*?</style>', lambda _: INTERACTION_FEEDBACK_STYLE, source, count=1, flags=re.S)
     source = standardize_shared_session_contract(source)
+    source = source.replace(
+        "return { tracker, index, title, seriesKeys, pendingKey:",
+        "return { tracker, index, title, seriesKeys, historyExerciseId: article?.dataset.historyExerciseId || String(index + 1), pendingKey:",
+        1,
+    )
     feedback_runtime = '''  const playMilestoneSound = type => {
     const motifs = {
       warmup: [[392, .1, 0, .026], [494, .1, .15, .028], [587, .15, .3, .03]],
@@ -3034,6 +3101,7 @@ def standardize_series_entry_zone(source: str) -> str:
       [/^elevación lateral/, { referenceKg: 10, stepKg: 2.5, label: 'elevación lateral · estimación orientativa ±25%' }],
       [/^jalón de tríceps/, { referenceKg: 20, stepKg: 2.5, label: 'tríceps en polea · estimación orientativa ±25%' }],
       [/^extensión de tríceps sobre cabeza/, { referenceKg: 15, stepKg: 2.5, label: 'tríceps con cuerda · estimación orientativa ±25%' }],
+      [/^peso muerto rumano en smith$/, { referenceKg: 40, stepKg: 2.5, label: 'Smith genérica · la resistencia efectiva depende del contrapeso; confirma la carga en el equipo' }],
       [/^peso muerto rumano con barra$/, { referenceKg: 50, stepKg: 2.5, label: 'barra libre · peso total con barra · estimación orientativa ±25%' }],
       [/^abducción de cadera/, { referenceKg: 40, stepKg: 2.5, label: 'abducción de cadera · estimación orientativa ±25%' }],
       [/^aducción de cadera/, { referenceKg: 40, stepKg: 2.5, label: 'aducción de cadera · estimación orientativa ±25%' }],
@@ -3195,17 +3263,17 @@ def standardize_series_entry_zone(source: str) -> str:
     )
     source = source.replace(
         "const previous = history.find(session => session.routineId === routineId && session.sessionId !== currentSessionId && (session.performance || []).some(record => record.exerciseId === String(item.index + 1)));",
-        "const historyExerciseId = String(item.index + 1); const historyLoadIsValid = record => { if (record.load === null || record.load === undefined || String(record.load).trim() === '') return true; const kg = Number.isFinite(Number(record.loadKg)) ? Number(record.loadKg) : record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load); return record.loadSelected !== false && Number.isFinite(kg) && kg >= item.performanceLoadProfile.minKg && kg <= item.performanceLoadProfile.maxKg; }; item.performanceHistory = history.filter(session => session.routineId === routineId && session.sessionId !== currentSessionId && (session.performance || []).some(record => record.exerciseId === historyExerciseId && historyLoadIsValid(record))).sort((a, b) => Number(b.endedAt || b.updatedAt || 0) - Number(a.endedAt || a.updatedAt || 0)); const previous = item.performanceHistory[0];",
+        "const historyExerciseId = item.historyExerciseId || String(item.index + 1); const historyRecordMatches = record => record.exerciseId === historyExerciseId || (record.exerciseId === String(item.index + 1) && String(record.title || record.exerciseName || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase() === String(item.title || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase()); const historyLoadIsValid = record => { if (record.load === null || record.load === undefined || String(record.load).trim() === '') return true; const kg = Number.isFinite(Number(record.loadKg)) ? Number(record.loadKg) : record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load); return record.loadSelected !== false && Number.isFinite(kg) && kg >= item.performanceLoadProfile.minKg && kg <= item.performanceLoadProfile.maxKg; }; item.performanceHistory = history.filter(session => session.routineId === routineId && session.sessionId !== currentSessionId && (session.performance || []).some(record => historyRecordMatches(record) && historyLoadIsValid(record))).sort((a, b) => Number(b.endedAt || b.updatedAt || 0) - Number(a.endedAt || a.updatedAt || 0)); const previous = item.performanceHistory[0];",
         1,
     )
     source = source.replace(
-        "item.performanceHistory = history.filter(session => session.routineId === routineId && session.sessionId !== currentSessionId && (session.performance || []).some(record => record.exerciseId === String(item.index + 1))).sort((a, b) => Number(b.endedAt || b.updatedAt || 0) - Number(a.endedAt || a.updatedAt || 0)); const previous = item.performanceHistory[0];",
-        "const historyExerciseId = String(item.index + 1); const historyLoadIsValid = record => { if (record.load === null || record.load === undefined || String(record.load).trim() === '') return true; const kg = Number.isFinite(Number(record.loadKg)) ? Number(record.loadKg) : record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load); return record.loadSelected !== false && Number.isFinite(kg) && kg >= item.performanceLoadProfile.minKg && kg <= item.performanceLoadProfile.maxKg; }; item.performanceHistory = history.filter(session => session.routineId === routineId && session.sessionId !== currentSessionId && (session.performance || []).some(record => record.exerciseId === historyExerciseId && historyLoadIsValid(record))).sort((a, b) => Number(b.endedAt || b.updatedAt || 0) - Number(a.endedAt || a.updatedAt || 0)); const previous = item.performanceHistory[0];",
+        "item.performanceHistory = history.filter(session => session.routineId === routineId && session.sessionId !== currentSessionId && (session.performance || []).some(record => historyRecordMatches(record))).sort((a, b) => Number(b.endedAt || b.updatedAt || 0) - Number(a.endedAt || a.updatedAt || 0)); const previous = item.performanceHistory[0];",
+        "const historyExerciseId = item.historyExerciseId || String(item.index + 1); const historyRecordMatches = record => record.exerciseId === historyExerciseId || (record.exerciseId === String(item.index + 1) && String(record.title || record.exerciseName || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase() === String(item.title || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase()); const historyLoadIsValid = record => { if (record.load === null || record.load === undefined || String(record.load).trim() === '') return true; const kg = Number.isFinite(Number(record.loadKg)) ? Number(record.loadKg) : record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load); return record.loadSelected !== false && Number.isFinite(kg) && kg >= item.performanceLoadProfile.minKg && kg <= item.performanceLoadProfile.maxKg; }; item.performanceHistory = history.filter(session => session.routineId === routineId && session.sessionId !== currentSessionId && (session.performance || []).some(record => historyRecordMatches(record) && historyLoadIsValid(record))).sort((a, b) => Number(b.endedAt || b.updatedAt || 0) - Number(a.endedAt || a.updatedAt || 0)); const previous = item.performanceHistory[0];",
         1,
     )
     history_anchor = "const previous = item.performanceHistory[0];"
     history_hydration = """const previous = item.performanceHistory[0];
-      const latestLoadRecord = item.performanceHistory.flatMap(session => (session.performance || []).filter(record => record.exerciseId === String(item.index + 1)).map(record => ({ ...record, _sessionUpdatedAt: Number(session.endedAt || session.updatedAt || 0) }))).filter(record => {
+      const latestLoadRecord = item.performanceHistory.flatMap(session => (session.performance || []).filter(historyRecordMatches).map(record => ({ ...record, _sessionUpdatedAt: Number(session.endedAt || session.updatedAt || 0) }))).filter(record => {
         if (record.loadSelected === false || record.load === null || record.load === undefined || String(record.load).trim() === '' || !Number.isFinite(Number(record.load))) return false;
         const storedKg = Number.isFinite(Number(record.loadKg)) ? Number(record.loadKg) : record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load);
         return Number.isFinite(storedKg) && storedKg >= item.performanceLoadProfile.minKg && storedKg <= item.performanceLoadProfile.maxKg;
@@ -3226,8 +3294,8 @@ def standardize_series_entry_zone(source: str) -> str:
         1,
     )
     source = source.replace(
-        "const records = (previous?.performance || []).filter(record => record.exerciseId === String(item.index + 1)).sort((a, b) => a.setNumber - b.setNumber);",
-        "const records = (previous?.performance || []).filter(record => { const reps = Number(record?.reps); return record && record.exerciseId === String(item.index + 1) && Number.isInteger(reps) && reps >= 1 && reps <= 100; }).sort((a, b) => a.setNumber - b.setNumber);",
+        "const records = (previous?.performance || []).filter(historyRecordMatches).sort((a, b) => a.setNumber - b.setNumber);",
+        "const records = (previous?.performance || []).filter(record => { const reps = Number(record?.reps); return record && historyRecordMatches(record) && Number.isInteger(reps) && reps >= 1 && reps <= 100; }).sort((a, b) => a.setNumber - b.setNumber);",
         1,
     )
     source = source.replace(
@@ -3284,7 +3352,7 @@ def standardize_series_entry_zone(source: str) -> str:
       if (snapshot(item).complete) {
         const toKg = record => record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load);
         const isQualified = session => {
-          const records = (session.performance || []).filter(record => record.exerciseId === String(item.index + 1)).sort((a, b) => a.setNumber - b.setNumber);
+          const records = (session.performance || []).filter(historyRecordMatches).sort((a, b) => a.setNumber - b.setNumber);
           if (records.length !== item.seriesKeys.length || records.some(record => Number(record.reps) < item.repMaximum + 1 || record.load === null || record.load === undefined || !Number.isFinite(Number(record.load)) || !(Number(record.durationMs) > 0))) return null;
           const loads = records.map(toKg);
           if (Math.max(...loads) - Math.min(...loads) > 0.01) return null;

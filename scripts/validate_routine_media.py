@@ -24,6 +24,26 @@ DAY1_MEDIA_KEYS = (
     "CURL DE BÍCEPS EN MÁQUINA",
     "CURL DE BÍCEPS SENTADO EN MÁQUINA",
 )
+DAY2_MEDIA_KEYS = (
+    "HIP THRUST",
+    "HACK SQUAT",
+    "PRENSA DE PIERNAS",
+    "CURL FEMORAL EN MÁQUINA",
+    "EXTENSIÓN DE PIERNAS",
+    "PANTORRILLAS DE PIE",
+)
+EXPECTED_STATIC_GIFS = {
+    "Rutina_Dia_1_Espalda_Biceps_V1.html": 1,
+    "Rutina_Dia_2_Pierna_Gluteo_V1.html": 1,
+    "Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html": 7,
+    "Rutina_Dia_4_Pierna_Equilibrio_V1.html": 7,
+}
+EXPECTED_DYNAMIC_GIFS = {
+    "Rutina_Dia_1_Espalda_Biceps_V1.html": 6,
+    "Rutina_Dia_2_Pierna_Gluteo_V1.html": 6,
+    "Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html": 0,
+    "Rutina_Dia_4_Pierna_Equilibrio_V1.html": 0,
+}
 DAY1_MEDIA_ENTRY = re.compile(
     r"gif\s*:\s*[\"']([^\"']+)[\"']\s*,\s*"
     r"thumbnail\s*:\s*[\"']([^\"']+)[\"']\s*,\s*"
@@ -124,14 +144,55 @@ def validate_path(path: Path) -> list[str]:
                 f"{path}:{image.line}: imagen de contenido sin alt ni aria-hidden: {image.path!r}"
             )
 
-    if path.name == "Rutina_Dia_1_Espalda_Biceps_V1.html":
-        media_block = re.search(r"const\s+media\s*=\s*\[(.*?)\];", text, flags=re.I | re.S)
-        entries = DAY1_MEDIA_ENTRY.findall(media_block.group(1)) if media_block else []
-        keys = tuple(entry[2] for entry in entries)
-        if keys != DAY1_MEDIA_KEYS:
+    if path.name in EXPECTED_STATIC_GIFS:
+        static_gifs = re.findall(
+            r'<img\b(?=[^>]*\bclass=["\'][^"\']*\broutineExerciseGif\b)[^>]*>',
+            text,
+            flags=re.I | re.S,
+        )
+        expected_static = EXPECTED_STATIC_GIFS[path.name]
+        if len(static_gifs) != expected_static:
             errors.append(
-                f"{path}: orden de media del Día 1 esperado={DAY1_MEDIA_KEYS} observado={keys}"
+                f"{path}: GIF estáticos esperados={expected_static}; observados={len(static_gifs)}"
             )
+
+        day = 1 if "Dia_1_" in path.name else 2 if "Dia_2_" in path.name else 0
+        expected_dynamic = EXPECTED_DYNAMIC_GIFS[path.name]
+        if day:
+            fix_name = "day1-gif-candidates" if day == 1 else "day2-exercise-gifs"
+            script = re.search(
+                rf'<script\b(?=[^>]*\bdata-fix=["\']{fix_name}["\'])[^>]*>(.*?)</script>',
+                text,
+                flags=re.I | re.S,
+            )
+            script_text = script.group(1) if script else ""
+            entries = DAY1_MEDIA_ENTRY.findall(script_text)
+            expected_keys = DAY1_MEDIA_KEYS if day == 1 else DAY2_MEDIA_KEYS
+            observed_keys = tuple(entry[2] for entry in entries)
+            if observed_keys != expected_keys:
+                errors.append(
+                    f"{path}: mapa de GIFs esperado={expected_keys}; observado={observed_keys}"
+                )
+            injector_count = script_text.count('make("img","gifMotion routineExerciseGif")')
+            if injector_count != 1:
+                errors.append(
+                    f"{path}: inyector debe usar una vez la clase compartida routineExerciseGif; observado={injector_count}"
+                )
+            if len(entries) != expected_dynamic:
+                errors.append(
+                    f"{path}: GIF dinámicos esperados={expected_dynamic}; observados={len(entries)}"
+                )
+
+        total_gifs = len(static_gifs) + expected_dynamic
+        if total_gifs != 7:
+            errors.append(f"{path}: cada rutina debe cubrir 7 GIFs reales; observados={total_gifs}")
+
+        cards = re.findall(r'<article\b[^>]*>.*?</article>', text, flags=re.I | re.S)
+        svg_motion = re.compile(r'<(?:animate|animateTransform|animateMotion|set)\b', re.I)
+        for index, card in enumerate(cards, start=1):
+            if svg_motion.search(card):
+                errors.append(f"{path}: ejercicio {index} contiene animación SVG; el movimiento requiere un GIF real")
+
     return errors
 
 

@@ -35,6 +35,20 @@ CANONICAL = ROOT / "data" / "rutinas_autocontenidas" / "canonicas"
 
 
 class CanonicalRoutineValidationTests(unittest.TestCase):
+    def test_all_days_have_realistic_warmup_and_cardio_durations(self) -> None:
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            source = path.read_text(encoding="utf-8")
+            warmup = re.search(r'<section class="warmupGuide".*?</section>', source, re.S)
+            self.assertIsNotNone(warmup, path.name)
+            section = warmup.group(0)
+            heading = re.search(r'<h2 id="warmup-title">.*?</h2>', section, re.S)
+            cardio = re.search(r'<div class="warmupIndex">01 · CARDIO</div>.*?</article>', section, re.S)
+            self.assertIsNotNone(heading, path.name)
+            self.assertIsNotNone(cardio, path.name)
+            self.assertIn("8–13 min", heading.group(0))
+            self.assertIn("5–8 min", cardio.group(0))
+            self.assertNotRegex(section, r"95–115 min", path.name)
+
     def test_weekly_reset_is_reachable_and_preserves_training_history(self) -> None:
         source = '''<html><head></head><body><aside class="floatingSessionSummary"><div class="summaryBody" id="summaryBody"><div class="summaryActivityStatus"></div><div class="summaryProgressTrack" id="summaryOverallProgress"></div><ul id="sessionSummaryList"></ul></div></aside><footer class="sessionFooter" aria-label="Acciones del día"><button type="button" id="resetSession">Reiniciar día</button></footer><script>const save = () => {\n    if (!window.GymratikInstallGate?.isInstalled()) return;\n  };\n  const migrateTimingState = () => {};\n  migrateTimingState(); const confirmed = window.confirm('¿Reiniciar el progreso de esta sesión? Se borrarán marcadores, pendientes y tiempos.');</script></body></html>'''
         result = standardize_weekly_progress_reset(source)
@@ -142,7 +156,7 @@ console.log(JSON.stringify({{ ok: true }}));
     def test_technique_guidance_uses_three_compact_exercise_specific_cues(self) -> None:
         source = '''<article class="card"><div class="exTitle">JALÓN AL PECHO</div><div class="techSteps"><div class="techStep setup">old setup</div><div class="techStep move">old movement</div><div class="techStep control">old tempo</div><div class="techStep warning">old warning</div></div></article>'''
         result = standardize_technique_guidance(source)
-        self.assertEqual(len(TECHNIQUE_CUES), 26)
+        self.assertEqual(len(TECHNIQUE_CUES), 27)
         self.assertEqual(result.count('class="techStep setup"'), 1)
         self.assertEqual(result.count('class="techStep move"'), 1)
         self.assertEqual(result.count('class="techStep warning"'), 1)
@@ -439,17 +453,17 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
         )
         self.assertEqual(
             len(re.findall(r'<div[^>]*class="[^"]*machineRefBox[^"]*"', source)),
-            6,
+            7,
         )
-        self.assertEqual(source.count('<div class="phaseLabel">Inicio'), 6)
-        self.assertEqual(source.count('<div class="phaseLabel">Final'), 6)
+        self.assertEqual(source.count('<div class="phaseLabel">Inicio'), 7)
+        self.assertEqual(source.count('<div class="phaseLabel">Final'), 7)
         self.assertIn("3025-butterfly-reverse-front.jpg", source)
         self.assertIn("0592-b6hQYMb-machine-only.jpg", source)
 
     def test_every_exercise_has_a_complete_position_pair_or_explicit_hip_thrust_guide(self) -> None:
         expected_counts = {
-            "Rutina_Dia_1_Espalda_Biceps_V1.html": 6,
-            "Rutina_Dia_2_Pierna_Gluteo_V1.html": 6,
+            "Rutina_Dia_1_Espalda_Biceps_V1.html": 7,
+            "Rutina_Dia_2_Pierna_Gluteo_V1.html": 7,
             "Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html": 7,
             "Rutina_Dia_4_Pierna_Equilibrio_V1.html": 7,
         }
@@ -463,12 +477,12 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
             with self.subTest(routine=path.name):
                 self.assertEqual(len(cards), expected_counts[path.name])
                 for index, declared_mode, card in cards:
-                    gif_count = len(re.findall(r'<img\b[^>]*class="[^"]*day[34]ExerciseGif', card))
+                    gif_count = len(re.findall(r'<img\b[^>]*class="[^"]*routineExerciseGif', card))
                     expected_mode = "GIF" if gif_count else "STATIC_ONLY"
                     self.assertEqual(declared_mode, expected_mode, f"ejercicio {index}")
                     if expected_mode == "STATIC_ONLY":
                         self.assertNotRegex(card, r"GIF LOCAL", f"ejercicio {index} promete un GIF que no contiene")
-                    if path.name == "Rutina_Dia_2_Pierna_Gluteo_V1.html" and index == "2":
+                    if "class=\"phaseRow hipThrustGuide\"" in card:
                         self.assertIn('class="phaseRow hipThrustGuide"', card)
                         self.assertEqual(card.count('class="hipThrustGuideTitle"'), 3)
                         self.assertNotIn('class="phaseCol"', card)
@@ -489,7 +503,8 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
         source = (CANONICAL / "Rutina_Dia_1_Espalda_Biceps_V1.html").read_text(
             encoding="utf-8"
         )
-        card = source[source.index("<!-- 3 -->") : source.index("<!-- 4 -->")]
+        cards = re.findall(r'<article\b(?=[^>]*data-exercise-index="(\d+)")[^>]*>.*?</article>', source, re.S)
+        card = next(card for index, card in re.findall(r'<article\b(?=[^>]*data-exercise-index="(\d+)")[^>]*>(.*?)</article>', source, re.S) if index == "3")
         self.assertIn("▶ VIDEO TÉCNICO · Remo horizontal", card)
         self.assertIn("Jl0r78dnqGU", card)
         self.assertIn("8–12 repeticiones", card)
@@ -733,7 +748,7 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
         profile_block = source[profile_start:profile_end]
         profile_rows = re.findall(r"\[/\^(.+?)/, \{ referenceKg: ([0-9.]+), stepKg: ([0-9.]+),", profile_block)
         patterns = [re.compile(pattern.removesuffix("$"), re.I) for pattern, _reference, _step in profile_rows]
-        self.assertEqual(len(profile_rows), 25)
+        self.assertEqual(len(profile_rows), 26)
         for _pattern, reference, _step in profile_rows:
             center = float(reference)
             capture_min = max(0, center - 150)
@@ -756,7 +771,7 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
             for title in titles:
                 with self.subTest(day=path.name, exercise=title):
                     self.assertEqual(sum(bool(pattern.search(title.lower())) for pattern in patterns), 1)
-        self.assertEqual(exercise_count, 26)
+        self.assertEqual(exercise_count, 28)
         self.assertIn("{ referenceKg: 50, stepKg: 2.5, label: 'barra libre · peso total con barra", profile_block)
         self.assertIn("/^curl de bíceps sentado en máquina$/, { referenceKg: 25, stepKg: 5, discreteStepKg: true, label: 'curl alterno Panatta · pila selectorizada en kg · incrementos de 5 kg' }", profile_block)
         self.assertIn("{ referenceKg: 30, stepKg: 2.5, label: 'curl femoral", profile_block)
@@ -819,7 +834,7 @@ console.log(JSON.stringify({{ savedLoadKg: loadMath.normalizeKg(loadMath.toKg(se
                 profile_block,
             )
         ]
-        self.assertEqual(len(profiles), 25)
+        self.assertEqual(len(profiles), 26)
         profile_json = json.dumps(profiles)
         script = f"""
 const assert = require('assert');
@@ -845,7 +860,7 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
 """
         result = subprocess.run(["node", "-e", script], cwd=ROOT, capture_output=True, text=True, check=False)
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(json.loads(result.stdout), {"profiles": 25, "units": 2})
+        self.assertEqual(json.loads(result.stdout), {"profiles": 26, "units": 2})
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
             html = path.read_text(encoding="utf-8")
             with self.subTest(routine=path.name):
@@ -962,12 +977,27 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 self.assertIn("celebrate(target,", celebration_logic)
                 self.assertIn("doneSeries === 1", celebration_logic)
 
+    def test_e2e_uses_shared_exercise_gif_class_for_all_four_routines(self) -> None:
+        source = (ROOT / "scripts" / "e2e_routine_activity_check.py").read_text(encoding="utf-8")
+        self.assertIn('cards.locator("img.routineExerciseGif")', source)
+        self.assertIn('expected_exercise_gifs = {1: 7, 2: 7, 3: 7, 4: 7}[day_number]', source)
+        self.assertIn('expected = 7', source)
+        self.assertIn('article.card svg animateMotion', source)
+        self.assertIn('absoluteTop - window.innerHeight - 120', source)
+        self.assertIn('img.routineExerciseGif', source)
+        battery = (ROOT / "scripts" / "pwa_battery.py").read_text(encoding="utf-8")
+        self.assertIn("img.routineExerciseGif", battery)
+        self.assertIn(".routineExerciseGif", battery)
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            self.assertIn("img.routineExerciseGif", path.read_text(encoding="utf-8"), path.name)
+
     def test_all_routines_share_the_canonical_page_layout_contract(self) -> None:
-        expected_cards = {"Rutina_Dia_1_Espalda_Biceps_V1.html": 6, "Rutina_Dia_2_Pierna_Gluteo_V1.html": 6, "Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html": 7, "Rutina_Dia_4_Pierna_Equilibrio_V1.html": 7}
+        expected_cards = {"Rutina_Dia_1_Espalda_Biceps_V1.html": 7, "Rutina_Dia_2_Pierna_Gluteo_V1.html": 7, "Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html": 7, "Rutina_Dia_4_Pierna_Equilibrio_V1.html": 7}
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
             source = path.read_text(encoding="utf-8")
             with self.subTest(path=path.name):
                 self.assertEqual(source.count('<main class="cards">'), 1)
+                self.assertRegex(source, r'<span id="summaryHeadline">0/7 ejercicios · 0/\d+ series</span>')
                 self.assertEqual(source.count('<footer class="sessionFooter"'), 1)
                 self.assertEqual(source.count('id="finishDay"'), 1)
                 self.assertIn('id="resetSession">Reiniciar día</button>', source)
@@ -984,6 +1014,22 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 self.assertNotIn('<footer class="footer">', source)
                 card_indexes = [int(value) for value in re.findall(r'<article\b(?=[^>]*\bdata-exercise-index="(\d+)")[^>]*>', source)]
                 self.assertEqual(card_indexes, list(range(1, expected_cards[path.name] + 1)))
+
+    def test_all_routines_share_the_compact_context_and_mobile_logging_order(self) -> None:
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            source = path.read_text(encoding="utf-8")
+            with self.subTest(path=path.name):
+                self.assertEqual(source.count('data-enhancement="routine-context-v1"'), 1)
+                context_start = source.index('<details class="routineContextDisclosure"')
+                context_end = source.index('</details>', context_start)
+                context = source[context_start:context_end]
+                self.assertNotIn(' open', source[context_start:source.index('>', context_start)])
+                self.assertIn('class="routineContextHint">Objetivo y músculos del día', context)
+                self.assertLess(context.index('class="heroSummary"'), context.index('class="muscleDayPanel"'))
+                self.assertIn('@media(max-width:820px)', source)
+                self.assertIn('article.card>.coach{order:2!important}', source)
+                self.assertIn('article.card>.visual{order:3!important}', source)
+                self.assertEqual(source.count('data-enhancement="technique-accordion-v1"'), len(re.findall(r'<article\b(?=[^>]*\bdata-exercise-index="\d+")[^>]*>', source)))
 
     def test_routine_navigation_targets_every_exercise_card_in_the_document(self) -> None:
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
@@ -1190,7 +1236,19 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                     self.assertIsNotNone(raw_title, f"{path.name}: tarjeta sin título")
                     title = unescape(re.sub(r"<[^>]+>", "", raw_title.group(1))).strip()
                     self.assertIn(title, TECHNIQUE_CUES, f"{path.name}: guía no definida para {title}")
-                    self.assertNotIn(title, seen_titles, f"Ejercicio duplicado en rutinas: {title}")
+                    repeated_by_weekly_frequency = {
+                        "PRESS DE PECHO SENTADO EN MÁQUINA",
+                        "JALÓN DE TRÍCEPS EN POLEA",
+                        "ELEVACIÓN LATERAL EN MÁQUINA",
+                        "REMO HORIZONTAL EN MÁQUINA",
+                        "CURL DE BÍCEPS SENTADO EN MÁQUINA",
+                        "HIP THRUST",
+                        "ABDUCCIÓN DE CADERA SENTADA",
+                        "ADUCCIÓN DE CADERA SENTADA",
+                        "EXTENSIÓN DE PIERNAS",
+                    }
+                    if title in seen_titles:
+                        self.assertIn(title, repeated_by_weekly_frequency, f"Duplicado no programado: {title}")
                     seen_titles.add(title)
                     actual_cues = re.findall(r'<div class="techStepText">(.*?)</div>', card, re.S)
                     self.assertEqual(actual_cues, list(TECHNIQUE_CUES[title]), f"{path.name}: guía desactualizada para {title}")
@@ -1208,22 +1266,26 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 self.assertNotIn("new MutationObserver(scheduleAlignment)", source)
                 self.assertIn("scrollIntoView({behavior:'smooth', block:'start'})", source)
                 self.assertIn("width:82px!important;height:82px!important", source)
-        self.assertEqual(seen_titles, set(TECHNIQUE_CUES))
+        self.assertEqual(set(TECHNIQUE_CUES) - seen_titles, {"PESO MUERTO RUMANO CON BARRA"})
 
-    def test_day_four_uses_free_barbell_romanian_deadlift_and_owned_local_media(self) -> None:
+    def test_day_four_uses_smith_romanian_deadlift_and_owned_local_media(self) -> None:
         path = CANONICAL / "Rutina_Dia_4_Pierna_Equilibrio_V1.html"
         source = path.read_text(encoding="utf-8")
         manifest = json.loads((ROOT / "data/rutinas_autocontenidas/evidencia/dia4_media_manifest.json").read_text(encoding="utf-8"))
-        entry = next(item for item in manifest["entries"] if item["repo_id"] == "barbell-rdl-v1")
-        self.assertIn("PESO MUERTO RUMANO CON BARRA", source)
-        self.assertIn("barbell-rdl-v1.gif", source)
+        entry = next(item for item in manifest["entries"] if item["repo_id"] == "smith-rdl-v2")
+        self.assertIn("PESO MUERTO RUMANO EN SMITH", source)
+        self.assertIn('data-history-exercise-id="day4-smith-rdl-v2"', source)
+        self.assertIn("const exerciseId = item.historyExerciseId || String(item.index + 1);", source)
+        self.assertIn("const historyExerciseId = item.historyExerciseId || String(item.index + 1);", source)
+        self.assertIn("record.exerciseId === (item.historyExerciseId || String(item.index + 1))", source)
+        self.assertIn("smith-rdl-v2.gif", source)
         self.assertIn("Lleva la cadera atrás", source)
-        self.assertIn("barra cerca de las piernas", source)
-        self.assertIn("barra libre y discos", source)
+        self.assertIn("barra cerca del cuerpo", source)
+        self.assertIn("máquina Smith · barra guiada y seguros", source)
         self.assertNotIn("PESO MUERTO EN MÁQUINA", source)
         self.assertNotIn("0578-GUT8I22", source)
         self.assertEqual(entry["gif"]["frames"], 72)
-        self.assertEqual(entry["equipment_identity_status"], "FREE_BAR_AND_PLATES")
+        self.assertEqual(entry["equipment_identity_status"], "GENERIC_SMITH_SCHEMATIC")
         for key in ("gif", "start", "final", "machine_reference"):
             asset = (ROOT / entry["published"][key]).resolve()
             self.assertTrue(asset.is_file(), f"Falta medio del peso muerto rumano: {asset}")

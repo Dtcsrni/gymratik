@@ -25,8 +25,8 @@ class HomepageContractTests(unittest.TestCase):
         self.assertEqual(self.manifest["name"], "Gymratik: Rutinas y progreso")
         self.assertEqual(self.manifest["short_name"], "Gymratik")
         self.assertIn("Gymratik: Rutinas y progreso", self.html)
-        self.assertIn('aria-label="Gymratik v0.4.8, inicio"', self.html)
-        self.assertIn('class="brand-version" aria-label="Versión 0.4.8">v0.4.8', self.html)
+        self.assertIn('aria-label="Gymratik v0.6.0, inicio"', self.html)
+        self.assertIn('class="brand-version" aria-label="Versión 0.6.0">v0.6.0', self.html)
         self.assertIn('<span class="brand-mark" aria-hidden="true"><img src="./assets/branding/gymratik-mascots-mark-v2.png" alt=""></span>', self.html)
         self.assertIn("background:rgba(11,16,23,.72)", self.html)
         self.assertIn(".hero-strength-stage", self.html)
@@ -46,20 +46,21 @@ class HomepageContractTests(unittest.TestCase):
 
     def test_routine_names_describe_the_programmed_focus(self):
         for title in (
-            "Tirón · espalda y bíceps",
-            "Pierna · cuádriceps y glúteos",
-            "Empuje · pecho, hombros y tríceps",
-            "Pierna y core · cadera y estabilidad",
+            "Tren superior A · espalda y bíceps",
+            "Tren inferior A · cuádriceps y glúteos",
+            "Tren superior B · pecho y hombros",
+            "Opcional · posterior y core",
         ):
             self.assertIn(title, self.html)
         self.assertIn("routineId: 'day1'", self.html)
         self.assertIn("routineId: 'day4'", self.html)
 
-    def test_homepage_summary_matches_all_four_routines(self):
+    def test_homepage_summary_marks_three_base_days_and_one_optional_day(self):
         self.assertIn("Calienta, entrena con técnica y registra cada serie.", self.html)
-        self.assertIn('<span class="plan-pill">4 días · 82 series</span>', self.html)
-        self.assertIn('<div class="quick-stat"><strong>4</strong><span>sesiones para rotar</span></div>', self.html)
-        self.assertIn('<div class="quick-stat"><strong>82</strong><span>series efectivas programadas</span></div>', self.html)
+        self.assertIn('<span class="plan-pill">3 días base + 1 opcional · 90 series máx.</span>', self.html)
+        self.assertIn('<div class="quick-stat"><strong>3</strong><span>sesiones base por semana</span></div>', self.html)
+        self.assertIn('<div class="quick-stat"><strong>68</strong><span>series efectivas base</span></div>', self.html)
+        self.assertIn('Día 4 · opcional', self.html)
         self.assertIn('id="nextSessionTitle"', self.html)
         self.assertIn('href="#routines">Ver plan completo</a>', self.html)
 
@@ -398,7 +399,8 @@ class HomepageContractTests(unittest.TestCase):
         next_session = self.html.split('function renderNextSession', 1)[1].split('function renderProgress', 1)[0]
         self.assertIn('activeToday', next_session)
         self.assertIn('progressIsNewer', next_session)
-        self.assertIn('(byId.get(latestRoutineId) + 1) % routineCatalog.length', next_session)
+        self.assertIn('(baseIndex + 1) % baseRoutineCatalog.length', next_session)
+        self.assertIn('const baseRoutineCatalog = routineCatalog.filter((routine) => !routine.optional)', next_session)
         self.assertIn('const dashboard = await window.TrainingProgressStore.getDashboard();', self.html)
         self.assertIn('const history = await window.TrainingProgressStore.getHistory(100);', self.html)
 
@@ -548,7 +550,7 @@ const context = {
     { routineId: 'day1', day: 'Día 1', title: 'Tirón', summary: '', totalExercises: 6, totalSeries: 20, image: 'day1.webp', href: 'day1.html' },
     { routineId: 'day2', day: 'Día 2', title: 'Pierna', summary: '', totalExercises: 6, totalSeries: 20, image: 'day2.webp', href: 'day2.html' },
     { routineId: 'day3', day: 'Día 3', title: 'Empuje', summary: '', totalExercises: 7, totalSeries: 22, image: 'day3.webp', href: 'day3.html' },
-    { routineId: 'day4', day: 'Día 4', title: 'Pierna y core', summary: '', totalExercises: 7, totalSeries: 20, image: 'day4.webp', href: 'day4.html' }
+    { routineId: 'day4', day: 'Día 4', title: 'Pierna y core', summary: '', totalExercises: 7, totalSeries: 22, optional: true, image: 'day4.webp', href: 'day4.html' }
   ],
   ...nodes
 };
@@ -582,7 +584,7 @@ const context = {
     { routineId: 'day1', day: 'Día 1', title: 'Tirón', summary: '', totalExercises: 6, totalSeries: 20, image: 'day1.webp', href: 'day1.html' },
     { routineId: 'day2', day: 'Día 2', title: 'Pierna', summary: '', totalExercises: 6, totalSeries: 20, image: 'day2.webp', href: 'day2.html' },
     { routineId: 'day3', day: 'Día 3', title: 'Empuje', summary: '', totalExercises: 7, totalSeries: 22, image: 'day3.webp', href: 'day3.html' },
-    { routineId: 'day4', day: 'Día 4', title: 'Pierna y core', summary: '', totalExercises: 7, totalSeries: 20, image: 'day4.webp', href: 'day4.html' }
+    { routineId: 'day4', day: 'Día 4', title: 'Pierna y core', summary: '', totalExercises: 7, totalSeries: 22, optional: true, image: 'day4.webp', href: 'day4.html' }
   ],
   ...nodes
 };
@@ -603,6 +605,13 @@ context.renderNextSession({ routines: context.routineCatalog.map(item => ({ rout
 ]);
 assert.strictEqual(context.nextSessionCta.textContent, 'Empezar Día 1', 'last week history must not carry the rotation into this week');
 assert.strictEqual(context.nextSessionCta.href, 'day1.html');
+const optionalDayCompleted = new Date();
+optionalDayCompleted.setHours(0, 0, 0, 0);
+context.renderNextSession({ routines: context.routineCatalog.map(item => ({ routineId: item.routineId, doneSeries: 0, updatedAt: 0, sessionStartedAt: 0, sessionEndedAt: 0 })), todaySeries: 0 }, [
+  { routineId: 'day2', startedAt: optionalDayCompleted.getTime(), completedSeries: 23, totalSeries: 23 },
+  { routineId: 'day4', startedAt: optionalDayCompleted.getTime() + 1000, completedSeries: 22, totalSeries: 22 }
+]);
+assert.strictEqual(context.nextSessionCta.textContent, 'Empezar Día 3', 'optional Day 4 must not displace the three-day base rotation');
 console.log(JSON.stringify({ ok: true }));
 """
         result = subprocess.run(["node", "-e", script, str(INDEX)], cwd=ROOT, check=False, capture_output=True, text=True)

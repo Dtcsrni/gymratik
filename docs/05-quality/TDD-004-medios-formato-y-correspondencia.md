@@ -1,8 +1,8 @@
 # TDD-004 — Medios, formato y correspondencia visual
 
-**Estado:** `In progress`  
-**Versión:** `0.1`  
-**Fecha:** `2026-09-17`  
+**Estado:** `Verified (local synthetic; physical/public pending)`
+**Versión:** `0.2`
+**Fecha:** `2026-10-28`
 **Diseño asociado:** [SDD-003](../03-architecture/SDD-003-medios-fallback-procedencia-tecnica.md)
 
 ## 1. Objetivo
@@ -75,6 +75,39 @@ Forzar error de carga y activar `prefers-reduced-motion: reduce`. Comprobar que
 el fallback aparece, que no se duplica el anuncio para lectores de pantalla y
 que la tarjeta conserva significado y controles utilizables.
 
+### TST-MED-007 — GIF real y correspondencia por ejercicio
+
+**Requisito:** FUN-TRN-017.
+
+**Preparación:** recorrer las 28 tarjetas (7 por cada una de las cuatro rutinas)
+en el navegador sintético, extraer cuadros iniciales, medios y finales de cada
+GIF, y cotejarlos con el título, equipo descrito y técnica escrita.
+
+**Comprobaciones:**
+
+- cada tarjeta tiene exactamente un `img.routineExerciseGif` cuya URL termina
+  en `.gif`, se decodifica y tiene dimensiones no nulas;
+- el mapa de recursos por título se comprueba contra el HTML canónico y sus
+  archivos locales; los ejercicios 1–6 de Días 1 y 2 pasan por el mismo
+  selector de batería/reduced-motion que los GIF estáticos de Días 3 y 4;
+- no existe `<animate>`, `<animateTransform>` o `<animateMotion>` dentro de las
+  tarjetas; los iconos SVG estáticos no cuentan como demostración de movimiento;
+- la revisión visual se registra por ejercicio como `MATCH`, `MISMATCH` o
+  `UNABLE_TO_CONFIRM`; similitud de nombre o equipo no basta para aprobar;
+- el hip thrust usa el GIF local derivado de una referencia oficial de Booty
+  Builder y conserva un enlace visible a su fuente.
+
+**Resultado esperado:** 28/28 GIFs correctos para el patrón/técnica descritos,
+28/28 cargados en E2E y cero animaciones SVG de ejercicio. La identidad del
+modelo físico de cada máquina se verifica por separado.
+
+**Evidencia 2026-10-28:** la revisión visual por ejercicio está en
+[routine-gif-review-2026-10-28.md](evidence/routine-gif-review-2026-10-28.md);
+el E2E local sintético confirmó 7 GIF por día y cero demostraciones SVG
+animadas, junto con los 90 registros de series efectivas en
+[routine-v3-e2e-2026-10-28.json](evidence/routine-v3-e2e-2026-10-28.json).
+Quedan fuera de esta evidencia el dispositivo físico y el despliegue público.
+
 ## 3. Implementación prevista
 
 El comprobador técnico de rutas es
@@ -91,6 +124,11 @@ python scripts/validate_routine_media.py
 La comprobación de correspondencia visual debe permanecer separada del código
 automático. Puede usar revisión en navegador y capturas controladas, pero no
 debe marcar `MATCH` por similitud de nombres, tamaño, color o hash.
+
+La herramienta `scripts/validate_routine_media.py` verifica existencia, rutas,
+clases y asignación declarada. La carga, dimensiones, pausa/reanudación y ausencia
+de animación SVG se verifican en `scripts/e2e_routine_activity_check.py`. El
+`MATCH` de técnica requiere revisión humana de cuadros del GIF.
 
 ## 4. Evidencia y cierre
 

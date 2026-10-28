@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 
 from standardize_muscle_visuals import sanitize_canonical_metadata, standardize_muscle_visuals
+from apply_hypertrophy_4day_contract import apply as apply_hypertrophy_contract
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -199,6 +200,12 @@ def build_warmup(template: str) -> str:
             "al tirar": "al empujar",
         },
     )
+    section = section.replace("95–115 min", "5–8 min")
+    heading = re.search(r'<h2 id="warmup-title">.*?</h2>', section, re.S)
+    if heading is None:
+        raise ValueError("No se encontró el encabezado del calentamiento del Día 3")
+    fixed_heading = heading.group(0).replace("5–8 min", "8–13 min")
+    section = section[: heading.start()] + fixed_heading + section[heading.end() :]
     return section
 
 
@@ -373,22 +380,28 @@ def main() -> None:
         template,
         '<section class="routineSummary"',
         {
+            "7 ejercicios · 23 series efectivas": "7 ejercicios · 22 series efectivas",
             "6 ejercicios · 20 series efectivas": "7 ejercicios · 22 series efectivas",
             "Día 1": "Día 3",
+            "Tren superior A · espalda y bíceps": "Tren superior B · pecho y hombros",
             "Tirón · espalda y bíceps": "Empuje · pecho, hombros y tríceps",
+            "90–115 min": "90–115 min",
             "75–95 min": "83–98 min",
             "60 s–2.5 min": "60–180 s",
         },
     )
-    gamification = build_section(template, '<section class="sessionGamification"', {"0/20": "0/22", "20 series": "22 series"})
+    gamification = build_section(template, '<section class="sessionGamification"', {"0/23": "0/22", "23 series": "22 series", "0/20": "0/22", "20 series": "22 series"})
     prep = build_section(template, '<section class="prep">', {"16–17 min": "16 min", "3 + 1": "3 + 2", "Jalón: series + calentamiento": "Press: aproximación"})
     dashboard = build_section(
         template,
         '<section class="sessionDashboard">',
         {
-            "75–95 min": "83–98 min",
+            "90–115 min": "90–115 min",
+            "23 series efectivas": "22 series efectivas",
             "20 series efectivas": "22 series efectivas",
+            "4 + 4 + 3 + 3 + 3 + 3 + 3 series": "4 + 3 + 3 + 3 + 3 + 3 + 3 series",
             "4 + 4 + 3 + 3 + 3 + 3 series": "4 + 3 + 3 + 3 + 3 + 3 + 3 series",
+            "Tren superior A · espalda y bíceps": "Tren superior B · pecho y hombros",
             "Tirón · espalda y bíceps": "Empuje · pecho, hombros y tríceps",
             "Con trabajo complementario de deltoides posterior y pecho": "Con volumen directo para pecho, hombros y tríceps",
             "De 60 s a 2.5 min según el ejercicio": "De 60 s a 3 min según el ejercicio",
@@ -410,12 +423,14 @@ def main() -> None:
     overlays = replace_all(
         overlays,
         {
+            "0/7 ejercicios · 0/23 series": "0/7 ejercicios · 0/22 series",
             "0/6 ejercicios · 0/20 series": "0/7 ejercicios · 0/22 series",
+            "23 pendientes": "22 pendientes",
             "0 pendientes": "22 pendientes",
         },
     )
     footer = between(template, '<footer class="sessionFooter"', "</footer>")
-    footer = replace_all(footer, {"Día 1": "Día 3", "espalda y bíceps": "pecho, hombros y tríceps", "18 series": "22 series"})
+    footer = replace_all(footer, {"Día 1": "Día 3", "espalda y bíceps": "pecho, hombros y tríceps", "23 series": "22 series", "18 series": "22 series"})
     body = "\n".join([
         "<body>",
         '<div class="page">',
@@ -476,6 +491,7 @@ def main() -> None:
         raise ValueError(f"El HTML canónico conserva metadatos de licencia/atribución: {leaked_metadata}")
     canonical = sanitize_canonical_metadata(standardize_muscle_visuals(head + body))
     OUTPUT.write_text(canonical, encoding="utf-8", newline="\n")
+    apply_hypertrophy_contract()
     print(f"GENERATED {OUTPUT.relative_to(ROOT)} bytes={OUTPUT.stat().st_size}")
 
 

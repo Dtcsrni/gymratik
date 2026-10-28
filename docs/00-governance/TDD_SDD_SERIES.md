@@ -64,6 +64,9 @@ Los TDD de Android, servidores, IA e integraciones no forman parte del plan acti
 - **TST-CAN-002:** la suma de series coincide con atributos, resumen y contenido documentado.
 - **TST-CAN-003:** `data-next` apunta al índice/título correcto y el último ejercicio termina el flujo.
 - **TST-CAN-004:** layout compartido conserva `main.cards`, tarjetas contiguas y acciones únicas.
+- **TST-CAN-005:** contexto plegado y orden de registro antes de referencias en móvil para todas las rutinas.
+- **TST-CAN-006:** los días base v3 suman 21–24 series; el cuarto día opcional tiene 22; cada rutina tiene máximo 7 ejercicios, mínimo 3 series por ejercicio y 8–12 repeticiones; Día 4 usa Smith y el E2E completa todas las series efectivas.
+- **TST-CAN-007:** el contador de sesión inicia en `0/7`, usa el total correcto por día y permanece sincronizado con las siete tarjetas.
 - **TST-UI-001:** calentamiento y bloqueos se muestran antes de permitir completar una serie.
 - **TST-UI-002:** reset reinicia el estado operativo esperado sin borrar historial no incluido en el reset.
 - **TST-MED-001:** HTML, manifiesto y archivo local coinciden en ruta, hash y estado de procedencia.

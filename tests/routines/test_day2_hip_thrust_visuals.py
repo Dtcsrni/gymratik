@@ -29,11 +29,11 @@ class Day2HipThrustVisualTests(unittest.TestCase):
             "hip_thrust_panatta_guide.svg",
             "hip_thrust_panatta_inicio.svg",
             "hip_thrust_panatta_final.svg",
-            "hip_thrust_machine_booty_builder_correct_form.gif",
+            "2286-OPqShYN.gif",
         ):
             with self.subTest(asset=incorrect_asset):
                 self.assertNotIn(incorrect_asset, self.card)
-        self.assertNotIn('class="gifProof"', self.card)
+        self.assertIn("Puntos de colocación y recorrido", self.card)
 
     def test_technique_copy_matches_manufacturer_machine_contact_points(self) -> None:
         self.assertIn('aria-label="Puntos de colocación y recorrido del hip thrust en máquina"', self.card)
@@ -48,9 +48,11 @@ class Day2HipThrustVisualTests(unittest.TestCase):
         self.assertIn('target="_blank" rel="noopener noreferrer"', self.card)
         self.assertIn("Ver demostración oficial · Panatta Fit Evo", self.card)
 
-    def test_builder_no_longer_injects_generated_hip_thrust_motion(self) -> None:
+    def test_builder_uses_documented_official_hip_thrust_gif(self) -> None:
         self.assertNotIn("hip_thrust_panatta_guide.svg", self.builder)
-        self.assertNotIn('key:"HIP THRUST"', self.builder)
+        self.assertIn('key:"HIP THRUST"', self.builder)
+        self.assertIn("hip_thrust_machine_booty_builder_correct_form.gif", self.builder)
+        self.assertIn("https://bootybuilder.com/how-to-use-the-booty-builder/", self.builder)
         self.assertIn("hipThrustGuide", self.builder)
 
 

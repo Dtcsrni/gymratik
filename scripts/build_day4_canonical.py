@@ -9,6 +9,7 @@ from build_day2_canonical import build_warmup as build_lower_warmup
 from build_day3_canonical import between, build_section, build_day3_script, replace_all
 from build_day4_barbell_rdl_media import main as build_barbell_rdl_media
 from standardize_muscle_visuals import sanitize_canonical_metadata, standardize_muscle_visuals
+from apply_hypertrophy_4day_contract import apply as apply_hypertrophy_contract
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -33,19 +34,19 @@ EXERCISES = [
         "avoid": "Despegar la pelvis, colapsar la rodilla hacia dentro, rebotar en el fondo o usar una carga que obligue a compensar con el tronco.",
     },
     {
-        "title": "PESO MUERTO RUMANO CON BARRA",
+        "title": "PESO MUERTO RUMANO EN SMITH",
         "zone": "CADERA · GLÚTEOS E ISQUIOSURALES",
-        "equipment": "barra libre y discos · bisagra de cadera",
-        "repo": "barbell-rdl-v1",
+        "equipment": "máquina Smith · barra guiada y seguros",
+        "repo": "smith-rdl-v2",
         "series": 3,
         "reps": "8–12",
         "rest": "2–3 min",
         "duration": "10–13 min",
         "focus": "Glúteos e isquiosurales; bisagra de cadera",
-        "setup": "Pies al ancho de cadera; barra sobre el mediopié. Tómala apenas por fuera de las piernas y empieza de pie, con rodillas suaves, abdomen firme y espalda neutra.",
-        "execution": "Desplaza la cadera atrás y baja la barra pegada a muslos y piernas. Detén el descenso cuando notes tensión clara en isquiosurales antes de redondear la espalda; vuelve llevando la cadera al frente.",
-        "rhythm": "Baja en 2–3 s y sube en 1–2 s. Mantén los brazos largos y la barra rozando las piernas.",
-        "avoid": "Convertirlo en sentadilla, alejar la barra, doblar más las rodillas durante el descenso, redondear la espalda o hiperextender al subir.",
+        "setup": "Ajusta la barra a una altura cómoda y coloca los seguros justo por debajo del rango previsto. Alinea los pies bajo la barra y confirma cómo contrapesa la Smith antes de cargar.",
+        "execution": "Desliza la barra por los rieles mientras llevas la cadera atrás. Baja solo hasta sentir tensión en isquiosurales sin redondear la espalda y vuelve extendiendo la cadera.",
+        "rhythm": "Baja en 2–3 s y sube en 1–2 s. Mantén la barra cerca de las piernas y el recorrido controlado.",
+        "avoid": "Convertirlo en sentadilla, separar la barra del cuerpo, perder la espalda neutra o bloquear los seguros durante la repetición.",
     },
     {
         "title": "CURL FEMORAL TUMBADO",
@@ -204,20 +205,20 @@ def main() -> None:
 .phaseRow .day4StaticFrame{object-fit:contain!important;background:#fff!important}.gifProof{margin-top:12px;padding:10px 12px;border:1px solid rgba(45,97,121,.55);border-radius:14px;background:rgba(12,24,34,.68)}.gifProofTitle{font-size:12px;font-weight:900;letter-spacing:.6px;color:#72D4F0;margin-bottom:7px}.gifPreview{max-width:240px;margin:0 auto;aspect-ratio:1/1}.gifPreview img.day4ExerciseGif{object-fit:contain!important}.gifProof .videoProof{margin-top:7px!important}@media(max-width:700px){.gifPreview{max-width:220px}}
 </style></head>''', 1)
     quick_rules = build_section(template, '<section class="footer quickRules"', {"espalda y bíceps": "pierna y cadera", "tirones": "series", "remo": "recorrido", "Jalón": "Prensa", "1–2 s al tirar": "1–2 s al empujar", "al tirar": "al empujar", "Si cae la postura": "Si pierdes la postura o el control"})
-    summary = build_section(template, '<section class="routineSummary"', {"6 ejercicios · 20 series efectivas": "7 ejercicios · 20 series efectivas", "Día 1": "Día 4", "Tirón · espalda y bíceps": "Pierna y core · cadera y estabilidad", "75–95 min": "75–90 min", "60 s–2.5 min": "60 s–3 min"})
-    gamification = build_section(template, '<section class="sessionGamification"', {})
+    summary = build_section(template, '<section class="routineSummary"', {"7 ejercicios · 23 series efectivas": "7 ejercicios · 22 series efectivas", "6 ejercicios · 20 series efectivas": "7 ejercicios · 22 series efectivas", "Día 1": "Día 4", "Tren superior A · espalda y bíceps": "Opcional · posterior y core", "Tirón · espalda y bíceps": "Pierna y core · cadera y estabilidad", "90–115 min": "90–115 min", "75–95 min": "75–90 min", "60 s–2.5 min": "60 s–3 min"})
+    gamification = build_section(template, '<section class="sessionGamification"', {"0/23": "0/22", "23 series": "22 series"})
     prep = build_section(template, '<section class="prep">', {"16–17 min": "8–10 min", "3 + 1": "3 + 1", "Jalón: series + calentamiento": "Prensa: series + aproximación"})
-    dashboard = build_section(template, '<section class="sessionDashboard">', {"75–95 min": "75–90 min", "20 series efectivas": "20 series efectivas", "4 + 4 + 3 + 3 + 3 + 3 series": "3 + 3 + 4 + 2 + 2 + 3 + 3 series", "Tirón · espalda y bíceps": "Pierna y core · cadera y estabilidad", "Con trabajo complementario de deltoides posterior y pecho": "Con trabajo distribuido entre rodilla, cadera, pantorrilla y core", "De 60 s a 2.5 min según el ejercicio": "De 60 s a 3 min según el ejercicio"})
+    dashboard = build_section(template, '<section class="sessionDashboard">', {"90–115 min": "90–115 min", "23 series efectivas": "22 series efectivas", "20 series efectivas": "22 series efectivas", "4 + 4 + 3 + 3 + 3 + 3 + 3 series": "3 + 3 + 4 + 3 + 3 + 3 + 3 series", "4 + 4 + 3 + 3 + 3 + 3 series": "3 + 3 + 4 + 3 + 3 + 3 + 3 series", "Tren superior A · espalda y bíceps": "Opcional · posterior y core", "Tirón · espalda y bíceps": "Pierna y core · cadera y estabilidad", "Con trabajo complementario de deltoides posterior y pecho": "Con trabajo distribuido entre rodilla, cadera, pantorrilla y core", "De 60 s a 2.5 min según el ejercicio": "De 60 s a 3 min según el ejercicio"})
     note = build_section(template, '<section class="note notePanel"', {"Puntos clave de la sesión": "Puntos clave del Día 4", "La serie de aproximación prepara el movimiento y no cuenta como efectiva.": "Las series de aproximación preparan el movimiento y no cuentan como efectivas.", "RIR 2–3 al inicio y 1–2 al final": "RIR 1–3, manteniendo técnica y rango controlados", "Si cae la postura": "Si pierdes la postura o el control"})
     cards = "\n".join(build_card(item, index) for index, item in enumerate(EXERCISES))
-    overlays = replace_all(between(template, '<section class="sessionCompletionPanel"', "</aside>"), {"0/6 ejercicios · 0/20 series": "0/7 ejercicios · 0/20 series", "0 pendientes": "20 pendientes"})
+    overlays = replace_all(between(template, '<section class="sessionCompletionPanel"', "</aside>"), {"0/7 ejercicios · 0/23 series": "0/7 ejercicios · 0/22 series", "0/6 ejercicios · 0/20 series": "0/7 ejercicios · 0/22 series", "23 pendientes": "22 pendientes", "0 pendientes": "22 pendientes"})
     overlays = re.sub(r'<footer class="sessionFooter".*?</footer>', "", overlays, count=1, flags=re.S)
-    footer = replace_all(between(template, '<footer class="sessionFooter"', "</footer>"), {"Día 1": "Día 4", "espalda y bíceps": "pierna y cadera", "18 series": "20 series"})
+    footer = replace_all(between(template, '<footer class="sessionFooter"', "</footer>"), {"Día 1": "Día 4", "espalda y bíceps": "pierna y cadera", "23 series": "22 series", "18 series": "22 series"})
     lower_warmup = build_lower_warmup(template).replace('data-fix="day2-warmup-guide"', 'data-fix="day4-warmup-guide"', 1)
     body = "\n".join(["<body>", '<div class="page">', build_header(template), quick_rules, lower_warmup, summary, gamification, prep, dashboard, note, '<main class="cards">', cards, "</main>", overlays, footer, build_day4_script(template), "</div>", "</body>", "</html>"])
     if body.count('<article class="card" data-exercise-index="') != 7 or body.count("realphoto day4StaticFrame") != 14 or body.count("realphoto day4ExerciseGif") != 7:
         raise ValueError("El Día 4 debe contener 7 tarjetas con 14 fases estáticas y 7 GIFs")
-    if "0/20 series" not in body or "20 series efectivas" not in body or "3 + 3 + 4 + 2 + 2 + 3 + 3 series" not in body:
+    if "0/22 series" not in body or "22 series efectivas" not in body or "3 + 3 + 4 + 3 + 3 + 3 + 3 series" not in body:
         raise ValueError("El volumen del Día 4 no quedó sincronizado")
     if "fitlovers-day1-series-v1" in body or '<script data-fix="day1-gif-candidates">' in body:
         raise ValueError("El Día 4 conserva referencias del Día 1")
@@ -227,6 +228,7 @@ def main() -> None:
         raise ValueError(f"Metadatos de media no permitidos en HTML: {leaked}")
     canonical = sanitize_canonical_metadata(standardize_muscle_visuals(head + body))
     OUTPUT.write_text(canonical, encoding="utf-8", newline="\n")
+    apply_hypertrophy_contract()
     print(f"GENERATED {OUTPUT.relative_to(ROOT)} bytes={OUTPUT.stat().st_size}")
 
 

@@ -13,10 +13,10 @@ ROOT = Path(__file__).resolve().parents[1]
 CANONICAL_DIR = ROOT / "data" / "rutinas_autocontenidas" / "canonicas"
 
 EXPECTED_CONTRACTS: dict[str, tuple[int, int, tuple[int, ...]]] = {
-    "Rutina_Dia_1_Espalda_Biceps_V1.html": (6, 20, (4, 4, 3, 3, 3, 3)),
-    "Rutina_Dia_2_Pierna_Gluteo_V1.html": (6, 20, (3, 3, 3, 4, 3, 4)),
+    "Rutina_Dia_1_Espalda_Biceps_V1.html": (7, 23, (4, 4, 3, 3, 3, 3, 3)),
+    "Rutina_Dia_2_Pierna_Gluteo_V1.html": (7, 23, (3, 3, 3, 4, 4, 3, 3)),
     "Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html": (7, 22, (4, 3, 3, 3, 3, 3, 3)),
-    "Rutina_Dia_4_Pierna_Equilibrio_V1.html": (7, 20, (3, 3, 4, 2, 2, 3, 3)),
+    "Rutina_Dia_4_Pierna_Equilibrio_V1.html": (7, 22, (3, 3, 4, 3, 3, 3, 3)),
 }
 
 
@@ -134,12 +134,14 @@ def extract_dashboard(text: str) -> tuple[int | None, tuple[int, ...] | None]:
         text,
         flags=re.I | re.S,
     )
-    total = int(value_match.group(1)) if value_match else None
     distribution = (
         tuple(int(part.strip()) for part in sub_match.group(1).split("+"))
         if sub_match
         else None
     )
+    # El dashboard canónico muestra la distribución por ejercicio; su suma es
+    # la fuente verificable del total y evita depender del marcado visual anidado.
+    total = sum(distribution) if distribution else int(value_match.group(1)) if value_match else None
     return total, distribution
 
 
@@ -156,6 +158,27 @@ def inspect(path: Path) -> Inspection:
         dashboard_total=dashboard_total,
         dashboard_distribution=dashboard_distribution,
     )
+
+
+def extract_displayed_series(path: Path) -> tuple[int, ...]:
+    """Read the visible series count from every card's technique summary."""
+    source = path.read_text(encoding="utf-8")
+    cards = re.findall(
+        r'<article\b(?=[^>]*\bclass=["\'][^"\']*\bcard\b)[^>]*>.*?</article>',
+        source,
+        flags=re.I | re.S,
+    )
+    displayed: list[int] = []
+    for card in cards:
+        metric = re.search(
+            r'<div\s+class=["\']metric series["\'].*?'
+            r'<div\s+class=["\']metricVal["\']\s*>(.*?)</div>',
+            card,
+            flags=re.I | re.S,
+        )
+        match = re.match(r"\s*(\d+)", text_content(metric.group(1)) if metric else "")
+        displayed.append(int(match.group(1)) if match else -1)
+    return tuple(displayed)
 
 
 def validate_path(path: Path) -> list[str]:
@@ -186,6 +209,12 @@ def validate_path(path: Path) -> list[str]:
     if tuple(counts) != expected_distribution:
         errors.append(
             f"{path}: distribución de series esperada={expected_distribution} observada={tuple(counts)}"
+        )
+    displayed_series = extract_displayed_series(path)
+    if displayed_series != tuple(counts):
+        errors.append(
+            f"{path}: series visibles por ejercicio={displayed_series}; "
+            f"el contador registra={tuple(counts)}"
         )
     if sum(counts) != expected_total:
         errors.append(f"{path}: suma de series esperada={expected_total} observada={sum(counts)}")
@@ -221,6 +250,19 @@ def validate_path(path: Path) -> list[str]:
                     )
         elif tracker.next_cues:
             errors.append(f"{path}: el último ejercicio {tracker.index} no debe tener nextExerciseCue")
+
+    source = path.read_text(encoding="utf-8")
+    cards = re.findall(r'<article\b(?=[^>]*\bclass=["\'][^"\']*\bcard\b)[^>]*>.*?</article>', source, re.I | re.S)
+    for index, card in enumerate(cards, 1):
+        reps_match = re.search(r'<div\s+class=["\']metric\s+reps["\'].*?<div\s+class=["\']metricVal["\']\s*>(.*?)</div>', card, re.I | re.S)
+        reps = text_content(reps_match.group(1)) if reps_match else ""
+        if not re.search(r"\b8\s*[–-]\s*12(?:\s+por\s+lado)?\s+repeticiones\b", reps, re.I):
+            errors.append(f"{path}: ejercicio {index} repeticiones esperadas=8–12 observadas={reps!r}")
+
+    if 'data-routine-content-version="3"' not in source:
+        errors.append(f"{path}: falta data-routine-content-version=3")
+    if path.name == "Rutina_Dia_4_Pierna_Equilibrio_V1.html" and "PESO MUERTO RUMANO EN SMITH" not in source:
+        errors.append(f"{path}: el ejercicio de bisagra debe usar Smith")
 
     if result.summary != (expected_count, expected_total):
         errors.append(

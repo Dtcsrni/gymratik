@@ -89,7 +89,27 @@ class RoutineMediaValidationTests(unittest.TestCase):
             path = Path(directory) / "Rutina_Dia_1_Espalda_Biceps_V1.html"
             path.write_text(mutated, encoding="utf-8")
             errors = validate_path(path)
-        self.assertTrue(any("orden de media del Día 1" in error for error in errors))
+        self.assertTrue(any("mapa de GIFs esperado" in error for error in errors))
+
+    def test_all_four_routines_require_seven_real_exercise_gifs(self) -> None:
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            with self.subTest(routine=path.name):
+                source = path.read_text(encoding="utf-8")
+                self.assertEqual(validate_path(path), [])
+                self.assertNotRegex(
+                    source,
+                    r"<(?:animate|animateTransform|animateMotion|set)\b",
+                )
+
+    def test_hip_thrust_uses_the_documented_official_gif(self) -> None:
+        source = (CANONICAL / "Rutina_Dia_2_Pierna_Gluteo_V1.html").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn(
+            "hip_thrust_machine_booty_builder_correct_form.gif", source
+        )
+        self.assertIn("https://bootybuilder.com/how-to-use-the-booty-builder/", source)
+        self.assertIn('key:"HIP THRUST"', source)
 
 
 if __name__ == "__main__":
