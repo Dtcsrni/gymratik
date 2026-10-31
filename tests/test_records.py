@@ -29,6 +29,16 @@ class RecordsScreenContractTests(unittest.TestCase):
         for marker in ('statSessions', 'statSets', 'statReps', 'statDays'):
             self.assertIn(f'id="{marker}"', self.page)
 
+    def test_milestones_use_local_mascots_and_explain_validation_bounds(self):
+        for marker in ('id="heroLoad"', 'id="milestoneExercises"', 'id="milestonePrs"', 'id="milestoneCorrections"', 'id="milestoneList"', 'id="reviewList"'):
+            self.assertIn(marker, self.page)
+        self.assertIn('states-v1/female-strength.png', self.page)
+        self.assertIn('states-v1/male-strength.png', self.page)
+        self.assertIn('25&nbsp;%–250&nbsp;%', self.page)
+        self.assertIn('prefers-reduced-motion:reduce', self.style)
+        self.assertIn('transform:translateY', self.style)
+        self.assertIn('opacity:', self.style)
+
     def test_records_are_read_from_local_store_without_mutation_or_html_injection(self):
         self.assertIn('TrainingProgressStore.getHistory(50)', self.script)
         self.assertIn('GymratikInstallGate?.isInstalled()', self.script)
@@ -46,30 +56,51 @@ class RecordsScreenContractTests(unittest.TestCase):
     def test_records_render_correctly_from_synthetic_local_history(self):
         script = r"""
 const assert = require('node:assert/strict');
-const ids = ['dataStatus','recordsContent','periodFilter','statSessions','statSets','statReps','statDays','weeklyChart','exerciseLoads','routineBreakdown','sessionHistory','historyCount'];
+const ids = ['dataStatus','recordsContent','periodFilter','statSessions','statSets','statReps','statDays','weeklyChart','exerciseLoads','routineBreakdown','sessionHistory','historyCount','heroLoad','heroLoadContext','milestoneStatus','milestoneExercises','milestonePrs','milestoneCorrections','milestoneList','reviewDetails','reviewList','reviewCount'];
 class Element {
-  constructor(id='') { this.id=id; this.children=[]; this.dataset={}; this.style={}; this.hidden=false; this.value='30'; this.textContent=''; this.listeners={}; }
+  constructor(id='') { this.id=id; this.children=[]; this.dataset={}; this.style={}; this.classList={items:[],add(value){this.items.push(value);}}; this.hidden=false; this.value='30'; this.textContent=''; this.listeners={}; }
   append(...items) { this.children.push(...items); }
   replaceChildren(...items) { this.children=[...items]; }
   setAttribute(name,value) { this[name]=value; }
   addEventListener(name,fn) { this.listeners[name]=fn; }
 }
 const elements = Object.fromEntries(ids.map(id => [id,new Element(id)]));
-global.document = { querySelector:s=>elements[s.slice(1)], createElement:()=>new Element(), addEventListener(){} };
+elements.heroArt = new Element('hero-art');
+global.document = { querySelector:s=>s === '.hero-art' ? elements.heroArt : elements[s.slice(1)], createElement:()=>new Element(), addEventListener(){} };
 const now = Date.now();
+const session = (sessionId, offset, load, reps=8, otherRecords=[]) => ({sessionId,routineId:'day1',label:'Día 1 · Tirón',startedAt:now-offset,updatedAt:now-offset,status:'completed',completedSeries:2,totalSeries:3,performance:[{exerciseId:'row',exerciseName:'Remo horizontal en máquina',setNumber:1,reps,load,loadUnit:'kg',loadKg:load},...otherRecords]});
 global.window = { addEventListener(){}, GymratikInstallGate:{isInstalled:()=>true}, TrainingProgressStore:{getHistory:async limit=>{
   assert.equal(limit,50);
-  return [{sessionId:'fixture-1',routineId:'day1',label:'Día 1 · Tirón',startedAt:now-1000,updatedAt:now,status:'completed',completedSeries:2,totalSeries:3,performance:[{exerciseId:'row',exerciseName:'Remo',setNumber:1,reps:8,load:20,loadUnit:'kg',loadKg:20},{exerciseId:'row',exerciseName:'Remo',setNumber:2,reps:7,load:20,loadUnit:'kg',loadKg:20}]}];
-},capture(){throw new Error('la vista no debe escribir');},clearAll(){throw new Error('la vista no debe borrar');}} };
+  return [
+    session('fixture-1',5000,20,8,[{exerciseId:'row',exerciseName:'Remo horizontal en máquina',setNumber:2,reps:10,load:2,loadUnit:'kg',loadKg:2}]),
+    session('fixture-2',4000,22.5,7),
+    session('fixture-3',3000,80),
+    session('fixture-4',2000,20),
+    session('fixture-5',1000,12.5),
+  ];
+},getProfile:async()=>({units:'metric',sex:'female'}),capture(){throw new Error('la vista no debe escribir');},clearAll(){throw new Error('la vista no debe borrar');}} };
 require(__SCRIPT__);
 setTimeout(()=>{
-  assert.equal(elements.statSessions.textContent,'1');
-  assert.equal(elements.statSets.textContent,'2');
-  assert.equal(elements.statReps.textContent,'15');
+  assert.equal(elements.statSessions.textContent,'5');
+  assert.equal(elements.statSets.textContent,'10');
+  assert.equal(elements.statReps.textContent,'49');
   assert.equal(elements.statDays.textContent,'1');
-  assert.equal(elements.historyCount.textContent,'1');
-  assert.equal(elements.exerciseLoads.children[0].children[1].textContent,'20 kg');
+  assert.equal(elements.historyCount.textContent,'5');
+  assert.equal(elements.exerciseLoads.children[0].children[1].textContent,'22.5 kg · 49.6 lb');
   assert.equal(elements.routineBreakdown.children.length,1);
+  assert.equal(elements.heroLoad.textContent,'22.5 kg · 49.6 lb');
+  assert.equal(elements.milestoneExercises.textContent,'1');
+  assert.equal(elements.milestonePrs.textContent,'1');
+  assert.equal(elements.milestoneCorrections.textContent,'3');
+  assert.equal(elements.milestoneList.children.length,1);
+  assert.equal(elements.reviewList.children.length,3);
+  const flaggedLowSet = elements.sessionHistory.children[0].children[1].children[1];
+  assert.equal(flaggedLowSet.classList.items.includes('review-row'),true);
+  assert.equal(elements.sessionHistory.children[0].children[1].children[0].classList.items.includes('review-row'),false);
+  const flaggedHistoryRow = elements.sessionHistory.children[2].children[1].children[0];
+  assert.equal(flaggedHistoryRow.classList.items.includes('review-row'),true);
+  assert.equal(flaggedHistoryRow.children[1].children[0].textContent,'Revisar · no cuenta para hitos');
+  assert.equal(elements.heroArt.dataset.sex,'female');
   assert.equal(elements.recordsContent.hidden,false);
 },20);
 """.replace("__SCRIPT__", json.dumps(str(ROOT / "records.js")))

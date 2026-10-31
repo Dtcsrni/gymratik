@@ -1,5 +1,5 @@
-const CACHE_NAME = 'entrenamiento-pwa-4683b488317e';
-const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-73b7a0dd8a4b';
+const CACHE_NAME = 'entrenamiento-pwa-5f63df362f7f';
+const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-3331e066f5f3';
 const PRECACHE = [
   './',
   './index.html',
@@ -178,9 +178,9 @@ const PRECACHE_URLS = new Set(PRECACHE.map((path) => new URL(path, self.registra
 const RESOURCE_BYTES = {
   './': 111512,
   './index.html': 111512,
-  './records.html': 4092,
-  './records.css': 7273,
-  './records.js': 9743,
+  './records.html': 7213,
+  './records.css': 19609,
+  './records.js': 19985,
   './manifest.webmanifest': 971,
   './assets/branding/gymratik-pwa-icon-v8-192.png': 67672,
   './assets/branding/gymratik-pwa-icon-v8-512.png': 365117,

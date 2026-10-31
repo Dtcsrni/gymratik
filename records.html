@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#10161f">
   <meta name="application-name" content="Gymratik">
-  <meta name="description" content="Consulta el historial local de sesiones, series, repeticiones y cargas registradas en Gymratik.">
+  <meta name="description" content="Celebra tus hitos de entrenamiento y consulta progresiones de carga validadas con tus registros locales de Gymratik.">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./assets/branding/gymratik-mascots-mark-v2.png" type="image/png">
   <link rel="stylesheet" href="./records.css">
   <script src="./install-gate.js"></script>
   <script src="./progress-store.js"></script>
-  <title>Registros y estadísticas · Gymratik</title>
+  <title>Hitos y registros · Gymratik</title>
 </head>
 <body>
   <main class="records-shell">
@@ -19,10 +19,41 @@
       <a class="records-brand" href="./" aria-label="Gymratik, volver a portada">GYMRATIK <span>REGISTRO LOCAL</span></a>
       <a class="back-link" href="./">← Portada</a>
     </header>
-    <section class="intro" aria-labelledby="pageTitle">
-      <p class="eyebrow">Tu entrenamiento, en este dispositivo</p>
-      <h1 id="pageTitle">Registros y estadísticas</h1>
-      <p>Consulta tus sesiones y los datos que guardaste en cada serie. Este resumen no modifica tu progreso.</p>
+    <section class="milestone-hero" aria-labelledby="pageTitle">
+      <div class="hero-copy">
+        <p class="eyebrow">Hitos · tu constancia deja huella</p>
+        <h1 id="pageTitle">Cada sesión suma fuerza.</h1>
+        <p class="hero-description">Tus mejores cargas, cambios realistas y sesiones que construyeron el progreso. Todo se calcula aquí, con tus datos locales.</p>
+        <p class="hero-status" id="milestoneStatus" role="status" aria-live="polite">Preparando tus hitos…</p>
+        <div class="hero-record" aria-live="polite">
+          <span class="hero-record-label">Tu carga más alta validada</span>
+          <strong id="heroLoad">—</strong>
+          <span id="heroLoadContext">Aún no hay cargas verificables.</span>
+        </div>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <span class="hero-orbit hero-orbit--one"></span><span class="hero-orbit hero-orbit--two"></span>
+        <span class="hero-spark hero-spark--one">✦</span><span class="hero-spark hero-spark--two">✧</span>
+        <img class="hero-mascot hero-mascot--female" src="./data/profile/mascot-motion/states-v1/female-strength.png" alt="" width="128" height="128" fetchpriority="high">
+        <img class="hero-mascot hero-mascot--male" src="./data/profile/mascot-motion/states-v1/male-strength.png" alt="" width="128" height="128" fetchpriority="high">
+        <span class="hero-speech">¡Un paso<br>más fuerte!</span>
+      </div>
+      <div class="hero-scroll-cue" aria-hidden="true"><span></span> TUS HITOS</div>
+    </section>
+    <section class="milestone-summary" aria-label="Resumen de hitos">
+      <article class="milestone-stat"><span>Ejercicios con récord</span><strong id="milestoneExercises">0</strong><small>con carga validada</small></article>
+      <article class="milestone-stat"><span>Nuevos máximos</span><strong id="milestonePrs">0</strong><small>progresiones confirmadas</small></article>
+      <article class="milestone-stat"><span>Registros por revisar</span><strong id="milestoneCorrections">0</strong><small>no cuentan para tus récords</small></article>
+    </section>
+    <section class="records-panel milestone-panel" aria-labelledby="milestoneTitle">
+      <div class="section-heading"><div><p class="eyebrow">Tu podio personal</p><h2 id="milestoneTitle">Máximo validado por ejercicio</h2></div><span class="count-pill">Hasta 50 sesiones</span></div>
+      <p class="section-note">Cada ejercicio conserva su propia marca; las cargas de movimientos distintos no se comparan como una misma prueba. Para filtrar errores usamos una banda orientativa amplia (25&nbsp;%–250&nbsp;% de la referencia del ejercicio) y aceptamos cambios entre sesiones de hasta un paso del equipo o el 10&nbsp;% de la carga previa, lo que sea mayor. Es una heurística de registro, no describe el límite de tu cuerpo ni del equipo.</p>
+      <div id="milestoneList" class="milestone-list"></div>
+      <details class="review-details" id="reviewDetails" hidden>
+        <summary><span>Ver capturas apartadas para revisión</span><span class="count-pill" id="reviewCount">0</span></summary>
+        <p>Se excluyeron de los hitos porque la carga salió de la banda orientativa del ejercicio o cambió demasiado frente a la última sesión válida. Los datos originales permanecen intactos.</p>
+        <div id="reviewList" class="review-list"></div>
+      </details>
     </section>
     <section class="records-panel" aria-label="Periodo del historial">
       <label for="periodFilter">Mostrar</label>

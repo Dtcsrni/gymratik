@@ -9,6 +9,29 @@
   const dateLabel = value => value ? new Intl.DateTimeFormat('es-MX', { day:'numeric', month:'short', year:'numeric' }).format(new Date(value)) : 'Fecha no disponible';
   const sessionTitle = session => String(session?.label || session?.routineId || 'Sesión de entrenamiento');
   const safeRecords = session => Array.isArray(session?.performance) ? session.performance.filter(item => item && typeof item === 'object') : [];
+  const historyRecordKey = (session, record) => `${String(session?.sessionId || dateOf(session))}:${String(session?.routineId || '')}:${String(record?.exerciseId || normalizeName(record?.exerciseName))}:${String(record?.setKey || record?.setNumber || '')}`;
+  const LOAD_PROFILES = [
+    [/^jalon al pecho$/,40,2.5],[/^remo alto unilateral$/,25,2.5],[/^remo horizontal en maquina$/,40,2.5],[/^apertura inversa en maquina$/,25,2.5],
+    [/^curl de biceps sentado en maquina$/,25,5],[/^curl de biceps en maquina$/,15,2.5],[/^hack squat$/,100,5],[/^hip thrust$/,80,5],
+    [/^prensa de piernas$/,120,5],[/^prensa unilateral alterna$/,50,5],[/^curl femoral/,30,2.5],[/^extension de piernas$/,40,2.5],
+    [/^pantorrillas de pie$/,60,2.5],[/^press de pecho sentado/,40,2.5],[/^press inclinado convergente/,35,2.5],[/^pec deck/,30,2.5],
+    [/^press de hombro/,25,2.5],[/^elevacion lateral/,10,2.5],[/^jalon de triceps/,20,2.5],[/^extension de triceps sobre cabeza/,15,2.5],
+    [/^peso muerto rumano en smith$/,40,2.5],[/^peso muerto rumano con barra$/,50,2.5],[/^abduccion de cadera/,40,2.5],
+    [/^aduccion de cadera/,40,2.5],[/^elevacion de pantorrilla sentada$/,40,2.5],[/^crunch con elevacion de piernas sentada$/,30,2.5],
+  ].map(([pattern, referenceKg, stepKg]) => ({ pattern, referenceKg, stepKg }));
+  const normalizeName = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/\s+/g, ' ');
+  const loadProfile = name => LOAD_PROFILES.find(profile => profile.pattern.test(normalizeName(name)));
+  const loadKgOf = record => {
+    const load = Number(record.load);
+    const hasStoredKg = record.loadKg !== null && record.loadKg !== undefined && record.loadKg !== '';
+    const kg = hasStoredKg && Number.isFinite(Number(record.loadKg)) ? Number(record.loadKg) : record.loadUnit === 'lb' ? load * 0.45359237 : record.loadUnit === 'kg' ? load : NaN;
+    return record.loadSelected !== false && ['kg','lb'].includes(record.loadUnit) && record.load !== null && record.load !== undefined && Number.isFinite(load) && Number.isFinite(kg) ? kg : NaN;
+  };
+  const formatNumber = value => new Intl.NumberFormat('es-MX', {maximumFractionDigits:1}).format(value);
+  const formatPreferredLoad = (kg, units = 'metric') => units === 'imperial' ? `${formatNumber(kg / 0.45359237)} lb` : `${formatNumber(kg)} kg`;
+  const formatAlternateLoad = (kg, units = 'metric') => units === 'imperial' ? `${formatNumber(kg)} kg` : `${formatNumber(kg / 0.45359237)} lb`;
+  const formatLoad = (kg, units = 'metric') => `${formatPreferredLoad(kg, units)} · ${formatAlternateLoad(kg, units)}`;
+  const formatDelta = (kg, units = 'metric') => `${kg > 0 ? '+' : '−'}${formatPreferredLoad(Math.abs(kg), units)}`;
   const make = (tag, className, text) => {
     const node = document.createElement(tag);
     if (className) node.className = className;
@@ -27,6 +50,126 @@
     return allSessions.filter(session => startedWithin(session, days, now));
   }
   function setEmpty(container, message) { container.replaceChildren(make('p', 'empty-note', message)); }
+  function setMascotPreference(sex) {
+    const art = $('.hero-art');
+    if (art) art.dataset.sex = ['female', 'male'].includes(sex) ? sex : 'all';
+  }
+  function sessionPeakRecords(sessions) {
+    const peaks = new Map();
+    const review = [];
+    for (const session of sessions) {
+      if (!number(session.completedSeries)) continue;
+      const date = dateOf(session);
+      if (!date) continue;
+      const sessionExercises = new Map();
+      for (const record of safeRecords(session)) {
+        const kg = loadKgOf(record);
+        if (!Number.isFinite(kg) || kg === 0) continue;
+        const exerciseName = String(record.exerciseName || record.exerciseId || 'Ejercicio').slice(0,100);
+        const profile = loadProfile(exerciseName);
+        const exerciseId = String(record.exerciseId || normalizeName(exerciseName)).slice(0,100);
+        const key = `${String(session.routineId || '')}:${exerciseId}`;
+        const item = { key, exerciseName, profile, kg, reps:number(record.reps), session, date, record };
+        if (profile && (kg < profile.referenceKg * .25 || kg > profile.referenceKg * 2.5)) {
+          const lower = new Intl.NumberFormat('es-MX',{maximumFractionDigits:1}).format(profile.referenceKg * .25);
+          const upper = new Intl.NumberFormat('es-MX',{maximumFractionDigits:1}).format(profile.referenceKg * 2.5);
+          review.push({ ...item, reason:`Fuera de la banda orientativa (${lower}–${upper} kg).` });
+          continue;
+        }
+        const current = sessionExercises.get(key);
+        if (!current || kg > current.kg) sessionExercises.set(key, { ...item, sets:1 });
+        else if (kg === current.kg) current.sets += 1;
+      }
+      for (const [key, item] of sessionExercises) {
+        const items = peaks.get(key) || [];
+        items.push(item);
+        peaks.set(key, items);
+      }
+    }
+    return { peaks, review };
+  }
+  function validateMilestones(sessions) {
+    const validExercises = [];
+    const review = [];
+    let personalRecords = 0;
+    const { peaks:groups, review:rangeReview } = sessionPeakRecords(sessions);
+    review.push(...rangeReview);
+    for (const items of groups.values()) {
+      items.sort((a,b) => a.date - b.date);
+      const accepted = [];
+      for (const item of items) {
+        const profile = item.profile;
+        let reason = '';
+        if (!profile) reason = 'No hay referencia orientativa para validar este ejercicio.';
+        else if (accepted.length) {
+          const previous = accepted[accepted.length - 1];
+          const allowedChange = Math.max(profile.stepKg, previous.kg * .10);
+          if (Math.abs(item.kg - previous.kg) > allowedChange + .001) {
+            reason = `Cambio de ${formatDelta(item.kg - previous.kg)} frente a la última sesión válida; el límite orientativo era ${formatLoad(allowedChange)}.`;
+          }
+        }
+        if (reason) { review.push({ ...item, reason }); continue; }
+        const previousBest = accepted.reduce((best, candidate) => !best || candidate.kg > best.kg ? candidate : best, null);
+        const isNewRecord = Boolean(previousBest && item.kg > previousBest.kg + .001);
+        if (isNewRecord) personalRecords += 1;
+        accepted.push({ ...item, isNewRecord });
+      }
+      if (!accepted.length) continue;
+      const best = accepted.reduce((current, item) => !current || item.kg > current.kg || (item.kg === current.kg && item.date > current.date) ? item : current, null);
+      validExercises.push({
+        name:best.exerciseName,
+        best,
+        baseline:accepted[0],
+        validRecords:accepted,
+        validSessions:accepted.length,
+        personalRecords:accepted.filter(item => item.isNewRecord).length,
+        gainKg:best.kg - accepted[0].kg,
+      });
+    }
+    validExercises.sort((a,b) => b.best.kg - a.best.kg || a.name.localeCompare(b.name, 'es'));
+    return { validExercises, review, personalRecords };
+  }
+  function renderMilestones(sessions, units = 'metric') {
+    const { validExercises, review, personalRecords } = validateMilestones(sessions);
+    const highest = validExercises[0];
+    $('#heroLoad').textContent = highest ? formatLoad(highest.best.kg, units) : '—';
+    $('#heroLoadContext').textContent = highest ? `${highest.name} · ${dateLabel(highest.best.date)}` : 'Aún no hay cargas verificables.';
+    $('#milestoneStatus').textContent = `Validación orientativa sobre ${sessions.length} sesiones disponibles (hasta 50). Los datos originales no se modifican.`;
+    $('#milestoneExercises').textContent = String(validExercises.length);
+    $('#milestonePrs').textContent = String(personalRecords);
+    $('#milestoneCorrections').textContent = String(review.length);
+
+    const root = $('#milestoneList');
+    root.replaceChildren();
+    if (!validExercises.length) setEmpty(root, 'Todavía no hay cargas validadas. Completa series y registra la carga con el nombre de ejercicio de tu rutina.');
+    for (const [index, item] of validExercises.entries()) {
+      const card = make('article', 'milestone-card');
+      const rank = make('span', 'milestone-rank', `#${index + 1}`);
+      rank.setAttribute('aria-label', `Puesto ${index + 1}`);
+      const copy = make('span', 'milestone-copy');
+      copy.append(make('strong', 'milestone-name', item.name));
+      const best = item.best;
+      const repLabel = best.reps ? ` · ${best.reps} rep.` : '';
+      copy.append(make('small', 'milestone-meta', `${item.validSessions} sesiones válidas · ${best.sets} series en el máximo${repLabel} · ${dateLabel(best.date)}`));
+      const load = make('strong', 'milestone-load', formatPreferredLoad(best.kg, units));
+      load.append(make('small', '', `${formatAlternateLoad(best.kg, units)} · máximo personal`));
+      const gain = make('div', `milestone-gain${item.gainKg <= .001 ? ' is-flat' : ''}`);
+      gain.append(make('span', '', item.gainKg > .001 ? `↗ ${formatDelta(item.gainKg, units)} desde tu primera sesión válida` : '• Sin cambio desde tu primera sesión válida'));
+      gain.append(make('span', '', `${item.personalRecords} ${item.personalRecords === 1 ? 'nuevo máximo' : 'nuevos máximos'}`));
+      card.append(rank, copy, load, gain);
+      root.append(card);
+    }
+    const reviewDetails = $('#reviewDetails');
+    const reviewList = $('#reviewList');
+    reviewList.replaceChildren();
+    reviewDetails.hidden = review.length === 0;
+    $('#reviewCount').textContent = String(review.length);
+    for (const item of review.slice().reverse()) {
+      const row = make('div', 'review-item');
+      row.append(make('span', '', `${item.exerciseName} · ${dateLabel(item.date)}`), make('strong', '', `${formatLoad(item.kg)} — ${item.reason}`));
+      reviewList.append(row);
+    }
+  }
   function renderSummary(sessions) {
     const activeSessions = sessions.filter(session => number(session.completedSeries) > 0);
     const records = activeSessions.flatMap(safeRecords);
@@ -77,24 +220,19 @@
   function renderLoads(sessions) {
     const root = $('#exerciseLoads');
     root.replaceChildren();
-    const byExercise = new Map();
-    for (const session of sessions) for (const record of safeRecords(session)) {
-      const kg = Number(record.loadKg);
-      const load = Number(record.load);
-      if (!Number.isFinite(kg) || !Number.isFinite(load) || !record.loadUnit) continue;
-      const key = String(record.exerciseId || record.exerciseName || 'exercise').slice(0,100);
-      const existing = byExercise.get(key) || { name:String(record.exerciseName || record.exerciseId || 'Ejercicio'), kg:-1, load, unit:String(record.loadUnit), count:0 };
-      existing.count += 1;
-      if (kg > existing.kg) Object.assign(existing, { kg, load, unit:String(record.loadUnit) });
-      byExercise.set(key, existing);
-    }
-    const values = [...byExercise.values()].sort((a,b) => a.name.localeCompare(b.name, 'es'));
+    const selectedSessionKeys = new Set(sessions.map(session => String(session.sessionId || `${session.routineId || ''}:${dateOf(session)}`)));
+    const values = validateMilestones(allSessions).validExercises.map(item => {
+      const validRecords = item.validRecords.filter(record => selectedSessionKeys.has(String(record.session.sessionId || `${record.session.routineId || ''}:${dateOf(record.session)}`)));
+      if (!validRecords.length) return null;
+      const best = validRecords.reduce((current, record) => !current || record.kg > current.kg || (record.kg === current.kg && record.date > current.date) ? record : current, null);
+      return { ...item, best, validSessions:validRecords.length };
+    }).filter(Boolean);
     if (!values.length) return setEmpty(root, 'Aún no hay cargas guardadas. Las series sin carga registrada no se cuentan como cero.');
     for (const item of values) {
       const row = make('div', 'exercise-item');
       const name = make('span', '', item.name);
-      name.append(make('small', '', `${item.count} registros de carga`));
-      row.append(name, make('strong', '', `${new Intl.NumberFormat('es-MX', {maximumFractionDigits:2}).format(item.load)} ${item.unit}`));
+      name.append(make('small', '', `${item.validSessions} sesiones válidas · máximo ${dateLabel(item.best.date)}`));
+      row.append(name, make('strong', '', formatLoad(item.best.kg, currentProfile?.units || 'metric')));
       root.append(row);
     }
   }
@@ -130,6 +268,7 @@
     root.replaceChildren();
     $('#historyCount').textContent = String(sessions.length);
     if (!sessions.length) return setEmpty(root, 'No hay sesiones en el periodo seleccionado.');
+    const reviewKeys = new Set(validateMilestones(allSessions).review.map(item => historyRecordKey(item.session, item.record)));
     for (const session of sessions) {
       const details = make('details');
       const summary = make('summary');
@@ -143,7 +282,12 @@
         const row = make('div', 'performance-row');
         const exercise = String(record.exerciseName || record.exerciseId || 'Ejercicio');
         const set = number(record.setNumber) ? ` · Serie ${number(record.setNumber)}` : '';
-        row.append(make('span', '', `${exercise}${set}`), make('span', '', performanceLabel(record)));
+        const value = make('span', '', performanceLabel(record));
+        if (reviewKeys.has(historyRecordKey(session, record))) {
+          row.classList.add('review-row');
+          value.append(make('small', 'record-review-flag', 'Revisar · no cuenta para hitos'));
+        }
+        row.append(make('span', '', `${exercise}${set}`), value);
         performance.append(row);
       }
       details.append(summary, performance);
@@ -152,6 +296,7 @@
   }
   function render() {
     const sessions = selectedSessions();
+    renderMilestones(allSessions, currentProfile?.units || 'metric');
     renderSummary(sessions);
     renderWeeks(allSessions);
     renderLoads(sessions);
@@ -161,6 +306,7 @@
     content.hidden = false;
   }
   let allSessions = [];
+  let currentProfile = null;
   async function refresh() {
     if (!window.GymratikInstallGate?.isInstalled() || !window.TrainingProgressStore?.getHistory) {
       status.textContent = 'Para proteger tu privacidad, los registros solo se consultan desde la PWA instalada en este dispositivo.';
@@ -170,7 +316,13 @@
     }
     try {
       status.dataset.state = '';
-      allSessions = await window.TrainingProgressStore.getHistory(50);
+      const [history, profile] = await Promise.all([
+        window.TrainingProgressStore.getHistory(50),
+        window.TrainingProgressStore.getProfile ? window.TrainingProgressStore.getProfile() : Promise.resolve(null),
+      ]);
+      allSessions = Array.isArray(history) ? history : [];
+      currentProfile = profile;
+      setMascotPreference(profile?.sex);
       render();
     } catch (error) {
       console.error('No fue posible leer el historial local.', error);
@@ -182,6 +334,9 @@
   filter.addEventListener('change', render);
   window.addEventListener('training-progress-updated', refresh);
   window.addEventListener('pageshow', refresh);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+  document.addEventListener('visibilitychange', () => {
+    document.documentElement.dataset.pageHidden = String(document.hidden);
+    if (!document.hidden) refresh();
+  });
   refresh();
 })();
