@@ -38,6 +38,33 @@
     if (text !== undefined) node.textContent = String(text);
     return node;
   };
+  const svgElement = (tag, attrs = {}) => {
+    const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (const [name, value] of Object.entries(attrs)) node.setAttribute(name, String(value));
+    return node;
+  };
+  function milestoneSparkline(records, name, units) {
+    const values = records.map(record => record.kg);
+    const width = 180;
+    const height = 52;
+    const pad = 7;
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const spread = max - min || 1;
+    const points = values.map((value, index) => ({
+      x: values.length === 1 ? width / 2 : pad + index * (width - 2 * pad) / (values.length - 1),
+      y: height - pad - (value - min) / spread * (height - 2 * pad),
+      value,
+      record: records[index],
+    }));
+    const svg = svgElement('svg', { class:'milestone-sparkline', viewBox:`0 0 ${width} ${height}`, role:'img', 'aria-label':`${name}: evolución de ${values.length} máximos de sesión validados` });
+    const title = svgElement('title');
+    title.textContent = `${name}: ${points.map(point => `${dateLabel(point.record.date)}, ${formatPreferredLoad(point.value, units)}`).join('; ')}`;
+    svg.append(title, svgElement('line', { class:'spark-guide', x1:pad, y1:height - pad, x2:width - pad, y2:height - pad }));
+    if (points.length > 1) svg.append(svgElement('polyline', { class:'spark-line', points:points.map(point => `${point.x},${point.y}`).join(' ') }));
+    for (const [index, point] of points.entries()) svg.append(svgElement('circle', { class:`spark-point${index === points.length - 1 ? ' spark-point--latest' : ''}`, cx:point.x, cy:point.y, r:index === points.length - 1 ? 4 : 2.7 }));
+    return svg;
+  }
   const startedWithin = (session, days, now) => {
     const startedAt = dateOf(session);
     return startedAt > 0 && startedAt <= now && startedAt >= now - days * 86400000;
@@ -154,9 +181,17 @@
       const load = make('strong', 'milestone-load', formatPreferredLoad(best.kg, units));
       load.append(make('small', '', `${formatAlternateLoad(best.kg, units)} · máximo personal`));
       const gain = make('div', `milestone-gain${item.gainKg <= .001 ? ' is-flat' : ''}`);
-      gain.append(make('span', '', item.gainKg > .001 ? `↗ ${formatDelta(item.gainKg, units)} desde tu primera sesión válida` : '• Sin cambio desde tu primera sesión válida'));
+      const netPercent = item.baseline.kg > 0 ? item.gainKg / item.baseline.kg * 100 : 0;
+      const latest = item.validRecords[item.validRecords.length - 1];
+      const previous = item.validRecords.length > 1 ? item.validRecords[item.validRecords.length - 2] : null;
+      const lastDelta = previous ? latest.kg - previous.kg : 0;
+      const lastPercent = previous?.kg > 0 ? lastDelta / previous.kg * 100 : 0;
+      const lastDeltaLabel = previous ? `Δ última captura ${formatDelta(lastDelta, units)} (${lastPercent > 0 ? '+' : ''}${formatNumber(lastPercent)} %)` : 'Una captura válida';
+      gain.append(make('span', '', item.gainKg > .001 ? `↗ ${formatDelta(item.gainKg, units)} netos · +${formatNumber(netPercent)} % desde tu primera sesión válida` : '• Sin cambio neto desde tu primera sesión válida'));
       gain.append(make('span', '', `${item.personalRecords} ${item.personalRecords === 1 ? 'nuevo máximo' : 'nuevos máximos'}`));
-      card.append(rank, copy, load, gain);
+      const trend = make('div', `milestone-trend${lastDelta < -.001 ? ' is-down' : lastDelta <= .001 ? ' is-flat' : ''}`);
+      trend.append(milestoneSparkline(item.validRecords, item.name, units), make('span', 'milestone-delta', lastDeltaLabel));
+      card.append(rank, copy, load, gain, trend);
       root.append(card);
     }
     const reviewDetails = $('#reviewDetails');

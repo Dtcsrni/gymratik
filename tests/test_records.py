@@ -66,7 +66,7 @@ class Element {
 }
 const elements = Object.fromEntries(ids.map(id => [id,new Element(id)]));
 elements.heroArt = new Element('hero-art');
-global.document = { querySelector:s=>s === '.hero-art' ? elements.heroArt : elements[s.slice(1)], createElement:()=>new Element(), addEventListener(){} };
+global.document = { querySelector:s=>s === '.hero-art' ? elements.heroArt : elements[s.slice(1)], createElement:()=>new Element(), createElementNS:()=>new Element(), addEventListener(){} };
 const now = Date.now();
 const session = (sessionId, offset, load, reps=8, otherRecords=[]) => ({sessionId,routineId:'day1',label:'Día 1 · Tirón',startedAt:now-offset,updatedAt:now-offset,status:'completed',completedSeries:2,totalSeries:3,performance:[{exerciseId:'row',exerciseName:'Remo horizontal en máquina',setNumber:1,reps,load,loadUnit:'kg',loadKg:load},...otherRecords]});
 global.window = { addEventListener(){}, GymratikInstallGate:{isInstalled:()=>true}, TrainingProgressStore:{getHistory:async limit=>{
@@ -93,6 +93,9 @@ setTimeout(()=>{
   assert.equal(elements.milestonePrs.textContent,'1');
   assert.equal(elements.milestoneCorrections.textContent,'3');
   assert.equal(elements.milestoneList.children.length,1);
+  assert.equal(elements.milestoneList.children[0].children[4].children[0].role, 'img');
+  assert.match(elements.milestoneList.children[0].children[4].children[1].textContent, /Δ última captura −2.5 kg/);
+  assert.match(elements.milestoneList.children[0].children[3].children[0].textContent, /\+12.5 %/);
   assert.equal(elements.reviewList.children.length,3);
   const flaggedLowSet = elements.sessionHistory.children[0].children[1].children[1];
   assert.equal(flaggedLowSet.classList.items.includes('review-row'),true);
