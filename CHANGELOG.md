@@ -2,6 +2,13 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.3] - 2026-11-09
+
+### Added
+
+- Se comparan la sesión reciente con la anterior, la semana en curso y el mes en curso contra tramos equivalentes previos.
+- Se agregan gráficos de actividad diaria, semanal y mensual con deltas y animaciones que respetan movimiento reducido.
+
 ## [0.7.2] - 2026-11-09
 
 ### Changed

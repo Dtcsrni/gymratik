@@ -24,7 +24,7 @@ class RecordsScreenContractTests(unittest.TestCase):
         self.assertIn('Number(session.completedSeries) > 0', self.home)
 
     def test_records_screen_offers_periods_and_useful_metrics(self):
-        for marker in ('value="7"', 'value="30"', 'value="all"', 'id="weeklyChart"', 'id="exerciseLoads"', 'id="routineBreakdown"', 'id="sessionHistory"'):
+        for marker in ('value="7"', 'value="30"', 'value="all"', 'id="sessionComparison"', 'id="periodComparison"', 'id="weeklyChart"', 'id="dailyChart"', 'id="monthlyChart"', 'id="exerciseLoads"', 'id="routineBreakdown"', 'id="sessionHistory"'):
             self.assertIn(marker, self.page)
         for marker in ('statSessions', 'statSets', 'statReps', 'statDays'):
             self.assertIn(f'id="{marker}"', self.page)
@@ -38,6 +38,16 @@ class RecordsScreenContractTests(unittest.TestCase):
         self.assertIn('prefers-reduced-motion:reduce', self.style)
         self.assertIn('transform:translateY', self.style)
         self.assertIn('opacity:', self.style)
+
+    def test_analytics_explain_period_cutoffs_and_use_accessible_animations(self):
+        self.assertIn('mismo día y hora de la semana anterior', self.page)
+        self.assertIn('role="img" aria-label="Gráfica diaria', self.page)
+        self.assertIn('role="img" aria-label="Gráfica mensual', self.page)
+        self.assertIn('prefers-reduced-motion:reduce', self.style)
+        self.assertIn('@keyframes bar-rise', self.style)
+        self.assertIn('Semana en curso · mismo tramo', self.script)
+        self.assertIn('Mes en curso · mismo tramo', self.script)
+        self.assertIn('Última sesión frente a la anterior', self.page)
 
     def test_records_are_read_from_local_store_without_mutation_or_html_injection(self):
         self.assertIn('TrainingProgressStore.getHistory(50)', self.script)
@@ -56,7 +66,7 @@ class RecordsScreenContractTests(unittest.TestCase):
     def test_records_render_correctly_from_synthetic_local_history(self):
         script = r"""
 const assert = require('node:assert/strict');
-const ids = ['dataStatus','recordsContent','periodFilter','statSessions','statSets','statReps','statDays','weeklyChart','exerciseLoads','routineBreakdown','sessionHistory','historyCount','heroLoad','heroLoadContext','milestoneStatus','milestoneExercises','milestonePrs','milestoneCorrections','milestoneList','reviewDetails','reviewList','reviewCount'];
+const ids = ['dataStatus','recordsContent','periodFilter','statSessions','statSets','statReps','statDays','sessionComparisonHint','sessionComparison','periodComparison','weeklyChart','dailyChart','dailyTrendSummary','monthlyChart','monthlyTrendSummary','exerciseLoads','routineBreakdown','sessionHistory','historyCount','heroLoad','heroLoadContext','milestoneStatus','milestoneExercises','milestonePrs','milestoneCorrections','milestoneList','reviewDetails','reviewList','reviewCount'];
 class Element {
   constructor(id='') { this.id=id; this.children=[]; this.dataset={}; this.style={}; this.classList={items:[],add(value){this.items.push(value);}}; this.hidden=false; this.value='30'; this.textContent=''; this.listeners={}; }
   append(...items) { this.children.push(...items); }
@@ -88,6 +98,14 @@ setTimeout(()=>{
   assert.equal(elements.historyCount.textContent,'5');
   assert.equal(elements.exerciseLoads.children[0].children[1].textContent,'22.5 kg · 49.6 lb');
   assert.equal(elements.routineBreakdown.children.length,1);
+  assert.equal(elements.sessionComparison.children.length,1);
+  assert.equal(elements.sessionComparison.children[0].className,'session-pair-card');
+  assert.equal(elements.periodComparison.children.length,2);
+  assert.equal(elements.weeklyChart.children.length,12);
+  assert.equal(elements.dailyChart.children.length,14);
+  assert.equal(elements.monthlyChart.children.length,6);
+  assert.match(elements.dailyTrendSummary.textContent,/series en \d+ día(?:s)? activ(?:o|os)/);
+  assert.match(elements.monthlyTrendSummary.textContent,/mes anterior completo/);
   assert.equal(elements.heroLoad.textContent,'22.5 kg · 49.6 lb');
   assert.equal(elements.milestoneExercises.textContent,'1');
   assert.equal(elements.milestonePrs.textContent,'1');

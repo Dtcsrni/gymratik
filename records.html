@@ -71,15 +71,36 @@
     </section>
     <section id="recordsContent" hidden>
       <section class="stats-grid" aria-label="Resumen del periodo">
-        <article class="stat-card"><span>Sesiones con actividad</span><strong id="statSessions">0</strong></article>
-        <article class="stat-card"><span>Series completadas</span><strong id="statSets">0</strong></article>
-        <article class="stat-card"><span>Repeticiones registradas</span><strong id="statReps">0</strong></article>
-        <article class="stat-card"><span>Días con entrenamiento</span><strong id="statDays">0</strong></article>
+        <article class="stat-card"><span>Sesiones con actividad</span><strong id="statSessions">0</strong><small>según el periodo elegido</small></article>
+        <article class="stat-card"><span>Series completadas</span><strong id="statSets">0</strong><small>sin contar aproximaciones</small></article>
+        <article class="stat-card"><span>Repeticiones registradas</span><strong id="statReps">0</strong><small>de series normales</small></article>
+        <article class="stat-card"><span>Días con entrenamiento</span><strong id="statDays">0</strong><small>días distintos</small></article>
+      </section>
+      <section class="records-panel comparison-panel" aria-labelledby="comparisonTitle">
+        <div class="section-heading"><div><p class="eyebrow">Tu ritmo, con contexto</p><h2 id="comparisonTitle">Comparativas personales</h2></div><span class="count-pill">Solo datos locales</span></div>
+        <p class="section-note comparison-note">Las comparaciones usan las últimas 50 sesiones disponibles con series completadas, independientemente del filtro «Mostrar». La semana usa el mismo día y hora de la semana anterior; el mes compara el mismo número de días transcurridos y se limita al último día si el mes anterior es más corto.</p>
+        <section class="session-comparison-block" aria-labelledby="sessionComparisonTitle">
+          <div class="comparison-subheading"><h3 id="sessionComparisonTitle">Última sesión frente a la anterior</h3><span id="sessionComparisonHint">Sesiones más recientes con actividad</span></div>
+          <div id="sessionComparison" class="session-comparison"></div>
+        </section>
+        <div id="periodComparison" class="period-comparison-grid"></div>
       </section>
       <section class="records-panel" aria-labelledby="trendTitle">
-        <div class="section-heading"><div><p class="eyebrow">Frecuencia</p><h2 id="trendTitle">Series por semana</h2></div><p>Últimas seis semanas</p></div>
+        <div class="section-heading"><div><p class="eyebrow">Frecuencia</p><h2 id="trendTitle">Ritmo semanal</h2></div><p>Series completadas · últimas 12 semanas</p></div>
         <div id="weeklyChart" class="weekly-chart" role="img" aria-label="Gráfica de series completadas por semana"></div>
       </section>
+      <div class="chart-pair">
+        <section class="records-panel chart-panel" aria-labelledby="dailyTrendTitle">
+          <div class="section-heading"><div><p class="eyebrow">Constancia</p><h2 id="dailyTrendTitle">Actividad diaria</h2></div><p>Últimos 14 días</p></div>
+          <div class="chart-scroll"><div id="dailyChart" class="daily-chart" role="img" aria-label="Gráfica diaria de series completadas durante los últimos 14 días"></div></div>
+          <p id="dailyTrendSummary" class="chart-summary"></p>
+        </section>
+        <section class="records-panel chart-panel" aria-labelledby="monthlyTrendTitle">
+          <div class="section-heading"><div><p class="eyebrow">Continuidad</p><h2 id="monthlyTrendTitle">Tendencia mensual</h2></div><p>Últimos 6 meses</p></div>
+          <div id="monthlyChart" class="monthly-chart" role="img" aria-label="Gráfica mensual de sesiones con series completadas"></div>
+          <p id="monthlyTrendSummary" class="chart-summary"></p>
+        </section>
+      </div>
       <section class="records-panel" aria-labelledby="exerciseTitle">
         <div class="section-heading"><div><p class="eyebrow">Progresión observada</p><h2 id="exerciseTitle">Cargas guardadas por ejercicio</h2></div></div>
         <p class="section-note">Se muestra el mayor valor registrado para cada ejercicio, conservando la unidad anotada. Las máquinas y los ejercicios distintos no son comparables entre sí.</p>

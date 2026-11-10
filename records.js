@@ -217,6 +217,134 @@
     $('#statReps').textContent = String(records.reduce((sum, record) => sum + number(record.reps), 0));
     $('#statDays').textContent = String(trainedDays.size);
   }
+  const sessionTimestamp = session => Number(session?.endedAt) || dateOf(session);
+  const countDeltaLabel = (current, previous) => {
+    const delta = current - previous;
+    if (!delta) return 'Sin cambio';
+    const sign = delta > 0 ? '+' : '−';
+    const percent = previous > 0 ? ` · ${delta > 0 ? '+' : '−'}${formatNumber(Math.abs(delta) / previous * 100)} %` : '';
+    return `${sign}${formatNumber(Math.abs(delta))}${percent}`;
+  };
+  const countDeltaClass = (current, previous) => current > previous ? 'delta-up' : current < previous ? 'delta-down' : 'delta-flat';
+  function sessionStats(session) {
+    const records = safeRecords(session);
+    return {
+      sets: number(session?.completedSeries),
+      reps: records.reduce((sum, record) => sum + number(record.reps), 0),
+      exercises: new Set(records.map(record => String(record.exerciseId || normalizeName(record.exerciseName))).filter(Boolean)).size,
+    };
+  }
+  function comparisonMetrics(current, previous, definitions) {
+    const grid = make('div', 'comparison-metrics');
+    for (const [key, label] of definitions) {
+      const row = make('div', 'comparison-metric');
+      const delta = make('strong', `metric-delta ${countDeltaClass(current[key], previous[key])}`, countDeltaLabel(current[key], previous[key]));
+      row.append(make('span', 'metric-name', label), make('span', 'metric-current', formatNumber(current[key])), make('span', 'metric-previous', formatNumber(previous[key])), delta);
+      grid.append(row);
+    }
+    return grid;
+  }
+  function renderSessionComparison(sessions) {
+    const root = $('#sessionComparison');
+    const hint = $('#sessionComparisonHint');
+    root.replaceChildren();
+    const recent = sessions.filter(session => number(session.completedSeries) > 0).slice().sort((a,b) => sessionTimestamp(b) - sessionTimestamp(a));
+    if (!recent.length) {
+      hint.textContent = 'Se necesitan sesiones con series registradas';
+      return setEmpty(root, 'Aún no hay sesiones con actividad para comparar.');
+    }
+    const current = recent[0];
+    const previous = recent[1];
+    if (!previous) {
+      hint.textContent = 'La comparación aparecerá al guardar otra sesión';
+      const card = make('article', 'session-latest-card');
+      card.append(make('span', 'comparison-kicker', 'TU SESIÓN MÁS RECIENTE'), make('strong', 'session-latest-name', sessionTitle(current)), make('span', 'session-latest-date', dateLabel(dateOf(current))));
+      const metrics = sessionStats(current);
+      const summary = make('div','latest-metric-grid');
+      for (const [key,label] of [['sets','Series'],['reps','Repeticiones'],['exercises','Ejercicios con datos']]) {
+        const metric = make('div','latest-metric');
+        metric.append(make('span','',label),make('strong','',formatNumber(metrics[key])));
+        summary.append(metric);
+      }
+      card.append(summary);
+      root.append(card);
+      return;
+    }
+    hint.textContent = `${sessionTitle(current)} · comparación descriptiva, incluso si cambió la rutina`;
+    const currentStats = sessionStats(current);
+    const previousStats = sessionStats(previous);
+    const comparison = make('article', 'session-pair-card');
+    const headings = make('div', 'session-pair-headings');
+    const currentHead = make('div', 'session-period session-period--current');
+    currentHead.append(make('span', 'comparison-kicker', 'MÁS RECIENTE'), make('strong', '', sessionTitle(current)), make('small', '', dateLabel(dateOf(current))));
+    const previousHead = make('div', 'session-period');
+    previousHead.append(make('span', 'comparison-kicker', 'ANTERIOR'), make('strong', '', sessionTitle(previous)), make('small', '', dateLabel(dateOf(previous))));
+    headings.append(currentHead, make('span', 'comparison-arrow', '→'), previousHead);
+    const labels = make('div', 'comparison-column-labels');
+    labels.append(make('span', '', 'Indicador'), make('span', '', 'Última'), make('span', '', 'Anterior'), make('span', '', 'Delta'));
+    comparison.append(headings, labels, comparisonMetrics(currentStats, previousStats, [['sets','Series'],['reps','Repeticiones'],['exercises','Ejercicios con datos']]));
+    root.append(comparison);
+  }
+  const startOfDay = date => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const daysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
+  function statsInRange(sessions, from, through) {
+    const items = sessions.filter(session => {
+      const timestamp = dateOf(session);
+      return timestamp >= from.getTime() && timestamp <= through.getTime() && number(session.completedSeries) > 0;
+    });
+    const days = new Set(items.map(session => {
+      const date = new Date(dateOf(session));
+      return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+    }));
+    return {
+      sessions:items.length,
+      sets:items.reduce((sum, session) => sum + number(session.completedSeries), 0),
+      reps:items.reduce((sum, session) => sum + safeRecords(session).reduce((total, record) => total + number(record.reps), 0), 0),
+      days:days.size,
+    };
+  }
+  const shortDateLabel = value => new Intl.DateTimeFormat('es-MX', {day:'numeric',month:'short'}).format(value);
+  function renderPeriodCard(root, title, currentRange, previousRange, sessions) {
+    const card = make('article', 'period-compare-card');
+    const head = make('div', 'period-compare-head');
+    head.append(make('span', 'comparison-kicker', title), make('span', 'period-current-range', `${shortDateLabel(currentRange.from)}–${shortDateLabel(currentRange.through)}`));
+    card.append(head);
+    const labels = make('div', 'comparison-column-labels');
+    labels.append(make('span', '', 'Indicador'), make('span', '', 'Actual'), make('span', '', 'Anterior'), make('span', '', 'Delta'));
+    const currentStats = statsInRange(sessions,currentRange.from,currentRange.through);
+    const previousStats = statsInRange(sessions,previousRange.from,previousRange.through);
+    if (!currentStats.sessions && !previousStats.sessions) {
+      card.append(make('p','empty-note','Aún no hay actividad en estos tramos.'));
+    } else {
+      card.append(labels,comparisonMetrics(currentStats,previousStats,[['sessions','Sesiones'],['sets','Series'],['reps','Repeticiones'],['days','Días activos']]));
+    }
+    const foot = make('p', 'period-compare-foot', `vs ${shortDateLabel(previousRange.from)}–${shortDateLabel(previousRange.through)} del periodo anterior`);
+    card.append(foot);
+    root.append(card);
+  }
+  function renderPeriodComparisons(sessions) {
+    const root = $('#periodComparison');
+    root.replaceChildren();
+    const now = new Date();
+    const currentWeek = mondayStart(now);
+    const previousWeek = new Date(currentWeek);
+    previousWeek.setDate(previousWeek.getDate() - 7);
+    const previousWeekThrough = new Date(now);
+    previousWeekThrough.setDate(previousWeekThrough.getDate() - 7);
+    const currentMonth = new Date(now.getFullYear(),now.getMonth(),1);
+    const previousMonth = new Date(now.getFullYear(),now.getMonth()-1,1);
+    const comparisonDay = Math.min(now.getDate(),daysInMonth(previousMonth.getFullYear(),previousMonth.getMonth()));
+    const currentMonthThrough = new Date(now);
+    currentMonthThrough.setDate(comparisonDay);
+    currentMonthThrough.setHours(now.getHours(),now.getMinutes(),now.getSeconds(),now.getMilliseconds());
+    const previousMonthThrough = new Date(previousMonth);
+    previousMonthThrough.setDate(comparisonDay);
+    previousMonthThrough.setHours(now.getHours(),now.getMinutes(),now.getSeconds(),now.getMilliseconds());
+    renderPeriodCard(root,'Semana en curso · mismo tramo',
+      {from:currentWeek,through:now}, {from:previousWeek,through:previousWeekThrough}, sessions);
+    renderPeriodCard(root,'Mes en curso · mismo tramo',
+      {from:currentMonth,through:currentMonthThrough}, {from:previousMonth,through:previousMonthThrough}, sessions);
+  }
   function mondayStart(date) {
     const copy = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     copy.setDate(copy.getDate() - ((copy.getDay() + 6) % 7));
@@ -227,9 +355,9 @@
     root.replaceChildren();
     const now = new Date();
     const currentMonday = mondayStart(now);
-    const weeks = Array.from({length:6}, (_, index) => {
+    const weeks = Array.from({length:12}, (_, index) => {
       const start = new Date(currentMonday);
-      start.setDate(start.getDate() - (5 - index) * 7);
+      start.setDate(start.getDate() - (11 - index) * 7);
       return { start, series:0 };
     });
     for (const session of sessions) {
@@ -239,18 +367,90 @@
       if (week) week.series += number(session.completedSeries);
     }
     const max = Math.max(1, ...weeks.map(week => week.series));
+    root.setAttribute('aria-label',`Series completadas por semana, últimas 12 semanas: ${weeks.map(week=>`${shortDateLabel(week.start)}, ${week.series}`).join('; ')}`);
     for (const week of weeks) {
-      const column = make('div', 'week-column');
-      column.setAttribute('aria-label', `${dateLabel(week.start.getTime())}: ${week.series} series`);
+      const isCurrent = week.start.getTime() === currentMonday.getTime();
+      const column = make('div', `week-column${isCurrent ? ' is-current' : ''}`);
+      const weekEnd = new Date(week.start); weekEnd.setDate(weekEnd.getDate() + 6);
+      column.setAttribute('aria-label', `${isCurrent ? 'Semana actual, ' : ''}${shortDateLabel(week.start)} al ${shortDateLabel(weekEnd)}: ${week.series} series`);
       column.append(make('span', 'week-value', week.series));
       const track = make('div', 'week-track');
       track.setAttribute('aria-hidden', 'true');
       const bar = make('div', 'week-bar');
       bar.style.height = `${week.series ? Math.max(5, week.series / max * 100) : 0}%`;
+      bar.style.animationDelay = `${(weeks.indexOf(week) % 8) * 35}ms`;
       track.append(bar);
       column.append(track, make('span', 'week-label', new Intl.DateTimeFormat('es-MX', {day:'numeric', month:'short'}).format(week.start)));
       root.append(column);
     }
+  }
+  function renderDaily(sessions) {
+    const root = $('#dailyChart');
+    root.replaceChildren();
+    const today = startOfDay(new Date());
+    const days = Array.from({length:14},(_,index) => {
+      const date = new Date(today);
+      date.setDate(today.getDate() - (13 - index));
+      return {date,series:0};
+    });
+    for (const session of sessions) {
+      if (!number(session.completedSeries)) continue;
+      const date = startOfDay(new Date(dateOf(session)));
+      const day = days.find(item => item.date.getTime() === date.getTime());
+      if (day) day.series += number(session.completedSeries);
+    }
+    const max = Math.max(1,...days.map(day=>day.series));
+    for (const [index,day] of days.entries()) {
+      const column = make('div',`daily-column${day.series ? ' has-training' : ''}${index === days.length - 1 ? ' is-today' : ''}`);
+      column.title = `${dateLabel(day.date.getTime())}: ${day.series} series`;
+      column.setAttribute('aria-label',`${dateLabel(day.date.getTime())}: ${day.series} series`);
+      const track = make('div','daily-track');
+      const bar = make('div','daily-bar');
+      bar.style.height = `${day.series ? Math.max(5,day.series/max*100) : 0}%`;
+      bar.style.animationDelay = `${index*24}ms`;
+      track.append(bar);
+      const dayName = new Intl.DateTimeFormat('es-MX',{weekday:'narrow'}).format(day.date);
+      column.append(track,make('span','daily-day',dayName),make('span','daily-date',String(day.date.getDate())));
+      root.append(column);
+    }
+    const activeDays = days.filter(day=>day.series>0).length;
+    const total = days.reduce((sum,day)=>sum+day.series,0);
+    root.setAttribute('aria-label',`Actividad diaria de los últimos 14 días: ${days.map(day=>`${shortDateLabel(day.date)}, ${day.series} series`).join('; ')}`);
+    $('#dailyTrendSummary').textContent = `${formatNumber(total)} series en ${activeDays} ${activeDays === 1 ? 'día activo' : 'días activos'} de los últimos 14.`;
+  }
+  function renderMonthly(sessions) {
+    const root = $('#monthlyChart');
+    root.replaceChildren();
+    const now = new Date();
+    const months = Array.from({length:6},(_,index) => {
+      const start = new Date(now.getFullYear(),now.getMonth() - (5 - index),1);
+      return {start,sessions:0,series:0};
+    });
+    for (const session of sessions) {
+      if (!number(session.completedSeries)) continue;
+      const date = new Date(dateOf(session));
+      const month = months.find(item => item.start.getFullYear() === date.getFullYear() && item.start.getMonth() === date.getMonth());
+      if (month) { month.sessions += 1; month.series += number(session.completedSeries); }
+    }
+    const max = Math.max(1,...months.map(month=>month.sessions));
+    for (const [index,month] of months.entries()) {
+      const current = index === months.length - 1;
+      const column = make('div',`month-column${current ? ' is-current' : ''}${month.sessions ? ' has-training' : ''}`);
+      const monthLabel = new Intl.DateTimeFormat('es-MX',{month:'short'}).format(month.start).replace('.','');
+      column.title = `${new Intl.DateTimeFormat('es-MX',{month:'long',year:'numeric'}).format(month.start)}: ${month.sessions} sesiones, ${month.series} series${current ? ' (mes en curso)' : ''}`;
+      column.setAttribute('aria-label',column.title);
+      const track = make('div','month-track');
+      const bar = make('div','month-bar');
+      bar.style.height = `${month.sessions ? Math.max(5,month.sessions/max*100) : 0}%`;
+      bar.style.animationDelay = `${index*55}ms`;
+      track.append(bar);
+      column.append(make('span','month-value',String(month.sessions)),track,make('span','month-label',monthLabel));
+      root.append(column);
+    }
+    const current = months[months.length-1];
+    const previous = months[months.length-2];
+    root.setAttribute('aria-label',`Sesiones mensuales: ${months.map(month=>`${new Intl.DateTimeFormat('es-MX',{month:'long',year:'numeric'}).format(month.start)}, ${month.sessions} sesiones, ${month.series} series`).join('; ')}`);
+    $('#monthlyTrendSummary').textContent = `Mes en curso: ${current.sessions} ${current.sessions === 1 ? 'sesión' : 'sesiones'} · mes anterior completo: ${previous.sessions}. El comparativo principal usa el mismo tramo.`;
   }
   function renderLoads(sessions) {
     const root = $('#exerciseLoads');
@@ -333,7 +533,11 @@
     const sessions = selectedSessions();
     renderMilestones(allSessions, currentProfile?.units || 'metric');
     renderSummary(sessions);
+    renderSessionComparison(allSessions);
+    renderPeriodComparisons(allSessions);
     renderWeeks(allSessions);
+    renderDaily(allSessions);
+    renderMonthly(allSessions);
     renderLoads(sessions);
     renderRoutines(sessions);
     renderHistory(sessions);

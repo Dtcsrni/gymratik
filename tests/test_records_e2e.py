@@ -78,7 +78,7 @@ def milestone_fixture() -> dict:
                 session("fixture-2", 15, 22.5, reps=7),
                 session("fixture-3", 10, 80),
                 session("fixture-4", 5, 20),
-                session("fixture-5", 1, 12.5),
+                session("fixture-5", 1, 12.5, reps=10),
             ],
         },
     }
@@ -108,6 +108,18 @@ class RecordsMilestoneE2ETests(unittest.TestCase):
                     self.assertEqual(page.locator("#milestoneExercises").inner_text(), "1")
                     self.assertEqual(page.locator("#milestonePrs").inner_text(), "1")
                     self.assertEqual(page.locator("#milestoneCorrections").inner_text(), "3")
+                    self.assertEqual(page.locator("#sessionComparison .session-pair-card").count(), 1)
+                    self.assertIn("MÁS RECIENTE", page.locator("#sessionComparison").inner_text())
+                    self.assertIn("ANTERIOR", page.locator("#sessionComparison").inner_text())
+                    self.assertRegex(page.locator("#sessionComparison .comparison-metric").nth(1).locator(".metric-delta").inner_text(), r"\+2 · \+25(?:[,.]0)? %")
+                    self.assertEqual(page.locator("#periodComparison .period-compare-card").count(), 2)
+                    self.assertEqual(page.locator("#weeklyChart .week-column").count(), 12)
+                    self.assertEqual(page.locator("#dailyChart .daily-column").count(), 14)
+                    self.assertEqual(page.locator("#monthlyChart .month-column").count(), 6)
+                    self.assertIn("El comparativo principal usa el mismo tramo", page.locator("#monthlyTrendSummary").inner_text())
+                    self.assertIn("Actividad diaria de los últimos 14 días", page.locator("#dailyChart").get_attribute("aria-label"))
+                    self.assertIn("Sesiones mensuales", page.locator("#monthlyChart").get_attribute("aria-label"))
+                    self.assertIn("Series completadas por semana", page.locator("#weeklyChart").get_attribute("aria-label"))
                     self.assertIn("3 sesiones válidas", page.locator("#milestoneList").inner_text())
                     self.assertEqual(page.locator("#milestoneList .milestone-sparkline").count(), 1)
                     self.assertRegex(page.locator("#milestoneList .milestone-delta").inner_text(), r"Δ última captura −2\.5 kg \(-11[,.]1 %\)")
@@ -151,6 +163,7 @@ class RecordsMilestoneE2ETests(unittest.TestCase):
                     reduced_page = reduced.new_page()
                     reduced_page.goto(f"http://127.0.0.1:{server.server_address[1]}/records.html", wait_until="domcontentloaded")
                     self.assertEqual(reduced_page.locator(".hero-mascot--female").evaluate("element => getComputedStyle(element).animationName"), "none")
+                    self.assertEqual(reduced_page.locator("#monthlyChart .month-bar").first.evaluate("element => getComputedStyle(element).animationName"), "none")
                     reduced.close()
                     context.close()
                     self.assertEqual(page_errors, [])
