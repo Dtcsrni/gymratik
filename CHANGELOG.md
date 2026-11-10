@@ -2,6 +2,12 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.2] - 2026-11-09
+
+### Changed
+
+- El panel completo de control de series también queda resaltado en amarillo y difuminado cuando la máquina está ocupada; solo el control para liberarla permanece activo y nítido.
+
 ## [0.7.1] - 2026-11-09
 
 ### Changed

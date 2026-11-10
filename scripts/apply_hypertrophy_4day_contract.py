@@ -225,7 +225,7 @@ def update_sections(source: str, day: int, count: int, distribution: tuple[int, 
     return source
 
 
-INTERACTION_REDESIGN = r'''<style data-enhancement="exercise-focus-occupied-quote-v3">
+INTERACTION_REDESIGN = r'''<style data-enhancement="exercise-focus-occupied-quote-v4">
 /* Separa visualmente cada ejercicio y reserva el ámbar para una máquina ocupada. */
 main.cards article.card[data-exercise-index]{--exercise-accent:#72dcff;position:relative;border:1px solid color-mix(in srgb,var(--exercise-accent) 30%,transparent);transition:border-color .24s ease,box-shadow .24s ease,transform .24s ease}
 main.cards article.card[data-exercise-index]:focus-within,main.cards article.card[data-exercise-index].is-exercise-focused{border-color:var(--exercise-accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--exercise-accent) 22%,transparent),0 18px 42px rgba(0,0,0,.24)}
@@ -233,7 +233,8 @@ main.cards article.card[data-exercise-index] .num{background:color-mix(in srgb,v
 main.cards article.card[data-exercise-index] .exTitle{ text-wrap:balance }
 main.cards article.card[data-exercise-index][data-machine-occupied="true"]{isolation:isolate;border:2px solid #ffd166!important;background:linear-gradient(145deg,rgba(102,74,22,.68),rgba(36,31,19,.94))!important;box-shadow:0 0 0 2px rgba(255,209,102,.18),0 16px 42px rgba(0,0,0,.22)!important}
 main.cards article.card[data-machine-occupied="true"]::after{position:absolute;z-index:1;inset:0;border-radius:inherit;background:rgba(255,196,67,.12);backdrop-filter:blur(1.2px);-webkit-backdrop-filter:blur(1.2px);content:"";pointer-events:none}
-main.cards article.card[data-machine-occupied="true"]>:not(.exerciseTracker),main.cards article.card[data-machine-occupied="true"] .exerciseTrackerHead,main.cards article.card[data-machine-occupied="true"] .exerciseSetButtons>:not(.machinePendingToggle){filter:blur(1.7px) saturate(.55)!important;opacity:.52!important;pointer-events:none!important;user-select:none!important}
+main.cards article.card[data-machine-occupied="true"]>:not(.exerciseTracker),main.cards article.card[data-machine-occupied="true"] .exerciseTracker> :not(.exerciseSetButtons),main.cards article.card[data-machine-occupied="true"] .exerciseSetButtons>:not(.machinePendingToggle){filter:blur(1.7px) saturate(.55)!important;opacity:.52!important;pointer-events:none!important;user-select:none!important}
+main.cards article.card[data-machine-occupied="true"] .exerciseTracker{border-color:#ffd166!important;background:linear-gradient(145deg,rgba(105,75,19,.56),rgba(43,35,18,.72))!important;box-shadow:inset 0 0 0 1px rgba(255,209,102,.2),0 0 18px rgba(255,209,102,.1)!important}
 main.cards article.card[data-machine-occupied="true"] .machinePendingToggle{position:relative;z-index:5;pointer-events:auto!important;border-color:#ffe08a!important;background:linear-gradient(135deg,#8b641c,#624715)!important;color:#fff3c6!important;box-shadow:0 0 0 2px rgba(255,209,102,.2)}
 .floatingSessionSummary .summaryFocusBadge{display:none;min-width:0;max-width:100%;margin:.1rem 0;padding:.22rem .35rem;border:1px solid rgba(255,209,102,.68);border-radius:.38rem;background:rgba(107,75,18,.82);color:#fff0bf;font-size:.57rem;font-weight:950;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .floatingSessionSummary.is-exercise-focused .summaryFocusBadge{display:block;animation:exerciseFocusReveal .34s cubic-bezier(.2,.8,.2,1) both}
@@ -252,7 +253,7 @@ main.cards article.card[data-machine-occupied="true"] .machinePendingToggle{posi
 @media(max-width:640px){.floatingSessionSummary .summaryFocusBadge{font-size:.55rem}.sessionCompletionCopy p#motivationMessage{padding:.75rem .8rem .75rem 1.05rem}}
 @media(prefers-reduced-motion:reduce){.floatingSessionSummary.is-exercise-focused .summaryFocusBadge,.floatingSessionSummary.is-exercise-focused .summaryToggle,.summaryExercise.isCurrent{animation:none!important}main.cards article.card[data-exercise-index]{transition:none}}
 </style>
-<script data-enhancement="exercise-focus-occupied-quote-v3">
+<script data-enhancement="exercise-focus-occupied-quote-v4">
 (() => {
   const cards = [...document.querySelectorAll('main.cards article.card[data-exercise-index]')];
   const summary = document.querySelector('.floatingSessionSummary');
@@ -474,7 +475,7 @@ SECTION_LOAD_REDESIGN = r'''<style data-enhancement="section-ledger-load-v2">
 
 
 def apply_interaction_redesign(source: str) -> str:
-    for previous in ("exercise-focus-occupied-quote-v2", "section-ledger-load-v1"):
+    for previous in ("exercise-focus-occupied-quote-v2", "exercise-focus-occupied-quote-v3", "section-ledger-load-v1"):
         source = re.sub(
             rf'<style\s+data-enhancement="{re.escape(previous)}">.*?</script>',
             "",
@@ -483,7 +484,7 @@ def apply_interaction_redesign(source: str) -> str:
             flags=re.I | re.S,
         )
     source = re.sub(r'(<meta\b(?=[^>]*\bname=["\']viewport["\'])[^>]*\bcontent=["\'])([^"\']*)(["\'][^>]*>)', lambda m: m.group(1) + re.sub(r',?\s*(?:maximum-scale|user-scalable)=[^,]+', '', m.group(2)) + ', maximum-scale=1, user-scalable=no' + m.group(3), source, count=1, flags=re.I)
-    if 'data-enhancement="exercise-focus-occupied-quote-v3"' not in source:
+    if 'data-enhancement="exercise-focus-occupied-quote-v4"' not in source:
         source = source.replace('</body>', INTERACTION_REDESIGN + '\n</body>', 1)
     source = source.replace(
         'item.performancePanel = performancePanel;',

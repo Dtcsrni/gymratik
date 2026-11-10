@@ -1342,11 +1342,14 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
         for path in sorted(CANONICAL.glob("*.html")):
             with self.subTest(routine=path.name):
                 source = path.read_text(encoding="utf-8")
-                self.assertEqual(source.count('data-enhancement="exercise-focus-occupied-quote-v3"'), 2)
+                self.assertEqual(source.count('data-enhancement="exercise-focus-occupied-quote-v4"'), 2)
                 self.assertEqual(source.count('data-enhancement="section-ledger-load-v2"'), 2)
                 self.assertIn('data-machine-occupied="true"', source)
                 self.assertIn("setFocusedCard", source)
                 self.assertIn("syncOccupiedState", source)
+                self.assertIn(".exerciseTracker{border-color:#ffd166!important", source)
+                self.assertIn(".exerciseTracker> :not(.exerciseSetButtons)", source)
+                self.assertIn(".exerciseSetButtons>:not(.machinePendingToggle)", source)
                 self.assertIn("pointer-events:none!important", source)
                 self.assertIn("maximum-scale=1, user-scalable=no", source)
                 self.assertIn("__warmupPerformance", source)
