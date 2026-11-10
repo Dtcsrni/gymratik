@@ -3,7 +3,7 @@
 <html data-document-role="page" data-label="Día 2 · Tren inferior A: cuádriceps y glúteos · rutina v3" lang="es" data-routine-content-version="3" data-routine-cover="day2">
 <head>
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
+<meta content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" name="viewport"/>
 <title>Día 2 · Tren inferior A: cuádriceps y glúteos · rutina v3</title>
 <style>
 :root {
@@ -7945,5 +7945,100 @@ button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gra
 #gymratikEncouragement .toastCopy{min-width:0;overflow-wrap:anywhere}
 @media(max-width:380px){#gymratikEncouragement{gap:.4rem;min-height:56px;padding:.35rem .65rem .35rem .4rem;font-size:.82rem}#gymratikEncouragement .toastMascot{flex-basis:46px;width:46px;height:46px}}
 </style>
+<style data-enhancement="exercise-focus-occupied-quote-v2">
+/* Separa visualmente cada ejercicio y reserva el ámbar para una máquina ocupada. */
+main.cards article.card[data-exercise-index]{--exercise-accent:#72dcff;position:relative;border:1px solid color-mix(in srgb,var(--exercise-accent) 30%,transparent);transition:border-color .24s ease,box-shadow .24s ease,transform .24s ease}
+main.cards article.card[data-exercise-index]:focus-within,main.cards article.card[data-exercise-index].is-exercise-focused{border-color:var(--exercise-accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--exercise-accent) 22%,transparent),0 18px 42px rgba(0,0,0,.24)}
+main.cards article.card[data-exercise-index] .num{background:color-mix(in srgb,var(--exercise-accent) 20%,#071b28)!important;border-color:var(--exercise-accent)!important;color:#f3fcff!important}
+main.cards article.card[data-exercise-index] .exTitle{ text-wrap:balance }
+main.cards article.card[data-exercise-index][data-machine-occupied="true"]{border:2px solid #ffd166!important;background:linear-gradient(145deg,rgba(102,74,22,.68),rgba(36,31,19,.94))!important;box-shadow:0 0 0 2px rgba(255,209,102,.18),0 16px 42px rgba(0,0,0,.22)!important}
+main.cards article.card[data-machine-occupied="true"]>:not(.exerciseTracker),main.cards article.card[data-machine-occupied="true"] .exerciseTrackerHead,main.cards article.card[data-machine-occupied="true"] .exerciseSetButtons>:not(.machinePendingToggle){filter:blur(1.7px) saturate(.55)!important;opacity:.52!important;pointer-events:none!important;user-select:none!important}
+main.cards article.card[data-machine-occupied="true"] .machinePendingToggle{position:relative;z-index:5;pointer-events:auto!important;border-color:#ffe08a!important;background:linear-gradient(135deg,#8b641c,#624715)!important;color:#fff3c6!important;box-shadow:0 0 0 2px rgba(255,209,102,.2)}
+.floatingSessionSummary .summaryFocusBadge{display:none;min-width:0;max-width:100%;margin:.1rem 0;padding:.22rem .35rem;border:1px solid rgba(255,209,102,.68);border-radius:.38rem;background:rgba(107,75,18,.82);color:#fff0bf;font-size:.57rem;font-weight:950;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.floatingSessionSummary.is-exercise-focused .summaryFocusBadge{display:block;animation:exerciseFocusReveal .34s cubic-bezier(.2,.8,.2,1) both}
+.floatingSessionSummary.is-exercise-focused .summaryToggle{box-shadow:inset 3px 0 #ffd166,0 0 16px rgba(255,209,102,.2);animation:exerciseBarPulse 1.25s ease-in-out infinite alternate}
+.summaryExercise.isCurrent{outline:2px solid #ffd166;outline-offset:1px;animation:exerciseFocusReveal .34s ease both}
+.warmupSet:not([hidden]){display:inline-flex;align-items:center;gap:.35rem;padding:.38rem .58rem;border:1px solid #ffd166;border-radius:.58rem;background:rgba(104,73,18,.62);color:#fff0bf;font-size:.68rem;font-weight:950;letter-spacing:.035em}
+.exerciseWarmupHint:not([hidden]){border-color:rgba(255,209,102,.7)!important;background:linear-gradient(110deg,rgba(103,73,20,.35),rgba(38,31,19,.42))!important;color:#ffedbd!important}
+.sessionCompletionPanel:not([hidden]){border:1px solid rgba(117,230,255,.36);background:radial-gradient(ellipse at 0 0,rgba(45,153,173,.2),transparent 52%),linear-gradient(145deg,rgba(14,43,59,.98),rgba(10,20,38,.99));box-shadow:0 20px 60px rgba(0,0,0,.42),inset 0 1px rgba(255,255,255,.08)}
+.sessionCompletionCopy{padding:.2rem .25rem}
+.sessionCompletionKicker{display:inline-flex;align-items:center;gap:.4rem;padding:.28rem .48rem;border:1px solid rgba(101,242,221,.38);border-radius:999px;background:rgba(20,91,83,.25);letter-spacing:.1em}
+.sessionCompletionCopy p#motivationMessage{position:relative;margin:.35rem 0 .25rem;padding:.85rem 1rem .85rem 1.2rem;border-left:3px solid #65f2dd;border-radius:.2rem .8rem .8rem .2rem;background:linear-gradient(100deg,rgba(18,91,83,.2),rgba(8,27,39,.45));color:#f4fdff;font-size:clamp(1.05rem,2.6vw,1.45rem);font-weight:850;line-height:1.38;letter-spacing:-.015em;text-wrap:pretty}
+.sessionCompletionCopy p#motivationMessage::before{content:"“";position:absolute;left:.35rem;top:.15rem;color:#65f2dd;font-size:1.1rem;line-height:1}
+.motivationNote{font-weight:800}
+@keyframes exerciseFocusReveal{from{opacity:.4;transform:translateY(4px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes exerciseBarPulse{from{filter:brightness(1)}to{filter:brightness(1.22)}}
+@media(max-width:640px){.floatingSessionSummary .summaryFocusBadge{font-size:.55rem}.sessionCompletionCopy p#motivationMessage{padding:.75rem .8rem .75rem 1.05rem}}
+@media(prefers-reduced-motion:reduce){.floatingSessionSummary.is-exercise-focused .summaryFocusBadge,.floatingSessionSummary.is-exercise-focused .summaryToggle,.summaryExercise.isCurrent{animation:none!important}main.cards article.card[data-exercise-index]{transition:none}}
+</style>
+<script data-enhancement="exercise-focus-occupied-quote-v2">
+(() => {
+  const cards = [...document.querySelectorAll('main.cards article.card[data-exercise-index]')];
+  const summary = document.querySelector('.floatingSessionSummary');
+  const toggle = document.getElementById('summaryToggle');
+  if (!cards.length || !summary || !toggle) return;
+  const badge = document.createElement('span');
+  badge.className = 'summaryFocusBadge';
+  badge.setAttribute('aria-hidden', 'true');
+  toggle.insertAdjacentElement('afterend', badge);
+  const originalControlState = new WeakMap();
+  let focusedCard = null;
+  const setFocusedCard = card => {
+    if (!card) return;
+    focusedCard?.classList.remove('is-exercise-focused');
+    focusedCard = card;
+    focusedCard.classList.add('is-exercise-focused');
+    const number = String(card.dataset.exerciseIndex).padStart(2, '0');
+    const title = card.querySelector('.exTitle')?.textContent?.trim() || `Ejercicio ${number}`;
+    badge.textContent = `EN FOCO · ${number} · ${title}`;
+    summary.classList.add('is-exercise-focused');
+    window.gymratikFocusedExerciseIndex = Number(card.dataset.exerciseIndex) - 1;
+    document.querySelectorAll('.summaryExercise').forEach(item => item.classList.toggle('isCurrent', Number(item.dataset.exercise) === Number(card.dataset.exerciseIndex)));
+  };
+  const syncOccupiedState = card => {
+    const button = card.querySelector('.machinePendingToggle');
+    const occupied = button?.getAttribute('aria-pressed') === 'true';
+    card.dataset.machineOccupied = String(occupied);
+    button?.setAttribute('aria-label', occupied ? 'Desactivar máquina ocupada para este ejercicio' : 'Marcar máquina ocupada para este ejercicio');
+    card.querySelectorAll('button,input,select,textarea,a,summary,[tabindex]').forEach(control => {
+      if (control === button) return;
+      if (occupied) {
+        if (!originalControlState.has(control)) originalControlState.set(control, { disabled: 'disabled' in control ? control.disabled : null, tabindex: control.getAttribute('tabindex'), ariaDisabled: control.getAttribute('aria-disabled') });
+        if ('disabled' in control) control.disabled = true;
+        control.setAttribute('tabindex', '-1');
+        control.setAttribute('aria-disabled', 'true');
+      } else if (originalControlState.has(control)) {
+        const original = originalControlState.get(control);
+        if (original.disabled !== null) control.disabled = original.disabled;
+        if (original.tabindex === null) control.removeAttribute('tabindex'); else control.setAttribute('tabindex', original.tabindex);
+        if (original.ariaDisabled === null) control.removeAttribute('aria-disabled'); else control.setAttribute('aria-disabled', original.ariaDisabled);
+        originalControlState.delete(control);
+      }
+    });
+  };
+  cards.forEach((card, index) => {
+    const palette = ['#72dcff','#65f2dd','#c2a4ff','#ffd166'];
+    card.style.setProperty('--exercise-accent', palette[index % palette.length]);
+    card.addEventListener('pointerenter', () => setFocusedCard(card));
+    card.addEventListener('focusin', () => setFocusedCard(card));
+    card.querySelector('.machinePendingToggle')?.addEventListener('click', () => requestAnimationFrame(() => syncOccupiedState(card)));
+    syncOccupiedState(card);
+  });
+  document.addEventListener('click', event => {
+    const card = event.target.closest('article.card[data-machine-occupied="true"]');
+    if (card && !event.target.closest('.machinePendingToggle')) { event.preventDefault(); event.stopImmediatePropagation(); }
+  }, true);
+  document.addEventListener('keydown', event => {
+    const card = event.target.closest?.('article.card[data-machine-occupied="true"]');
+    if (card && event.target.closest?.('.machinePendingToggle')) return;
+    if (card && ['Enter',' '].includes(event.key)) { event.preventDefault(); event.stopImmediatePropagation(); }
+  }, true);
+  const visible = new IntersectionObserver(entries => {
+    const candidate = entries.filter(entry => entry.isIntersecting).sort((a,b) => b.intersectionRatio-a.intersectionRatio)[0];
+    if (candidate && candidate.intersectionRatio > .28) setFocusedCard(candidate.target);
+  }, { threshold: [.28,.5,.72] });
+  cards.forEach(card => visible.observe(card));
+})();
+</script>
 </body>
 </html>

@@ -1337,6 +1337,19 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                     for marker in required_markers:
                         self.assertEqual(len(re.findall(marker, card)), 1, marker)
 
+    def test_all_routines_share_focus_occupied_and_quote_interaction_redesign(self) -> None:
+        for path in sorted(CANONICAL.glob("*.html")):
+            with self.subTest(routine=path.name):
+                source = path.read_text(encoding="utf-8")
+                self.assertEqual(source.count('data-enhancement="exercise-focus-occupied-quote-v2"'), 2)
+                self.assertIn('data-machine-occupied="true"', source)
+                self.assertIn("setFocusedCard", source)
+                self.assertIn("syncOccupiedState", source)
+                self.assertIn("pointer-events:none!important", source)
+                self.assertIn("maximum-scale=1, user-scalable=no", source)
+                self.assertIn("__warmupPerformance", source)
+                self.assertIn("sessionCompletionCopy p#motivationMessage", source)
+
     def test_each_canonical_day_has_its_own_shared_template_cover(self) -> None:
         cover_dir = ROOT / "assets" / "branding" / "routine-covers"
         for day, path in enumerate(sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")), start=1):

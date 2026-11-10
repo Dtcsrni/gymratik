@@ -1,5 +1,5 @@
-const CACHE_NAME = 'entrenamiento-pwa-5f63df362f7f';
-const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-3331e066f5f3';
+const CACHE_NAME = 'entrenamiento-pwa-f2ec85790f6d';
+const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-0c2458cbf108';
 const PRECACHE = [
   './',
   './index.html',
@@ -176,11 +176,11 @@ const PRECACHE = [
 ];
 const PRECACHE_URLS = new Set(PRECACHE.map((path) => new URL(path, self.registration.scope).href));
 const RESOURCE_BYTES = {
-  './': 111512,
-  './index.html': 111512,
-  './records.html': 7213,
-  './records.css': 19609,
-  './records.js': 19985,
+  './': 111547,
+  './index.html': 111547,
+  './records.html': 7733,
+  './records.css': 21918,
+  './records.js': 22590,
   './manifest.webmanifest': 971,
   './assets/branding/gymratik-pwa-icon-v8-192.png': 67672,
   './assets/branding/gymratik-pwa-icon-v8-512.png': 365117,
@@ -228,10 +228,10 @@ const RESOURCE_BYTES = {
   './data/profile/mascot-motion/states-v1/male-mobility.png': 12451,
   './data/profile/mascot-motion/states-v1/male-rest.png': 15701,
   './data/profile/mascot-motion/states-v1/male-approval.png': 12307,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html': 1083063,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html': 2676799,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html': 656305,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html': 661194,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html': 1092227,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html': 2685963,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html': 665469,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html': 670358,
   './assets/branding/gymratik-mascots-mark-v2.png': 338005,
   './data/rutinas_autocontenidas/frases_fitness/fitness_quotes.js': 5148,
   './data/rutinas_autocontenidas/frases_fitness/retratos/arnold-schwarzenegger-eu-2026.jpg': 278839,
