@@ -1359,6 +1359,15 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 self.assertIn("Última aproximación registrada", source)
                 self.assertIn("routineSectionStamp", source)
                 self.assertIn("sessionCompletionCopy p#motivationMessage", source)
+                self.assertIn('id="sessionRecap"', source)
+                for recap_id in ("sessionRecapSets", "sessionRecapExercises", "sessionRecapReps", "sessionRecapSkipped", "sessionRecapDuration", "sessionFunFact"):
+                    self.assertEqual(source.count(f'id="{recap_id}"'), 1)
+                self.assertIn("series confirmadas", source)
+                self.assertIn("aproximaciones, cargas y repeticiones de calentamiento permanecen aparte", source)
+                self.assertIn("Reintentar guardado", source)
+                self.assertIn("const complete = rows.length > 0 && rows.every(row => row.complete && !row.skipped)", source)
+                self.assertIn("item.seriesKeys.forEach", source)
+                self.assertIn("updateSessionCompletion(true)", source)
 
     def test_each_canonical_day_has_its_own_shared_template_cover(self) -> None:
         cover_dir = ROOT / "assets" / "branding" / "routine-covers"

@@ -2,6 +2,13 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.4] - 2026-11-10
+
+### Added
+
+- El cierre del día celebra sesiones completas y parciales con resumen de series, ejercicios, repeticiones y duración, más datos curiosos basados en series confirmadas.
+- Se aclara que las aproximaciones no cuentan como trabajo efectivo y se permite reintentar el guardado cuando falla.
+
 ## [0.7.3] - 2026-11-09
 
 ### Added

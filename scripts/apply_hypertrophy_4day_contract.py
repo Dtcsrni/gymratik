@@ -248,10 +248,25 @@ main.cards article.card[data-machine-occupied="true"] .machinePendingToggle{posi
 .sessionCompletionCopy p#motivationMessage{position:relative;margin:.35rem 0 .25rem;padding:.85rem 1rem .85rem 1.2rem;border-left:3px solid #65f2dd;border-radius:.2rem .8rem .8rem .2rem;background:linear-gradient(100deg,rgba(18,91,83,.2),rgba(8,27,39,.45));color:#f4fdff;font-size:clamp(1.05rem,2.6vw,1.45rem);font-weight:850;line-height:1.38;letter-spacing:-.015em;text-wrap:pretty}
 .sessionCompletionCopy p#motivationMessage::before{content:"“";position:absolute;left:.35rem;top:.15rem;color:#65f2dd;font-size:1.1rem;line-height:1}
 .motivationNote{font-weight:800}
+.sessionCompletionPanel.isPartial{border-color:rgba(255,209,102,.52)!important;background:radial-gradient(ellipse at 0 0,rgba(177,123,35,.17),transparent 52%),linear-gradient(145deg,rgba(55,43,24,.98),rgba(19,27,38,.99))!important}
+.sessionCompletionPanel.isPartial .sessionCompletionKicker{border-color:rgba(255,209,102,.4);background:rgba(111,77,22,.24);color:#ffdc8c}
+.sessionRecap{margin-top:.8rem;padding:.8rem;border:1px solid rgba(114,220,255,.2);border-radius:.9rem;background:linear-gradient(135deg,rgba(4,22,34,.7),rgba(14,34,48,.7));animation:recapReveal .5s cubic-bezier(.2,.8,.2,1) both}
+.sessionRecapTitle{margin:0 0 .55rem;color:#dff8ff;font-size:.72rem;font-weight:950;letter-spacing:.1em;text-transform:uppercase}
+.sessionRecapGrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.42rem;margin:0}
+.sessionRecapMetric{min-width:0;padding:.5rem .55rem;border:1px solid rgba(157,204,218,.12);border-radius:.65rem;background:rgba(3,16,25,.5);animation:recapMetricIn .42s cubic-bezier(.2,.8,.2,1) both}
+.sessionRecapMetric:nth-child(2){animation-delay:.05s}.sessionRecapMetric:nth-child(3){animation-delay:.1s}.sessionRecapMetric:nth-child(4){animation-delay:.15s}.sessionRecapMetric:nth-child(5){animation-delay:.2s}
+.sessionRecapMetric dt{color:#91adba;font-size:.6rem;font-weight:800;line-height:1.2}
+.sessionRecapMetric dd{margin:.2rem 0 0;color:#a9f1dd;font-size:clamp(.86rem,1.5vw,1.12rem);font-weight:950;line-height:1.1;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.sessionCompletionPanel.isPartial .sessionRecapMetric dd{color:#ffe0a0}
+.sessionFunFact{margin:.55rem 0 0;padding:.55rem .65rem;border-left:3px solid #ffd166;border-radius:.25rem .6rem .6rem .25rem;background:rgba(117,79,18,.16);color:#ffe6b3;font-size:.76rem;font-weight:850;line-height:1.4;animation:factReveal .6s .12s both}
+.sessionRecapFoot{margin:.38rem 0 0;color:#8fa9b6;font-size:.61rem;line-height:1.35}
+@keyframes recapReveal{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes recapMetricIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes factReveal{from{opacity:0;filter:blur(3px)}to{opacity:1;filter:blur(0)}}
 @keyframes exerciseFocusReveal{from{opacity:.4;transform:translateY(4px) scale(.98)}to{opacity:1;transform:none}}
 @keyframes exerciseBarPulse{from{filter:brightness(1)}to{filter:brightness(1.22)}}
-@media(max-width:640px){.floatingSessionSummary .summaryFocusBadge{font-size:.55rem}.sessionCompletionCopy p#motivationMessage{padding:.75rem .8rem .75rem 1.05rem}}
-@media(prefers-reduced-motion:reduce){.floatingSessionSummary.is-exercise-focused .summaryFocusBadge,.floatingSessionSummary.is-exercise-focused .summaryToggle,.summaryExercise.isCurrent{animation:none!important}main.cards article.card[data-exercise-index]{transition:none}}
+@media(max-width:640px){.floatingSessionSummary .summaryFocusBadge{font-size:.55rem}.sessionCompletionCopy p#motivationMessage{padding:.75rem .8rem .75rem 1.05rem}.sessionRecap{padding:.62rem}.sessionRecapGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:.35rem}.sessionRecapMetric{padding:.45rem}.sessionRecapMetric dt{font-size:.57rem}.sessionFunFact{font-size:.7rem}}
+@media(prefers-reduced-motion:reduce){.floatingSessionSummary.is-exercise-focused .summaryFocusBadge,.floatingSessionSummary.is-exercise-focused .summaryToggle,.summaryExercise.isCurrent,.sessionRecap,.sessionRecapMetric,.sessionFunFact{animation:none!important}main.cards article.card[data-exercise-index]{transition:none}}
 </style>
 <script data-enhancement="exercise-focus-occupied-quote-v4">
 (() => {
@@ -474,8 +489,84 @@ SECTION_LOAD_REDESIGN = r'''<style data-enhancement="section-ledger-load-v2">
 </script>'''
 
 
+SESSION_RECAP_MARKUP = '''<div class="sessionRecap" id="sessionRecap" role="group" aria-label="Resumen de la sesión">
+<h3 class="sessionRecapTitle">Así fue tu sesión</h3>
+<dl class="sessionRecapGrid">
+<div class="sessionRecapMetric"><dt>Series confirmadas</dt><dd id="sessionRecapSets">—</dd></div>
+<div class="sessionRecapMetric"><dt>Ejercicios completos</dt><dd id="sessionRecapExercises">—</dd></div>
+<div class="sessionRecapMetric"><dt>Repeticiones registradas</dt><dd id="sessionRecapReps">—</dd></div>
+<div class="sessionRecapMetric"><dt>Ejercicios omitidos</dt><dd id="sessionRecapSkipped">—</dd></div>
+<div class="sessionRecapMetric"><dt>Tiempo transcurrido</dt><dd id="sessionRecapDuration">—</dd></div>
+</dl>
+<p class="sessionFunFact" id="sessionFunFact" role="status" aria-live="polite"></p>
+<p class="sessionRecapFoot">Solo cuentan series confirmadas; aproximaciones, cargas y repeticiones de calentamiento permanecen aparte. El tiempo incluye descansos.</p>
+</div>'''
+
+
+SESSION_COMPLETION_UPDATE = r'''  const renderSessionRecap = complete => {
+    const rows = exerciseItems.map(snapshot);
+    const doneSeries = rows.reduce((sum, row) => sum + row.done, 0);
+    const completedExercises = rows.filter(row => row.complete && !row.skipped).length;
+    const skippedExercises = rows.filter(row => row.skipped).length;
+    const recordedReps = [];
+    exerciseItems.forEach(item => item.seriesKeys.forEach((key, index) => {
+      if (state[key] !== true) return;
+      const record = state.__performance?.[String(item.index + 1)]?.[key];
+      const reps = Number(record?.reps);
+      if (record && Number.isInteger(reps) && reps >= 1 && reps <= 100) recordedReps.push({ reps, exercise: item.title, setNumber: index + 1 });
+    }));
+    const totalReps = recordedReps.reduce((sum, record) => sum + record.reps, 0);
+    const bestSet = recordedReps.reduce((best, record) => !best || record.reps > best.reps ? record : best, null);
+    const setText = (id, value) => { const node = document.getElementById(id); if (node) node.textContent = String(value); };
+    const timing = state.__timing || {};
+    const elapsedMs = Number(timing.sessionStartedAt) > 0 && Number(timing.sessionEndedAt) >= Number(timing.sessionStartedAt)
+      ? Number(timing.sessionEndedAt) - Number(timing.sessionStartedAt) : 0;
+    const elapsedMinutes = Math.floor(elapsedMs / 60000);
+    const elapsedHours = Math.floor(elapsedMinutes / 60);
+    const duration = elapsedMs < 1000 ? '—' : elapsedHours ? `${elapsedHours} h ${elapsedMinutes % 60} min` : elapsedMinutes ? `${elapsedMinutes} min` : '<1 min';
+    setText('sessionRecapSets', `${doneSeries}/${plannedSeries}`);
+    setText('sessionRecapExercises', `${completedExercises}/${exerciseItems.length}`);
+    setText('sessionRecapReps', totalReps ? totalReps : '—');
+    setText('sessionRecapSkipped', skippedExercises);
+    setText('sessionRecapDuration', duration);
+    const kicker = completionPanel.querySelector('.sessionCompletionKicker');
+    const title = document.getElementById('session-completion-title');
+    if (kicker) kicker.textContent = complete ? 'RUTINA COMPLETADA' : 'SESIÓN GUARDADA · PROGRESO PARCIAL';
+    if (title) title.textContent = complete ? '¡Día completo!' : 'Buen trabajo. Día guardado.';
+    const fact = bestSet
+      ? `Dato curioso: tu serie con más repeticiones fue de ${bestSet.reps} en ${bestSet.exercise} · serie ${bestSet.setNumber}.`
+      : doneSeries
+        ? `Dato curioso: confirmaste ${doneSeries} de ${plannedSeries} series (${Math.round(doneSeries / Math.max(1, plannedSeries) * 100)} % del plan).`
+        : 'Dato curioso: cerraste el día sin series confirmadas; las aproximaciones no cuentan como series de trabajo.';
+    setText('sessionFunFact', fact);
+  };
+  const updateSessionCompletion = (celebrate = false) => {
+    const rows = exerciseItems.map(snapshot);
+    const complete = rows.length > 0 && rows.every(row => row.complete && !row.skipped);
+    const partial = !complete && state.__timing?.sessionEndReason === 'partial' && Number(state.__timing?.sessionEndedAt) > 0;
+    if (!complete && !partial) { completionPanel.hidden = true; completionPanel.classList.remove('isPartial'); return; }
+    if (summaryToggle && summaryBody) { summaryToggle.setAttribute('aria-expanded', 'false'); summaryBody.hidden = true; }
+    renderSessionRecap(complete);
+    completionPanel.classList.toggle('isPartial', partial);
+    completionPanel.dataset.completionKind = complete ? 'complete' : 'partial';
+    if (!completionPanel.dataset.quoteShown) { showMotivation(); completionPanel.dataset.quoteShown = 'true'; }
+    completionPanel.hidden = false;
+    const doneSeries = exerciseItems.reduce((sum, item) => sum + snapshot(item).done, 0);
+    const celebrationKey = `${completionPanel.dataset.completionKind}:${Number(state.__timing?.sessionEndedAt) || doneSeries}`;
+    if (celebrate && completionPanel.dataset.celebrationKey !== celebrationKey) {
+      completionPanel.dataset.celebrationKey = celebrationKey;
+      playFeedback('session');
+      completionPanel.classList.remove('sessionCelebrating');
+      void completionPanel.offsetWidth;
+      completionPanel.classList.add('sessionCelebrating');
+      window.setTimeout(() => completionPanel.classList.remove('sessionCelebrating'), 1800);
+      window.setTimeout(() => completionPanel.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center' }), 120);
+    }
+  };'''
+
+
 def apply_interaction_redesign(source: str) -> str:
-    for previous in ("exercise-focus-occupied-quote-v2", "exercise-focus-occupied-quote-v3", "section-ledger-load-v1"):
+    for previous in ("exercise-focus-occupied-quote-v2", "exercise-focus-occupied-quote-v3", "exercise-focus-occupied-quote-v4", "section-ledger-load-v1", "section-ledger-load-v2"):
         source = re.sub(
             rf'<style\s+data-enhancement="{re.escape(previous)}">.*?</script>',
             "",
@@ -513,6 +604,89 @@ def apply_interaction_redesign(source: str) -> str:
     )
     if 'data-enhancement="section-ledger-load-v2"' not in source:
         source = source.replace('</body>', SECTION_LOAD_REDESIGN + '\n</body>', 1)
+    if 'id="sessionRecap"' not in source:
+        source, inserted = re.subn(
+            r'(<a class="motivationNote" id="motivationNote"[^>]*></a>)(</div>)',
+            lambda match: match.group(1) + SESSION_RECAP_MARKUP + match.group(2),
+            source,
+            count=1,
+        )
+        if inserted != 1:
+            raise ValueError("No se encontró el punto de inserción del resumen de sesión")
+    source, recap_functions = re.subn(
+        r'  const updateSessionCompletion = \(celebrate = false\) => \{.*?\n  \};',
+        SESSION_COMPLETION_UPDATE,
+        source,
+        count=1,
+        flags=re.S,
+    )
+    if recap_functions != 1:
+        raise ValueError("No se encontró el actualizador del panel de fin de sesión")
+    source = source.replace(
+        """      const finishDayButton = document.getElementById('finishDay');
+      if (finishDayButton) {
+        finishDayButton.disabled = Boolean(root?.sessionEndedAt);
+        finishDayButton.textContent = root?.sessionEndedAt ? 'Día terminado' : 'Terminar día';
+      }""",
+        """      const finishDayButton = document.getElementById('finishDay');
+      if (finishDayButton) {
+        const canRetryPartialSave = root?.sessionEndReason === 'partial' && finishDayButton.dataset.saveFailed === 'true';
+        finishDayButton.disabled = Boolean(root?.sessionEndedAt) && !canRetryPartialSave;
+        finishDayButton.textContent = canRetryPartialSave ? 'Reintentar guardado' : root?.sessionEndedAt ? 'Día terminado' : 'Terminar día';
+      }""",
+    )
+    finish_handler = r'''  document.addEventListener('click', async event => {
+    const finishDayButton = event.target instanceof Element ? event.target.closest('#finishDay') : null;
+    const isRetry = state.__timing?.sessionEndReason === 'partial' && Number(state.__timing?.sessionEndedAt) > 0;
+    if (!finishDayButton || (state.__timing?.sessionEndedAt && !isRetry)) return;
+    if (!isRetry && !window.confirm('¿Terminar este día con el progreso registrado hasta ahora? Las series sin confirmar no se contarán y podrás consultar este avance en tu historial.')) return;
+    finishDayButton.disabled = true;
+    finishDayButton.textContent = 'Guardando…';
+    clearPreparationTimers();
+    const timingRoot = getTimingState();
+    const endedAt = Number(timingRoot.sessionEndedAt) || Date.now();
+    if (!timingRoot.sessionStartedAt) timingRoot.sessionStartedAt = endedAt;
+    timingRoot.sessionEndedAt = endedAt;
+    timingRoot.sessionEndReason = 'partial';
+    Object.values(timingRoot.exercises || {}).forEach(timing => {
+      timing.preparationEndsAt = 0;
+      timing.seriesStartedAt = 0;
+      timing.restStartedAt = 0;
+      timing.restNotifiedAt = 0;
+      timing.restReminderNotifiedAt = 0;
+    });
+    if (timingRoot.warmup?.phase === 'preparing') timingRoot.warmup.phase = 'paused';
+    let saved;
+    try { saved = await save(); }
+    catch (error) { window.dispatchEvent(new CustomEvent('training-storage-error', { detail: { error } })); }
+    if (!saved?.source) {
+      finishDayButton.disabled = false;
+      finishDayButton.dataset.saveFailed = 'true';
+      finishDayButton.textContent = 'Reintentar guardado';
+      finishDayButton.setAttribute('aria-label', 'No se confirmó el guardado. Pulsa para reintentar.');
+      window.dispatchEvent(new CustomEvent('training-storage-error', { detail: { message: 'El cierre parcial no pudo confirmarse en el almacén local.' } }));
+      return;
+    }
+    delete finishDayButton.dataset.saveFailed;
+    finishDayButton.textContent = 'Día terminado';
+    finishDayButton.setAttribute('aria-label', 'Día terminado. Progreso guardado en este dispositivo.');
+    exerciseItems.forEach(item => updateTracker(item.tracker, false));
+    updateSessionCompletion(true);
+  });'''
+    source, finish_handlers = re.subn(
+        r"  document\.addEventListener\('click', async event => \{\s*const finishDayButton.*?\n  \}\);",
+        finish_handler,
+        source,
+        count=1,
+        flags=re.S,
+    )
+    if finish_handlers != 1:
+        raise ValueError("No se encontró el controlador del botón Terminar día")
+    source = source.replace(
+        "    state = {};\n    save();",
+        "    state = {};\n    delete document.getElementById('finishDay')?.dataset.saveFailed;\n    save();",
+        1,
+    )
     return source
 
 

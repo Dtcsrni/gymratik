@@ -3166,7 +3166,18 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 </main>
 <section class="sessionCompletionPanel" id="sessionCompletionPanel" aria-labelledby="session-completion-title" hidden>
 <div class="completionOrb" aria-hidden="true"><span>✓</span></div>
-<div class="motivationPhotoWrap"><div class="motivationPortrait" aria-label="Retrato de quien dice la frase"><img id="motivationPortrait" alt="" decoding="async" loading="lazy" hidden><span id="motivationInitials" aria-hidden="true">★</span></div><a class="motivationPhotoCredit" id="motivationPhotoCredit" target="_blank" rel="noopener noreferrer" hidden></a></div><div class="sessionCompletionCopy"><div class="sessionCompletionKicker">SESIÓN COMPLETADA</div><h2 id="session-completion-title">Trabajo terminado.</h2><p id="motivationMessage">Una serie a la vez. Hoy cumpliste.</p><a class="motivationNote" id="motivationNote" target="_blank" rel="noopener noreferrer" hidden></a></div>
+<div class="motivationPhotoWrap"><div class="motivationPortrait" aria-label="Retrato de quien dice la frase"><img id="motivationPortrait" alt="" decoding="async" loading="lazy" hidden><span id="motivationInitials" aria-hidden="true">★</span></div><a class="motivationPhotoCredit" id="motivationPhotoCredit" target="_blank" rel="noopener noreferrer" hidden></a></div><div class="sessionCompletionCopy"><div class="sessionCompletionKicker">SESIÓN COMPLETADA</div><h2 id="session-completion-title">Trabajo terminado.</h2><p id="motivationMessage">Una serie a la vez. Hoy cumpliste.</p><a class="motivationNote" id="motivationNote" target="_blank" rel="noopener noreferrer" hidden></a><div class="sessionRecap" id="sessionRecap" role="group" aria-label="Resumen de la sesión">
+<h3 class="sessionRecapTitle">Así fue tu sesión</h3>
+<dl class="sessionRecapGrid">
+<div class="sessionRecapMetric"><dt>Series confirmadas</dt><dd id="sessionRecapSets">—</dd></div>
+<div class="sessionRecapMetric"><dt>Ejercicios completos</dt><dd id="sessionRecapExercises">—</dd></div>
+<div class="sessionRecapMetric"><dt>Repeticiones registradas</dt><dd id="sessionRecapReps">—</dd></div>
+<div class="sessionRecapMetric"><dt>Ejercicios omitidos</dt><dd id="sessionRecapSkipped">—</dd></div>
+<div class="sessionRecapMetric"><dt>Tiempo transcurrido</dt><dd id="sessionRecapDuration">—</dd></div>
+</dl>
+<p class="sessionFunFact" id="sessionFunFact" role="status" aria-live="polite"></p>
+<p class="sessionRecapFoot">Solo cuentan series confirmadas; aproximaciones, cargas y repeticiones de calentamiento permanecen aparte. El tiempo incluye descansos.</p>
+</div></div>
 <div class="sessionCompletionActions"><button type="button" class="newMotivation" id="newMotivation">Otra frase</button><button type="button" class="soundToggle" id="soundToggle" aria-pressed="true">🔊 Sonidos activados</button><button type="button" class="hapticsToggle" id="hapticsToggle" aria-pressed="true">📳 Vibración activada</button></div>
 </section>
 <aside class="floatingSessionSummary" id="floatingSessionSummary" aria-label="Resumen flotante de la sesión">
@@ -3783,7 +3794,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     const loadInput = document.createElement('input'); loadInput.className = 'performanceLoad'; loadInput.type = 'range'; loadInput.min = '0'; loadInput.max = '1000'; loadInput.step = '2.5'; loadInput.value = '0'; loadInput.setAttribute('aria-label', `Carga utilizada en ${item.title}`); loadLabel.append(loadHead, loadOutputRow, loadInput);
     const progressionCue = document.createElement('p'); progressionCue.className = 'progressionCue'; progressionCue.setAttribute('role', 'status'); progressionCue.textContent = `Registra repeticiones y carga para completar. Si no conoces algún dato, toca «Quitar» y podrás continuar después de confirmar que quedará sin registrar. Rango de carga: ${item.performanceLoadProfile.minKg}–${item.performanceLoadProfile.maxKg} kg.`;
     performancePanel.append(repsLabel, loadLabel, progressionCue);
-    item.performancePanel = performancePanel; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save;
+    item.performancePanel = performancePanel; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save;
     item.performanceReps = repsInput;
     item.performanceRepsOutput = repsOutput;
     item.performanceLoad = loadInput;
@@ -3891,7 +3902,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       const latestLoadRecord = item.performanceHistory.flatMap(session => (session.performance || []).filter(record => record.exerciseId === String(item.index + 1)).map(record => ({ ...record, _sessionUpdatedAt: Number(session.endedAt || session.updatedAt || 0) }))).filter(record => record.loadSelected !== false && record.load !== null && record.load !== undefined && String(record.load).trim() !== '' && Number.isFinite(Number(record.load))).sort((a, b) => Number(b.updatedAt || b._sessionUpdatedAt || 0) - Number(a.updatedAt || a._sessionUpdatedAt || 0))[0];
       if (latestLoadRecord) {
         const storedKg = Number.isFinite(Number(latestLoadRecord.loadKg)) ? Number(latestLoadRecord.loadKg) : latestLoadRecord.loadUnit === 'lb' ? Number(latestLoadRecord.load) * 0.45359237 : Number(latestLoadRecord.load);
-        if (Number.isFinite(storedKg)) item.previousLoadKg = storedKg; item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.();
+        if (Number.isFinite(storedKg)) item.previousLoadKg = storedKg; item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.();
         if (!savedDraft && !item.performanceLoadSelected && !isExerciseStarted(item) && Number.isFinite(storedKg)) {
           const factor = item.performanceLoadUnit === 'lb' ? 1 / 0.45359237 : 1;
           const step = item.performanceLoadUnit === 'lb' ? 5 : item.performanceLoadProfile.stepKg;
@@ -4144,8 +4155,9 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       const sessionEndedPartial = root?.sessionEndReason === 'partial';
       const finishDayButton = document.getElementById('finishDay');
       if (finishDayButton) {
-        finishDayButton.disabled = Boolean(root?.sessionEndedAt);
-        finishDayButton.textContent = root?.sessionEndedAt ? 'Día terminado' : 'Terminar día';
+        const canRetryPartialSave = root?.sessionEndReason === 'partial' && finishDayButton.dataset.saveFailed === 'true';
+        finishDayButton.disabled = Boolean(root?.sessionEndedAt) && !canRetryPartialSave;
+        finishDayButton.textContent = canRetryPartialSave ? 'Reintentar guardado' : root?.sessionEndedAt ? 'Día terminado' : 'Terminar día';
       }
       const justStarted = Boolean(root?.sessionStartedAt && now - root.sessionStartedAt < 2600);
       const warmupDone = warmup.phase === 'done';
@@ -4769,21 +4781,138 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     save();
     updateTracker(item.tracker, false);
   };
+  const renderSessionRecap = complete => {
+    const rows = exerciseItems.map(snapshot);
+    const doneSeries = rows.reduce((sum, row) => sum + row.done, 0);
+    const completedExercises = rows.filter(row => row.complete && !row.skipped).length;
+    const skippedExercises = rows.filter(row => row.skipped).length;
+    const recordedReps = [];
+    exerciseItems.forEach(item => item.seriesKeys.forEach((key, index) => {
+      if (state[key] !== true) return;
+      const record = state.__performance?.[String(item.index + 1)]?.[key];
+      const reps = Number(record?.reps);
+      if (record && Number.isInteger(reps) && reps >= 1 && reps <= 100) recordedReps.push({ reps, exercise: item.title, setNumber: index + 1 });
+    }));
+    const totalReps = recordedReps.reduce((sum, record) => sum + record.reps, 0);
+    const bestSet = recordedReps.reduce((best, record) => !best || record.reps > best.reps ? record : best, null);
+    const setText = (id, value) => { const node = document.getElementById(id); if (node) node.textContent = String(value); };
+    const timing = state.__timing || {};
+    const elapsedMs = Number(timing.sessionStartedAt) > 0 && Number(timing.sessionEndedAt) >= Number(timing.sessionStartedAt)
+      ? Number(timing.sessionEndedAt) - Number(timing.sessionStartedAt) : 0;
+    const elapsedMinutes = Math.floor(elapsedMs / 60000);
+    const elapsedHours = Math.floor(elapsedMinutes / 60);
+    const duration = elapsedMs < 1000 ? '—' : elapsedHours ? `${elapsedHours} h ${elapsedMinutes % 60} min` : elapsedMinutes ? `${elapsedMinutes} min` : '<1 min';
+    setText('sessionRecapSets', `${doneSeries}/${plannedSeries}`);
+    setText('sessionRecapExercises', `${completedExercises}/${exerciseItems.length}`);
+    setText('sessionRecapReps', totalReps ? totalReps : '—');
+    setText('sessionRecapSkipped', skippedExercises);
+    setText('sessionRecapDuration', duration);
+    const kicker = completionPanel.querySelector('.sessionCompletionKicker');
+    const title = document.getElementById('session-completion-title');
+    if (kicker) kicker.textContent = complete ? 'RUTINA COMPLETADA' : 'SESIÓN GUARDADA · PROGRESO PARCIAL';
+    if (title) title.textContent = complete ? '¡Día completo!' : 'Buen trabajo. Día guardado.';
+    const fact = bestSet
+      ? `Dato curioso: tu serie con más repeticiones fue de ${bestSet.reps} en ${bestSet.exercise} · serie ${bestSet.setNumber}.`
+      : doneSeries
+        ? `Dato curioso: confirmaste ${doneSeries} de ${plannedSeries} series (${Math.round(doneSeries / Math.max(1, plannedSeries) * 100)} % del plan).`
+        : 'Dato curioso: cerraste el día sin series confirmadas; las aproximaciones no cuentan como series de trabajo.';
+    setText('sessionFunFact', fact);
+  };
+  const renderSessionRecap = complete => {
+    const rows = exerciseItems.map(snapshot);
+    const doneSeries = rows.reduce((sum, row) => sum + row.done, 0);
+    const completedExercises = rows.filter(row => row.complete && !row.skipped).length;
+    const skippedExercises = rows.filter(row => row.skipped).length;
+    const recordedReps = [];
+    exerciseItems.forEach(item => item.seriesKeys.forEach((key, index) => {
+      if (state[key] !== true) return;
+      const record = state.__performance?.[String(item.index + 1)]?.[key];
+      const reps = Number(record?.reps);
+      if (record && Number.isInteger(reps) && reps >= 1 && reps <= 100) recordedReps.push({ reps, exercise: item.title, setNumber: index + 1 });
+    }));
+    const totalReps = recordedReps.reduce((sum, record) => sum + record.reps, 0);
+    const bestSet = recordedReps.reduce((best, record) => !best || record.reps > best.reps ? record : best, null);
+    const setText = (id, value) => { const node = document.getElementById(id); if (node) node.textContent = String(value); };
+    const timing = state.__timing || {};
+    const elapsedMs = Number(timing.sessionStartedAt) > 0 && Number(timing.sessionEndedAt) >= Number(timing.sessionStartedAt)
+      ? Number(timing.sessionEndedAt) - Number(timing.sessionStartedAt) : 0;
+    const elapsedMinutes = Math.floor(elapsedMs / 60000);
+    const elapsedHours = Math.floor(elapsedMinutes / 60);
+    const duration = elapsedMs < 1000 ? '—' : elapsedHours ? `${elapsedHours} h ${elapsedMinutes % 60} min` : elapsedMinutes ? `${elapsedMinutes} min` : '<1 min';
+    setText('sessionRecapSets', `${doneSeries}/${plannedSeries}`);
+    setText('sessionRecapExercises', `${completedExercises}/${exerciseItems.length}`);
+    setText('sessionRecapReps', totalReps ? totalReps : '—');
+    setText('sessionRecapSkipped', skippedExercises);
+    setText('sessionRecapDuration', duration);
+    const kicker = completionPanel.querySelector('.sessionCompletionKicker');
+    const title = document.getElementById('session-completion-title');
+    if (kicker) kicker.textContent = complete ? 'RUTINA COMPLETADA' : 'SESIÓN GUARDADA · PROGRESO PARCIAL';
+    if (title) title.textContent = complete ? '¡Día completo!' : 'Buen trabajo. Día guardado.';
+    const fact = bestSet
+      ? `Dato curioso: tu serie con más repeticiones fue de ${bestSet.reps} en ${bestSet.exercise} · serie ${bestSet.setNumber}.`
+      : doneSeries
+        ? `Dato curioso: confirmaste ${doneSeries} de ${plannedSeries} series (${Math.round(doneSeries / Math.max(1, plannedSeries) * 100)} % del plan).`
+        : 'Dato curioso: cerraste el día sin series confirmadas; las aproximaciones no cuentan como series de trabajo.';
+    setText('sessionFunFact', fact);
+  };
+  const renderSessionRecap = complete => {
+    const rows = exerciseItems.map(snapshot);
+    const doneSeries = rows.reduce((sum, row) => sum + row.done, 0);
+    const completedExercises = rows.filter(row => row.complete && !row.skipped).length;
+    const skippedExercises = rows.filter(row => row.skipped).length;
+    const recordedReps = [];
+    exerciseItems.forEach(item => item.seriesKeys.forEach((key, index) => {
+      if (state[key] !== true) return;
+      const record = state.__performance?.[String(item.index + 1)]?.[key];
+      const reps = Number(record?.reps);
+      if (record && Number.isInteger(reps) && reps >= 1 && reps <= 100) recordedReps.push({ reps, exercise: item.title, setNumber: index + 1 });
+    }));
+    const totalReps = recordedReps.reduce((sum, record) => sum + record.reps, 0);
+    const bestSet = recordedReps.reduce((best, record) => !best || record.reps > best.reps ? record : best, null);
+    const setText = (id, value) => { const node = document.getElementById(id); if (node) node.textContent = String(value); };
+    const timing = state.__timing || {};
+    const elapsedMs = Number(timing.sessionStartedAt) > 0 && Number(timing.sessionEndedAt) >= Number(timing.sessionStartedAt)
+      ? Number(timing.sessionEndedAt) - Number(timing.sessionStartedAt) : 0;
+    const elapsedMinutes = Math.floor(elapsedMs / 60000);
+    const elapsedHours = Math.floor(elapsedMinutes / 60);
+    const duration = elapsedMs < 1000 ? '—' : elapsedHours ? `${elapsedHours} h ${elapsedMinutes % 60} min` : elapsedMinutes ? `${elapsedMinutes} min` : '<1 min';
+    setText('sessionRecapSets', `${doneSeries}/${plannedSeries}`);
+    setText('sessionRecapExercises', `${completedExercises}/${exerciseItems.length}`);
+    setText('sessionRecapReps', totalReps ? totalReps : '—');
+    setText('sessionRecapSkipped', skippedExercises);
+    setText('sessionRecapDuration', duration);
+    const kicker = completionPanel.querySelector('.sessionCompletionKicker');
+    const title = document.getElementById('session-completion-title');
+    if (kicker) kicker.textContent = complete ? 'RUTINA COMPLETADA' : 'SESIÓN GUARDADA · PROGRESO PARCIAL';
+    if (title) title.textContent = complete ? '¡Día completo!' : 'Buen trabajo. Día guardado.';
+    const fact = bestSet
+      ? `Dato curioso: tu serie con más repeticiones fue de ${bestSet.reps} en ${bestSet.exercise} · serie ${bestSet.setNumber}.`
+      : doneSeries
+        ? `Dato curioso: confirmaste ${doneSeries} de ${plannedSeries} series (${Math.round(doneSeries / Math.max(1, plannedSeries) * 100)} % del plan).`
+        : 'Dato curioso: cerraste el día sin series confirmadas; las aproximaciones no cuentan como series de trabajo.';
+    setText('sessionFunFact', fact);
+  };
   const updateSessionCompletion = (celebrate = false) => {
-    const complete = trackers.every(tracker => tracker.classList.contains('exerciseDone'));
-    if (complete && summaryToggle && summaryBody) { summaryToggle.setAttribute('aria-expanded', 'false'); summaryBody.hidden = true; }
-    if (!complete) { completionPanel.hidden = true; return; }
-    if (completionPanel.hidden) {
-      completionPanel.hidden = false;
-      if (!completionPanel.dataset.quoteShown) { showMotivation(); completionPanel.dataset.quoteShown = 'true'; }
-      if (celebrate) {
-        playFeedback('session');
-        completionPanel.classList.remove('sessionCelebrating');
-        void completionPanel.offsetWidth;
-        completionPanel.classList.add('sessionCelebrating');
-        window.setTimeout(() => completionPanel.classList.remove('sessionCelebrating'), 1800);
-        window.setTimeout(() => completionPanel.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center' }), 120);
-      }
+    const rows = exerciseItems.map(snapshot);
+    const complete = rows.length > 0 && rows.every(row => row.complete && !row.skipped);
+    const partial = !complete && state.__timing?.sessionEndReason === 'partial' && Number(state.__timing?.sessionEndedAt) > 0;
+    if (!complete && !partial) { completionPanel.hidden = true; completionPanel.classList.remove('isPartial'); return; }
+    if (summaryToggle && summaryBody) { summaryToggle.setAttribute('aria-expanded', 'false'); summaryBody.hidden = true; }
+    renderSessionRecap(complete);
+    completionPanel.classList.toggle('isPartial', partial);
+    completionPanel.dataset.completionKind = complete ? 'complete' : 'partial';
+    if (!completionPanel.dataset.quoteShown) { showMotivation(); completionPanel.dataset.quoteShown = 'true'; }
+    completionPanel.hidden = false;
+    const doneSeries = exerciseItems.reduce((sum, item) => sum + snapshot(item).done, 0);
+    const celebrationKey = `${completionPanel.dataset.completionKind}:${Number(state.__timing?.sessionEndedAt) || doneSeries}`;
+    if (celebrate && completionPanel.dataset.celebrationKey !== celebrationKey) {
+      completionPanel.dataset.celebrationKey = celebrationKey;
+      playFeedback('session');
+      completionPanel.classList.remove('sessionCelebrating');
+      void completionPanel.offsetWidth;
+      completionPanel.classList.add('sessionCelebrating');
+      window.setTimeout(() => completionPanel.classList.remove('sessionCelebrating'), 1800);
+      window.setTimeout(() => completionPanel.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center' }), 120);
     }
   };
   const updateTracker = (tracker, celebrate = false) => {
@@ -6703,6 +6832,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     if (!confirmed) return;
     clearPreparationTimers();
     state = {};
+    delete document.getElementById('finishDay')?.dataset.saveFailed;
     save();
     exerciseItems.forEach(item => updateTracker(item.tracker));
     renderWarmupTiming();
@@ -6713,13 +6843,14 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
   });
   document.addEventListener('click', async event => {
     const finishDayButton = event.target instanceof Element ? event.target.closest('#finishDay') : null;
-    if (!finishDayButton || state.__timing?.sessionEndedAt) return;
-    if (!window.confirm('¿Terminar este día con el progreso registrado hasta ahora? Las series sin confirmar no se contarán y podrás consultar este avance en tu historial.')) return;
+    const isRetry = state.__timing?.sessionEndReason === 'partial' && Number(state.__timing?.sessionEndedAt) > 0;
+    if (!finishDayButton || (state.__timing?.sessionEndedAt && !isRetry)) return;
+    if (!isRetry && !window.confirm('¿Terminar este día con el progreso registrado hasta ahora? Las series sin confirmar no se contarán y podrás consultar este avance en tu historial.')) return;
     finishDayButton.disabled = true;
     finishDayButton.textContent = 'Guardando…';
     clearPreparationTimers();
     const timingRoot = getTimingState();
-    const endedAt = Date.now();
+    const endedAt = Number(timingRoot.sessionEndedAt) || Date.now();
     if (!timingRoot.sessionStartedAt) timingRoot.sessionStartedAt = endedAt;
     timingRoot.sessionEndedAt = endedAt;
     timingRoot.sessionEndReason = 'partial';
@@ -6727,13 +6858,26 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       timing.preparationEndsAt = 0;
       timing.seriesStartedAt = 0;
       timing.restStartedAt = 0;
-      timing.restNotifiedAt = 0; timing.restReminderNotifiedAt = 0;});
+      timing.restNotifiedAt = 0;
+      timing.restReminderNotifiedAt = 0;
+    });
     if (timingRoot.warmup?.phase === 'preparing') timingRoot.warmup.phase = 'paused';
-    const saved = await save();
+    let saved;
+    try { saved = await save(); }
+    catch (error) { window.dispatchEvent(new CustomEvent('training-storage-error', { detail: { error } })); }
+    if (!saved?.source) {
+      finishDayButton.disabled = false;
+      finishDayButton.dataset.saveFailed = 'true';
+      finishDayButton.textContent = 'Reintentar guardado';
+      finishDayButton.setAttribute('aria-label', 'No se confirmó el guardado. Pulsa para reintentar.');
+      window.dispatchEvent(new CustomEvent('training-storage-error', { detail: { message: 'El cierre parcial no pudo confirmarse en el almacén local.' } }));
+      return;
+    }
+    delete finishDayButton.dataset.saveFailed;
     finishDayButton.textContent = 'Día terminado';
     finishDayButton.setAttribute('aria-label', 'Día terminado. Progreso guardado en este dispositivo.');
-    if (!saved) window.dispatchEvent(new CustomEvent('training-storage-error', { detail: { message: 'El cierre parcial no pudo confirmarse en el almacén local.' } }));
-    render();
+    exerciseItems.forEach(item => updateTracker(item.tracker, false));
+    updateSessionCompletion(true);
   });
   summaryToggle?.addEventListener('click', () => {
     const expanded = summaryToggle.getAttribute('aria-expanded') !== 'true';
@@ -7713,6 +7857,125 @@ button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gra
 
 
 
+
+
+
+
+
+
+<style data-enhancement="exercise-focus-occupied-quote-v4">
+/* Separa visualmente cada ejercicio y reserva el ámbar para una máquina ocupada. */
+main.cards article.card[data-exercise-index]{--exercise-accent:#72dcff;position:relative;border:1px solid color-mix(in srgb,var(--exercise-accent) 30%,transparent);transition:border-color .24s ease,box-shadow .24s ease,transform .24s ease}
+main.cards article.card[data-exercise-index]:focus-within,main.cards article.card[data-exercise-index].is-exercise-focused{border-color:var(--exercise-accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--exercise-accent) 22%,transparent),0 18px 42px rgba(0,0,0,.24)}
+main.cards article.card[data-exercise-index] .num{background:color-mix(in srgb,var(--exercise-accent) 20%,#071b28)!important;border-color:var(--exercise-accent)!important;color:#f3fcff!important}
+main.cards article.card[data-exercise-index] .exTitle{ text-wrap:balance }
+main.cards article.card[data-exercise-index][data-machine-occupied="true"]{isolation:isolate;border:2px solid #ffd166!important;background:linear-gradient(145deg,rgba(102,74,22,.68),rgba(36,31,19,.94))!important;box-shadow:0 0 0 2px rgba(255,209,102,.18),0 16px 42px rgba(0,0,0,.22)!important}
+main.cards article.card[data-machine-occupied="true"]::after{position:absolute;z-index:1;inset:0;border-radius:inherit;background:rgba(255,196,67,.12);backdrop-filter:blur(1.2px);-webkit-backdrop-filter:blur(1.2px);content:"";pointer-events:none}
+main.cards article.card[data-machine-occupied="true"]>:not(.exerciseTracker),main.cards article.card[data-machine-occupied="true"] .exerciseTracker> :not(.exerciseSetButtons),main.cards article.card[data-machine-occupied="true"] .exerciseSetButtons>:not(.machinePendingToggle){filter:blur(1.7px) saturate(.55)!important;opacity:.52!important;pointer-events:none!important;user-select:none!important}
+main.cards article.card[data-machine-occupied="true"] .exerciseTracker{border-color:#ffd166!important;background:linear-gradient(145deg,rgba(105,75,19,.56),rgba(43,35,18,.72))!important;box-shadow:inset 0 0 0 1px rgba(255,209,102,.2),0 0 18px rgba(255,209,102,.1)!important}
+main.cards article.card[data-machine-occupied="true"] .machinePendingToggle{position:relative;z-index:5;pointer-events:auto!important;border-color:#ffe08a!important;background:linear-gradient(135deg,#8b641c,#624715)!important;color:#fff3c6!important;box-shadow:0 0 0 2px rgba(255,209,102,.2)}
+.floatingSessionSummary .summaryFocusBadge{display:none;min-width:0;max-width:100%;margin:.1rem 0;padding:.22rem .35rem;border:1px solid rgba(255,209,102,.68);border-radius:.38rem;background:rgba(107,75,18,.82);color:#fff0bf;font-size:.57rem;font-weight:950;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.floatingSessionSummary.is-exercise-focused .summaryFocusBadge{display:block;animation:exerciseFocusReveal .34s cubic-bezier(.2,.8,.2,1) both}
+.floatingSessionSummary.is-exercise-focused .summaryToggle{box-shadow:inset 3px 0 #ffd166,0 0 16px rgba(255,209,102,.2);animation:exerciseBarPulse 1.25s ease-in-out infinite alternate}
+.summaryExercise.isCurrent{outline:2px solid #ffd166;outline-offset:1px;animation:exerciseFocusReveal .34s ease both}
+.warmupSet:not([hidden]){display:inline-flex;align-items:center;gap:.35rem;padding:.38rem .58rem;border:1px solid #ffd166;border-radius:.58rem;background:rgba(104,73,18,.62);color:#fff0bf;font-size:.68rem;font-weight:950;letter-spacing:.035em}
+.exerciseWarmupHint:not([hidden]){border-color:rgba(255,209,102,.7)!important;background:linear-gradient(110deg,rgba(103,73,20,.35),rgba(38,31,19,.42))!important;color:#ffedbd!important}
+.sessionCompletionPanel:not([hidden]){border:1px solid rgba(117,230,255,.36);background:radial-gradient(ellipse at 0 0,rgba(45,153,173,.2),transparent 52%),linear-gradient(145deg,rgba(14,43,59,.98),rgba(10,20,38,.99));box-shadow:0 20px 60px rgba(0,0,0,.42),inset 0 1px rgba(255,255,255,.08)}
+.sessionCompletionCopy{padding:.2rem .25rem}
+.sessionCompletionKicker{display:inline-flex;align-items:center;gap:.4rem;padding:.28rem .48rem;border:1px solid rgba(101,242,221,.38);border-radius:999px;background:rgba(20,91,83,.25);letter-spacing:.1em}
+.sessionCompletionCopy p#motivationMessage{position:relative;margin:.35rem 0 .25rem;padding:.85rem 1rem .85rem 1.2rem;border-left:3px solid #65f2dd;border-radius:.2rem .8rem .8rem .2rem;background:linear-gradient(100deg,rgba(18,91,83,.2),rgba(8,27,39,.45));color:#f4fdff;font-size:clamp(1.05rem,2.6vw,1.45rem);font-weight:850;line-height:1.38;letter-spacing:-.015em;text-wrap:pretty}
+.sessionCompletionCopy p#motivationMessage::before{content:"“";position:absolute;left:.35rem;top:.15rem;color:#65f2dd;font-size:1.1rem;line-height:1}
+.motivationNote{font-weight:800}
+.sessionCompletionPanel.isPartial{border-color:rgba(255,209,102,.52)!important;background:radial-gradient(ellipse at 0 0,rgba(177,123,35,.17),transparent 52%),linear-gradient(145deg,rgba(55,43,24,.98),rgba(19,27,38,.99))!important}
+.sessionCompletionPanel.isPartial .sessionCompletionKicker{border-color:rgba(255,209,102,.4);background:rgba(111,77,22,.24);color:#ffdc8c}
+.sessionRecap{margin-top:.8rem;padding:.8rem;border:1px solid rgba(114,220,255,.2);border-radius:.9rem;background:linear-gradient(135deg,rgba(4,22,34,.7),rgba(14,34,48,.7));animation:recapReveal .5s cubic-bezier(.2,.8,.2,1) both}
+.sessionRecapTitle{margin:0 0 .55rem;color:#dff8ff;font-size:.72rem;font-weight:950;letter-spacing:.1em;text-transform:uppercase}
+.sessionRecapGrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.42rem;margin:0}
+.sessionRecapMetric{min-width:0;padding:.5rem .55rem;border:1px solid rgba(157,204,218,.12);border-radius:.65rem;background:rgba(3,16,25,.5);animation:recapMetricIn .42s cubic-bezier(.2,.8,.2,1) both}
+.sessionRecapMetric:nth-child(2){animation-delay:.05s}.sessionRecapMetric:nth-child(3){animation-delay:.1s}.sessionRecapMetric:nth-child(4){animation-delay:.15s}.sessionRecapMetric:nth-child(5){animation-delay:.2s}
+.sessionRecapMetric dt{color:#91adba;font-size:.6rem;font-weight:800;line-height:1.2}
+.sessionRecapMetric dd{margin:.2rem 0 0;color:#a9f1dd;font-size:clamp(.86rem,1.5vw,1.12rem);font-weight:950;line-height:1.1;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.sessionCompletionPanel.isPartial .sessionRecapMetric dd{color:#ffe0a0}
+.sessionFunFact{margin:.55rem 0 0;padding:.55rem .65rem;border-left:3px solid #ffd166;border-radius:.25rem .6rem .6rem .25rem;background:rgba(117,79,18,.16);color:#ffe6b3;font-size:.76rem;font-weight:850;line-height:1.4;animation:factReveal .6s .12s both}
+.sessionRecapFoot{margin:.38rem 0 0;color:#8fa9b6;font-size:.61rem;line-height:1.35}
+@keyframes recapReveal{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes recapMetricIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes factReveal{from{opacity:0;filter:blur(3px)}to{opacity:1;filter:blur(0)}}
+@keyframes exerciseFocusReveal{from{opacity:.4;transform:translateY(4px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes exerciseBarPulse{from{filter:brightness(1)}to{filter:brightness(1.22)}}
+@media(max-width:640px){.floatingSessionSummary .summaryFocusBadge{font-size:.55rem}.sessionCompletionCopy p#motivationMessage{padding:.75rem .8rem .75rem 1.05rem}.sessionRecap{padding:.62rem}.sessionRecapGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:.35rem}.sessionRecapMetric{padding:.45rem}.sessionRecapMetric dt{font-size:.57rem}.sessionFunFact{font-size:.7rem}}
+@media(prefers-reduced-motion:reduce){.floatingSessionSummary.is-exercise-focused .summaryFocusBadge,.floatingSessionSummary.is-exercise-focused .summaryToggle,.summaryExercise.isCurrent,.sessionRecap,.sessionRecapMetric,.sessionFunFact{animation:none!important}main.cards article.card[data-exercise-index]{transition:none}}
+</style>
+<script data-enhancement="exercise-focus-occupied-quote-v4">
+(() => {
+  const cards = [...document.querySelectorAll('main.cards article.card[data-exercise-index]')];
+  const summary = document.querySelector('.floatingSessionSummary');
+  const toggle = document.getElementById('summaryToggle');
+  if (!cards.length || !summary || !toggle) return;
+  const badge = document.createElement('span');
+  badge.className = 'summaryFocusBadge';
+  badge.setAttribute('aria-hidden', 'true');
+  toggle.insertAdjacentElement('afterend', badge);
+  const originalControlState = new WeakMap();
+  let focusedCard = null;
+  const setFocusedCard = card => {
+    if (!card) return;
+    focusedCard?.classList.remove('is-exercise-focused');
+    focusedCard = card;
+    focusedCard.classList.add('is-exercise-focused');
+    const number = String(card.dataset.exerciseIndex).padStart(2, '0');
+    const title = card.querySelector('.exTitle')?.textContent?.trim() || `Ejercicio ${number}`;
+    badge.textContent = `EN FOCO · ${number} · ${title}`;
+    summary.classList.add('is-exercise-focused');
+    window.gymratikFocusedExerciseIndex = Number(card.dataset.exerciseIndex) - 1;
+    document.querySelectorAll('.summaryExercise').forEach(item => item.classList.toggle('isCurrent', Number(item.dataset.exercise) === Number(card.dataset.exerciseIndex)));
+  };
+  const syncOccupiedState = card => {
+    const button = card.querySelector('.machinePendingToggle');
+    const occupied = button?.getAttribute('aria-pressed') === 'true';
+    card.dataset.machineOccupied = String(occupied);
+    button?.setAttribute('aria-label', occupied ? 'Desactivar máquina ocupada para este ejercicio' : 'Marcar máquina ocupada para este ejercicio');
+    card.querySelectorAll('button,input,select,textarea,a,summary,[tabindex]').forEach(control => {
+      if (control === button) return;
+      if (occupied) {
+        if (!originalControlState.has(control)) originalControlState.set(control, { disabled: 'disabled' in control ? control.disabled : null, tabindex: control.getAttribute('tabindex'), ariaDisabled: control.getAttribute('aria-disabled') });
+        if ('disabled' in control) control.disabled = true;
+        control.setAttribute('tabindex', '-1');
+        control.setAttribute('aria-disabled', 'true');
+      } else if (originalControlState.has(control)) {
+        const original = originalControlState.get(control);
+        if (original.disabled !== null) control.disabled = original.disabled;
+        if (original.tabindex === null) control.removeAttribute('tabindex'); else control.setAttribute('tabindex', original.tabindex);
+        if (original.ariaDisabled === null) control.removeAttribute('aria-disabled'); else control.setAttribute('aria-disabled', original.ariaDisabled);
+        originalControlState.delete(control);
+      }
+    });
+  };
+  cards.forEach((card, index) => {
+    const palette = ['#72dcff','#65f2dd','#c2a4ff','#ffd166'];
+    card.style.setProperty('--exercise-accent', palette[index % palette.length]);
+    card.addEventListener('pointerenter', () => setFocusedCard(card));
+    card.addEventListener('focusin', () => setFocusedCard(card));
+    card.querySelector('.machinePendingToggle')?.addEventListener('click', () => requestAnimationFrame(() => syncOccupiedState(card)));
+    syncOccupiedState(card);
+  });
+  document.addEventListener('click', event => {
+    const card = event.target.closest('article.card[data-machine-occupied="true"]');
+    if (card && !event.target.closest('.machinePendingToggle')) { event.preventDefault(); event.stopImmediatePropagation(); }
+  }, true);
+  document.addEventListener('keydown', event => {
+    const card = event.target.closest?.('article.card[data-machine-occupied="true"]');
+    if (card && event.target.closest?.('.machinePendingToggle')) return;
+    if (card && ['Enter',' '].includes(event.key)) { event.preventDefault(); event.stopImmediatePropagation(); }
+  }, true);
+  window.gymratikSyncOccupiedCard = syncOccupiedState;
+  const visible = new IntersectionObserver(entries => {
+    const candidate = entries.filter(entry => entry.isIntersecting).sort((a,b) => b.intersectionRatio-a.intersectionRatio)[0];
+    if (candidate && candidate.intersectionRatio > .28) setFocusedCard(candidate.target);
+  }, { threshold: [.28,.5,.72] });
+  cards.forEach(card => visible.observe(card));
+})();
+</script>
 <style data-enhancement="section-ledger-load-v2">
 /* Los bloques de cada ejercicio tienen rótulos, bordes y tonos propios. */
 .card .routineSectionStamp{display:flex;align-items:center;gap:.48rem;margin:.72rem 0 .45rem;padding:.38rem .55rem;border:1px solid currentColor;border-left-width:3px;border-radius:.55rem;font-size:.64rem;font-weight:950;letter-spacing:.09em;line-height:1.2}
@@ -7858,104 +8121,6 @@ button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gra
     updateWarmupLast();
     window.gymratikSyncOccupiedCard?.(card);
   });
-})();
-</script>
-<style data-enhancement="exercise-focus-occupied-quote-v4">
-/* Separa visualmente cada ejercicio y reserva el ámbar para una máquina ocupada. */
-main.cards article.card[data-exercise-index]{--exercise-accent:#72dcff;position:relative;border:1px solid color-mix(in srgb,var(--exercise-accent) 30%,transparent);transition:border-color .24s ease,box-shadow .24s ease,transform .24s ease}
-main.cards article.card[data-exercise-index]:focus-within,main.cards article.card[data-exercise-index].is-exercise-focused{border-color:var(--exercise-accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--exercise-accent) 22%,transparent),0 18px 42px rgba(0,0,0,.24)}
-main.cards article.card[data-exercise-index] .num{background:color-mix(in srgb,var(--exercise-accent) 20%,#071b28)!important;border-color:var(--exercise-accent)!important;color:#f3fcff!important}
-main.cards article.card[data-exercise-index] .exTitle{ text-wrap:balance }
-main.cards article.card[data-exercise-index][data-machine-occupied="true"]{isolation:isolate;border:2px solid #ffd166!important;background:linear-gradient(145deg,rgba(102,74,22,.68),rgba(36,31,19,.94))!important;box-shadow:0 0 0 2px rgba(255,209,102,.18),0 16px 42px rgba(0,0,0,.22)!important}
-main.cards article.card[data-machine-occupied="true"]::after{position:absolute;z-index:1;inset:0;border-radius:inherit;background:rgba(255,196,67,.12);backdrop-filter:blur(1.2px);-webkit-backdrop-filter:blur(1.2px);content:"";pointer-events:none}
-main.cards article.card[data-machine-occupied="true"]>:not(.exerciseTracker),main.cards article.card[data-machine-occupied="true"] .exerciseTracker> :not(.exerciseSetButtons),main.cards article.card[data-machine-occupied="true"] .exerciseSetButtons>:not(.machinePendingToggle){filter:blur(1.7px) saturate(.55)!important;opacity:.52!important;pointer-events:none!important;user-select:none!important}
-main.cards article.card[data-machine-occupied="true"] .exerciseTracker{border-color:#ffd166!important;background:linear-gradient(145deg,rgba(105,75,19,.56),rgba(43,35,18,.72))!important;box-shadow:inset 0 0 0 1px rgba(255,209,102,.2),0 0 18px rgba(255,209,102,.1)!important}
-main.cards article.card[data-machine-occupied="true"] .machinePendingToggle{position:relative;z-index:5;pointer-events:auto!important;border-color:#ffe08a!important;background:linear-gradient(135deg,#8b641c,#624715)!important;color:#fff3c6!important;box-shadow:0 0 0 2px rgba(255,209,102,.2)}
-.floatingSessionSummary .summaryFocusBadge{display:none;min-width:0;max-width:100%;margin:.1rem 0;padding:.22rem .35rem;border:1px solid rgba(255,209,102,.68);border-radius:.38rem;background:rgba(107,75,18,.82);color:#fff0bf;font-size:.57rem;font-weight:950;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.floatingSessionSummary.is-exercise-focused .summaryFocusBadge{display:block;animation:exerciseFocusReveal .34s cubic-bezier(.2,.8,.2,1) both}
-.floatingSessionSummary.is-exercise-focused .summaryToggle{box-shadow:inset 3px 0 #ffd166,0 0 16px rgba(255,209,102,.2);animation:exerciseBarPulse 1.25s ease-in-out infinite alternate}
-.summaryExercise.isCurrent{outline:2px solid #ffd166;outline-offset:1px;animation:exerciseFocusReveal .34s ease both}
-.warmupSet:not([hidden]){display:inline-flex;align-items:center;gap:.35rem;padding:.38rem .58rem;border:1px solid #ffd166;border-radius:.58rem;background:rgba(104,73,18,.62);color:#fff0bf;font-size:.68rem;font-weight:950;letter-spacing:.035em}
-.exerciseWarmupHint:not([hidden]){border-color:rgba(255,209,102,.7)!important;background:linear-gradient(110deg,rgba(103,73,20,.35),rgba(38,31,19,.42))!important;color:#ffedbd!important}
-.sessionCompletionPanel:not([hidden]){border:1px solid rgba(117,230,255,.36);background:radial-gradient(ellipse at 0 0,rgba(45,153,173,.2),transparent 52%),linear-gradient(145deg,rgba(14,43,59,.98),rgba(10,20,38,.99));box-shadow:0 20px 60px rgba(0,0,0,.42),inset 0 1px rgba(255,255,255,.08)}
-.sessionCompletionCopy{padding:.2rem .25rem}
-.sessionCompletionKicker{display:inline-flex;align-items:center;gap:.4rem;padding:.28rem .48rem;border:1px solid rgba(101,242,221,.38);border-radius:999px;background:rgba(20,91,83,.25);letter-spacing:.1em}
-.sessionCompletionCopy p#motivationMessage{position:relative;margin:.35rem 0 .25rem;padding:.85rem 1rem .85rem 1.2rem;border-left:3px solid #65f2dd;border-radius:.2rem .8rem .8rem .2rem;background:linear-gradient(100deg,rgba(18,91,83,.2),rgba(8,27,39,.45));color:#f4fdff;font-size:clamp(1.05rem,2.6vw,1.45rem);font-weight:850;line-height:1.38;letter-spacing:-.015em;text-wrap:pretty}
-.sessionCompletionCopy p#motivationMessage::before{content:"“";position:absolute;left:.35rem;top:.15rem;color:#65f2dd;font-size:1.1rem;line-height:1}
-.motivationNote{font-weight:800}
-@keyframes exerciseFocusReveal{from{opacity:.4;transform:translateY(4px) scale(.98)}to{opacity:1;transform:none}}
-@keyframes exerciseBarPulse{from{filter:brightness(1)}to{filter:brightness(1.22)}}
-@media(max-width:640px){.floatingSessionSummary .summaryFocusBadge{font-size:.55rem}.sessionCompletionCopy p#motivationMessage{padding:.75rem .8rem .75rem 1.05rem}}
-@media(prefers-reduced-motion:reduce){.floatingSessionSummary.is-exercise-focused .summaryFocusBadge,.floatingSessionSummary.is-exercise-focused .summaryToggle,.summaryExercise.isCurrent{animation:none!important}main.cards article.card[data-exercise-index]{transition:none}}
-</style>
-<script data-enhancement="exercise-focus-occupied-quote-v4">
-(() => {
-  const cards = [...document.querySelectorAll('main.cards article.card[data-exercise-index]')];
-  const summary = document.querySelector('.floatingSessionSummary');
-  const toggle = document.getElementById('summaryToggle');
-  if (!cards.length || !summary || !toggle) return;
-  const badge = document.createElement('span');
-  badge.className = 'summaryFocusBadge';
-  badge.setAttribute('aria-hidden', 'true');
-  toggle.insertAdjacentElement('afterend', badge);
-  const originalControlState = new WeakMap();
-  let focusedCard = null;
-  const setFocusedCard = card => {
-    if (!card) return;
-    focusedCard?.classList.remove('is-exercise-focused');
-    focusedCard = card;
-    focusedCard.classList.add('is-exercise-focused');
-    const number = String(card.dataset.exerciseIndex).padStart(2, '0');
-    const title = card.querySelector('.exTitle')?.textContent?.trim() || `Ejercicio ${number}`;
-    badge.textContent = `EN FOCO · ${number} · ${title}`;
-    summary.classList.add('is-exercise-focused');
-    window.gymratikFocusedExerciseIndex = Number(card.dataset.exerciseIndex) - 1;
-    document.querySelectorAll('.summaryExercise').forEach(item => item.classList.toggle('isCurrent', Number(item.dataset.exercise) === Number(card.dataset.exerciseIndex)));
-  };
-  const syncOccupiedState = card => {
-    const button = card.querySelector('.machinePendingToggle');
-    const occupied = button?.getAttribute('aria-pressed') === 'true';
-    card.dataset.machineOccupied = String(occupied);
-    button?.setAttribute('aria-label', occupied ? 'Desactivar máquina ocupada para este ejercicio' : 'Marcar máquina ocupada para este ejercicio');
-    card.querySelectorAll('button,input,select,textarea,a,summary,[tabindex]').forEach(control => {
-      if (control === button) return;
-      if (occupied) {
-        if (!originalControlState.has(control)) originalControlState.set(control, { disabled: 'disabled' in control ? control.disabled : null, tabindex: control.getAttribute('tabindex'), ariaDisabled: control.getAttribute('aria-disabled') });
-        if ('disabled' in control) control.disabled = true;
-        control.setAttribute('tabindex', '-1');
-        control.setAttribute('aria-disabled', 'true');
-      } else if (originalControlState.has(control)) {
-        const original = originalControlState.get(control);
-        if (original.disabled !== null) control.disabled = original.disabled;
-        if (original.tabindex === null) control.removeAttribute('tabindex'); else control.setAttribute('tabindex', original.tabindex);
-        if (original.ariaDisabled === null) control.removeAttribute('aria-disabled'); else control.setAttribute('aria-disabled', original.ariaDisabled);
-        originalControlState.delete(control);
-      }
-    });
-  };
-  cards.forEach((card, index) => {
-    const palette = ['#72dcff','#65f2dd','#c2a4ff','#ffd166'];
-    card.style.setProperty('--exercise-accent', palette[index % palette.length]);
-    card.addEventListener('pointerenter', () => setFocusedCard(card));
-    card.addEventListener('focusin', () => setFocusedCard(card));
-    card.querySelector('.machinePendingToggle')?.addEventListener('click', () => requestAnimationFrame(() => syncOccupiedState(card)));
-    syncOccupiedState(card);
-  });
-  document.addEventListener('click', event => {
-    const card = event.target.closest('article.card[data-machine-occupied="true"]');
-    if (card && !event.target.closest('.machinePendingToggle')) { event.preventDefault(); event.stopImmediatePropagation(); }
-  }, true);
-  document.addEventListener('keydown', event => {
-    const card = event.target.closest?.('article.card[data-machine-occupied="true"]');
-    if (card && event.target.closest?.('.machinePendingToggle')) return;
-    if (card && ['Enter',' '].includes(event.key)) { event.preventDefault(); event.stopImmediatePropagation(); }
-  }, true);
-  window.gymratikSyncOccupiedCard = syncOccupiedState;
-  const visible = new IntersectionObserver(entries => {
-    const candidate = entries.filter(entry => entry.isIntersecting).sort((a,b) => b.intersectionRatio-a.intersectionRatio)[0];
-    if (candidate && candidate.intersectionRatio > .28) setFocusedCard(candidate.target);
-  }, { threshold: [.28,.5,.72] });
-  cards.forEach(card => visible.observe(card));
 })();
 </script>
 </body>
