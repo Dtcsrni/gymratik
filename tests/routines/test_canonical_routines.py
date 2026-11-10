@@ -783,7 +783,8 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
             self.assertIn("loadMath.normalizeKg(loadMath.toKg(entered, item.performanceLoadUnit), item.performanceLoadProfile)", html)
             self.assertIn("const kilograms = loadMath.toKg(currentLoad, previousUnit)", html)
             self.assertNotIn("loadKg: loadSelected ? loadMath.normalizeKg(loadMath.toKg(load, item.performanceLoadUnit), item.performanceLoadProfile)", html)
-            self.assertIn("loadKg: loadSelected ? (item.performanceLoadUnit === 'lb' ? load * 0.45359237 : load) : null", html)
+            self.assertIn("loadUnit: warmupLoadUnit, loadKg: loadSelected ? warmupLoadKg : null", html)
+            self.assertIn("loadUnit, loadKg: loadSelected ? loadKg : null", html)
             self.assertIn("const loadKg = load === null ? null : loadUnit === 'lb' ? load * 0.45359237 : load;", html)
             self.assertIn("const updateLoadControl = () => {", html)
             self.assertIn("loadInput.min = String(profileMin); loadInput.max = String(profileMax);", html)
@@ -1341,13 +1342,19 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
         for path in sorted(CANONICAL.glob("*.html")):
             with self.subTest(routine=path.name):
                 source = path.read_text(encoding="utf-8")
-                self.assertEqual(source.count('data-enhancement="exercise-focus-occupied-quote-v2"'), 2)
+                self.assertEqual(source.count('data-enhancement="exercise-focus-occupied-quote-v3"'), 2)
+                self.assertEqual(source.count('data-enhancement="section-ledger-load-v2"'), 2)
                 self.assertIn('data-machine-occupied="true"', source)
                 self.assertIn("setFocusedCard", source)
                 self.assertIn("syncOccupiedState", source)
                 self.assertIn("pointer-events:none!important", source)
                 self.assertIn("maximum-scale=1, user-scalable=no", source)
                 self.assertIn("__warmupPerformance", source)
+                self.assertIn("__warmupDraft", source)
+                self.assertIn("item.warmupLoadExact", source)
+                self.assertIn("Última serie normal registrada", source)
+                self.assertIn("Última aproximación registrada", source)
+                self.assertIn("routineSectionStamp", source)
                 self.assertIn("sessionCompletionCopy p#motivationMessage", source)
 
     def test_each_canonical_day_has_its_own_shared_template_cover(self) -> None:

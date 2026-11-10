@@ -2,6 +2,14 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.1] - 2026-11-09
+
+### Changed
+
+- Se separan visualmente las secciones de prescripción, cargas, series, referencias y técnica en las cuatro rutinas.
+- El peso de aproximación usa un campo y un borrador propios; el peso normal conserva su última carga registrada y se muestra aparte.
+- La PWA deja explícito que la carga de aproximación no se mezcla con las series normales.
+
 ## [0.7.0] - 2026-11-09
 
 ### Changed

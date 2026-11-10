@@ -16,7 +16,7 @@ Demostrar los comportamientos del [SRS activo](../01-requirements/SRS.md), vincu
 
 ## Casos críticos
 
-- **TST-CAN-008:** comprobar en las cuatro rutinas el contrato de foco, bloqueo por máquina ocupada, zoom móvil desactivado y almacenamiento aparte de la carga de calentamiento.
+- **TST-CAN-008:** comprobar en las cuatro rutinas el contrato de foco, bloqueo por máquina ocupada, zoom móvil desactivado, rótulos visuales por sección y almacenamiento/visualización independiente de carga de aproximación y última carga normal registrada.
 - **TST-UX-001:** en navegador móvil/teclado, verificar que el foco de ejercicio se muestra también con la barra plegada, que cada control bloqueado permanece inerte y que liberar la máquina restaura el estado previo. La ejecución física queda pendiente.
 - **TST-PRO-006:** perfil vacío presenta el formulario inicial; guardar conserva navegación y progreso; perfil ya definido no se redirige.
 - **TST-PRO-007:** mensajes de actividad se derivan de datos locales disponibles sin inventar resultados ni modificar registros.
