@@ -3318,7 +3318,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 <button type="button" class="summaryToggle" id="summaryToggle" aria-expanded="false" aria-controls="summaryBody"><span id="summaryActivityIcon" aria-hidden="true"><svg class="lucide lucide-activity gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-activity"></use></svg></span><span id="summaryHeadline">0/7 ejercicios · 0/23 series</span><span id="summaryActivityHeadline">¡Vamos a entrenar!</span><span class="summaryMascotWrap"><img id="summaryActivityMascot" class="summaryActivityMascot" src="../../../data/profile/mascot-motion/neutral-exercise-still.webp" alt="Mascotas Gymratik animando el inicio de la rutina" decoding="async"></span><span class="summaryChevron" aria-hidden="true">⌃</span></button>
 <div class="summaryBody" id="summaryBody" hidden><div class="summaryTotals"><span id="summaryPending">23 pendientes</span></div><div class="summaryActivityStatus isIdle" id="summaryActivityStatus" data-activity="idle" aria-live="polite"><span class="summaryActivityIndicator" aria-hidden="true"></span><span class="summaryActivityLabel" id="summaryActivityLabel">¡Vamos a entrenar!</span><span class="summaryActivityClock" id="summaryActivityClock">Iniciar</span></div><div class="summaryProgressTrack" id="summaryOverallProgress" role="progressbar" aria-label="Progreso total de series" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="Sin series completadas" data-state="empty"><span id="summaryProgressFill"></span></div><div class="summaryTime" id="summaryElapsed" aria-live="polite">⏱ Total de rutina: —</div><ul class="sessionSummaryList" id="sessionSummaryList"></ul></div>
 </aside>
-<footer class="sessionFooter" aria-label="Acciones del día"><div class="sessionResetCopy"><strong>¿Quieres empezar este día de nuevo?</strong><span>«Terminar día» guarda las series registradas; «Reiniciar día» borra solo el progreso semanal de este día.</span></div><button type="button" id="finishDay">Terminar día</button><button type="button" id="resetSession">Reiniciar día</button></footer>
+<footer class="sessionFooter" aria-label="Acciones del día"><div class="sessionResetCopy"><strong>El progreso se guarda automáticamente</strong><span>Cada serie confirmada se guarda al instante; no necesitas cerrar el día para conservarla. Si terminas antes de completar la rutina, puedes registrar el cierre parcial aquí.</span></div><button type="button" id="finishDay">Cerrar sesión parcial (opcional)</button><button type="button" id="resetSession">Reiniciar día</button></footer>
 </div>
 <script>
 (function(){
@@ -4011,7 +4011,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     const loadInput = document.createElement('input'); loadInput.className = 'performanceLoad'; loadInput.type = 'range'; loadInput.min = '0'; loadInput.max = '1000'; loadInput.step = '2.5'; loadInput.value = '0'; loadInput.setAttribute('aria-label', `Carga utilizada en ${item.title}`); loadLabel.append(loadHead, loadOutputRow, loadInput);
     const progressionCue = document.createElement('p'); progressionCue.className = 'progressionCue'; progressionCue.setAttribute('role', 'status'); progressionCue.textContent = `Registra repeticiones y carga para completar. Si no conoces algún dato, toca «Quitar» y podrás continuar después de confirmar que quedará sin registrar. Rango de carga: ${item.performanceLoadProfile.minKg}–${item.performanceLoadProfile.maxKg} kg.`;
     performancePanel.append(repsLabel, loadLabel, progressionCue);
-    item.performancePanel = performancePanel; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save;
+    item.performancePanel = performancePanel; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save;
     item.performanceReps = repsInput;
     item.performanceRepsOutput = repsOutput;
     item.performanceLoad = loadInput;
@@ -4119,7 +4119,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       const latestLoadRecord = item.performanceHistory.flatMap(session => (session.performance || []).filter(record => record.exerciseId === String(item.index + 1)).map(record => ({ ...record, _sessionUpdatedAt: Number(session.endedAt || session.updatedAt || 0) }))).filter(record => record.loadSelected !== false && record.load !== null && record.load !== undefined && String(record.load).trim() !== '' && Number.isFinite(Number(record.load))).sort((a, b) => Number(b.updatedAt || b._sessionUpdatedAt || 0) - Number(a.updatedAt || a._sessionUpdatedAt || 0))[0];
       if (latestLoadRecord) {
         const storedKg = Number.isFinite(Number(latestLoadRecord.loadKg)) ? Number(latestLoadRecord.loadKg) : latestLoadRecord.loadUnit === 'lb' ? Number(latestLoadRecord.load) * 0.45359237 : Number(latestLoadRecord.load);
-        if (Number.isFinite(storedKg)) item.previousLoadKg = storedKg; item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.();
+        if (Number.isFinite(storedKg)) item.previousLoadKg = storedKg; item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.();
         if (!savedDraft && !item.performanceLoadSelected && !isExerciseStarted(item) && Number.isFinite(storedKg)) {
           const factor = item.performanceLoadUnit === 'lb' ? 1 / 0.45359237 : 1;
           const step = item.performanceLoadUnit === 'lb' ? 5 : item.performanceLoadProfile.stepKg;
@@ -4162,8 +4162,8 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       state.__skippedExercises[key] = true;
       const timing = getExerciseTiming(item); timing.preparationEndsAt = 0; timing.seriesStartedAt = 0; timing.restStartedAt = 0; timing.endedAt = timestamp;
       const preparation = seriesPreparation.get(item.index); if (preparation) window.clearTimeout(preparation.timer); seriesPreparation.delete(item.index);
-      if (exerciseItems.every(entry => snapshot(entry).complete || entry === item)) getTimingState().sessionEndedAt = timestamp;
-      save(); updateTracker(item.tracker, false);
+      if (exerciseItems.every(entry => snapshot(entry).complete || entry === item)) { const root = getTimingState(); root.sessionEndedAt = timestamp; root.sessionEndReason = 'partial'; }
+      save(); updateTracker(item.tracker, exerciseItems.every(entry => snapshot(entry).complete || entry === item));
     };
     const startSkipHold = event => { if (event.type === 'keydown' && ![' ', 'Enter'].includes(event.key)) return; if (event.type === 'keydown') event.preventDefault(); if (skipHoldTimer || snapshot(item).complete) return; skipExerciseButton.style.setProperty('--hold-progress', '0%'); skipExerciseButton.classList.add('is-holding'); requestAnimationFrame(() => skipExerciseButton.style.setProperty('--hold-progress', '100%')); skipExerciseStatus.textContent = 'Mantén…'; skipHoldTimer = window.setTimeout(() => { skipHoldTimer = 0; skipExerciseButton.classList.remove('is-holding'); skipExerciseStatus.textContent = 'Ejercicio omitido'; skipExercise(); }, 10000); };
     skipExerciseButton.addEventListener('pointerdown', startSkipHold); skipExerciseButton.addEventListener('keydown', startSkipHold);
@@ -4196,7 +4196,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
   const getExerciseTiming = item => { const root = getTimingState(); const key = String(item.index + 1); if (!root.exercises[key]) root.exercises[key] = { startedAt: 0, seriesStartedAt: 0, preparationEndsAt: 0, seriesTimes: [], restStartedAt: 0, restTimes: [], restNotifiedAt: 0, restReminderNotifiedAt: 0, endedAt: 0 }; const timing = root.exercises[key]; ['startedAt','seriesStartedAt','preparationEndsAt','restStartedAt','restNotifiedAt','restReminderNotifiedAt','endedAt','warmupStartedAt','warmupDurationMs'].forEach(keyName => { if (!Number.isFinite(timing[keyName]) || timing[keyName] < 0) timing[keyName] = 0; }); if (!Array.isArray(timing.seriesTimes)) timing.seriesTimes = []; if (!Array.isArray(timing.restTimes)) timing.restTimes = []; return timing; };
   const startTiming = (item, timestamp = Date.now(), startSeries = false) => { const root = getTimingState(); const timing = getExerciseTiming(item); if (!timing.startedAt) { timing.startedAt = timestamp; if (startSeries) timing.seriesStartedAt = timestamp; if (!root.sessionStartedAt) root.sessionStartedAt = timestamp; save(); } else if (startSeries && !timing.seriesStartedAt && !timing.restStartedAt && !timing.endedAt) { timing.seriesStartedAt = timestamp; save(); } return timing; };
   const beginSeries = (item, timestamp = Date.now()) => { const timing = startTiming(item, timestamp, true); const nextIndex = item.seriesKeys.findIndex(key => state[key] !== true); if (nextIndex < 0) return timing; if (nextIndex === 0 && timing.restStartedAt && state.__warmupPerformance?.[String(item.index + 1)]) state.__warmupPerformance[String(item.index + 1)].restDurationMs = Math.min(MAX_TIMING_MS, Math.max(0, timestamp - timing.restStartedAt)); if (nextIndex > 0 && timing.restStartedAt) timing.restTimes[nextIndex - 1] = Math.min(MAX_TIMING_MS, Math.max(0, timestamp - timing.restStartedAt)); timing.restStartedAt = 0; timing.restNotifiedAt = 0; timing.restReminderNotifiedAt = 0;timing.seriesStartedAt = timestamp; timing.endedAt = 0; save(); return timing; };
-  const recordSeriesTime = (item, seriesIndex, timestamp = Date.now()) => { const root = getTimingState(); const timing = getExerciseTiming(item); if (!timing.startedAt) startTiming(item, timestamp); if (seriesIndex > 0 && timing.restStartedAt) timing.restTimes[seriesIndex - 1] = Math.min(MAX_TIMING_MS, Math.max(0, timestamp - timing.restStartedAt)); timing.restStartedAt = 0; timing.restNotifiedAt = 0; timing.restReminderNotifiedAt = 0;if (timing.seriesTimes[seriesIndex] == null) timing.seriesTimes[seriesIndex] = Math.min(MAX_TIMING_MS, Math.max(0, timestamp - (timing.seriesStartedAt || timestamp))); timing.seriesStartedAt = 0; if (seriesIndex + 1 < item.seriesKeys.length || exerciseItems.some(entry => !snapshot(entry).complete)) timing.restStartedAt = timestamp; else timing.endedAt = timestamp; if (exerciseItems.every(entry => snapshot(entry).complete) && !root.sessionEndedAt) root.sessionEndedAt = timestamp; save(); };
+  const recordSeriesTime = (item, seriesIndex, timestamp = Date.now()) => { const root = getTimingState(); const timing = getExerciseTiming(item); if (!timing.startedAt) startTiming(item, timestamp); if (seriesIndex > 0 && timing.restStartedAt) timing.restTimes[seriesIndex - 1] = Math.min(MAX_TIMING_MS, Math.max(0, timestamp - timing.restStartedAt)); timing.restStartedAt = 0; timing.restNotifiedAt = 0; timing.restReminderNotifiedAt = 0;if (timing.seriesTimes[seriesIndex] == null) timing.seriesTimes[seriesIndex] = Math.min(MAX_TIMING_MS, Math.max(0, timestamp - (timing.seriesStartedAt || timestamp))); timing.seriesStartedAt = 0; if (seriesIndex + 1 < item.seriesKeys.length || exerciseItems.some(entry => !snapshot(entry).complete)) timing.restStartedAt = timestamp; else timing.endedAt = timestamp; if (exerciseItems.every(entry => snapshot(entry).complete) && !root.sessionEndedAt) { root.sessionEndedAt = timestamp; root.sessionEndReason = Object.values(state.__skippedExercises || {}).some(Boolean) ? 'partial' : 'complete'; } save(); };
   exerciseItems.forEach(item => { const display = document.createElement('div'); display.className = 'exerciseTiming'; display.setAttribute('role', 'group'); display.setAttribute('aria-live', 'off'); display.textContent = '⏱ Serie — · Ejercicio —'; item.timingDisplay = display; const restDisplay = document.createElement('div'); restDisplay.className = 'exerciseRest'; restDisplay.setAttribute('role', 'status'); restDisplay.setAttribute('aria-live', 'polite'); restDisplay.hidden = true; restDisplay.textContent = '⏳ Descanso en curso: 00:00'; item.restDisplay = restDisplay; item.tracker.querySelector('.exerciseTrackerHead')?.after(display); display.after(restDisplay); });
   const renderTimingDisplays = () => {
     const renderExerciseTimer = (item, entries, label) => {
@@ -4374,7 +4374,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       if (finishDayButton) {
         const canRetryPartialSave = root?.sessionEndReason === 'partial' && finishDayButton.dataset.saveFailed === 'true';
         finishDayButton.disabled = Boolean(root?.sessionEndedAt) && !canRetryPartialSave;
-        finishDayButton.textContent = canRetryPartialSave ? 'Reintentar guardado' : root?.sessionEndedAt ? 'Día terminado' : 'Terminar día';
+        finishDayButton.textContent = canRetryPartialSave ? 'Reintentar guardado' : root?.sessionEndedAt ? (root.sessionEndReason === 'partial' ? 'Sesión parcial guardada' : 'Rutina guardada') : 'Cerrar sesión parcial (opcional)';
       }
       const justStarted = Boolean(root?.sessionStartedAt && now - root.sessionStartedAt < 2600);
       const warmupDone = warmup.phase === 'done';
@@ -5101,6 +5101,117 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     const kicker = completionPanel.querySelector('.sessionCompletionKicker');
     const title = document.getElementById('session-completion-title');
     if (kicker) kicker.textContent = complete ? 'RUTINA COMPLETADA' : 'SESIÓN GUARDADA · PROGRESO PARCIAL';
+    if (title) title.textContent = complete ? '¡Día completo!' : 'Buen trabajo. Día guardado.';
+    const fact = bestSet
+      ? `Dato curioso: tu serie con más repeticiones fue de ${bestSet.reps} en ${bestSet.exercise} · serie ${bestSet.setNumber}.`
+      : doneSeries
+        ? `Dato curioso: confirmaste ${doneSeries} de ${plannedSeries} series (${Math.round(doneSeries / Math.max(1, plannedSeries) * 100)} % del plan).`
+        : 'Dato curioso: cerraste el día sin series confirmadas; las aproximaciones no cuentan como series de trabajo.';
+    setText('sessionFunFact', fact);
+  };
+  const renderSessionRecap = complete => {
+    const rows = exerciseItems.map(snapshot);
+    const doneSeries = rows.reduce((sum, row) => sum + row.done, 0);
+    const completedExercises = rows.filter(row => row.complete && !row.skipped).length;
+    const skippedExercises = rows.filter(row => row.skipped).length;
+    const recordedReps = [];
+    exerciseItems.forEach(item => item.seriesKeys.forEach((key, index) => {
+      if (state[key] !== true) return;
+      const record = state.__performance?.[String(item.index + 1)]?.[key];
+      const reps = Number(record?.reps);
+      if (record && Number.isInteger(reps) && reps >= 1 && reps <= 100) recordedReps.push({ reps, exercise: item.title, setNumber: index + 1 });
+    }));
+    const totalReps = recordedReps.reduce((sum, record) => sum + record.reps, 0);
+    const bestSet = recordedReps.reduce((best, record) => !best || record.reps > best.reps ? record : best, null);
+    const setText = (id, value) => { const node = document.getElementById(id); if (node) node.textContent = String(value); };
+    const timing = state.__timing || {};
+    const elapsedMs = Number(timing.sessionStartedAt) > 0 && Number(timing.sessionEndedAt) >= Number(timing.sessionStartedAt)
+      ? Number(timing.sessionEndedAt) - Number(timing.sessionStartedAt) : 0;
+    const elapsedMinutes = Math.floor(elapsedMs / 60000);
+    const elapsedHours = Math.floor(elapsedMinutes / 60);
+    const duration = elapsedMs < 1000 ? '—' : elapsedHours ? `${elapsedHours} h ${elapsedMinutes % 60} min` : elapsedMinutes ? `${elapsedMinutes} min` : '<1 min';
+    setText('sessionRecapSets', `${doneSeries}/${plannedSeries}`);
+    setText('sessionRecapExercises', `${completedExercises}/${exerciseItems.length}`);
+    setText('sessionRecapReps', totalReps ? totalReps : '—');
+    setText('sessionRecapSkipped', skippedExercises);
+    setText('sessionRecapDuration', duration);
+    const kicker = completionPanel.querySelector('.sessionCompletionKicker');
+    const title = document.getElementById('session-completion-title');
+    if (kicker) kicker.textContent = complete ? 'RUTINA COMPLETADA · GUARDADO AUTOMÁTICO' : 'SESIÓN GUARDADA · PROGRESO PARCIAL';
+    if (title) title.textContent = complete ? '¡Día completo!' : 'Buen trabajo. Día guardado.';
+    const fact = bestSet
+      ? `Dato curioso: tu serie con más repeticiones fue de ${bestSet.reps} en ${bestSet.exercise} · serie ${bestSet.setNumber}.`
+      : doneSeries
+        ? `Dato curioso: confirmaste ${doneSeries} de ${plannedSeries} series (${Math.round(doneSeries / Math.max(1, plannedSeries) * 100)} % del plan).`
+        : 'Dato curioso: cerraste el día sin series confirmadas; las aproximaciones no cuentan como series de trabajo.';
+    setText('sessionFunFact', fact);
+  };
+  const renderSessionRecap = complete => {
+    const rows = exerciseItems.map(snapshot);
+    const doneSeries = rows.reduce((sum, row) => sum + row.done, 0);
+    const completedExercises = rows.filter(row => row.complete && !row.skipped).length;
+    const skippedExercises = rows.filter(row => row.skipped).length;
+    const recordedReps = [];
+    exerciseItems.forEach(item => item.seriesKeys.forEach((key, index) => {
+      if (state[key] !== true) return;
+      const record = state.__performance?.[String(item.index + 1)]?.[key];
+      const reps = Number(record?.reps);
+      if (record && Number.isInteger(reps) && reps >= 1 && reps <= 100) recordedReps.push({ reps, exercise: item.title, setNumber: index + 1 });
+    }));
+    const totalReps = recordedReps.reduce((sum, record) => sum + record.reps, 0);
+    const bestSet = recordedReps.reduce((best, record) => !best || record.reps > best.reps ? record : best, null);
+    const setText = (id, value) => { const node = document.getElementById(id); if (node) node.textContent = String(value); };
+    const timing = state.__timing || {};
+    const elapsedMs = Number(timing.sessionStartedAt) > 0 && Number(timing.sessionEndedAt) >= Number(timing.sessionStartedAt)
+      ? Number(timing.sessionEndedAt) - Number(timing.sessionStartedAt) : 0;
+    const elapsedMinutes = Math.floor(elapsedMs / 60000);
+    const elapsedHours = Math.floor(elapsedMinutes / 60);
+    const duration = elapsedMs < 1000 ? '—' : elapsedHours ? `${elapsedHours} h ${elapsedMinutes % 60} min` : elapsedMinutes ? `${elapsedMinutes} min` : '<1 min';
+    setText('sessionRecapSets', `${doneSeries}/${plannedSeries}`);
+    setText('sessionRecapExercises', `${completedExercises}/${exerciseItems.length}`);
+    setText('sessionRecapReps', totalReps ? totalReps : '—');
+    setText('sessionRecapSkipped', skippedExercises);
+    setText('sessionRecapDuration', duration);
+    const kicker = completionPanel.querySelector('.sessionCompletionKicker');
+    const title = document.getElementById('session-completion-title');
+    if (kicker) kicker.textContent = complete ? 'RUTINA COMPLETADA · GUARDADO AUTOMÁTICO' : 'SESIÓN GUARDADA · PROGRESO PARCIAL';
+    if (title) title.textContent = complete ? '¡Día completo!' : 'Buen trabajo. Día guardado.';
+    const fact = bestSet
+      ? `Dato curioso: tu serie con más repeticiones fue de ${bestSet.reps} en ${bestSet.exercise} · serie ${bestSet.setNumber}.`
+      : doneSeries
+        ? `Dato curioso: confirmaste ${doneSeries} de ${plannedSeries} series (${Math.round(doneSeries / Math.max(1, plannedSeries) * 100)} % del plan).`
+        : 'Dato curioso: cerraste el día sin series confirmadas; las aproximaciones no cuentan como series de trabajo.';
+    setText('sessionFunFact', fact);
+  };
+  const renderSessionRecap = complete => {
+    const rows = exerciseItems.map(snapshot);
+    const doneSeries = rows.reduce((sum, row) => sum + row.done, 0);
+    const completedExercises = rows.filter(row => row.complete && !row.skipped).length;
+    const skippedExercises = rows.filter(row => row.skipped).length;
+    const recordedReps = [];
+    exerciseItems.forEach(item => item.seriesKeys.forEach((key, index) => {
+      if (state[key] !== true) return;
+      const record = state.__performance?.[String(item.index + 1)]?.[key];
+      const reps = Number(record?.reps);
+      if (record && Number.isInteger(reps) && reps >= 1 && reps <= 100) recordedReps.push({ reps, exercise: item.title, setNumber: index + 1 });
+    }));
+    const totalReps = recordedReps.reduce((sum, record) => sum + record.reps, 0);
+    const bestSet = recordedReps.reduce((best, record) => !best || record.reps > best.reps ? record : best, null);
+    const setText = (id, value) => { const node = document.getElementById(id); if (node) node.textContent = String(value); };
+    const timing = state.__timing || {};
+    const elapsedMs = Number(timing.sessionStartedAt) > 0 && Number(timing.sessionEndedAt) >= Number(timing.sessionStartedAt)
+      ? Number(timing.sessionEndedAt) - Number(timing.sessionStartedAt) : 0;
+    const elapsedMinutes = Math.floor(elapsedMs / 60000);
+    const elapsedHours = Math.floor(elapsedMinutes / 60);
+    const duration = elapsedMs < 1000 ? '—' : elapsedHours ? `${elapsedHours} h ${elapsedMinutes % 60} min` : elapsedMinutes ? `${elapsedMinutes} min` : '<1 min';
+    setText('sessionRecapSets', `${doneSeries}/${plannedSeries}`);
+    setText('sessionRecapExercises', `${completedExercises}/${exerciseItems.length}`);
+    setText('sessionRecapReps', totalReps ? totalReps : '—');
+    setText('sessionRecapSkipped', skippedExercises);
+    setText('sessionRecapDuration', duration);
+    const kicker = completionPanel.querySelector('.sessionCompletionKicker');
+    const title = document.getElementById('session-completion-title');
+    if (kicker) kicker.textContent = complete ? 'RUTINA COMPLETADA · GUARDADO AUTOMÁTICO' : 'SESIÓN GUARDADA · PROGRESO PARCIAL';
     if (title) title.textContent = complete ? '¡Día completo!' : 'Buen trabajo. Día guardado.';
     const fact = bestSet
       ? `Dato curioso: tu serie con más repeticiones fue de ${bestSet.reps} en ${bestSet.exercise} · serie ${bestSet.setNumber}.`
@@ -7062,7 +7173,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     const finishDayButton = event.target instanceof Element ? event.target.closest('#finishDay') : null;
     const isRetry = state.__timing?.sessionEndReason === 'partial' && Number(state.__timing?.sessionEndedAt) > 0;
     if (!finishDayButton || (state.__timing?.sessionEndedAt && !isRetry)) return;
-    if (!isRetry && !window.confirm('¿Terminar este día con el progreso registrado hasta ahora? Las series sin confirmar no se contarán y podrás consultar este avance en tu historial.')) return;
+    if (!isRetry && !window.confirm('Tu progreso se guarda automáticamente al confirmar cada serie. ¿Quieres cerrar ahora esta sesión parcial y registrar su hora de cierre?')) return;
     finishDayButton.disabled = true;
     finishDayButton.textContent = 'Guardando…';
     clearPreparationTimers();
@@ -7092,7 +7203,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     }
     delete finishDayButton.dataset.saveFailed;
     finishDayButton.textContent = 'Día terminado';
-    finishDayButton.setAttribute('aria-label', 'Día terminado. Progreso guardado en este dispositivo.');
+    finishDayButton.setAttribute('aria-label', 'Cierre parcial guardado. El progreso se guarda automáticamente.');
     exerciseItems.forEach(item => updateTracker(item.tracker, false));
     updateSessionCompletion(true);
   });
@@ -8098,6 +8209,12 @@ button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gra
 #gymratikEncouragement .toastCopy{min-width:0;overflow-wrap:anywhere}
 @media(max-width:380px){#gymratikEncouragement{gap:.4rem;min-height:56px;padding:.35rem .65rem .35rem .4rem;font-size:.82rem}#gymratikEncouragement .toastMascot{flex-basis:46px;width:46px;height:46px}}
 </style>
+
+
+
+
+
+
 
 
 

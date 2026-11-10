@@ -1002,11 +1002,12 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 self.assertEqual(source.count('<footer class="sessionFooter"'), 1)
                 self.assertEqual(source.count('id="finishDay"'), 1)
                 self.assertIn('id="resetSession">Reiniciar día</button>', source)
-                self.assertIn('id="finishDay">Terminar día</button>', source)
+                self.assertIn('id="finishDay">Cerrar sesión parcial (opcional)</button>', source)
                 self.assertIn("timingRoot.sessionEndReason = 'partial'", source)
                 self.assertIn("sessionEndedPartial", source)
                 self.assertIn("timing.sessionEndReason !== 'partial'", source)
-                self.assertIn('¿Quieres empezar este día de nuevo?', source)
+                self.assertIn('El progreso se guarda automáticamente', source)
+                self.assertIn('no necesitas cerrar el día para conservarla', source)
                 self.assertIn('display:block!important;visibility:visible!important;opacity:1!important', source)
                 self.assertGreater(source.index('id="resetSession"'), source.index('id="summaryOverallProgress"'))
                 self.assertLess(source.index('id="resetSession"'), source.rindex('</body>'))
@@ -1368,6 +1369,12 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 self.assertIn("const complete = rows.length > 0 && rows.every(row => row.complete && !row.skipped)", source)
                 self.assertIn("item.seriesKeys.forEach", source)
                 self.assertIn("updateSessionCompletion(true)", source)
+                self.assertIn("GUARDADO AUTOMÁTICO", source)
+                self.assertIn('Cerrar sesión parcial (opcional)', source)
+                self.assertIn('Cada serie confirmada se guarda al instante', source)
+                self.assertIn("root.sessionEndReason = Object.values(state.__skippedExercises || {}).some(Boolean) ? 'partial' : 'complete'", source)
+                self.assertIn("root.sessionEndReason = 'partial'", source)
+                self.assertIn("save(); updateTracker(item.tracker, exerciseItems.every(entry => snapshot(entry).complete || entry === item));", source)
 
     def test_each_canonical_day_has_its_own_shared_template_cover(self) -> None:
         cover_dir = ROOT / "assets" / "branding" / "routine-covers"

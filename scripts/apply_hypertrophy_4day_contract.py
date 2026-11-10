@@ -531,7 +531,7 @@ SESSION_COMPLETION_UPDATE = r'''  const renderSessionRecap = complete => {
     setText('sessionRecapDuration', duration);
     const kicker = completionPanel.querySelector('.sessionCompletionKicker');
     const title = document.getElementById('session-completion-title');
-    if (kicker) kicker.textContent = complete ? 'RUTINA COMPLETADA' : 'SESIÓN GUARDADA · PROGRESO PARCIAL';
+    if (kicker) kicker.textContent = complete ? 'RUTINA COMPLETADA · GUARDADO AUTOMÁTICO' : 'SESIÓN GUARDADA · PROGRESO PARCIAL';
     if (title) title.textContent = complete ? '¡Día completo!' : 'Buen trabajo. Día guardado.';
     const fact = bestSet
       ? `Dato curioso: tu serie con más repeticiones fue de ${bestSet.reps} en ${bestSet.exercise} · serie ${bestSet.setNumber}.`
@@ -632,14 +632,22 @@ def apply_interaction_redesign(source: str) -> str:
       if (finishDayButton) {
         const canRetryPartialSave = root?.sessionEndReason === 'partial' && finishDayButton.dataset.saveFailed === 'true';
         finishDayButton.disabled = Boolean(root?.sessionEndedAt) && !canRetryPartialSave;
-        finishDayButton.textContent = canRetryPartialSave ? 'Reintentar guardado' : root?.sessionEndedAt ? 'Día terminado' : 'Terminar día';
+        finishDayButton.textContent = canRetryPartialSave ? 'Reintentar guardado' : root?.sessionEndedAt ? (root.sessionEndReason === 'partial' ? 'Sesión parcial guardada' : 'Rutina guardada') : 'Cerrar sesión parcial (opcional)';
       }""",
+    )
+    source = source.replace(
+        """        const canRetryPartialSave = root?.sessionEndReason === 'partial' && finishDayButton.dataset.saveFailed === 'true';
+        finishDayButton.disabled = Boolean(root?.sessionEndedAt) && !canRetryPartialSave;
+        finishDayButton.textContent = canRetryPartialSave ? 'Reintentar guardado' : root?.sessionEndedAt ? 'Día terminado' : 'Terminar día';""",
+        """        const canRetryPartialSave = root?.sessionEndReason === 'partial' && finishDayButton.dataset.saveFailed === 'true';
+        finishDayButton.disabled = Boolean(root?.sessionEndedAt) && !canRetryPartialSave;
+        finishDayButton.textContent = canRetryPartialSave ? 'Reintentar guardado' : root?.sessionEndedAt ? (root.sessionEndReason === 'partial' ? 'Sesión parcial guardada' : 'Rutina guardada') : 'Cerrar sesión parcial (opcional)';""",
     )
     finish_handler = r'''  document.addEventListener('click', async event => {
     const finishDayButton = event.target instanceof Element ? event.target.closest('#finishDay') : null;
     const isRetry = state.__timing?.sessionEndReason === 'partial' && Number(state.__timing?.sessionEndedAt) > 0;
     if (!finishDayButton || (state.__timing?.sessionEndedAt && !isRetry)) return;
-    if (!isRetry && !window.confirm('¿Terminar este día con el progreso registrado hasta ahora? Las series sin confirmar no se contarán y podrás consultar este avance en tu historial.')) return;
+    if (!isRetry && !window.confirm('Tu progreso se guarda automáticamente al confirmar cada serie. ¿Quieres cerrar ahora esta sesión parcial y registrar su hora de cierre?')) return;
     finishDayButton.disabled = true;
     finishDayButton.textContent = 'Guardando…';
     clearPreparationTimers();
@@ -669,7 +677,7 @@ def apply_interaction_redesign(source: str) -> str:
     }
     delete finishDayButton.dataset.saveFailed;
     finishDayButton.textContent = 'Día terminado';
-    finishDayButton.setAttribute('aria-label', 'Día terminado. Progreso guardado en este dispositivo.');
+    finishDayButton.setAttribute('aria-label', 'Cierre parcial guardado. El progreso se guarda automáticamente.');
     exerciseItems.forEach(item => updateTracker(item.tracker, false));
     updateSessionCompletion(true);
   });'''
@@ -682,6 +690,23 @@ def apply_interaction_redesign(source: str) -> str:
     )
     if finish_handlers != 1:
         raise ValueError("No se encontró el controlador del botón Terminar día")
+    source = source.replace(
+        "if (exerciseItems.every(entry => snapshot(entry).complete) && !root.sessionEndedAt) root.sessionEndedAt = timestamp;",
+        "if (exerciseItems.every(entry => snapshot(entry).complete) && !root.sessionEndedAt) { root.sessionEndedAt = timestamp; root.sessionEndReason = Object.values(state.__skippedExercises || {}).some(Boolean) ? 'partial' : 'complete'; }",
+    )
+    source = source.replace(
+        "if (exerciseItems.every(entry => snapshot(entry).complete || entry === item)) getTimingState().sessionEndedAt = timestamp;\n      save(); updateTracker(item.tracker, false);",
+        "if (exerciseItems.every(entry => snapshot(entry).complete || entry === item)) { const root = getTimingState(); root.sessionEndedAt = timestamp; root.sessionEndReason = 'partial'; }\n      save(); updateTracker(item.tracker, exerciseItems.every(entry => snapshot(entry).complete || entry === item));",
+    )
+    source, footers = re.subn(
+        r'<div class="sessionResetCopy"><strong>.*?</strong><span>.*?</span></div><button type="button" id="finishDay">.*?</button>',
+        '<div class="sessionResetCopy"><strong>El progreso se guarda automáticamente</strong><span>Cada serie confirmada se guarda al instante; no necesitas cerrar el día para conservarla. Si terminas antes de completar la rutina, puedes registrar el cierre parcial aquí.</span></div><button type="button" id="finishDay">Cerrar sesión parcial (opcional)</button>',
+        source,
+        count=1,
+        flags=re.S,
+    )
+    if footers != 1:
+        raise ValueError("No se encontró el pie de acciones para explicar el guardado automático")
     source = source.replace(
         "    state = {};\n    save();",
         "    state = {};\n    delete document.getElementById('finishDay')?.dataset.saveFailed;\n    save();",

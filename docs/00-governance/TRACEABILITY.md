@@ -43,6 +43,7 @@ Cada requisito funcional/no funcional del SRS aparece una sola vez. `Partial` in
 | FUN-TRN-017 | RISK-004, RISK-014 | SDD-003 | TST-MED-007, E2E de rutinas | Verified (local synthetic; physical/public pending) |
 | FUN-TRN-018 | RISK-004 | SDD-001 | TST-CAN-008, TST-UX-001 | Implemented (local static; interactive device pending) |
 | FUN-TRN-019 | RISK-004 | SDD-001 | TST-CAN-009, TST-UX-001 | Implemented (local static; browser interaction pending) |
+| FUN-TRN-020 | RISK-004 | SDD-001, ADR-015 | TST-CAN-010, TST-PWA-013 | Implemented (local static; browser interaction pending) |
 | NFR-REL-001 | RISK-004 | ADR-013, ADR-015 | TST-PWA-012 | Partial |
 | NFR-REL-002 | RISK-004 | ADR-015 | TST-PWA-013 | Partial |
 | NFR-AVA-001 | RISK-011 | ADR-017 | TST-PWA-014 | Partial; navegador físico pendiente |

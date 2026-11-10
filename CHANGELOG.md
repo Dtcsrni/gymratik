@@ -2,6 +2,13 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.5] - 2026-11-10
+
+### Changed
+
+- El progreso se identifica como guardado automático; completar la última serie cierra la rutina sin pulsar un botón adicional.
+- El cierre manual temprano se presenta como opcional y omitir el último ejercicio registra automáticamente una sesión parcial.
+
 ## [0.7.4] - 2026-11-10
 
 ### Added
