@@ -2,6 +2,13 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.16] - 2026-11-11
+
+### Changed
+
+- El resumen de sesión usa ilustraciones musculares anatómicas locales, anterior y posterior, del segmento con mayor trabajo registrado.
+- Cada barra muestra series confirmadas frente a las prescritas para el grupo y llega al 100 % al completar su volumen previsto.
+
 ## [0.7.15] - 2026-11-10
 
 ### Changed

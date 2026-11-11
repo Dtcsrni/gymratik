@@ -1882,10 +1882,18 @@ def validate_completed_session_celebration(browser, name: str, sex: str, variant
     page.wait_for_function("document.querySelector('#summaryActivityStatus')?.dataset.activity === 'complete'")
     page.wait_for_function("expected => window.gymratikMascotVariant === expected", arg=variant)
     assert_mascot(page, variant, "celebration")
-    recap_graphs = page.locator("#sessionRecap").evaluate("element => ({percent: element.querySelector('#sessionRingPercent')?.textContent, ringLabel: element.querySelector('#sessionProgressRing')?.getAttribute('aria-label'), muscleRows: element.querySelectorAll('.sessionMuscleRow').length, activeRegions: element.querySelectorAll('.muscleHotspot.isActive').length, hotspotMotion: getComputedStyle(element.querySelector('.muscleHotspot.isActive')).animationName})")
-    if recap_graphs["percent"] != "100%" or "series confirmadas" not in (recap_graphs["ringLabel"] or "") or recap_graphs["muscleRows"] < 1 or recap_graphs["activeRegions"] < 1 or recap_graphs["hotspotMotion"] != "muscleGrowthPulse":
+    page.locator("#sessionMuscleMap").scroll_into_view_if_needed()
+    page.wait_for_function("[...document.querySelectorAll('#sessionMuscleMap img')].length === 2 && [...document.querySelectorAll('#sessionMuscleMap img')].every(image => image.complete && image.naturalWidth > 0)")
+    recap_graphs = page.locator("#sessionRecap").evaluate("element => ({percent: element.querySelector('#sessionRingPercent')?.textContent, ringLabel: element.querySelector('#sessionProgressRing')?.getAttribute('aria-label'), muscleRows: element.querySelectorAll('.sessionMuscleRow').length, anatomyImages: [...element.querySelectorAll('#sessionMuscleMap img')].map(image => ({src: image.getAttribute('src'), animation: getComputedStyle(image).animationName})), completeBars: [...element.querySelectorAll('.sessionMuscleBar')].every(bar => bar.getAttribute('aria-valuenow') === bar.getAttribute('aria-valuemax'))})")
+    if recap_graphs["percent"] != "100%" or "series confirmadas" not in (recap_graphs["ringLabel"] or "") or recap_graphs["muscleRows"] < 1 or len(recap_graphs["anatomyImages"]) != 2 or not recap_graphs["completeBars"] or any("musculos_generados/" not in image["src"] or image["animation"] != "muscleGrowthPulse" for image in recap_graphs["anatomyImages"]):
         context.close()
-        raise AssertionError(f"{name}: faltan gráficas de progreso o activación muscular: {recap_graphs}")
+        raise AssertionError(f"{name}: faltan ilustraciones anatómicas cargadas, barras completas o progreso: {recap_graphs}")
+    page.emulate_media(reduced_motion="reduce")
+    reduced_motion_state = page.locator("#sessionMuscleMap").evaluate("element => [...element.querySelectorAll('img')].map(image => ({animation: getComputedStyle(image).animationName, willChange: getComputedStyle(image).willChange, glow: getComputedStyle(image.parentElement, '::after').animationName}))")
+    if any(image["animation"] != "none" or image["willChange"] != "auto" or image["glow"] != "none" for image in reduced_motion_state):
+        context.close()
+        raise AssertionError(f"{name}: las ilustraciones musculares ignoran movimiento reducido: {reduced_motion_state}")
+    page.emulate_media(reduced_motion="no-preference")
     if page.locator(".exerciseTimerChip[data-kind^='active-']").count() != 0:
         context.close()
         raise AssertionError(f"{name}: quedó animado un cronómetro de serie/descanso tras completar la rutina")

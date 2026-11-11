@@ -133,11 +133,19 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
                 self.assertIn('id="sessionProgressRing"', source)
                 self.assertIn('id="sessionRingProgress"', source)
                 self.assertIn('id="sessionMuscleMap"', source)
+                self.assertIn('id="sessionAnatomyAnterior"', source)
+                self.assertIn('id="sessionAnatomyPosterior"', source)
+                for anatomy_asset in ("upper_anterior_anatomy_v1.webp", "upper_posterior_anatomy_v1.webp", "lower_anterior_anatomy_v1.webp", "lower_posterior_anatomy_v1.webp"):
+                    self.assertIn(anatomy_asset, source)
                 self.assertIn('id="sessionMuscleRows"', source)
                 self.assertIn("const groupCounts = new Map()", source)
-                self.assertIn("if (!row?.done) return", source)
+                self.assertIn("current.planned += item.seriesKeys.length", source)
+                self.assertIn("filter(([, count]) => count.done > 0)", source)
+                self.assertIn("aria-valuemax", source)
+                self.assertIn("count.done / Math.max(1, count.planned)", source)
                 self.assertIn("muscleGrowthPulse", source)
-                self.assertIn("El pulso es decorativo; no mide crecimiento muscular", source)
+                self.assertIn(".muscleAnatomyFigure img,.muscleAnatomyFigure::after,.muscleVizPulseLabel i{animation:none!important}", source)
+                self.assertIn("Ilustración anatómica educativa", source)
                 self.assertIn("sessionRingPercent", source)
 
     def test_translucent_summary_state_colors_keep_wcag_aa_text_contrast(self) -> None:
@@ -1494,7 +1502,7 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
         for path in sorted(CANONICAL.glob("*.html")):
             with self.subTest(routine=path.name):
                 source = path.read_text(encoding="utf-8")
-                self.assertEqual(source.count('data-enhancement="exercise-focus-occupied-quote-v5"'), 2)
+                self.assertEqual(source.count('data-enhancement="exercise-focus-occupied-quote-v6"'), 2)
                 self.assertEqual(source.count('data-enhancement="section-ledger-load-v2"'), 2)
                 self.assertIn('data-machine-occupied="true"', source)
                 self.assertIn("setFocusedCard", source)
