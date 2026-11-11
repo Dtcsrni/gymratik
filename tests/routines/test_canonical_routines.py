@@ -6,6 +6,7 @@ import json
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 from html import unescape
 from html.parser import HTMLParser
 from pathlib import Path
@@ -17,6 +18,8 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from validate_canonical_routines import validate_path  # noqa: E402
 from build_fitness_quotes_js import EDITORIAL_QUOTES, compact_payload  # noqa: E402
+from apply_hypertrophy_4day_contract import apply_interaction_redesign  # noqa: E402
+import validate_repository  # noqa: E402
 from standardize_muscle_visuals import (  # noqa: E402
     close_unterminated_segmented_progress_style,
     standardize_offline_image_sources,
@@ -41,6 +44,34 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
             with self.subTest(routine=path.name):
                 self.assertEqual(source.count("const renderSessionRecap = complete =>"), 1)
                 self.assertEqual(source.count("const updateSessionCompletion = (celebrate = false) =>"), 1)
+
+    def test_interaction_generator_collapses_repeated_session_recap_blocks(self) -> None:
+        path = CANONICAL / "Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html"
+        source = path.read_text(encoding="utf-8")
+        block_start = source.index("  const renderSessionRecap = complete => {")
+        block_end = source.index("\n  const updateTracker = (tracker, celebrate = false) => {", block_start)
+        recap_block = source[block_start:block_end]
+        duplicated = source[:block_end] + "\n" + recap_block + source[block_end:]
+
+        normalized = apply_interaction_redesign(duplicated)
+
+        self.assertEqual(normalized.count("const renderSessionRecap = complete =>"), 1)
+        self.assertEqual(normalized.count("const updateSessionCompletion = (celebrate = false) =>"), 1)
+
+    def test_repository_validator_blocks_duplicate_session_script_declarations(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            routine = Path(directory) / "Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html"
+            routine.write_text(
+                "<script>const renderSessionRecap = () => {}; const renderSessionRecap = () => {}; "
+                "const updateSessionCompletion = () => {};</script>",
+                encoding="utf-8",
+            )
+            errors: list[str] = []
+            with patch.object(validate_repository, "CANONICAL_ROUTINES_DIR", Path(directory)):
+                validate_repository.validate_routine_script_contract(errors)
+
+        self.assertEqual(len(errors), 1)
+        self.assertIn("renderSessionRecap 2 veces", errors[0])
 
     def test_all_days_have_realistic_warmup_and_cardio_durations(self) -> None:
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):

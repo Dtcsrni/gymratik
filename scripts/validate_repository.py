@@ -166,6 +166,22 @@ def validate_routine_media(errors: list[str]) -> None:
         errors.extend(validate_path(path))
 
 
+def validate_routine_script_contract(errors: list[str]) -> None:
+    """Reject the duplicate top-level declarations that disabled routine scripts."""
+    declarations = {
+        "renderSessionRecap": re.compile(r"\bconst\s+renderSessionRecap\s*="),
+        "updateSessionCompletion": re.compile(r"\bconst\s+updateSessionCompletion\s*="),
+    }
+    for path in sorted(CANONICAL_ROUTINES_DIR.glob("Rutina_Dia_*_V1.html")):
+        source = path.read_text(encoding="utf-8")
+        for name, pattern in declarations.items():
+            count = len(pattern.findall(source))
+            if count != 1:
+                errors.append(
+                    f"{path.name} declara {name} {count} veces; se requiere exactamente una para que el script de rutina sea válido"
+                )
+
+
 def main() -> int:
     errors: list[str] = []
     validate_json(errors)
@@ -173,6 +189,7 @@ def main() -> int:
     validate_requirement_traceability(errors)
     validate_identifiers(errors)
     validate_sensitive_names(errors)
+    validate_routine_script_contract(errors)
     validate_routine_media(errors)
 
     if errors:
