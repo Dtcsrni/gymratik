@@ -419,7 +419,7 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
         source = (CANONICAL / "Rutina_Dia_1_Espalda_Biceps_V1.html").read_text(
             encoding="utf-8"
         )
-        with tempfile.TemporaryDirectory(dir=ROOT / "tmp") as directory:
+        with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "Rutina_Dia_1_Espalda_Biceps_V1.html"
             path.write_text(source.replace('data-exercise="3"', 'data-exercise="5"', 1), encoding="utf-8")
             errors = validate_path(path)
@@ -439,7 +439,7 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
         source = (CANONICAL / "Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html").read_text(
             encoding="utf-8"
         )
-        with tempfile.TemporaryDirectory(dir=ROOT / "tmp") as directory:
+        with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html"
             path.write_text(source.replace('data-next="2"', 'data-next="1"', 1), encoding="utf-8")
             errors = validate_path(path)
