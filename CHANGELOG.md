@@ -2,6 +2,13 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.6] - 2026-11-10
+
+### Fixed
+
+- Se elimina la duplicación de funciones en las rutinas que impedía analizar y ejecutar su JavaScript; vuelve a responder el calentamiento y se aplica la mascota elegida en el perfil.
+- La regeneración del contrato de cuatro días deja de acumular declaraciones y código repetido.
+
 ## [0.7.5] - 2026-11-10
 
 ### Changed

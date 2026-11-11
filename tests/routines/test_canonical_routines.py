@@ -35,6 +35,13 @@ CANONICAL = ROOT / "data" / "rutinas_autocontenidas" / "canonicas"
 
 
 class CanonicalRoutineValidationTests(unittest.TestCase):
+    def test_session_recap_has_one_lexical_declaration_per_routine(self) -> None:
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            source = path.read_text(encoding="utf-8")
+            with self.subTest(routine=path.name):
+                self.assertEqual(source.count("const renderSessionRecap = complete =>"), 1)
+                self.assertEqual(source.count("const updateSessionCompletion = (celebrate = false) =>"), 1)
+
     def test_all_days_have_realistic_warmup_and_cardio_durations(self) -> None:
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
             source = path.read_text(encoding="utf-8")

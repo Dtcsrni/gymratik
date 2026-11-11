@@ -577,9 +577,15 @@ def apply_interaction_redesign(source: str) -> str:
     source = re.sub(r'(<meta\b(?=[^>]*\bname=["\']viewport["\'])[^>]*\bcontent=["\'])([^"\']*)(["\'][^>]*>)', lambda m: m.group(1) + re.sub(r',?\s*(?:maximum-scale|user-scalable)=[^,]+', '', m.group(2)) + ', maximum-scale=1, user-scalable=no' + m.group(3), source, count=1, flags=re.I)
     if 'data-enhancement="exercise-focus-occupied-quote-v4"' not in source:
         source = source.replace('</body>', INTERACTION_REDESIGN + '\n</body>', 1)
-    source = source.replace(
-        'item.performancePanel = performancePanel;',
-        'item.performancePanel = performancePanel; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save;',
+    if 'performancePanel.__routineItem = item;' not in source:
+        source = source.replace(
+            'item.performancePanel = performancePanel;',
+            'item.performancePanel = performancePanel; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save;',
+        )
+    source = re.sub(
+        r'(item\.performancePanel = performancePanel;)(?:\s*performancePanel\.__routineItem = item; performancePanel\.__routineState = state; performancePanel\.__persistRoutineState = save;)+',
+        r'\1 performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save;',
+        source,
     )
     if 'item.warmupLoadExact' not in source:
         source = source.replace(
@@ -596,11 +602,21 @@ def apply_interaction_redesign(source: str) -> str:
         )
     source = source.replace(
         'if (Number.isFinite(storedKg)) item.previousLoadKg = storedKg;',
-        'if (Number.isFinite(storedKg)) item.previousLoadKg = storedKg; item.updateNormalLast?.();',
+        'if (Number.isFinite(storedKg)) { item.previousLoadKg = storedKg; item.updateNormalLast?.(); }',
+    )
+    source = re.sub(
+        r'(?m)^(\s*if \(Number\.isFinite\(storedKg\)\) \{ item\.previousLoadKg = storedKg; item\.updateNormalLast\?\.\(\); \})(?: item\.updateNormalLast\?\.\(\);)+[ \t]*$',
+        r'\1',
+        source,
     )
     source = source.replace(
         'item.previousLoadKg = loadKg;\n      } else if (load !== null) item.previousLoadKg = loadKg;',
         'item.previousLoadKg = loadKg; item.updateNormalLast?.();\n      } else if (load !== null) { item.previousLoadKg = loadKg; item.updateNormalLast?.(); }',
+    )
+    source = re.sub(
+        r'(item\.updateNormalLast\?\.\(\);)(?:\s*item\.updateNormalLast\?\.\(\);)+',
+        r'\1',
+        source,
     )
     if 'data-enhancement="section-ledger-load-v2"' not in source:
         source = source.replace('</body>', SECTION_LOAD_REDESIGN + '\n</body>', 1)
@@ -614,7 +630,7 @@ def apply_interaction_redesign(source: str) -> str:
         if inserted != 1:
             raise ValueError("No se encontró el punto de inserción del resumen de sesión")
     source, recap_functions = re.subn(
-        r'  const updateSessionCompletion = \(celebrate = false\) => \{.*?\n  \};',
+        r'  const renderSessionRecap = complete => \{.*?(?=\n  const updateTracker = \(tracker, celebrate = false\) => \{)',
         SESSION_COMPLETION_UPDATE,
         source,
         count=1,
@@ -712,6 +728,7 @@ def apply_interaction_redesign(source: str) -> str:
         "    state = {};\n    delete document.getElementById('finishDay')?.dataset.saveFailed;\n    save();",
         1,
     )
+    source = re.sub(r'\n{3,}(?=<style data-enhancement="exercise-focus-occupied-quote-v4">)', '\n\n', source)
     return source
 
 

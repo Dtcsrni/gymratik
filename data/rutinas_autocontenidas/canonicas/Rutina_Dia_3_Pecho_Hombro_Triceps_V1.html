@@ -3794,7 +3794,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     const loadInput = document.createElement('input'); loadInput.className = 'performanceLoad'; loadInput.type = 'range'; loadInput.min = '0'; loadInput.max = '1000'; loadInput.step = '2.5'; loadInput.value = '0'; loadInput.setAttribute('aria-label', `Carga utilizada en ${item.title}`); loadLabel.append(loadHead, loadOutputRow, loadInput);
     const progressionCue = document.createElement('p'); progressionCue.className = 'progressionCue'; progressionCue.setAttribute('role', 'status'); progressionCue.textContent = `Registra repeticiones y carga para completar. Si no conoces algún dato, toca «Quitar» y podrás continuar después de confirmar que quedará sin registrar. Rango de carga: ${item.performanceLoadProfile.minKg}–${item.performanceLoadProfile.maxKg} kg.`;
     performancePanel.append(repsLabel, loadLabel, progressionCue);
-    item.performancePanel = performancePanel; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save;
+    item.performancePanel = performancePanel; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save;
     item.performanceReps = repsInput;
     item.performanceRepsOutput = repsOutput;
     item.performanceLoad = loadInput;
@@ -3902,7 +3902,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       const latestLoadRecord = item.performanceHistory.flatMap(session => (session.performance || []).filter(record => record.exerciseId === String(item.index + 1)).map(record => ({ ...record, _sessionUpdatedAt: Number(session.endedAt || session.updatedAt || 0) }))).filter(record => record.loadSelected !== false && record.load !== null && record.load !== undefined && String(record.load).trim() !== '' && Number.isFinite(Number(record.load))).sort((a, b) => Number(b.updatedAt || b._sessionUpdatedAt || 0) - Number(a.updatedAt || a._sessionUpdatedAt || 0))[0];
       if (latestLoadRecord) {
         const storedKg = Number.isFinite(Number(latestLoadRecord.loadKg)) ? Number(latestLoadRecord.loadKg) : latestLoadRecord.loadUnit === 'lb' ? Number(latestLoadRecord.load) * 0.45359237 : Number(latestLoadRecord.load);
-        if (Number.isFinite(storedKg)) item.previousLoadKg = storedKg; item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.(); item.updateNormalLast?.();
+        if (Number.isFinite(storedKg)) { item.previousLoadKg = storedKg; item.updateNormalLast?.(); }
         if (!savedDraft && !item.performanceLoadSelected && !isExerciseStarted(item) && Number.isFinite(storedKg)) {
           const factor = item.performanceLoadUnit === 'lb' ? 1 / 0.45359237 : 1;
           const step = item.performanceLoadUnit === 'lb' ? 5 : item.performanceLoadProfile.stepKg;
@@ -4780,191 +4780,6 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     delete timingRoot.exercises[String(item.index + 1)];
     save();
     updateTracker(item.tracker, false);
-  };
-  const renderSessionRecap = complete => {
-    const rows = exerciseItems.map(snapshot);
-    const doneSeries = rows.reduce((sum, row) => sum + row.done, 0);
-    const completedExercises = rows.filter(row => row.complete && !row.skipped).length;
-    const skippedExercises = rows.filter(row => row.skipped).length;
-    const recordedReps = [];
-    exerciseItems.forEach(item => item.seriesKeys.forEach((key, index) => {
-      if (state[key] !== true) return;
-      const record = state.__performance?.[String(item.index + 1)]?.[key];
-      const reps = Number(record?.reps);
-      if (record && Number.isInteger(reps) && reps >= 1 && reps <= 100) recordedReps.push({ reps, exercise: item.title, setNumber: index + 1 });
-    }));
-    const totalReps = recordedReps.reduce((sum, record) => sum + record.reps, 0);
-    const bestSet = recordedReps.reduce((best, record) => !best || record.reps > best.reps ? record : best, null);
-    const setText = (id, value) => { const node = document.getElementById(id); if (node) node.textContent = String(value); };
-    const timing = state.__timing || {};
-    const elapsedMs = Number(timing.sessionStartedAt) > 0 && Number(timing.sessionEndedAt) >= Number(timing.sessionStartedAt)
-      ? Number(timing.sessionEndedAt) - Number(timing.sessionStartedAt) : 0;
-    const elapsedMinutes = Math.floor(elapsedMs / 60000);
-    const elapsedHours = Math.floor(elapsedMinutes / 60);
-    const duration = elapsedMs < 1000 ? '—' : elapsedHours ? `${elapsedHours} h ${elapsedMinutes % 60} min` : elapsedMinutes ? `${elapsedMinutes} min` : '<1 min';
-    setText('sessionRecapSets', `${doneSeries}/${plannedSeries}`);
-    setText('sessionRecapExercises', `${completedExercises}/${exerciseItems.length}`);
-    setText('sessionRecapReps', totalReps ? totalReps : '—');
-    setText('sessionRecapSkipped', skippedExercises);
-    setText('sessionRecapDuration', duration);
-    const kicker = completionPanel.querySelector('.sessionCompletionKicker');
-    const title = document.getElementById('session-completion-title');
-    if (kicker) kicker.textContent = complete ? 'RUTINA COMPLETADA' : 'SESIÓN GUARDADA · PROGRESO PARCIAL';
-    if (title) title.textContent = complete ? '¡Día completo!' : 'Buen trabajo. Día guardado.';
-    const fact = bestSet
-      ? `Dato curioso: tu serie con más repeticiones fue de ${bestSet.reps} en ${bestSet.exercise} · serie ${bestSet.setNumber}.`
-      : doneSeries
-        ? `Dato curioso: confirmaste ${doneSeries} de ${plannedSeries} series (${Math.round(doneSeries / Math.max(1, plannedSeries) * 100)} % del plan).`
-        : 'Dato curioso: cerraste el día sin series confirmadas; las aproximaciones no cuentan como series de trabajo.';
-    setText('sessionFunFact', fact);
-  };
-  const renderSessionRecap = complete => {
-    const rows = exerciseItems.map(snapshot);
-    const doneSeries = rows.reduce((sum, row) => sum + row.done, 0);
-    const completedExercises = rows.filter(row => row.complete && !row.skipped).length;
-    const skippedExercises = rows.filter(row => row.skipped).length;
-    const recordedReps = [];
-    exerciseItems.forEach(item => item.seriesKeys.forEach((key, index) => {
-      if (state[key] !== true) return;
-      const record = state.__performance?.[String(item.index + 1)]?.[key];
-      const reps = Number(record?.reps);
-      if (record && Number.isInteger(reps) && reps >= 1 && reps <= 100) recordedReps.push({ reps, exercise: item.title, setNumber: index + 1 });
-    }));
-    const totalReps = recordedReps.reduce((sum, record) => sum + record.reps, 0);
-    const bestSet = recordedReps.reduce((best, record) => !best || record.reps > best.reps ? record : best, null);
-    const setText = (id, value) => { const node = document.getElementById(id); if (node) node.textContent = String(value); };
-    const timing = state.__timing || {};
-    const elapsedMs = Number(timing.sessionStartedAt) > 0 && Number(timing.sessionEndedAt) >= Number(timing.sessionStartedAt)
-      ? Number(timing.sessionEndedAt) - Number(timing.sessionStartedAt) : 0;
-    const elapsedMinutes = Math.floor(elapsedMs / 60000);
-    const elapsedHours = Math.floor(elapsedMinutes / 60);
-    const duration = elapsedMs < 1000 ? '—' : elapsedHours ? `${elapsedHours} h ${elapsedMinutes % 60} min` : elapsedMinutes ? `${elapsedMinutes} min` : '<1 min';
-    setText('sessionRecapSets', `${doneSeries}/${plannedSeries}`);
-    setText('sessionRecapExercises', `${completedExercises}/${exerciseItems.length}`);
-    setText('sessionRecapReps', totalReps ? totalReps : '—');
-    setText('sessionRecapSkipped', skippedExercises);
-    setText('sessionRecapDuration', duration);
-    const kicker = completionPanel.querySelector('.sessionCompletionKicker');
-    const title = document.getElementById('session-completion-title');
-    if (kicker) kicker.textContent = complete ? 'RUTINA COMPLETADA' : 'SESIÓN GUARDADA · PROGRESO PARCIAL';
-    if (title) title.textContent = complete ? '¡Día completo!' : 'Buen trabajo. Día guardado.';
-    const fact = bestSet
-      ? `Dato curioso: tu serie con más repeticiones fue de ${bestSet.reps} en ${bestSet.exercise} · serie ${bestSet.setNumber}.`
-      : doneSeries
-        ? `Dato curioso: confirmaste ${doneSeries} de ${plannedSeries} series (${Math.round(doneSeries / Math.max(1, plannedSeries) * 100)} % del plan).`
-        : 'Dato curioso: cerraste el día sin series confirmadas; las aproximaciones no cuentan como series de trabajo.';
-    setText('sessionFunFact', fact);
-  };
-  const renderSessionRecap = complete => {
-    const rows = exerciseItems.map(snapshot);
-    const doneSeries = rows.reduce((sum, row) => sum + row.done, 0);
-    const completedExercises = rows.filter(row => row.complete && !row.skipped).length;
-    const skippedExercises = rows.filter(row => row.skipped).length;
-    const recordedReps = [];
-    exerciseItems.forEach(item => item.seriesKeys.forEach((key, index) => {
-      if (state[key] !== true) return;
-      const record = state.__performance?.[String(item.index + 1)]?.[key];
-      const reps = Number(record?.reps);
-      if (record && Number.isInteger(reps) && reps >= 1 && reps <= 100) recordedReps.push({ reps, exercise: item.title, setNumber: index + 1 });
-    }));
-    const totalReps = recordedReps.reduce((sum, record) => sum + record.reps, 0);
-    const bestSet = recordedReps.reduce((best, record) => !best || record.reps > best.reps ? record : best, null);
-    const setText = (id, value) => { const node = document.getElementById(id); if (node) node.textContent = String(value); };
-    const timing = state.__timing || {};
-    const elapsedMs = Number(timing.sessionStartedAt) > 0 && Number(timing.sessionEndedAt) >= Number(timing.sessionStartedAt)
-      ? Number(timing.sessionEndedAt) - Number(timing.sessionStartedAt) : 0;
-    const elapsedMinutes = Math.floor(elapsedMs / 60000);
-    const elapsedHours = Math.floor(elapsedMinutes / 60);
-    const duration = elapsedMs < 1000 ? '—' : elapsedHours ? `${elapsedHours} h ${elapsedMinutes % 60} min` : elapsedMinutes ? `${elapsedMinutes} min` : '<1 min';
-    setText('sessionRecapSets', `${doneSeries}/${plannedSeries}`);
-    setText('sessionRecapExercises', `${completedExercises}/${exerciseItems.length}`);
-    setText('sessionRecapReps', totalReps ? totalReps : '—');
-    setText('sessionRecapSkipped', skippedExercises);
-    setText('sessionRecapDuration', duration);
-    const kicker = completionPanel.querySelector('.sessionCompletionKicker');
-    const title = document.getElementById('session-completion-title');
-    if (kicker) kicker.textContent = complete ? 'RUTINA COMPLETADA' : 'SESIÓN GUARDADA · PROGRESO PARCIAL';
-    if (title) title.textContent = complete ? '¡Día completo!' : 'Buen trabajo. Día guardado.';
-    const fact = bestSet
-      ? `Dato curioso: tu serie con más repeticiones fue de ${bestSet.reps} en ${bestSet.exercise} · serie ${bestSet.setNumber}.`
-      : doneSeries
-        ? `Dato curioso: confirmaste ${doneSeries} de ${plannedSeries} series (${Math.round(doneSeries / Math.max(1, plannedSeries) * 100)} % del plan).`
-        : 'Dato curioso: cerraste el día sin series confirmadas; las aproximaciones no cuentan como series de trabajo.';
-    setText('sessionFunFact', fact);
-  };
-  const renderSessionRecap = complete => {
-    const rows = exerciseItems.map(snapshot);
-    const doneSeries = rows.reduce((sum, row) => sum + row.done, 0);
-    const completedExercises = rows.filter(row => row.complete && !row.skipped).length;
-    const skippedExercises = rows.filter(row => row.skipped).length;
-    const recordedReps = [];
-    exerciseItems.forEach(item => item.seriesKeys.forEach((key, index) => {
-      if (state[key] !== true) return;
-      const record = state.__performance?.[String(item.index + 1)]?.[key];
-      const reps = Number(record?.reps);
-      if (record && Number.isInteger(reps) && reps >= 1 && reps <= 100) recordedReps.push({ reps, exercise: item.title, setNumber: index + 1 });
-    }));
-    const totalReps = recordedReps.reduce((sum, record) => sum + record.reps, 0);
-    const bestSet = recordedReps.reduce((best, record) => !best || record.reps > best.reps ? record : best, null);
-    const setText = (id, value) => { const node = document.getElementById(id); if (node) node.textContent = String(value); };
-    const timing = state.__timing || {};
-    const elapsedMs = Number(timing.sessionStartedAt) > 0 && Number(timing.sessionEndedAt) >= Number(timing.sessionStartedAt)
-      ? Number(timing.sessionEndedAt) - Number(timing.sessionStartedAt) : 0;
-    const elapsedMinutes = Math.floor(elapsedMs / 60000);
-    const elapsedHours = Math.floor(elapsedMinutes / 60);
-    const duration = elapsedMs < 1000 ? '—' : elapsedHours ? `${elapsedHours} h ${elapsedMinutes % 60} min` : elapsedMinutes ? `${elapsedMinutes} min` : '<1 min';
-    setText('sessionRecapSets', `${doneSeries}/${plannedSeries}`);
-    setText('sessionRecapExercises', `${completedExercises}/${exerciseItems.length}`);
-    setText('sessionRecapReps', totalReps ? totalReps : '—');
-    setText('sessionRecapSkipped', skippedExercises);
-    setText('sessionRecapDuration', duration);
-    const kicker = completionPanel.querySelector('.sessionCompletionKicker');
-    const title = document.getElementById('session-completion-title');
-    if (kicker) kicker.textContent = complete ? 'RUTINA COMPLETADA · GUARDADO AUTOMÁTICO' : 'SESIÓN GUARDADA · PROGRESO PARCIAL';
-    if (title) title.textContent = complete ? '¡Día completo!' : 'Buen trabajo. Día guardado.';
-    const fact = bestSet
-      ? `Dato curioso: tu serie con más repeticiones fue de ${bestSet.reps} en ${bestSet.exercise} · serie ${bestSet.setNumber}.`
-      : doneSeries
-        ? `Dato curioso: confirmaste ${doneSeries} de ${plannedSeries} series (${Math.round(doneSeries / Math.max(1, plannedSeries) * 100)} % del plan).`
-        : 'Dato curioso: cerraste el día sin series confirmadas; las aproximaciones no cuentan como series de trabajo.';
-    setText('sessionFunFact', fact);
-  };
-  const renderSessionRecap = complete => {
-    const rows = exerciseItems.map(snapshot);
-    const doneSeries = rows.reduce((sum, row) => sum + row.done, 0);
-    const completedExercises = rows.filter(row => row.complete && !row.skipped).length;
-    const skippedExercises = rows.filter(row => row.skipped).length;
-    const recordedReps = [];
-    exerciseItems.forEach(item => item.seriesKeys.forEach((key, index) => {
-      if (state[key] !== true) return;
-      const record = state.__performance?.[String(item.index + 1)]?.[key];
-      const reps = Number(record?.reps);
-      if (record && Number.isInteger(reps) && reps >= 1 && reps <= 100) recordedReps.push({ reps, exercise: item.title, setNumber: index + 1 });
-    }));
-    const totalReps = recordedReps.reduce((sum, record) => sum + record.reps, 0);
-    const bestSet = recordedReps.reduce((best, record) => !best || record.reps > best.reps ? record : best, null);
-    const setText = (id, value) => { const node = document.getElementById(id); if (node) node.textContent = String(value); };
-    const timing = state.__timing || {};
-    const elapsedMs = Number(timing.sessionStartedAt) > 0 && Number(timing.sessionEndedAt) >= Number(timing.sessionStartedAt)
-      ? Number(timing.sessionEndedAt) - Number(timing.sessionStartedAt) : 0;
-    const elapsedMinutes = Math.floor(elapsedMs / 60000);
-    const elapsedHours = Math.floor(elapsedMinutes / 60);
-    const duration = elapsedMs < 1000 ? '—' : elapsedHours ? `${elapsedHours} h ${elapsedMinutes % 60} min` : elapsedMinutes ? `${elapsedMinutes} min` : '<1 min';
-    setText('sessionRecapSets', `${doneSeries}/${plannedSeries}`);
-    setText('sessionRecapExercises', `${completedExercises}/${exerciseItems.length}`);
-    setText('sessionRecapReps', totalReps ? totalReps : '—');
-    setText('sessionRecapSkipped', skippedExercises);
-    setText('sessionRecapDuration', duration);
-    const kicker = completionPanel.querySelector('.sessionCompletionKicker');
-    const title = document.getElementById('session-completion-title');
-    if (kicker) kicker.textContent = complete ? 'RUTINA COMPLETADA · GUARDADO AUTOMÁTICO' : 'SESIÓN GUARDADA · PROGRESO PARCIAL';
-    if (title) title.textContent = complete ? '¡Día completo!' : 'Buen trabajo. Día guardado.';
-    const fact = bestSet
-      ? `Dato curioso: tu serie con más repeticiones fue de ${bestSet.reps} en ${bestSet.exercise} · serie ${bestSet.setNumber}.`
-      : doneSeries
-        ? `Dato curioso: confirmaste ${doneSeries} de ${plannedSeries} series (${Math.round(doneSeries / Math.max(1, plannedSeries) * 100)} % del plan).`
-        : 'Dato curioso: cerraste el día sin series confirmadas; las aproximaciones no cuentan como series de trabajo.';
-    setText('sessionFunFact', fact);
   };
   const renderSessionRecap = complete => {
     const rows = exerciseItems.map(snapshot);
@@ -7965,20 +7780,6 @@ button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gra
 #gymratikEncouragement .toastCopy{min-width:0;overflow-wrap:anywhere}
 @media(max-width:380px){#gymratikEncouragement{gap:.4rem;min-height:56px;padding:.35rem .65rem .35rem .4rem;font-size:.82rem}#gymratikEncouragement .toastMascot{flex-basis:46px;width:46px;height:46px}}
 </style>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 <style data-enhancement="exercise-focus-occupied-quote-v4">
 /* Separa visualmente cada ejercicio y reserva el ámbar para una máquina ocupada. */
