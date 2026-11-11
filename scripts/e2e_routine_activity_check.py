@@ -1539,7 +1539,7 @@ def validate_primary_set_buttons(browser, name: str, sex: str, exercise_limit: i
             if not hint.is_visible() or "carga ligera" not in hint.inner_text().lower():
                 context.close()
                 raise AssertionError(f"{name}: faltó el consejo visual de aproximación cuando correspondía en el ejercicio {index + 1}")
-            if card.locator('[data-load-mode="approximation"]').inner_text().strip() != "Peso de aproximación" or card.locator(".performanceLoadValue").get_attribute("data-selected") != "false" or card.locator(".performanceWarmupLoad:visible").count():
+            if card.locator('[data-load-mode="approximation"]').inner_text().strip() != "Peso de aproximación" or card.locator(".performanceLoadValue").get_attribute("data-selected") != "false" or card.locator(".performanceWarmupLoad").count():
                 context.close()
                 raise AssertionError(f"{name}: el selector no entró vacío en modo aproximación independiente en el ejercicio {index + 1}")
             select_valid_performance(card)

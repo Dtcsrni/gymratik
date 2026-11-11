@@ -61,6 +61,24 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
         self.assertEqual(normalized.count("const updateSessionCompletion = (celebrate = false) =>"), 1)
         self.assertIn('../../../page-update-client.js', normalized)
 
+    def test_interaction_generator_removes_legacy_duplicate_warmup_load_panel(self) -> None:
+        path = CANONICAL / "Rutina_Dia_1_Espalda_Biceps_V1.html"
+        source = path.read_text(encoding="utf-8")
+        start = source.index('<style data-enhancement="section-ledger-load-v2">')
+        end = source.index('</script>', source.index('<script data-enhancement="section-ledger-load-v2">', start)) + len('</script>')
+        legacy_block = source[start:end].replace(
+            "window.gymratikSyncOccupiedCard?.(card);",
+            "const warmup = document.createElement('section'); warmup.className = 'performanceWarmupLoad';\n    window.gymratikSyncOccupiedCard?.(card);",
+            1,
+        )
+        legacy = source[:start] + legacy_block + source[end:]
+
+        normalized = apply_interaction_redesign(legacy)
+
+        self.assertNotIn("performanceWarmupLoad", normalized)
+        self.assertEqual(normalized.count('data-enhancement="section-ledger-load-v2"'), 2)
+        self.assertIn("performanceNormalLast", normalized)
+
     def test_mobile_summary_and_motion_layout_are_guarded_on_all_days(self) -> None:
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
             source = path.read_text(encoding="utf-8")
@@ -1210,7 +1228,7 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 self.assertIn("state.__warmupDraft[exerciseId] = {", source)
                 self.assertIn("item.performanceLoadExact = 0;\n          item.performanceLoadSelected = false;", source)
                 self.assertIn("const load = Number(item.performanceLoadExact);", source)
-                self.assertIn(".performanceWarmupLoad{display:none!important}", source)
+                self.assertNotIn("performanceWarmupLoad", source)
                 self.assertIn("if (item) updatePendingButton(item);\n      exerciseItems.forEach(updateCompleteButton);\n      updateSummary();", source)
                 self.assertNotIn("warmup.click(); return;", source)
                 self.assertIn("longPressDetected = false; startSeriesButton.style.setProperty('--hold-progress', '0%');", source)
@@ -1438,9 +1456,10 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 self.assertIn("maximum-scale=1, user-scalable=no", source)
                 self.assertIn("__warmupPerformance", source)
                 self.assertIn("__warmupDraft", source)
-                self.assertIn("item.warmupLoadExact", source)
+                self.assertNotIn("item.warmupLoadExact", source)
+                self.assertNotIn("performanceWarmupLoad", source)
                 self.assertIn("Última serie normal registrada", source)
-                self.assertIn("Última aproximación registrada", source)
+                self.assertIn("Peso de aproximación", source)
                 self.assertIn("routineSectionStamp", source)
                 self.assertIn("sessionCompletionCopy p#motivationMessage", source)
                 self.assertIn('id="sessionRecap"', source)

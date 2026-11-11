@@ -383,22 +383,10 @@ SECTION_LOAD_REDESIGN = r'''<style data-enhancement="section-ledger-load-v2">
 .card .routineSectionStamp[data-section="series"]{color:#c2a4ff;background:rgba(71,48,116,.2)}
 .card .routineSectionStamp[data-section="visual"]{color:#89baff;background:rgba(41,67,125,.22)}
 .card .routineSectionStamp[data-section="technique"]{color:#ffd277;background:rgba(111,77,22,.2)}
-.performanceWarmupLoad{display:none!important}
 .performanceEntry{border-left:3px solid #65f2dd!important}
 .performanceNormalLoad{border-color:rgba(101,242,221,.35)!important;background:linear-gradient(145deg,rgba(9,43,47,.72),rgba(5,22,34,.96))!important}
-.performanceWarmupLoad{display:grid;gap:.4rem;margin:.55rem 0;padding:.62rem;border:1px solid rgba(255,209,102,.55);border-left:3px solid #ffd166;border-radius:.78rem;background:linear-gradient(145deg,rgba(81,60,22,.5),rgba(27,27,22,.72))}
-.performanceWarmupLoadHead{display:flex;align-items:center;justify-content:space-between;gap:.55rem;color:#ffe5a4;font-size:.76rem;font-weight:950}
-.performanceWarmupLoadHead label{display:flex;align-items:center;gap:.4rem;min-width:0}
-.performanceWarmupLoadHead label::before{content:"A";display:grid;place-items:center;width:1.35rem;height:1.35rem;flex:none;border:1px solid rgba(255,209,102,.68);border-radius:.38rem;background:rgba(132,91,20,.48);color:#fff0bf;font-size:.7rem}
-.performanceWarmupLoadControls{display:grid;grid-template-columns:minmax(0,1fr) 4.2rem auto;align-items:center;gap:.4rem}
-.performanceWarmupLoadInput{width:100%;min-width:0;min-height:44px;padding:.45rem .55rem;border:1px solid rgba(255,209,102,.55);border-radius:.58rem;background:rgba(9,23,31,.92);color:#fff4d3;font:inherit;font-size:1rem;font-weight:900;text-align:center;font-variant-numeric:tabular-nums}
-.performanceWarmupLoadUnit{min-height:44px;padding:.3rem;border:1px solid rgba(255,209,102,.45);border-radius:.55rem;background:#211d12;color:#fff0bf;font:inherit;font-weight:850}
-.performanceWarmupClear{min-height:44px;padding:.3rem .5rem;border:1px solid rgba(255,209,102,.4);border-radius:.52rem;background:rgba(91,65,20,.35);color:#ffe5a4;font:inherit;font-size:.65rem;font-weight:850}
-.performanceWarmupLast,.performanceNormalLast{margin:0;color:#c1d8df;font-size:.68rem;font-weight:800;line-height:1.4}
-.performanceWarmupLast{color:#ffe5a4}.performanceNormalLast{padding:.25rem .1rem;color:#aef5e7}
+.performanceNormalLast{margin:0;padding:.25rem .1rem;color:#aef5e7;font-size:.68rem;font-weight:800;line-height:1.4}
 .performanceEntry .progressionCue{padding:.45rem .55rem;border-top:1px solid rgba(114,220,255,.17)}
-@media(max-width:400px){.performanceWarmupLoadControls{grid-template-columns:minmax(0,1fr) 3.4rem}.performanceWarmupClear{grid-column:1/-1;min-height:38px}}
-@media(prefers-reduced-motion:reduce){.performanceWarmupLoadInput{transition:none}}
 </style>
 <script data-enhancement="section-ledger-load-v2">
 (() => {
@@ -445,79 +433,6 @@ SECTION_LOAD_REDESIGN = r'''<style data-enhancement="section-ledger-load-v2">
     item.updateNormalLast = updateNormalLast;
     item.performanceLoadUnitSelect?.addEventListener('change',updateNormalLast);
     updateNormalLast();
-    const warmup = document.createElement('section');
-    warmup.className = 'performanceWarmupLoad';
-    const head = document.createElement('div'); head.className = 'performanceWarmupLoadHead';
-    const label = document.createElement('label'); label.htmlFor = `warmup-load-${card.dataset.exerciseIndex}`; label.textContent = 'Peso de aproximación';
-    const required = document.createElement('span'); required.textContent = 'APARTE'; head.append(label,required);
-    const controls = document.createElement('div'); controls.className = 'performanceWarmupLoadControls';
-    const input = document.createElement('input'); input.id = label.htmlFor; input.type = 'number'; input.inputMode = 'decimal'; input.step = '0.1'; input.min = '0'; input.max = String(item.performanceLoadProfile.maxKg); input.className = 'performanceWarmupLoadInput'; input.setAttribute('aria-label',`Peso de aproximación en ${item.title}`); input.placeholder = 'Sin registrar';
-    const unit = document.createElement('select'); unit.className = 'performanceWarmupLoadUnit'; unit.setAttribute('aria-label',`Unidad del peso de aproximación en ${item.title}`);
-    [['kg','kg'],['lb','lb']].forEach(([value,text]) => { const option = document.createElement('option'); option.value = value; option.textContent = text; unit.append(option); });
-    const clear = document.createElement('button'); clear.type='button'; clear.className='performanceWarmupClear'; clear.textContent='Limpiar'; clear.setAttribute('aria-label',`Limpiar peso de aproximación de ${item.title}`);
-    controls.append(input,unit,clear);
-    const last = document.createElement('p'); last.className='performanceWarmupLast'; last.setAttribute('aria-live','polite');
-    warmup.append(head,controls,last);
-    const cue = panel.querySelector('.progressionCue');
-    panel.insertBefore(warmup,cue || null);
-    const warmupStored = state.__warmupPerformance?.[exerciseId];
-    const draft = state.__warmupDraft?.[exerciseId];
-    const initial = draft || warmupStored || {};
-    let warmupUnit = initial.loadUnit === 'lb' ? 'lb' : item.performanceLoadUnit;
-    let warmupSelected = initial.loadSelected === true || (initial.loadSelected !== false && initial.load !== null && initial.load !== undefined && Number(initial.load) > 0);
-    let warmupExact = Number(initial.load) || 0;
-    unit.value = warmupUnit;
-    if (warmupSelected) input.value = String(warmupExact);
-    const toKg = (value, units) => units === 'lb' ? value * 0.45359237 : value;
-    const syncWarmupBounds = () => {
-      const factor = warmupUnit === 'lb' ? 1 / 0.45359237 : 1;
-      input.min = String(Math.max(0,item.performanceLoadProfile.minKg * factor));
-      input.max = String(item.performanceLoadProfile.maxKg * factor);
-      input.step = warmupUnit === 'lb' ? '0.1' : String(item.performanceLoadProfile.stepKg);
-      input.setAttribute('aria-label',`Peso de aproximación en ${warmupUnit} para ${item.title}`);
-    };
-    const updateWarmupLast = () => {
-      const saved = state.__warmupPerformance?.[exerciseId];
-      const draftValue = state.__warmupDraft?.[exerciseId];
-      const kg = saved?.loadKg == null ? (saved?.load == null ? NaN : toKg(Number(saved.load),saved.loadUnit === 'lb' ? 'lb' : 'kg')) : Number(saved.loadKg);
-      const draftKg = draftValue?.loadKg == null ? (draftValue?.load == null ? NaN : toKg(Number(draftValue.load),draftValue.loadUnit === 'lb' ? 'lb' : 'kg')) : Number(draftValue.loadKg);
-      last.textContent = Number.isFinite(kg)
-        ? `Última aproximación registrada: ${formatKg(kg,warmupUnit)} · no cuenta como serie normal.`
-        : Number.isFinite(draftKg)
-          ? `Carga preparada para aproximación: ${formatKg(draftKg,warmupUnit)} · se guarda aparte al completar.`
-          : 'Peso de aproximación sin registrar; no se mezclará con la carga normal.';
-    };
-    const persistWarmupDraft = () => {
-      const value = Number(input.value);
-      warmupUnit = unit.value === 'lb' ? 'lb' : 'kg';
-      warmupExact = value;
-      const valueKg = toKg(value,warmupUnit);
-      warmupSelected = input.value.trim() !== '' && Number.isFinite(valueKg) && valueKg >= item.performanceLoadProfile.minKg && valueKg <= item.performanceLoadProfile.maxKg;
-      item.warmupLoadUnit = warmupUnit;
-      item.warmupLoadExact = value;
-      item.warmupLoadSelected = warmupSelected;
-      state.__warmupDraft ||= {};
-      state.__warmupDraft[exerciseId] = {load:warmupSelected ? value : null,loadUnit:warmupUnit,loadKg:warmupSelected ? valueKg : null,loadSelected:warmupSelected};
-      panel.__persistRoutineState?.();
-      updateWarmupLast();
-    };
-    item.warmupLoadUnitSelect = unit;
-    item.warmupLoadInput = input;
-    item.warmupLoadExact = warmupExact;
-    item.warmupLoadUnit = warmupUnit;
-    item.warmupLoadSelected = warmupSelected;
-    syncWarmupBounds();
-    input.addEventListener('input',persistWarmupDraft);
-    unit.addEventListener('change',() => {
-      const oldKg = warmupSelected ? toKg(Number(input.value),warmupUnit) : NaN;
-      warmupUnit = unit.value === 'lb' ? 'lb' : 'kg';
-      syncWarmupBounds();
-      if (Number.isFinite(oldKg)) input.value = String(Math.round(toKg(oldKg,warmupUnit)*10)/10);
-      persistWarmupDraft();
-    });
-    clear.addEventListener('click',() => { input.value=''; persistWarmupDraft(); });
-    item.updateWarmupLast = updateWarmupLast;
-    updateWarmupLast();
     window.gymratikSyncOccupiedCard?.(card);
   });
 })();
@@ -663,7 +578,10 @@ def apply_interaction_redesign(source: str) -> str:
         r'\1',
         source,
     )
-    if 'data-enhancement="section-ledger-load-v2"' not in source:
+    section_ledger_pattern = r'<style data-enhancement="section-ledger-load-v2">.*?</style>\s*<script data-enhancement="section-ledger-load-v2">.*?</script>'
+    if re.search(section_ledger_pattern, source, flags=re.S):
+        source = re.sub(section_ledger_pattern, lambda _: SECTION_LOAD_REDESIGN, source, count=1, flags=re.S)
+    else:
         source = source.replace('</body>', SECTION_LOAD_REDESIGN + '\n</body>', 1)
     if 'id="sessionRecap"' not in source:
         source, inserted = re.subn(

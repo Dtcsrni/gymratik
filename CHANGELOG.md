@@ -2,6 +2,12 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.10] - 2026-11-10
+
+### Fixed
+
+- Se elimina el bloque duplicado de peso de aproximación; el único selector de carga adopta ese modo solo mientras la aproximación está pendiente.
+
 ## [0.7.9] - 2026-11-10
 
 ### Fixed
