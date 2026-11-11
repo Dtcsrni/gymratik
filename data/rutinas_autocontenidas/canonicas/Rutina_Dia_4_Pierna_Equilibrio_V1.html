@@ -3050,14 +3050,14 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 <div class="sessionRecapMetric"><dt>Tiempo transcurrido</dt><dd id="sessionRecapDuration">—</dd></div>
 </dl>
 <section class="sessionMuscleViz" id="sessionMuscleViz" aria-labelledby="sessionMuscleTitle">
-<div class="muscleVizHeader"><div><h4 id="sessionMuscleTitle">Músculos trabajados</h4><p>Series confirmadas por zona</p></div><span class="muscleVizPulseLabel"><i aria-hidden="true"></i>PULSO ILUSTRATIVO</span></div>
+<div class="muscleVizHeader"><h4 id="sessionMuscleTitle">Músculos trabajados</h4></div>
 <div class="muscleVizLayout">
-<div class="sessionMuscleMap" id="sessionMuscleMap" role="group" aria-label="Ilustraciones anatómicas de los músculos trabajados">
-<figure class="muscleAnatomyFigure"><img id="sessionAnatomyAnterior" src="../../../data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/musculos_generados/upper_anterior_anatomy_v1.webp" data-upper-src="../../../data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/musculos_generados/upper_anterior_anatomy_v1.webp" data-lower-src="../../../data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/musculos_generados/lower_anterior_anatomy_v1.webp" alt="Ilustración anatómica muscular realista, vista anterior" loading="lazy" decoding="async"><figcaption>Anterior</figcaption></figure>
-<figure class="muscleAnatomyFigure"><img id="sessionAnatomyPosterior" src="../../../data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/musculos_generados/upper_posterior_anatomy_v1.webp" data-upper-src="../../../data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/musculos_generados/upper_posterior_anatomy_v1.webp" data-lower-src="../../../data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/musculos_generados/lower_posterior_anatomy_v1.webp" alt="Ilustración anatómica muscular realista, vista posterior" loading="lazy" decoding="async"><figcaption>Posterior</figcaption></figure>
+<div class="sessionMuscleMap" id="sessionMuscleMap" role="group" aria-label="Vistas anterior y posterior de los músculos trabajados">
+<figure class="muscleAnatomyFigure"><img id="sessionAnatomyAnterior" src="../../../data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/musculos_generados/upper_anterior_anatomy_v1.webp" data-upper-src="../../../data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/musculos_generados/upper_anterior_anatomy_v1.webp" data-lower-src="../../../data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/musculos_generados/lower_anterior_anatomy_v1.webp" alt="Músculos del tren superior, vista anterior" loading="lazy" decoding="async"><figcaption>Frente</figcaption></figure>
+<figure class="muscleAnatomyFigure"><img id="sessionAnatomyPosterior" src="../../../data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/musculos_generados/upper_posterior_anatomy_v1.webp" data-upper-src="../../../data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/musculos_generados/upper_posterior_anatomy_v1.webp" data-lower-src="../../../data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/musculos_generados/lower_posterior_anatomy_v1.webp" alt="Músculos del tren superior, vista posterior" loading="lazy" decoding="async"><figcaption>Espalda</figcaption></figure>
 </div>
 <ol class="sessionMuscleRows" id="sessionMuscleRows" aria-live="polite"></ol>
-</div><p class="muscleVizNote">Ilustración anatómica educativa; el pulso es decorativo y no mide crecimiento. Cada barra compara series confirmadas con las prescritas para esa zona.</p>
+</div>
 </section>
 <p class="sessionFunFact" id="sessionFunFact" role="status" aria-live="polite"></p>
 <p class="sessionRecapFoot">Solo cuentan series confirmadas; aproximaciones, cargas y repeticiones de calentamiento permanecen aparte. El tiempo incluye descansos.</p>
@@ -7879,7 +7879,7 @@ button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gra
 @media(prefers-reduced-motion:reduce){#floatingSessionSummary,#summaryToggle{scroll-behavior:auto!important;transition:none!important}}
 </style>
 
-<style data-enhancement="exercise-focus-occupied-quote-v6">
+<style data-enhancement="exercise-focus-occupied-quote-v7">
 /* Separa visualmente cada ejercicio y reserva el ámbar para una máquina ocupada. */
 main.cards article.card[data-exercise-index]{--exercise-accent:#72dcff;position:relative;border:1px solid color-mix(in srgb,var(--exercise-accent) 30%,transparent);transition:border-color .24s ease,box-shadow .24s ease,transform .24s ease}
 main.cards article.card[data-exercise-index]:focus-within,main.cards article.card[data-exercise-index].is-exercise-focused{border-color:var(--exercise-accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--exercise-accent) 22%,transparent),0 18px 42px rgba(0,0,0,.24)}
@@ -7921,28 +7921,28 @@ main.cards article.card[data-machine-occupied="true"] .machinePendingToggle{posi
 .sessionRecapMetric dt{color:#91adba;font-size:.6rem;font-weight:800;line-height:1.2}
 .sessionRecapMetric dd{margin:.2rem 0 0;color:#a9f1dd;font-size:clamp(.86rem,1.5vw,1.12rem);font-weight:950;line-height:1.1;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .sessionCompletionPanel.isPartial .sessionRecapMetric dd{color:#ffe0a0}
-.sessionMuscleViz{margin-top:.7rem;padding:.7rem;border:1px solid rgba(101,242,221,.24);border-radius:.85rem;background:radial-gradient(ellipse at 0 0,rgba(26,123,119,.18),transparent 58%),rgba(3,16,25,.48)}
+.sessionMuscleViz{position:relative;margin-top:.7rem;padding:.82rem .7rem .7rem;border:1px solid rgba(255,91,112,.38);border-radius:.9rem;background:radial-gradient(ellipse at 0 0,rgba(183,42,62,.2),transparent 56%),linear-gradient(145deg,rgba(17,27,43,.94),rgba(3,16,25,.76));box-shadow:inset 0 1px rgba(255,255,255,.045),0 12px 28px rgba(0,0,0,.16);overflow:hidden}
+.sessionMuscleViz::before{position:absolute;top:0;left:.7rem;right:.7rem;height:2px;background:linear-gradient(90deg,transparent,#f0445d 25%,#ff927d 50%,#f0445d 75%,transparent);box-shadow:0 0 14px rgba(240,68,93,.55);content:""}
 .muscleVizHeader{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.45rem}
+.muscleVizHeader h4{display:flex;align-items:center;gap:.5rem}
+.muscleVizHeader h4::before{width:.28rem;height:1.1em;border-radius:99px;background:linear-gradient(#ff6573,#bd243e);box-shadow:0 0 10px rgba(240,68,93,.44);content:""}
 .muscleVizHeader h4{margin:0;color:#e4fbff;font-size:clamp(.92rem,2vw,1.12rem);font-weight:950}
-.muscleVizHeader p{margin:.15rem 0 0;color:#a9c7d2;font-size:.72rem;font-weight:750}
-.muscleVizPulseLabel{display:inline-flex;align-items:center;gap:.32rem;padding:.24rem .4rem;border:1px solid rgba(255,209,102,.32);border-radius:999px;color:#ffe0a0;font-size:.55rem;font-weight:950;letter-spacing:.07em;white-space:nowrap}
-.muscleVizPulseLabel i{width:.42rem;height:.42rem;border-radius:50%;background:#ffd166;box-shadow:0 0 10px #ffd166;animation:musclePulseDot 1.8s ease-in-out infinite}
+.muscleVizHeader{margin-bottom:.62rem}
 .muscleVizLayout{display:grid;grid-template-columns:minmax(7.2rem,.85fr) minmax(0,1.5fr);align-items:center;gap:.55rem}
 .sessionMuscleMap{display:grid;grid-template-columns:minmax(0,1fr);gap:.36rem;width:100%;min-width:0}
-.muscleAnatomyFigure{position:relative;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:.24rem;min-width:0;margin:0;padding:.28rem;border:1px solid rgba(168,207,219,.2);border-radius:.62rem;background:linear-gradient(155deg,#f5f2e9,#dbe3df);overflow:hidden;isolation:isolate}
-.muscleAnatomyFigure::after{position:absolute;z-index:-1;inset:15% 12%;border-radius:50%;background:rgba(255,116,89,.25);filter:blur(15px);content:"";opacity:.35;animation:muscleTissueGlow 3.2s ease-in-out infinite}
+.muscleAnatomyFigure{position:relative;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:.24rem;min-width:0;margin:0;padding:.28rem;border:1px solid rgba(255,108,123,.34);border-radius:.7rem;background:linear-gradient(155deg,#f5f2e9,#dbe3df);overflow:hidden;isolation:isolate;box-shadow:inset 0 0 0 1px rgba(255,255,255,.24),0 0 18px rgba(212,42,65,.12)}
+.muscleAnatomyFigure::after{position:absolute;z-index:-1;inset:8% 8%;border-radius:50%;background:radial-gradient(ellipse,rgba(244,46,72,.58),rgba(226,54,73,.2) 48%,transparent 76%);filter:blur(19px);content:"";opacity:.5;animation:muscleTissueGlow 2.15s ease-in-out infinite;will-change:transform,opacity}
 .muscleAnatomyFigure:nth-child(2)::after{animation-delay:-1.6s}
-.muscleAnatomyFigure img{display:block;width:100%;height:8.5rem;object-fit:contain;transform-origin:50% 52%;animation:muscleGrowthPulse 3.2s ease-in-out infinite;will-change:transform}
+.muscleAnatomyFigure img{display:block;width:100%;height:8.5rem;object-fit:contain;transform-origin:50% 52%;animation:muscleGrowthPulse 2.15s cubic-bezier(.4,0,.2,1) infinite;will-change:transform}
 .muscleAnatomyFigure:nth-child(2) img{animation-delay:-1.6s}
 .muscleAnatomyFigure figcaption{overflow:hidden;color:#263a43;font-size:.52rem;font-weight:950;letter-spacing:.04em;text-align:center;text-overflow:ellipsis;text-transform:uppercase;white-space:nowrap}
 .sessionMuscleRows{display:grid;gap:.34rem;min-width:0;margin:0;padding:0;list-style:none}
 .sessionMuscleRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.14rem .4rem;align-items:center;min-width:0;padding:.3rem .42rem;border:1px solid rgba(157,204,218,.12);border-radius:.52rem;background:rgba(11,32,45,.72);animation:recapMetricIn .35s both}
 .sessionMuscleRowLabel{overflow:hidden;color:#e2f6fa;font-size:.72rem;font-weight:850;text-overflow:ellipsis;white-space:nowrap}
-.sessionMuscleRowCount{color:#a9f1dd;font-size:.68rem;font-weight:950;white-space:nowrap;font-variant-numeric:tabular-nums}
+.sessionMuscleRowCount{color:#ffb7c0;font-size:.68rem;font-weight:950;white-space:nowrap;font-variant-numeric:tabular-nums}
 .sessionMuscleBar{grid-column:1/-1;height:.32rem;overflow:hidden;border-radius:99px;background:rgba(157,204,218,.13)}
-.sessionMuscleBar span{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#28c4bd,#65f2dd,#ffd166);box-shadow:0 0 10px rgba(101,242,221,.38);transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.sessionMuscleBar span{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#b92540,#f0445d 58%,#ff9a86);box-shadow:0 0 12px rgba(240,68,93,.48);transition:width .8s cubic-bezier(.2,.8,.2,1)}
 .sessionMuscleEmpty{grid-column:1/-1;margin:0;padding:.7rem;color:#b9d2db;font-size:.78rem;line-height:1.4}
-.muscleVizNote{margin:.45rem 0 0;color:#9cb4bf;font-size:.64rem;line-height:1.35}
 .sessionFunFact{margin:.55rem 0 0;padding:.55rem .65rem;border-left:3px solid #ffd166;border-radius:.25rem .6rem .6rem .25rem;background:rgba(117,79,18,.16);color:#ffe6b3;font-size:.76rem;font-weight:850;line-height:1.4;animation:factReveal .6s .12s both}
 .sessionRecapFoot{margin:.38rem 0 0;color:#8fa9b6;font-size:.61rem;line-height:1.35}
 .motivationPortrait.isMascot{border-radius:50%!important;border-color:rgba(101,242,221,.72)!important;background:radial-gradient(circle at 50% 38%,rgba(101,242,221,.24),rgba(9,34,48,.96) 72%)!important;box-shadow:0 0 0 3px rgba(101,242,221,.09),0 7px 20px rgba(0,0,0,.28),0 0 22px rgba(101,242,221,.18)!important}
@@ -7957,11 +7957,10 @@ main.cards article.card[data-machine-occupied="true"] .machinePendingToggle{posi
 @keyframes exerciseBarPulse{from{filter:brightness(1)}to{filter:brightness(1.22)}}
 @keyframes completionMascotBounce{0%,100%{transform:translateY(1px) rotate(-2deg) scale(1)}50%{transform:translateY(-3px) rotate(2deg) scale(1.045)}}
 @keyframes completionSparkle{0%,100%{opacity:.48;transform:scale(.78) rotate(-12deg)}50%{opacity:1;transform:scale(1.16) rotate(16deg)}}
-@keyframes muscleGrowthPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
-@keyframes muscleTissueGlow{0%,100%{opacity:.22;transform:scale(.86)}50%{opacity:.68;transform:scale(1.08)}}
-@keyframes musclePulseDot{0%,100%{transform:scale(.78);opacity:.65}50%{transform:scale(1.15);opacity:1}}
+@keyframes muscleGrowthPulse{0%,100%{transform:scale(1)}48%{transform:scale(1.065)}}
+@keyframes muscleTissueGlow{0%,100%{opacity:.28;transform:scale(.78)}48%{opacity:.92;transform:scale(1.16)}}
 @keyframes snackOffer{0%,100%{transform:translate(0,0) rotate(5deg) scale(.94)}45%{transform:translate(-5px,-5px) rotate(-9deg) scale(1.06)}70%{transform:translate(-2px,-1px) rotate(2deg) scale(1)}}
-@media(max-width:640px){.floatingSessionSummary .summaryFocusBadge{font-size:.55rem}.sessionCompletionCopy p#motivationMessage{padding:.75rem .8rem .75rem 1.05rem}.sessionRecap{padding:.62rem}.sessionRecapGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:.35rem}.sessionRecapMetric{padding:.45rem}.sessionRecapMetric dt{font-size:.64rem}.sessionRecapMetric dd{font-size:.92rem}.sessionFunFact{font-size:.78rem}.sessionRecapHeader{margin-bottom:.5rem}.sessionRecapTitle{font-size:1.04rem}.sessionProgressRing{flex-basis:4rem;width:4rem;height:4rem}.sessionMuscleViz{padding:.56rem}.muscleVizLayout{grid-template-columns:minmax(6.3rem,.78fr) minmax(0,1.5fr);gap:.4rem}.muscleAnatomyFigure{padding:.2rem}.muscleAnatomyFigure img{height:7.4rem}.muscleAnatomyFigure figcaption{font-size:.45rem}.sessionMuscleRowLabel{font-size:.68rem}.sessionMuscleRowCount{font-size:.64rem}.muscleVizNote{font-size:.66rem}
+@media(max-width:640px){.floatingSessionSummary .summaryFocusBadge{font-size:.55rem}.sessionCompletionCopy p#motivationMessage{padding:.75rem .8rem .75rem 1.05rem}.sessionRecap{padding:.62rem}.sessionRecapGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:.35rem}.sessionRecapMetric{padding:.45rem}.sessionRecapMetric dt{font-size:.64rem}.sessionRecapMetric dd{font-size:.92rem}.sessionFunFact{font-size:.78rem}.sessionRecapHeader{margin-bottom:.5rem}.sessionRecapTitle{font-size:1.04rem}.sessionProgressRing{flex-basis:4rem;width:4rem;height:4rem}.sessionMuscleViz{padding:.82rem .56rem .56rem}.muscleVizLayout{grid-template-columns:minmax(6.3rem,.78fr) minmax(0,1.5fr);gap:.4rem}.muscleAnatomyFigure{padding:.2rem}.muscleAnatomyFigure img{height:7.4rem}.muscleAnatomyFigure figcaption{font-size:.45rem}.sessionMuscleRowLabel{font-size:.68rem}.sessionMuscleRowCount{font-size:.64rem}
   .sessionCompletionPanel:not([hidden]){grid-template-columns:minmax(0,1fr) 3.15rem!important;grid-template-rows:auto auto auto auto auto auto!important;align-items:start!important;gap:.3rem .45rem!important;padding:.65rem .72rem!important;overflow:hidden!important}
   .sessionCompletionPanel:not([hidden])>*{min-width:0!important;max-width:100%!important}
   .sessionCompletionPanel .completionOrb{display:none!important}
@@ -7983,7 +7982,7 @@ main.cards article.card[data-machine-occupied="true"] .machinePendingToggle{posi
   .sessionCompletionPanel .sessionRecapMetric dt{font-size:.64rem!important;line-height:1.15!important}
   .sessionCompletionPanel .sessionRecapMetric dd{margin-top:.16rem!important;font-size:.9rem!important;line-height:1.1!important}
   .sessionCompletionPanel .sessionMuscleViz{grid-column:1/-1!important;margin:.35rem 0 0!important;padding:.58rem!important}
-  .sessionCompletionPanel .muscleVizHeader h4{font-size:.95rem!important}.sessionCompletionPanel .muscleVizHeader p{font-size:.68rem!important}.sessionCompletionPanel .muscleVizPulseLabel{font-size:.5rem!important}
+  .sessionCompletionPanel .muscleVizHeader h4{font-size:1rem!important}
   .sessionCompletionPanel .sessionMuscleMap{grid-template-columns:minmax(0,1fr)!important}.sessionCompletionPanel .muscleAnatomyFigure img{height:7.2rem!important}.sessionCompletionPanel .sessionMuscleRow{padding:.28rem .34rem!important}.sessionCompletionPanel .sessionMuscleRowLabel{font-size:.65rem!important}.sessionCompletionPanel .sessionMuscleRowCount{font-size:.62rem!important}
   .sessionCompletionPanel .sessionFunFact{grid-column:1/-1!important;margin:.3rem 0 0!important;padding:.35rem .45rem!important;font-size:.64rem!important;line-height:1.25!important}
   .sessionCompletionPanel .sessionRecapFoot{margin:.24rem 0 0!important;font-size:.53rem!important;line-height:1.22!important}
@@ -7991,9 +7990,9 @@ main.cards article.card[data-machine-occupied="true"] .machinePendingToggle{posi
   .sessionCompletionPanel .newMotivation,.sessionCompletionPanel .soundToggle,.sessionCompletionPanel .hapticsToggle{flex:1 1 8rem!important;min-width:0!important;min-height:40px!important;padding:.32rem .42rem!important;font-size:.62rem!important;line-height:1.15!important}
 }
 @media(max-width:380px){.sessionCompletionPanel:not([hidden]){grid-template-columns:minmax(0,1fr) 2.7rem!important;padding:.58rem!important}.sessionCompletionPanel .motivationPhotoWrap{width:2.55rem!important}.sessionCompletionPanel .motivationPortrait{width:2.55rem!important;height:2.55rem!important}.sessionCompletionPanel .sessionRecapGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.sessionCompletionPanel #session-completion-title{font-size:1.08rem!important}.sessionCompletionPanel #motivationMessage{font-size:.85rem!important}}
-@media(prefers-reduced-motion:reduce){.floatingSessionSummary.is-exercise-focused .summaryFocusBadge,.floatingSessionSummary.is-exercise-focused .summaryToggle,.summaryExercise.isCurrent,.sessionRecap,.sessionRecapMetric,.sessionFunFact,.motivationPortrait.isMascot img,.motivationPhotoWrap::after,.completionSnack,.muscleAnatomyFigure img,.muscleAnatomyFigure::after,.muscleVizPulseLabel i{animation:none!important}.muscleAnatomyFigure img{will-change:auto}.sessionRingProgress,.sessionMuscleBar span{transition:none!important}main.cards article.card[data-exercise-index]{transition:none}}
+@media(prefers-reduced-motion:reduce){.floatingSessionSummary.is-exercise-focused .summaryFocusBadge,.floatingSessionSummary.is-exercise-focused .summaryToggle,.summaryExercise.isCurrent,.sessionRecap,.sessionRecapMetric,.sessionFunFact,.motivationPortrait.isMascot img,.motivationPhotoWrap::after,.completionSnack,.muscleAnatomyFigure img,.muscleAnatomyFigure::after{animation:none!important}.muscleAnatomyFigure img,.muscleAnatomyFigure::after{will-change:auto}.sessionRingProgress,.sessionMuscleBar span{transition:none!important}main.cards article.card[data-exercise-index]{transition:none}}
 </style>
-<script data-enhancement="exercise-focus-occupied-quote-v6">
+<script data-enhancement="exercise-focus-occupied-quote-v7">
 (() => {
   const cards = [...document.querySelectorAll('main.cards article.card[data-exercise-index]')];
   const summary = document.querySelector('.floatingSessionSummary');

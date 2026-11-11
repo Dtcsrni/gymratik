@@ -204,7 +204,7 @@ class ServiceWorkerContractTests(unittest.TestCase):
 
     def test_homepage_shows_the_active_service_worker_version(self):
         self.assertIn('id="appVersion"', self.homepage)
-        self.assertIn('class="brand-version" aria-label="Versión 0.7.16">v0.7.16', self.homepage)
+        self.assertIn('class="brand-version" aria-label="Versión 0.7.17">v0.7.17', self.homepage)
         self.assertIn("event.data?.type === 'VERSION_STATUS'", self.homepage)
         self.assertIn("postMessage({ type: 'GET_VERSION_STATUS' })", self.homepage)
         self.assertIn("cacheName: CACHE_NAME", self.service_worker)

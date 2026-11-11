@@ -144,8 +144,10 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
                 self.assertIn("aria-valuemax", source)
                 self.assertIn("count.done / Math.max(1, count.planned)", source)
                 self.assertIn("muscleGrowthPulse", source)
-                self.assertIn(".muscleAnatomyFigure img,.muscleAnatomyFigure::after,.muscleVizPulseLabel i{animation:none!important}", source)
-                self.assertIn("Ilustración anatómica educativa", source)
+                self.assertIn(".muscleAnatomyFigure img,.muscleAnatomyFigure::after{animation:none!important}", source)
+                self.assertNotIn("Ilustración anatómica educativa", source)
+                self.assertNotIn("PULSO ILUSTRATIVO", source)
+                self.assertNotIn("Series confirmadas por zona", source)
                 self.assertIn("sessionRingPercent", source)
 
     def test_translucent_summary_state_colors_keep_wcag_aa_text_contrast(self) -> None:
@@ -1502,7 +1504,7 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
         for path in sorted(CANONICAL.glob("*.html")):
             with self.subTest(routine=path.name):
                 source = path.read_text(encoding="utf-8")
-                self.assertEqual(source.count('data-enhancement="exercise-focus-occupied-quote-v6"'), 2)
+                self.assertEqual(source.count('data-enhancement="exercise-focus-occupied-quote-v7"'), 2)
                 self.assertEqual(source.count('data-enhancement="section-ledger-load-v2"'), 2)
                 self.assertIn('data-machine-occupied="true"', source)
                 self.assertIn("setFocusedCard", source)

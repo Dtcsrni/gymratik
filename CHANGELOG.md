@@ -2,6 +2,12 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.17] - 2026-11-11
+
+### Changed
+
+- El panel muscular elimina leyendas redundantes y refuerza el pulso visual rojo con un ciclo más marcado, manteniendo el ajuste de movimiento reducido.
+
 ## [0.7.16] - 2026-11-11
 
 ### Changed
