@@ -566,6 +566,8 @@ SESSION_COMPLETION_UPDATE = r'''  const renderSessionRecap = complete => {
 
 
 def apply_interaction_redesign(source: str) -> str:
+    if './page-update-client.js' not in source:
+        source = source.replace('</head>', '  <script src="../../../page-update-client.js" defer></script>\n</head>', 1)
     for previous in ("exercise-focus-occupied-quote-v2", "exercise-focus-occupied-quote-v3", "exercise-focus-occupied-quote-v4", "section-ledger-load-v1", "section-ledger-load-v2"):
         source = re.sub(
             rf'<style\s+data-enhancement="{re.escape(previous)}">.*?</script>',

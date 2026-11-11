@@ -2,6 +2,12 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.7] - 2026-11-10
+
+### Fixed
+
+- La portada, los hitos y las cuatro rutinas recargan la versión activa cuando el Service Worker aplica una actualización, manteniendo un único paquete coherente de pantallas y recursos.
+
 ## [0.7.6] - 2026-11-10
 
 ### Fixed

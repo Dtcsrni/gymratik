@@ -45,5 +45,6 @@
 2. La PWA prepara el inventario offline según la preferencia de red.
 3. Una nueva versión se guarda completa antes de reemplazar la activa.
 4. Si el usuario continúa sin descargar, la actualización queda pendiente.
+5. Al activarse la nueva versión, todas las pantallas Gymratik abiertas recargan el mismo paquete de recursos.
 
 No se definen casos de uso de nutrición, suplementos, IA, gimnasio/equipo, integraciones ni sincronización entre dispositivos dentro del alcance vigente.

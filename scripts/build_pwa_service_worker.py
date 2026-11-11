@@ -193,6 +193,7 @@ def build_precache() -> list[str]:
         "./install-gate.js",
         "./data/profile/mascot-install-phone.webp",
         "./progress-store.js",
+        "./page-update-client.js",
         "./routine-liquid-glass-v13.css",
         "./data/profile/mouse-female-effort.webp",
         "./data/profile/mouse-male-effort.webp",

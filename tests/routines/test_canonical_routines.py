@@ -44,6 +44,7 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
             with self.subTest(routine=path.name):
                 self.assertEqual(source.count("const renderSessionRecap = complete =>"), 1)
                 self.assertEqual(source.count("const updateSessionCompletion = (celebrate = false) =>"), 1)
+                self.assertIn('../../../page-update-client.js', source)
 
     def test_interaction_generator_collapses_repeated_session_recap_blocks(self) -> None:
         path = CANONICAL / "Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html"
@@ -57,6 +58,7 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
 
         self.assertEqual(normalized.count("const renderSessionRecap = complete =>"), 1)
         self.assertEqual(normalized.count("const updateSessionCompletion = (celebrate = false) =>"), 1)
+        self.assertIn('../../../page-update-client.js', normalized)
 
     def test_repository_validator_blocks_duplicate_session_script_declarations(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

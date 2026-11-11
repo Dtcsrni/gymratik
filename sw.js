@@ -1,5 +1,5 @@
-const CACHE_NAME = 'entrenamiento-pwa-4aa8ddd73aca';
-const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-5ca78cd728f0';
+const CACHE_NAME = 'entrenamiento-pwa-231c00070966';
+const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-374dfbc3c2e8';
 const PRECACHE = [
   './',
   './index.html',
@@ -20,6 +20,7 @@ const PRECACHE = [
   './install-gate.js',
   './data/profile/mascot-install-phone.webp',
   './progress-store.js',
+  './page-update-client.js',
   './routine-liquid-glass-v13.css',
   './data/profile/mouse-female-effort.webp',
   './data/profile/mouse-male-effort.webp',
@@ -176,9 +177,9 @@ const PRECACHE = [
 ];
 const PRECACHE_URLS = new Set(PRECACHE.map((path) => new URL(path, self.registration.scope).href));
 const RESOURCE_BYTES = {
-  './': 111547,
-  './index.html': 111547,
-  './records.html': 10040,
+  './': 111520,
+  './index.html': 111520,
+  './records.html': 10096,
   './records.css': 30703,
   './records.js': 35445,
   './manifest.webmanifest': 971,
@@ -195,6 +196,7 @@ const RESOURCE_BYTES = {
   './install-gate.js': 8459,
   './data/profile/mascot-install-phone.webp': 1006568,
   './progress-store.js': 44714,
+  './page-update-client.js': 343,
   './routine-liquid-glass-v13.css': 8250,
   './data/profile/mouse-female-effort.webp': 1212010,
   './data/profile/mouse-male-effort.webp': 1072538,
@@ -228,10 +230,10 @@ const RESOURCE_BYTES = {
   './data/profile/mascot-motion/states-v1/male-mobility.png': 12451,
   './data/profile/mascot-motion/states-v1/male-rest.png': 15701,
   './data/profile/mascot-motion/states-v1/male-approval.png': 12307,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html': 1112583,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html': 2706319,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html': 685825,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html': 690740,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html': 1112646,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html': 2706382,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html': 685888,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html': 690803,
   './assets/branding/gymratik-mascots-mark-v2.png': 338005,
   './data/rutinas_autocontenidas/frases_fitness/fitness_quotes.js': 5148,
   './data/rutinas_autocontenidas/frases_fitness/retratos/arnold-schwarzenegger-eu-2026.jpg': 278839,

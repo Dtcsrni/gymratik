@@ -37,6 +37,10 @@ class ServiceWorkerContractTests(unittest.TestCase):
             self.assertIn("if (cached && !bypassCache) return cached", source)
             self.assertIn("if (cached) return cached", source)
 
+    def test_shared_update_client_is_in_the_complete_version_cache(self):
+        self.assertIn("./page-update-client.js", set(build_precache()))
+        self.assertIn("./page-update-client.js", self.service_worker)
+
     def test_resource_scanner_ignores_original_source_provenance_metadata(self):
         snippet = '<img data-original-src="https://example.test/source.jpg" src="./image.jpg">'
         self.assertEqual(HTML_ATTR_PATTERN.findall(snippet), ["./image.jpg"])
@@ -200,7 +204,7 @@ class ServiceWorkerContractTests(unittest.TestCase):
 
     def test_homepage_shows_the_active_service_worker_version(self):
         self.assertIn('id="appVersion"', self.homepage)
-        self.assertIn('class="brand-version" aria-label="Versión 0.7.6">v0.7.6', self.homepage)
+        self.assertIn('class="brand-version" aria-label="Versión 0.7.7">v0.7.7', self.homepage)
         self.assertIn("event.data?.type === 'VERSION_STATUS'", self.homepage)
         self.assertIn("postMessage({ type: 'GET_VERSION_STATUS' })", self.homepage)
         self.assertIn("cacheName: CACHE_NAME", self.service_worker)

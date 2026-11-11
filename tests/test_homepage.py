@@ -25,8 +25,8 @@ class HomepageContractTests(unittest.TestCase):
         self.assertEqual(self.manifest["name"], "Gymratik: Rutinas y progreso")
         self.assertEqual(self.manifest["short_name"], "Gymratik")
         self.assertIn("Gymratik: Rutinas y progreso", self.html)
-        self.assertIn('aria-label="Gymratik v0.7.6, inicio"', self.html)
-        self.assertIn('class="brand-version" aria-label="Versión 0.7.6">v0.7.6', self.html)
+        self.assertIn('aria-label="Gymratik v0.7.7, inicio"', self.html)
+        self.assertIn('class="brand-version" aria-label="Versión 0.7.7">v0.7.7', self.html)
         self.assertIn('<span class="brand-mark" aria-hidden="true"><img src="./assets/branding/gymratik-mascots-mark-v2.png" alt=""></span>', self.html)
         self.assertIn("background:rgba(11,16,23,.72)", self.html)
         self.assertIn(".hero-strength-stage", self.html)
@@ -490,7 +490,9 @@ console.log(JSON.stringify({{ok:true}}));
     def test_homepage_debounces_page_reloads_and_omits_generic_section_descriptions(self):
         self.assertIn('PAGE_RELOAD_GUARD_MS = 4000', self.html)
         self.assertIn('sessionStorage.getItem(PAGE_RELOAD_GUARD_KEY)', self.html)
-        self.assertIn("addEventListener('controllerchange', reloadPageOnce)", self.html)
+        client = (ROOT / "page-update-client.js").read_text(encoding="utf-8")
+        self.assertIn("let reloadRequested = false", client)
+        self.assertIn("if (reloadRequested) return", client)
         for phrase in (
             'La portada te acompaña sin pedirte que prepares nada antes de salir.',
             'Lo que llevas registrado en este dispositivo, actualizado al abrir la portada.',
@@ -628,9 +630,17 @@ console.log(JSON.stringify({ ok: true }));
         self.assertIn('JSON «gymratik-backup», esquema 3', self.html)
 
     def test_homepage_reloads_after_service_worker_controller_change(self):
-        self.assertIn("addEventListener('controllerchange'", self.html)
-        self.assertIn("addEventListener('controllerchange', reloadPageOnce)", self.html)
-        self.assertIn('window.location.reload()', self.html)
+        client = (ROOT / "page-update-client.js").read_text(encoding="utf-8")
+        self.assertIn('src="./page-update-client.js" defer', self.html)
+        self.assertIn("addEventListener('controllerchange'", client)
+        self.assertIn('window.location.reload()', client)
+
+    def test_all_top_level_screens_share_service_worker_update_reload(self):
+        client = (ROOT / "page-update-client.js").read_text(encoding="utf-8")
+        self.assertIn("addEventListener('controllerchange'", client)
+        for page in (ROOT / "records.html", *CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            with self.subTest(page=page.name):
+                self.assertIn("page-update-client.js", page.read_text(encoding="utf-8"))
 
     def test_homepage_is_offline_first_without_manual_preparation_prompt(self):
         self.assertNotIn('Prepáralo antes de salir', self.html)
