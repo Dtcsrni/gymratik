@@ -10,7 +10,7 @@ import html
 import re
 from pathlib import Path
 
-from standardize_muscle_visuals import apply_warmup_load_selector_contract
+from standardize_muscle_visuals import apply_warmup_load_selector_contract, standardize_quote_portrait_loading
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -262,13 +262,46 @@ main.cards article.card[data-machine-occupied="true"] .machinePendingToggle{posi
 .sessionCompletionPanel.isPartial .sessionRecapMetric dd{color:#ffe0a0}
 .sessionFunFact{margin:.55rem 0 0;padding:.55rem .65rem;border-left:3px solid #ffd166;border-radius:.25rem .6rem .6rem .25rem;background:rgba(117,79,18,.16);color:#ffe6b3;font-size:.76rem;font-weight:850;line-height:1.4;animation:factReveal .6s .12s both}
 .sessionRecapFoot{margin:.38rem 0 0;color:#8fa9b6;font-size:.61rem;line-height:1.35}
+.motivationPortrait.isMascot{border-radius:50%!important;border-color:rgba(101,242,221,.72)!important;background:radial-gradient(circle at 50% 38%,rgba(101,242,221,.24),rgba(9,34,48,.96) 72%)!important;box-shadow:0 0 0 3px rgba(101,242,221,.09),0 7px 20px rgba(0,0,0,.28),0 0 22px rgba(101,242,221,.18)!important}
+.motivationPortrait.isMascot img{object-fit:contain!important;padding:4px;animation:completionMascotBounce 2.8s ease-in-out infinite}
+.completionSnack{position:absolute;right:-.5rem;bottom:-.38rem;z-index:3;display:none;place-items:center;width:1.55rem;height:1.55rem;border:1px solid rgba(255,222,144,.65);border-radius:50%;background:linear-gradient(145deg,#674c1d,#352b20);font-size:.92rem;line-height:1;filter:drop-shadow(0 4px 8px rgba(0,0,0,.4));animation:snackOffer 2.4s cubic-bezier(.4,0,.2,1) infinite}
+.motivationPhotoWrap.hasMascot .completionSnack{display:grid}
+.motivationPhotoWrap::after{position:absolute;right:-.28rem;top:-.38rem;z-index:2;color:#ffe28b;font-size:1rem;content:"✦";pointer-events:none;animation:completionSparkle 1.8s ease-in-out infinite}
 @keyframes recapReveal{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}
 @keyframes recapMetricIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 @keyframes factReveal{from{opacity:0;filter:blur(3px)}to{opacity:1;filter:blur(0)}}
 @keyframes exerciseFocusReveal{from{opacity:.4;transform:translateY(4px) scale(.98)}to{opacity:1;transform:none}}
 @keyframes exerciseBarPulse{from{filter:brightness(1)}to{filter:brightness(1.22)}}
-@media(max-width:640px){.floatingSessionSummary .summaryFocusBadge{font-size:.55rem}.sessionCompletionCopy p#motivationMessage{padding:.75rem .8rem .75rem 1.05rem}.sessionRecap{padding:.62rem}.sessionRecapGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:.35rem}.sessionRecapMetric{padding:.45rem}.sessionRecapMetric dt{font-size:.57rem}.sessionFunFact{font-size:.7rem}}
-@media(prefers-reduced-motion:reduce){.floatingSessionSummary.is-exercise-focused .summaryFocusBadge,.floatingSessionSummary.is-exercise-focused .summaryToggle,.summaryExercise.isCurrent,.sessionRecap,.sessionRecapMetric,.sessionFunFact{animation:none!important}main.cards article.card[data-exercise-index]{transition:none}}
+@keyframes completionMascotBounce{0%,100%{transform:translateY(1px) rotate(-2deg) scale(1)}50%{transform:translateY(-3px) rotate(2deg) scale(1.045)}}
+@keyframes completionSparkle{0%,100%{opacity:.48;transform:scale(.78) rotate(-12deg)}50%{opacity:1;transform:scale(1.16) rotate(16deg)}}
+@keyframes snackOffer{0%,100%{transform:translate(0,0) rotate(5deg) scale(.94)}45%{transform:translate(-5px,-5px) rotate(-9deg) scale(1.06)}70%{transform:translate(-2px,-1px) rotate(2deg) scale(1)}}
+@media(max-width:640px){.floatingSessionSummary .summaryFocusBadge{font-size:.55rem}.sessionCompletionCopy p#motivationMessage{padding:.75rem .8rem .75rem 1.05rem}.sessionRecap{padding:.62rem}.sessionRecapGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:.35rem}.sessionRecapMetric{padding:.45rem}.sessionRecapMetric dt{font-size:.57rem}.sessionFunFact{font-size:.7rem}
+  .sessionCompletionPanel:not([hidden]){grid-template-columns:minmax(0,1fr) 3.15rem!important;grid-template-rows:auto auto auto auto auto auto!important;align-items:start!important;gap:.3rem .45rem!important;padding:.65rem .72rem!important;overflow:hidden!important}
+  .sessionCompletionPanel:not([hidden])>*{min-width:0!important;max-width:100%!important}
+  .sessionCompletionPanel .completionOrb{display:none!important}
+  .sessionCompletionPanel .motivationPhotoWrap{grid-column:2!important;grid-row:1/3!important;align-self:start!important;justify-self:end!important;width:2.9rem!important;gap:0!important}
+  .sessionCompletionPanel .motivationPortrait{width:2.9rem!important;height:2.9rem!important;border-radius:50%!important}
+  .sessionCompletionPanel .completionSnack{right:-.32rem!important;bottom:-.28rem!important;width:1.2rem!important;height:1.2rem!important;font-size:.72rem!important}
+  .sessionCompletionPanel .motivationPhotoCredit{display:none!important}
+  .sessionCompletionPanel .sessionCompletionCopy{display:contents!important}
+  .sessionCompletionPanel .sessionCompletionKicker{grid-column:1!important;grid-row:1!important;align-self:center!important;max-width:100%!important;padding:.18rem .34rem!important;font-size:.55rem!important;letter-spacing:.07em!important;line-height:1.15!important}
+  .sessionCompletionPanel #session-completion-title{grid-column:1!important;grid-row:2!important;margin:.05rem 0 .08rem!important;font-size:1.18rem!important;line-height:1.08!important}
+  .sessionCompletionPanel #motivationMessage{grid-column:1/-1!important;grid-row:3!important;margin:.12rem 0!important;padding:.42rem .55rem .42rem .85rem!important;font-size:.9rem!important;line-height:1.28!important}
+  .sessionCompletionPanel #motivationMessage::before{left:.24rem!important;top:.08rem!important}
+  .sessionCompletionPanel .motivationNote{grid-column:1/-1!important;grid-row:4!important;margin:.05rem 0 .12rem!important;font-size:.58rem!important;line-height:1.2!important}
+  .sessionCompletionPanel .sessionRecap{grid-column:1/-1!important;grid-row:5!important;margin:.12rem 0 0!important;padding:.48rem!important;border-radius:.68rem!important}
+  .sessionCompletionPanel .sessionRecapTitle{margin:0 0 .35rem!important;font-size:.62rem!important}
+  .sessionCompletionPanel .sessionRecapGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:.28rem!important}
+  .sessionCompletionPanel .sessionRecapMetric{padding:.34rem .38rem!important;border-radius:.5rem!important}
+  .sessionCompletionPanel .sessionRecapMetric dt{font-size:.52rem!important;line-height:1.1!important}
+  .sessionCompletionPanel .sessionRecapMetric dd{margin-top:.13rem!important;font-size:.76rem!important;line-height:1.08!important}
+  .sessionCompletionPanel .sessionFunFact{grid-column:1/-1!important;margin:.3rem 0 0!important;padding:.35rem .45rem!important;font-size:.64rem!important;line-height:1.25!important}
+  .sessionCompletionPanel .sessionRecapFoot{margin:.24rem 0 0!important;font-size:.53rem!important;line-height:1.22!important}
+  .sessionCompletionPanel .sessionCompletionActions{grid-column:1/-1!important;grid-row:6!important;gap:.3rem!important;margin:.12rem 0 0!important}
+  .sessionCompletionPanel .newMotivation,.sessionCompletionPanel .soundToggle,.sessionCompletionPanel .hapticsToggle{flex:1 1 8rem!important;min-width:0!important;min-height:40px!important;padding:.32rem .42rem!important;font-size:.62rem!important;line-height:1.15!important}
+}
+@media(max-width:380px){.sessionCompletionPanel:not([hidden]){grid-template-columns:minmax(0,1fr) 2.7rem!important;padding:.58rem!important}.sessionCompletionPanel .motivationPhotoWrap{width:2.55rem!important}.sessionCompletionPanel .motivationPortrait{width:2.55rem!important;height:2.55rem!important}.sessionCompletionPanel .sessionRecapGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.sessionCompletionPanel #session-completion-title{font-size:1.08rem!important}.sessionCompletionPanel #motivationMessage{font-size:.85rem!important}}
+@media(prefers-reduced-motion:reduce){.floatingSessionSummary.is-exercise-focused .summaryFocusBadge,.floatingSessionSummary.is-exercise-focused .summaryToggle,.summaryExercise.isCurrent,.sessionRecap,.sessionRecapMetric,.sessionFunFact,.motivationPortrait.isMascot img,.motivationPhotoWrap::after,.completionSnack{animation:none!important}main.cards article.card[data-exercise-index]{transition:none}}
 </style>
 <script data-enhancement="exercise-focus-occupied-quote-v4">
 (() => {
@@ -766,6 +799,7 @@ def apply() -> list[str]:
         updated = texts[day][:first.start()] + "\n".join(normalized) + texts[day][last.end():]
         updated = update_sections(updated, day, expected_count, distribution, total)
         updated = apply_interaction_redesign(updated)
+        updated = standardize_quote_portrait_loading(updated)
         updated = apply_warmup_load_selector_contract(updated)
         if day == 4:
             # El peso muerto cambió de barra libre a Smith: separa su historial

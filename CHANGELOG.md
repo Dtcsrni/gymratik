@@ -2,6 +2,12 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.14] - 2026-11-10
+
+### Changed
+
+- El cierre de sesión usa un diseño móvil compacto, con métricas y mensaje a ancho completo, mascota local cuando no hay retrato, fruta decorativa animada y adornos que respetan movimiento reducido.
+
 ## [0.7.13] - 2026-11-10
 
 ### Changed

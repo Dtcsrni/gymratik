@@ -2233,9 +2233,9 @@ def validate_motivation_card(browser, widths=(320, 360, 412, 530)) -> dict:
             context.close()
             raise AssertionError(f"La rotación repitió consecutivamente la cita de Arnold a {width}px")
         layout["nextAuthor"] = next_author
-        if layout["author"].find("Arnold Schwarzenegger") < 0 or layout["portraitNaturalWidth"] < 500 or layout["portrait"]["width"] < 80 or layout["portrait"]["height"] < 100:
+        if layout["author"].find("Arnold Schwarzenegger") < 0 or layout["portraitNaturalWidth"] < 500 or layout["portrait"]["width"] < 35 or layout["portrait"]["height"] < 35:
             context.close()
-            raise AssertionError(f"Cita de Arnold/retrato no se presentó en tamaño grande a {width}px: {layout}")
+            raise AssertionError(f"Cita de Arnold/retrato compacto no se presentó correctamente a {width}px: {layout}")
         if layout["panel"]["left"] < -1 or layout["panel"]["right"] > width + 1 or any(child["visible"] and (child["box"]["left"] < layout["panel"]["left"] or child["box"]["right"] > layout["panel"]["right"] or child["scrollWidth"] > child["clientWidth"] + 3) for child in layout["children"]):
             context.close()
             raise AssertionError(f"La tarjeta o alguno de sus bloques visibles se recorta/desborda a {width}px: {layout}")
@@ -2245,14 +2245,21 @@ def validate_motivation_card(browser, widths=(320, 360, 412, 530)) -> dict:
         if "CC BY 4.0" not in layout["photoCredit"] or "schwarzenegger.com/fitness/post" not in layout["source"]:
             context.close()
             raise AssertionError(f"Falta la atribución enlazada de la cita o fotografía: {layout}")
-        page.route("**/data/rutinas_autocontenidas/frases_fitness/retratos/*.jpg", lambda route: route.abort())
-        page.evaluate("() => { Math.random=()=>0; document.getElementById('newMotivation').click(); }")
-        page.wait_for_function("document.getElementById('motivationPortrait')?.hidden === true && document.getElementById('motivationInitials')?.hidden === false")
-        fallback = page.evaluate("() => ({imageHidden:document.getElementById('motivationPortrait').hidden, initialsVisible:!document.getElementById('motivationInitials').hidden})")
-        if not fallback["imageHidden"] or not fallback["initialsVisible"]:
+        page.evaluate("""() => {
+          const quotes=window.fitnessQuotesData.quotes, target=quotes.findIndex(item=>item.author==='Arnold Schwarzenegger');
+          const previous=Number(localStorage.getItem('gymratik-motivation-rotation-v1'));
+          const pool=quotes.length-1, candidate=target>previous?target-1:target;
+          Math.random=()=>((candidate+.5)/pool);
+          document.getElementById('newMotivation').click();
+        }""")
+        page.wait_for_function("document.getElementById('motivationNote')?.textContent.includes('Arnold Schwarzenegger')")
+        page.evaluate("() => document.getElementById('motivationPortrait')?.onerror?.(new Event('error'))")
+        page.wait_for_function("() => { const image=document.getElementById('motivationPortrait'); return image?.dataset.mascotFallback === 'true' && image.complete && image.naturalWidth > 0 && !image.hidden; }")
+        fallback = page.evaluate("() => { const image=document.getElementById('motivationPortrait'),wrap=image.closest('.motivationPhotoWrap'),snack=wrap?.querySelector('.completionSnack'); return {mascotVisible:!image.hidden, initialsHidden:document.getElementById('motivationInitials').hidden, mascotFallback:image.dataset.mascotFallback, source:new URL(image.src).pathname, naturalWidth:image.naturalWidth, snackVisible:snack && getComputedStyle(snack).display!=='none'}; }")
+        if not fallback["mascotVisible"] or not fallback["initialsHidden"] or fallback["mascotFallback"] != "true" or fallback["naturalWidth"] < 32 or "/data/profile/mascot-motion/" not in fallback["source"] or not fallback["snackVisible"]:
             context.close()
-            raise AssertionError(f"La cita dejó visible un retrato roto en vez del avatar de respaldo: {fallback}")
-        layout["brokenPortraitFallback"] = fallback
+            raise AssertionError(f"La cita no usó la mascota local al fallar el retrato: {fallback}")
+        layout["brokenPortraitMascotFallback"] = fallback
         results.append(layout)
         context.close()
     return {"viewports": results, "quotePortraitAndTextVerified": True}

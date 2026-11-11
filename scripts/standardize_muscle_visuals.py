@@ -2128,34 +2128,70 @@ def _image_markup(markup: str, name: str, focus: dict[str, str]) -> str:
 
 
 def standardize_quote_portrait_loading(source: str) -> str:
-    start_marker = "if (portraitEl && initialsEl) { portraitEl.hidden = !phrase.portrait;"
-    start = source.find(start_marker)
+    motivation_start = source.find("const showMotivation =")
+    if motivation_start < 0:
+        return source
+    start = source.find("if (portraitEl && initialsEl) {", motivation_start)
     if start < 0:
-        return source.replace(
-            "portraitEl.alt = `Retrato de ${phrase.author}`;\n        portraitEl.src = phrase.portrait;",
-            "portraitEl.alt = `Retrato de ${phrase.author}`;\n        portraitEl.loading = 'eager';\n        portraitEl.src = phrase.portrait;",
-            1,
-        )
-    end_marker = "portraitEl.onerror = () => { portraitEl.hidden = true; initialsEl.hidden = false; }; } }"
-    end = source.find(end_marker, start)
-    if end < 0:
-        raise ValueError("No se encontró el fallback del retrato de la cita")
-    end += len(end_marker)
+        return source
+    legacy_end = "portraitEl.onerror = () => { portraitEl.hidden = true; initialsEl.hidden = false; }; } }"
+    current_end = "\n    }\n  };"
+    legacy = source.find(legacy_end, start)
+    if legacy >= 0:
+        end = legacy + len(legacy_end)
+        suffix = ""
+    else:
+        current = source.find(current_end, start)
+        if current < 0:
+            raise ValueError("No se encontró el bloque del retrato de la cita")
+        end = current + len("\n    }")
+        suffix = ""
     replacement = """if (portraitEl && initialsEl) {
       initialsEl.textContent = phrase.author.split(/\\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase() || '★';
-      const showPortraitFallback = () => { portraitEl.hidden = true; initialsEl.hidden = false; };
-      portraitEl.onload = () => { if (portraitEl.complete && portraitEl.naturalWidth > 0) { portraitEl.hidden = false; initialsEl.hidden = true; } else showPortraitFallback(); };
-      portraitEl.onerror = showPortraitFallback;
+      const showInitialFallback = () => { portraitEl.hidden = true; initialsEl.hidden = false; photoCreditEl && (photoCreditEl.hidden = true); };
+      const useMascotFallback = () => {
+        if (portraitEl.dataset.mascotFallback === 'true') {
+          if (portraitEl.complete && portraitEl.naturalWidth > 0) { portraitEl.hidden = false; initialsEl.hidden = true; }
+          else showInitialFallback();
+          return;
+        }
+        portraitEl.dataset.mascotFallback = 'true';
+        portraitEl.classList.add('isMascot');
+        portraitEl.closest('.motivationPhotoWrap')?.classList.add('hasMascot');
+        portraitEl.hidden = true; initialsEl.hidden = false;
+        if (photoCreditEl) photoCreditEl.hidden = true;
+        const variant = window.gymratikMascotVariant;
+        portraitEl.alt = 'Mascota Gymratik celebrando la sesión';
+        portraitEl.loading = 'eager';
+        portraitEl.src = ['male', 'female'].includes(variant)
+          ? `../../../data/profile/mascot-motion/states-v1/${variant}-approval.png`
+          : '../../../data/profile/mascot-motion/neutral-exercise-still.webp';
+      };
+      portraitEl.onload = () => {
+        if (portraitEl.complete && portraitEl.naturalWidth > 0) { portraitEl.hidden = false; initialsEl.hidden = true; }
+        else useMascotFallback();
+      };
+      portraitEl.onerror = useMascotFallback;
       if (phrase.portrait) {
+        delete portraitEl.dataset.mascotFallback;
+        portraitEl.classList.remove('isMascot');
+        portraitEl.closest('.motivationPhotoWrap')?.classList.remove('hasMascot');
         portraitEl.hidden = true; initialsEl.hidden = false;
         portraitEl.alt = `Retrato de ${phrase.author}`;
         portraitEl.loading = 'eager';
         portraitEl.src = phrase.portrait;
       } else {
-        showPortraitFallback(); portraitEl.alt = ''; portraitEl.removeAttribute('src');
+        useMascotFallback();
       }
     }"""
-    return source[:start] + replacement + source[end:]
+    updated = source[:start] + replacement + suffix + source[end:]
+    if 'class="completionSnack"' not in updated:
+        updated = updated.replace(
+            '</div><a class="motivationPhotoCredit" id="motivationPhotoCredit"',
+            '</div><span class="completionSnack" aria-hidden="true">🍎</span><a class="motivationPhotoCredit" id="motivationPhotoCredit"',
+            1,
+        )
+    return updated
 
 
 TECHNIQUE_CUES = {
@@ -3131,6 +3167,12 @@ def standardize_visual_language(source: str) -> str:
             source,
             count=1,
             flags=re.S,
+        )
+    if 'class="completionSnack"' not in source:
+        source = source.replace(
+            '</div><a class="motivationPhotoCredit" id="motivationPhotoCredit"',
+            '</div><span class="completionSnack" aria-hidden="true">🍎</span><a class="motivationPhotoCredit" id="motivationPhotoCredit"',
+            1,
         )
     source = re.sub(
         r'<span class="motivationNote" id="motivationNote" hidden></span>',

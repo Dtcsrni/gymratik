@@ -111,6 +111,21 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
                 for rule in expected_order:
                     self.assertIn(rule, source)
 
+    def test_session_completion_is_compact_and_uses_local_mascot_when_quote_art_is_missing(self) -> None:
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            source = path.read_text(encoding="utf-8")
+            with self.subTest(routine=path.name):
+                self.assertIn("portraitEl.dataset.mascotFallback = 'true'", source)
+                self.assertIn("classList.add('hasMascot')", source)
+                self.assertIn("states-v1/${variant}-approval.png", source)
+                self.assertIn("neutral-exercise-still.webp", source)
+                self.assertIn('class="completionSnack" aria-hidden="true">🍎</span>', source)
+                self.assertIn(".motivationPhotoWrap.hasMascot .completionSnack{display:grid}", source)
+                self.assertIn(".sessionCompletionPanel .sessionCompletionCopy{display:contents!important}", source)
+                self.assertIn("grid-template-columns:repeat(3,minmax(0,1fr))!important", source)
+                self.assertIn("@keyframes completionMascotBounce", source)
+                self.assertIn("@media(prefers-reduced-motion:reduce)", source)
+
     def test_translucent_summary_state_colors_keep_wcag_aa_text_contrast(self) -> None:
         def luminance(color: tuple[int, int, int]) -> float:
             channels = [value / 255 for value in color]
@@ -1342,7 +1357,8 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 self.assertEqual(source.count('class="motivationPhotoWrap"'), 1)
                 self.assertIn("sessionCompletionCopy p{display:block!important", source)
                 self.assertIn("portraitEl.onload = () =>", source)
-                self.assertIn("portraitEl.onerror = showPortraitFallback", source)
+                self.assertIn("portraitEl.onerror = useMascotFallback", source)
+                self.assertIn("classList.add('hasMascot')", source)
                 self.assertIn("portraitEl.loading = 'eager'", source)
                 self.assertIn("portraitEl.hidden = true; initialsEl.hidden = false;", source)
                 self.assertNotIn('id="fitnessQuotesPayload"', source)
