@@ -83,7 +83,8 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
             source = path.read_text(encoding="utf-8")
             with self.subTest(routine=path.name):
-                self.assertIn('grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr)', source)
+                self.assertIn('main.cards article.card .phaseRow{grid-template-columns:minmax(0,1fr)!important', source)
+                self.assertIn('main.cards article.card .phaseRow .swap{justify-self:center!important;align-self:center!important', source)
                 self.assertIn('overflow-wrap:break-word', source)
                 self.assertIn('rgba(6,24,37,.94)', source)
                 self.assertIn("compactActivityLabels[displayActivity.kind]", source)

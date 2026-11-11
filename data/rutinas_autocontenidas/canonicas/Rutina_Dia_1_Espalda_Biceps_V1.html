@@ -8122,11 +8122,11 @@ button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gra
   #summaryToggle[aria-expanded="true"] + #summaryBody #summaryElapsed{display:none!important}
   #floatingSessionSummary .summaryFocusBadge{margin:0!important;padding:.14rem .34rem!important;font-size:.51rem!important;line-height:1.12!important}
   #floatingSessionSummary .sessionSummaryList{max-height:min(17dvh,110px)!important}
-  main.cards article.card .phaseRow{grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr)!important;gap:6px!important;align-items:start!important}
-  main.cards article.card .phaseRow>.phaseCol{min-width:0!important;width:auto!important}
-  main.cards article.card .phaseRow>.routineSectionStamp{grid-column:1/-1!important;width:100%!important}
-  main.cards article.card .phaseRow .phaseLabel{max-width:100%!important;white-space:normal!important;word-break:normal!important;overflow-wrap:normal!important;line-height:1.2!important}
-  main.cards article.card .phaseRow .source{min-width:0!important;max-width:100%!important;word-break:normal!important;overflow-wrap:break-word!important;hyphens:auto}
+  main.cards article.card .phaseRow{grid-template-columns:minmax(0,1fr)!important;gap:.55rem!important;align-items:stretch!important}
+  main.cards article.card .phaseRow>.phaseCol{min-width:0!important;width:100%!important}
+  main.cards article.card .phaseRow .phaseLabel{max-width:100%!important;white-space:normal!important;word-break:normal!important;overflow-wrap:anywhere!important;line-height:1.2!important}
+  main.cards article.card .phaseRow .source{min-width:0!important;max-width:100%!important;word-break:normal!important;overflow-wrap:anywhere!important;hyphens:auto}
+  main.cards article.card .phaseRow .swap{justify-self:center!important;align-self:center!important;margin:.1rem 0!important;transform:rotate(90deg)!important}
 }
 @media(max-width:360px){.performanceRepsControl{grid-template-columns:40px minmax(0,1fr) 40px!important;gap:.25rem!important}.performanceRepsNudge{min-width:40px!important;min-height:44px!important}.performanceFieldTitleRow{flex-wrap:wrap!important;justify-content:flex-start!important;gap:.25rem .4rem!important}.performanceFieldLabel{flex:1 1 120px!important;flex-wrap:wrap!important}.performanceRequired{margin-left:26px!important}}
 @media(prefers-reduced-motion:reduce){#floatingSessionSummary,#summaryToggle{scroll-behavior:auto!important;transition:none!important}}

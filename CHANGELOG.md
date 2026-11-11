@@ -2,6 +2,12 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.11] - 2026-11-10
+
+### Fixed
+
+- La vista «Posición y recorrido» se apila en móvil con imágenes y textos a ancho completo; la flecha queda entre Inicio y Final.
+
 ## [0.7.10] - 2026-11-10
 
 ### Fixed

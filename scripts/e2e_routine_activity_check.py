@@ -2114,6 +2114,13 @@ def validate_responsive_layout(browser) -> dict:
                 raise AssertionError(f"{name} {width}x{height}: control recortado horizontalmente: {layout['controls']}")
             if visual_audit["offscreen"] or visual_audit["clippedText"] or visual_audit["clippedControls"] or visual_audit["missingExerciseParts"] or visual_audit["detachedTechniqueSections"] or visual_audit["cardTopology"]["total"] != visual_audit["cardTopology"]["insideRoutineGrid"] or visual_audit["accordions"]["count"] != visual_audit["cardTopology"]["total"] or not visual_audit["accordions"]["collapsedByDefault"] or not visual_audit["accordions"]["contentHiddenByDefault"] or not visual_audit["accordions"]["tapWorks"] or not visual_audit["accordions"]["expandedTechniqueVisible"] or not visual_audit["accordions"]["contentHiddenAfterClose"]:
                 raise AssertionError(f"{name} {width}x{height}: auditoría de geometría visual falló: {visual_audit}")
+            if width <= 640:
+                phase_layout = page.locator("main.cards article.card .phaseRow").first.evaluate("""row => {
+                  const rect = element => { const r=element.getBoundingClientRect(); return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width}; };
+                  return {row:rect(row),start:rect(row.querySelector(':scope > .phaseCol')),arrow:rect(row.querySelector(':scope > .swap')),end:rect([...row.querySelectorAll(':scope > .phaseCol')][1])};
+                }""")
+                if phase_layout["start"]["width"] < phase_layout["row"]["width"] * .9 or phase_layout["end"]["width"] < phase_layout["row"]["width"] * .9 or phase_layout["start"]["bottom"] > phase_layout["arrow"]["top"] + 1 or phase_layout["arrow"]["bottom"] > phase_layout["end"]["top"] + 1:
+                    raise AssertionError(f"{name} {width}x{height}: inicio, flecha y final deben ocupar filas legibles en móvil: {phase_layout}")
 
             overlap = None
             summary_visible_rows = None
