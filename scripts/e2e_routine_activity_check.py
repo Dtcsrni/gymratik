@@ -2115,6 +2115,19 @@ def validate_responsive_layout(browser) -> dict:
             if visual_audit["offscreen"] or visual_audit["clippedText"] or visual_audit["clippedControls"] or visual_audit["missingExerciseParts"] or visual_audit["detachedTechniqueSections"] or visual_audit["cardTopology"]["total"] != visual_audit["cardTopology"]["insideRoutineGrid"] or visual_audit["accordions"]["count"] != visual_audit["cardTopology"]["total"] or not visual_audit["accordions"]["collapsedByDefault"] or not visual_audit["accordions"]["contentHiddenByDefault"] or not visual_audit["accordions"]["tapWorks"] or not visual_audit["accordions"]["expandedTechniqueVisible"] or not visual_audit["accordions"]["contentHiddenAfterClose"]:
                 raise AssertionError(f"{name} {width}x{height}: auditoría de geometría visual falló: {visual_audit}")
             if width <= 640:
+                mobile_clearance = page.evaluate("""() => {
+                  const page=document.querySelector('.page');
+                  const summary=document.querySelector('#floatingSessionSummary');
+                  const firstCard=document.querySelector('main.cards article.card');
+                  return {
+                    summaryHeight:summary?.getBoundingClientRect().height || 0,
+                    pageBottomPadding:parseFloat(getComputedStyle(page).paddingBottom) || 0,
+                    zoneDisplay:firstCard ? getComputedStyle(firstCard.querySelector('.zone')).display : 'missing',
+                    chipRowDisplay:firstCard ? getComputedStyle(firstCard.querySelector('.chipRow')).display : 'missing'
+                  };
+                }""")
+                if mobile_clearance["pageBottomPadding"] < mobile_clearance["summaryHeight"] + 12 or mobile_clearance["zoneDisplay"] == "none" or mobile_clearance["chipRowDisplay"] != "none":
+                    raise AssertionError(f"{name} {width}x{height}: la barra invade el espacio desplazable o las etiquetas del ejercicio no se leen como zona única: {mobile_clearance}")
                 phase_layout = page.locator("main.cards article.card .phaseRow").first.evaluate("""row => {
                   const rect = element => { const r=element.getBoundingClientRect(); return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width}; };
                   return {row:rect(row),start:rect(row.querySelector(':scope > .phaseCol')),arrow:rect(row.querySelector(':scope > .swap')),end:rect([...row.querySelectorAll(':scope > .phaseCol')][1])};

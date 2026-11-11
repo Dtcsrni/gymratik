@@ -2,6 +2,13 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.12] - 2026-11-10
+
+### Fixed
+
+- En móvil, las etiquetas de ejercicio se consolidan en una sola zona legible y dejan de mostrar fichas vacías o repetidas.
+- El contenido de las rutinas reserva el alto real de la barra flotante, incluso cuando esta se expande, para permitir desplazar los controles que quedan detrás.
+
 ## [0.7.11] - 2026-11-10
 
 ### Fixed

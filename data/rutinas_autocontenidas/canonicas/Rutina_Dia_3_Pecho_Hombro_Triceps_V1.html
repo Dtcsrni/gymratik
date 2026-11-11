@@ -7859,6 +7859,9 @@ button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gra
 <style data-enhancement="mobile-summary-layout-v1">
 @media(max-width:640px){
   #floatingSessionSummary{right:max(.45rem,env(safe-area-inset-right))!important;bottom:max(.45rem,env(safe-area-inset-bottom))!important;width:min(340px,calc(100vw - .9rem))!important;max-height:min(36dvh,260px)!important;border-radius:.82rem!important;background:rgba(6,24,37,.94)!important;backdrop-filter:blur(14px) saturate(1.08)!important;-webkit-backdrop-filter:blur(14px) saturate(1.08)!important}
+  html body .page{padding-bottom:calc(max(10rem,var(--floating-summary-clearance,10rem)) + env(safe-area-inset-bottom,0px))!important}
+  main.cards article.card .zone{display:inline-flex!important;align-self:flex-start!important;max-width:100%!important;margin:9px 0 0!important;padding:.34rem .58rem!important;border:1px solid rgba(114,220,255,.28)!important;border-radius:999px!important;background:rgba(14,57,75,.84)!important;color:#d5f5ff!important;font-size:.72rem!important;line-height:1.2!important;font-weight:850!important;overflow-wrap:anywhere!important}
+  main.cards article.card .chipRow{display:none!important}
   #summaryToggle{grid-template-columns:auto minmax(0,1fr) 48px auto!important;grid-template-rows:auto auto!important;min-height:54px!important;gap:.12rem .38rem!important;padding:.3rem .46rem!important}
   #summaryToggle #summaryHeadline{grid-column:2;grid-row:1;font-size:.7rem!important;line-height:1.15!important}
   #summaryToggle #summaryActivityHeadline{grid-column:2;grid-row:2;display:block!important;font-size:.62rem!important;line-height:1.1!important}
@@ -7937,6 +7940,14 @@ main.cards article.card[data-machine-occupied="true"] .machinePendingToggle{posi
   const summary = document.querySelector('.floatingSessionSummary');
   const toggle = document.getElementById('summaryToggle');
   if (!cards.length || !summary || !toggle) return;
+  const syncSummaryClearance = () => {
+    const height = summary.getBoundingClientRect().height;
+    if (Number.isFinite(height) && height > 0) document.documentElement.style.setProperty('--floating-summary-clearance', `${Math.ceil(height + 16)}px`);
+  };
+  syncSummaryClearance();
+  if (typeof ResizeObserver === 'function') { window.gymratikSummaryClearanceObserver = new ResizeObserver(syncSummaryClearance); window.gymratikSummaryClearanceObserver.observe(summary); }
+  window.addEventListener('resize', syncSummaryClearance, { passive: true });
+  window.visualViewport?.addEventListener('resize', syncSummaryClearance, { passive: true });
   const badge = document.createElement('span');
   badge.className = 'summaryFocusBadge';
   badge.setAttribute('aria-hidden', 'true');
