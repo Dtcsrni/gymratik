@@ -3787,7 +3787,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     const loadLabel = document.createElement('div');
     loadLabel.className = 'performanceField';
     const loadHead = document.createElement('div'); loadHead.className = 'performanceLoadHead';
-    const loadLabelText = document.createElement('span'); loadLabelText.textContent = 'Carga'; const loadIcon = createPerformanceIcon('weight'); const loadRequired = document.createElement('span'); loadRequired.className = 'performanceRequired'; loadRequired.textContent = 'Requerida'; const loadFieldLabel = document.createElement('span'); loadFieldLabel.className = 'performanceFieldLabel'; if (loadIcon) loadFieldLabel.append(loadIcon); loadFieldLabel.append(loadLabelText); const loadTitle = document.createElement('span'); loadTitle.className = 'performanceFieldLabel'; loadTitle.append(loadFieldLabel, loadRequired);
+    const loadLabelText = document.createElement('span'); loadLabelText.textContent = 'Carga'; loadLabelText.dataset.loadMode = 'normal'; const loadIcon = createPerformanceIcon('weight'); const loadRequired = document.createElement('span'); loadRequired.className = 'performanceRequired'; loadRequired.textContent = 'Requerida'; const loadFieldLabel = document.createElement('span'); loadFieldLabel.className = 'performanceFieldLabel'; if (loadIcon) loadFieldLabel.append(loadIcon); loadFieldLabel.append(loadLabelText); const loadTitle = document.createElement('span'); loadTitle.className = 'performanceFieldLabel'; loadTitle.append(loadFieldLabel, loadRequired);
     const loadUnitSelect = document.createElement('select'); loadUnitSelect.className = 'performanceLoadUnit'; loadUnitSelect.setAttribute('aria-label', `Unidad de carga para ${item.title}`);
     [['kg', 'kg'], ['lb', 'lb']].forEach(([value, label]) => { const option = document.createElement('option'); option.value = value; option.textContent = label; option.setAttribute('aria-label', value === 'kg' ? 'Kilogramos' : 'Libras'); loadUnitSelect.append(option); }); loadUnitSelect.addEventListener('keydown', event => { if (event.key === 'Enter') event.stopPropagation(); });
     const loadClear = document.createElement('button'); loadClear.type = 'button'; loadClear.className = 'performanceClear'; loadClear.textContent = 'Quitar'; loadClear.setAttribute('aria-label', `No registrar carga de ${item.title}`); loadClear.hidden = true; loadHead.append(loadTitle, loadUnitSelect);
@@ -3829,7 +3829,77 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       const displayValue = unit === 'lb' ? String(Math.round(value)) : Number.isInteger(value) ? String(value) : value.toFixed(1);
       loadOutput.textContent = item.performanceLoadSelected ? `${displayValue} ${unit}` : 'Sin registrar · toca para añadir'; loadOutput.dataset.selected = String(item.performanceLoadSelected); loadClear.hidden = !item.performanceLoadSelected; updateRangeFill(loadInput);
     };
+    const setPerformanceLoadMode = isWarmup => {
+      const nextMode = Boolean(isWarmup);
+      if (Boolean(item.performanceWarmupMode) === nextMode) return;
+      if (nextMode) {
+        item.performanceWarmupNormalSnapshot = {
+          reps: item.performanceReps.value,
+          repsSelected: item.performanceReps.dataset.selected === 'true',
+          load: item.performanceLoadExact,
+          loadSelected: item.performanceLoadSelected,
+          unit: item.performanceLoadUnit,
+          unitTouched: item.performanceLoadUnitTouched
+        };
+        const saved = state.__warmupDraft?.[exerciseId] || state.__warmupPerformance?.[exerciseId];
+        const savedUnit = saved?.loadUnit === 'lb' ? 'lb' : 'kg';
+        const savedKg = Number.isFinite(Number(saved?.loadKg))
+          ? Number(saved.loadKg)
+          : loadMath.toKg(Number(saved?.load), savedUnit);
+        const savedSelected = saved?.loadSelected === true || (saved?.loadSelected !== false && Number.isFinite(savedKg));
+        if (savedSelected && Number.isFinite(savedKg) && savedKg >= item.performanceLoadProfile.minKg && savedKg <= item.performanceLoadProfile.maxKg) {
+          item.performanceLoadUnit = savedUnit;
+          item.performanceLoadExact = loadMath.toDisplay(loadMath.normalizeKg(savedKg, item.performanceLoadProfile), savedUnit);
+          item.performanceLoadSelected = true;
+        } else {
+          item.performanceLoadExact = 0;
+          item.performanceLoadSelected = false;
+        }
+        const savedReps = Number(saved?.reps);
+        if (Number.isInteger(savedReps) && savedReps >= Math.max(1, item.repMinimum - 3) && savedReps <= item.repMaximum + 4) {
+          item.performanceReps.value = String(savedReps);
+          item.performanceReps.dataset.selected = 'true';
+          renderPerformanceReps();
+        }
+      } else {
+        const normal = item.performanceWarmupNormalSnapshot;
+        if (normal) {
+          item.performanceReps.value = normal.reps;
+          item.performanceReps.dataset.selected = String(normal.repsSelected);
+          item.performanceLoadExact = normal.load;
+          item.performanceLoadSelected = normal.loadSelected;
+          item.performanceLoadUnit = normal.unit;
+          item.performanceLoadUnitTouched = normal.unitTouched;
+          renderPerformanceReps();
+        }
+        item.performanceWarmupNormalSnapshot = null;
+      }
+      item.performanceWarmupMode = nextMode;
+      loadLabelText.textContent = nextMode ? 'Peso de aproximación' : 'Carga';
+      loadLabelText.dataset.loadMode = nextMode ? 'approximation' : 'normal';
+      const loadDescription = nextMode ? 'la carga de aproximación' : 'la carga de las series';
+      loadUnitSelect.setAttribute('aria-label', `Unidad de ${loadDescription} para ${item.title}`);
+      loadOutput.setAttribute('aria-label', `Tocar para editar ${loadDescription} de ${item.title}`);
+      updateLoadControl();
+    };
+    item.setPerformanceLoadMode = setPerformanceLoadMode;
     const savePerformanceDraft = () => {
+      if (item.performanceWarmupMode) {
+        const load = Number(item.performanceLoadExact);
+        const loadUnit = item.performanceLoadUnit === 'lb' ? 'lb' : 'kg';
+        const loadKg = loadMath.toKg(load, loadUnit);
+        const loadSelected = item.performanceLoadSelected && Number.isFinite(loadKg) && loadKg >= item.performanceLoadProfile.minKg && loadKg <= item.performanceLoadProfile.maxKg;
+        state.__warmupDraft ||= {};
+        state.__warmupDraft[exerciseId] = {
+          reps: item.performanceReps.dataset.selected === 'true' ? Number(item.performanceReps.value) : null,
+          load: loadSelected ? load : null,
+          loadUnit,
+          loadKg: loadSelected ? loadKg : null,
+          loadSelected
+        };
+        save();
+        return;
+      }
       if (!state.__performanceDraft) state.__performanceDraft = {};
       state.__performanceDraft[exerciseId] = { reps: item.performanceReps.dataset.selected === 'true' ? item.performanceReps.value : '0', load: item.performanceLoadSelected ? String(item.performanceLoadExact) : '', loadSelected: item.performanceLoadSelected, loadUnit: item.performanceLoadUnit };
       save();
@@ -4676,6 +4746,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     const exerciseWarmupComplete = !warmup || state[warmup.dataset.key] === true;
     const warmupStartedAt = Number(timing?.warmupStartedAt) || 0;
     const warmupDue = globalWarmupComplete && !exerciseWarmupComplete;
+    item.setPerformanceLoadMode?.(warmupDue);
     const warmupHint = item.tracker.querySelector('.exerciseWarmupHint');
     if (warmupHint) warmupHint.hidden = !warmupDue;
     item.tracker.classList.toggle('is-approximation', warmupDue);
@@ -4928,10 +4999,10 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
         if (!timing.warmupStartedAt) { timing.warmupStartedAt = Date.now(); startTiming(item, timing.warmupStartedAt); save(); updateTracker(tracker, false); return; }
         const reps = Number(item.performanceReps?.value);
         const repsSelected = item.performanceReps?.dataset.selected === 'true' && Number.isInteger(reps) && reps >= Math.max(1, item.repMinimum - 3) && reps <= item.repMaximum + 4;
-        const load = Number(item.warmupLoadExact);
-        const warmupLoadUnit = item.warmupLoadUnit === 'lb' ? 'lb' : 'kg';
+        const load = Number(item.performanceLoadExact);
+        const warmupLoadUnit = item.performanceLoadUnit === 'lb' ? 'lb' : 'kg';
         const warmupLoadKg = warmupLoadUnit === 'lb' ? load * 0.45359237 : load;
-        const loadSelected = item.warmupLoadSelected && Number.isFinite(warmupLoadKg) && warmupLoadKg >= item.performanceLoadProfile.minKg && warmupLoadKg <= item.performanceLoadProfile.maxKg;
+        const loadSelected = item.performanceLoadSelected && Number.isFinite(warmupLoadKg) && warmupLoadKg >= item.performanceLoadProfile.minKg && warmupLoadKg <= item.performanceLoadProfile.maxKg;
         const missingPerformance = [...(!repsSelected ? ['repeticiones'] : []), ...(!loadSelected ? ['carga'] : [])];
         if (missingPerformance.length && !(await confirmMissingPerformance(missingPerformance))) return;
         const completedAt = Date.now();
@@ -7939,6 +8010,7 @@ main.cards article.card[data-machine-occupied="true"] .machinePendingToggle{posi
 .card .routineSectionStamp[data-section="series"]{color:#c2a4ff;background:rgba(71,48,116,.2)}
 .card .routineSectionStamp[data-section="visual"]{color:#89baff;background:rgba(41,67,125,.22)}
 .card .routineSectionStamp[data-section="technique"]{color:#ffd277;background:rgba(111,77,22,.2)}
+.performanceWarmupLoad{display:none!important}
 .performanceEntry{border-left:3px solid #65f2dd!important}
 .performanceNormalLoad{border-color:rgba(101,242,221,.35)!important;background:linear-gradient(145deg,rgba(9,43,47,.72),rgba(5,22,34,.96))!important}
 .performanceWarmupLoad{display:grid;gap:.4rem;margin:.55rem 0;padding:.62rem;border:1px solid rgba(255,209,102,.55);border-left:3px solid #ffd166;border-radius:.78rem;background:linear-gradient(145deg,rgba(81,60,22,.5),rgba(27,27,22,.72))}

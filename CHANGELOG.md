@@ -2,6 +2,13 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.9] - 2026-11-10
+
+### Fixed
+
+- El selector de carga cambia a una aproximación independiente para el primer ejercicio pendiente, guarda su valor por ejercicio y vuelve a la carga normal al terminar.
+- La aproximación no hereda la carga normal cuando todavía no tiene un valor propio, y sus indicadores desaparecen al registrarla.
+
 ## [0.7.8] - 2026-11-10
 
 ### Changed

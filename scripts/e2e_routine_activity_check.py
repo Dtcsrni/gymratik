@@ -1522,6 +1522,10 @@ def validate_primary_set_buttons(browser, name: str, sex: str, exercise_limit: i
         button.scroll_into_view_if_needed()
         select_valid_performance(card)
         if card.locator(".warmupSet").count():
+            normal_draft_before = page.evaluate(
+                "exercise => { const key=Object.keys(localStorage).find(value=>/^fitlovers-day\\d+-series-v1$/.test(value)); const state=key?JSON.parse(localStorage.getItem(key)||'{}'):{}; return state.__performanceDraft?.[String(exercise)]; }",
+                index + 1,
+            )
             click_control(button)
             warmup_progress = card.locator(".approximationProgress")
             if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "approximation" or not warmup_progress.is_visible():
@@ -1535,12 +1539,26 @@ def validate_primary_set_buttons(browser, name: str, sex: str, exercise_limit: i
             if not hint.is_visible() or "carga ligera" not in hint.inner_text().lower():
                 context.close()
                 raise AssertionError(f"{name}: faltó el consejo visual de aproximación cuando correspondía en el ejercicio {index + 1}")
+            if card.locator('[data-load-mode="approximation"]').inner_text().strip() != "Peso de aproximación" or card.locator(".performanceLoadValue").get_attribute("data-selected") != "false" or card.locator(".performanceWarmupLoad:visible").count():
+                context.close()
+                raise AssertionError(f"{name}: el selector no entró vacío en modo aproximación independiente en el ejercicio {index + 1}")
+            select_valid_performance(card)
             advance_test_clock(page, 20_000)
             click_control(button)
             warmup_record = page.evaluate(f"""() => Object.values(localStorage).map(raw => {{ try {{ return JSON.parse(raw); }} catch (_) {{ return null; }} }}).find(value => value?.__warmupPerformance)?.__warmupPerformance?.['{index + 1}']""")
             if not warmup_record or not warmup_record.get("durationMs") or warmup_progress.get_attribute("aria-valuenow") != "1":
                 context.close()
                 raise AssertionError(f"{name}: no guardó por separado repeticiones/carga/duración de la aproximación: {warmup_record}")
+            normal_draft_after = page.evaluate(
+                "exercise => { const key=Object.keys(localStorage).find(value=>/^fitlovers-day\\d+-series-v1$/.test(value)); const state=key?JSON.parse(localStorage.getItem(key)||'{}'):{}; return state.__performanceDraft?.[String(exercise)]; }",
+                index + 1,
+            )
+            if warmup_record.get("load") is None or warmup_record.get("loadKg") is None or not normal_draft_before or normal_draft_after != normal_draft_before:
+                context.close()
+                raise AssertionError(f"{name}: il peso de aproximación no se guardó aparte o sobrescribió el borrador normal: aproximación={warmup_record}, normal antes={normal_draft_before}, después={normal_draft_after}")
+            if card.locator('[data-load-mode="approximation"]').count() or card.locator(".exerciseWarmupHint:visible,.approximationProgress:visible").count():
+                context.close()
+                raise AssertionError(f"{name}: dejó indicadores de aproximación después de completar la única serie permitida")
             if card.locator(".exerciseProgress").inner_text().strip() != f"0/{segments}" or hint.is_visible():
                 context.close()
                 raise AssertionError(f"{name}: la aproximación cambió el volumen efectivo o dejó su ayuda visible fuera de turno")

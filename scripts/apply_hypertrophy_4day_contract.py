@@ -10,6 +10,8 @@ import html
 import re
 from pathlib import Path
 
+from standardize_muscle_visuals import apply_warmup_load_selector_contract
+
 
 ROOT = Path(__file__).resolve().parents[1]
 CANONICAL = ROOT / "data/rutinas_autocontenidas/canonicas"
@@ -381,6 +383,7 @@ SECTION_LOAD_REDESIGN = r'''<style data-enhancement="section-ledger-load-v2">
 .card .routineSectionStamp[data-section="series"]{color:#c2a4ff;background:rgba(71,48,116,.2)}
 .card .routineSectionStamp[data-section="visual"]{color:#89baff;background:rgba(41,67,125,.22)}
 .card .routineSectionStamp[data-section="technique"]{color:#ffd277;background:rgba(111,77,22,.2)}
+.performanceWarmupLoad{display:none!important}
 .performanceEntry{border-left:3px solid #65f2dd!important}
 .performanceNormalLoad{border-color:rgba(101,242,221,.35)!important;background:linear-gradient(145deg,rgba(9,43,47,.72),rgba(5,22,34,.96))!important}
 .performanceWarmupLoad{display:grid;gap:.4rem;margin:.55rem 0;padding:.62rem;border:1px solid rgba(255,209,102,.55);border-left:3px solid #ffd166;border-radius:.78rem;background:linear-gradient(145deg,rgba(81,60,22,.5),rgba(27,27,22,.72))}
@@ -822,6 +825,7 @@ def apply() -> list[str]:
         updated = texts[day][:first.start()] + "\n".join(normalized) + texts[day][last.end():]
         updated = update_sections(updated, day, expected_count, distribution, total)
         updated = apply_interaction_redesign(updated)
+        updated = apply_warmup_load_selector_contract(updated)
         if day == 4:
             # El peso muerto cambió de barra libre a Smith: separa su historial
             # del identificador numérico que antes pertenecía al movimiento previo.

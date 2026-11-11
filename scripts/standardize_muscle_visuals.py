@@ -1184,6 +1184,127 @@ def sanitize_canonical_metadata(source: str) -> str:
     return source
 
 
+def apply_warmup_load_selector_contract(source: str) -> str:
+    """Use the exercise load selector for the one pending warm-up, separately from working-set drafts."""
+    if 'loadLabelText.dataset.loadMode' not in source:
+        source = source.replace(
+            "const loadLabelText = document.createElement('span'); loadLabelText.textContent = 'Carga';",
+            "const loadLabelText = document.createElement('span'); loadLabelText.textContent = 'Carga'; loadLabelText.dataset.loadMode = 'normal';",
+            1,
+        )
+
+    mode_contract = """    const setPerformanceLoadMode = isWarmup => {
+      const nextMode = Boolean(isWarmup);
+      if (Boolean(item.performanceWarmupMode) === nextMode) return;
+      if (nextMode) {
+        item.performanceWarmupNormalSnapshot = {
+          reps: item.performanceReps.value,
+          repsSelected: item.performanceReps.dataset.selected === 'true',
+          load: item.performanceLoadExact,
+          loadSelected: item.performanceLoadSelected,
+          unit: item.performanceLoadUnit,
+          unitTouched: item.performanceLoadUnitTouched
+        };
+        const saved = state.__warmupDraft?.[exerciseId] || state.__warmupPerformance?.[exerciseId];
+        const savedUnit = saved?.loadUnit === 'lb' ? 'lb' : 'kg';
+        const savedKg = Number.isFinite(Number(saved?.loadKg))
+          ? Number(saved.loadKg)
+          : loadMath.toKg(Number(saved?.load), savedUnit);
+        const savedSelected = saved?.loadSelected === true || (saved?.loadSelected !== false && Number.isFinite(savedKg));
+        if (savedSelected && Number.isFinite(savedKg) && savedKg >= item.performanceLoadProfile.minKg && savedKg <= item.performanceLoadProfile.maxKg) {
+          item.performanceLoadUnit = savedUnit;
+          item.performanceLoadExact = loadMath.toDisplay(loadMath.normalizeKg(savedKg, item.performanceLoadProfile), savedUnit);
+          item.performanceLoadSelected = true;
+        } else {
+          item.performanceLoadExact = 0;
+          item.performanceLoadSelected = false;
+        }
+        const savedReps = Number(saved?.reps);
+        if (Number.isInteger(savedReps) && savedReps >= Math.max(1, item.repMinimum - 3) && savedReps <= item.repMaximum + 4) {
+          item.performanceReps.value = String(savedReps);
+          item.performanceReps.dataset.selected = 'true';
+          renderPerformanceReps();
+        }
+      } else {
+        const normal = item.performanceWarmupNormalSnapshot;
+        if (normal) {
+          item.performanceReps.value = normal.reps;
+          item.performanceReps.dataset.selected = String(normal.repsSelected);
+          item.performanceLoadExact = normal.load;
+          item.performanceLoadSelected = normal.loadSelected;
+          item.performanceLoadUnit = normal.unit;
+          item.performanceLoadUnitTouched = normal.unitTouched;
+          renderPerformanceReps();
+        }
+        item.performanceWarmupNormalSnapshot = null;
+      }
+      item.performanceWarmupMode = nextMode;
+      loadLabelText.textContent = nextMode ? 'Peso de aproximación' : 'Carga';
+      loadLabelText.dataset.loadMode = nextMode ? 'approximation' : 'normal';
+      const loadDescription = nextMode ? 'la carga de aproximación' : 'la carga de las series';
+      loadUnitSelect.setAttribute('aria-label', `Unidad de ${loadDescription} para ${item.title}`);
+      loadOutput.setAttribute('aria-label', `Tocar para editar ${loadDescription} de ${item.title}`);
+      updateLoadControl();
+    };
+    item.setPerformanceLoadMode = setPerformanceLoadMode;
+"""
+    if 'item.setPerformanceLoadMode = setPerformanceLoadMode;' in source:
+        source = re.sub(
+            r"    const setPerformanceLoadMode = isWarmup => \{.*?\n    item\.setPerformanceLoadMode = setPerformanceLoadMode;\n",
+            lambda _: mode_contract,
+            source,
+            count=1,
+            flags=re.S,
+        )
+    else:
+        anchor = "    const savePerformanceDraft = () => {"
+        if anchor not in source:
+            raise ValueError("No se encontró savePerformanceDraft para separar la carga de aproximación")
+        source = source.replace(anchor, mode_contract + anchor, 1)
+
+    warmup_draft_guard = """      if (item.performanceWarmupMode) {
+        const load = Number(item.performanceLoadExact);
+        const loadUnit = item.performanceLoadUnit === 'lb' ? 'lb' : 'kg';
+        const loadKg = loadMath.toKg(load, loadUnit);
+        const loadSelected = item.performanceLoadSelected && Number.isFinite(loadKg) && loadKg >= item.performanceLoadProfile.minKg && loadKg <= item.performanceLoadProfile.maxKg;
+        state.__warmupDraft ||= {};
+        state.__warmupDraft[exerciseId] = {
+          reps: item.performanceReps.dataset.selected === 'true' ? Number(item.performanceReps.value) : null,
+          load: loadSelected ? load : null,
+          loadUnit,
+          loadKg: loadSelected ? loadKg : null,
+          loadSelected
+        };
+        save();
+        return;
+      }
+"""
+    draft_anchor = "const savePerformanceDraft = () => {\n      if (!state.__performanceDraft) state.__performanceDraft = {};"
+    warmup_draft_marker = "if (item.performanceWarmupMode) {\n        const load = Number(item.performanceLoadExact);"
+    if warmup_draft_marker not in source:
+        if draft_anchor not in source:
+            raise ValueError("No se encontró savePerformanceDraft para separar la carga de aproximación")
+        source = source.replace(
+            draft_anchor,
+            "const savePerformanceDraft = () => {\n" + warmup_draft_guard + "      if (!state.__performanceDraft) state.__performanceDraft = {};",
+            1,
+        )
+    if "state.__warmupDraft[exerciseId] = {" not in source:
+        raise ValueError("No se pudo separar el borrador normal del borrador de aproximación")
+
+    source = source.replace(
+        "const warmupDue = globalWarmupComplete && !exerciseWarmupComplete;\n    const warmupHint = item.tracker.querySelector('.exerciseWarmupHint');",
+        "const warmupDue = globalWarmupComplete && !exerciseWarmupComplete;\n    item.setPerformanceLoadMode?.(warmupDue);\n    const warmupHint = item.tracker.querySelector('.exerciseWarmupHint');",
+        1,
+    )
+
+    source = source.replace(
+        "const load = Number(item.warmupLoadExact);\n        const warmupLoadUnit = item.warmupLoadUnit === 'lb' ? 'lb' : 'kg';\n        const warmupLoadKg = warmupLoadUnit === 'lb' ? load * 0.45359237 : load;\n        const loadSelected = item.warmupLoadSelected && Number.isFinite(warmupLoadKg) && warmupLoadKg >= item.performanceLoadProfile.minKg && warmupLoadKg <= item.performanceLoadProfile.maxKg;",
+        "const load = Number(item.performanceLoadExact);\n        const warmupLoadUnit = item.performanceLoadUnit === 'lb' ? 'lb' : 'kg';\n        const warmupLoadKg = warmupLoadUnit === 'lb' ? load * 0.45359237 : load;\n        const loadSelected = item.performanceLoadSelected && Number.isFinite(warmupLoadKg) && warmupLoadKg >= item.performanceLoadProfile.minKg && warmupLoadKg <= item.performanceLoadProfile.maxKg;",
+    )
+    return source
+
+
 def standardize_shared_session_contract(source: str) -> str:
     """Alinea los campos de temporización y lectura compartidos de las salidas."""
     source = source.replace(
@@ -1909,7 +2030,7 @@ def standardize_shared_session_contract(source: str) -> str:
 """
         source = source.replace("  const refreshTimingDisplays = () => {", profile_mascot_init + "  const refreshTimingDisplays = () => {", 1)
     source = source.replace("  document.addEventListener('visibilitychange', () => renderTimingDisplays());\n", "")
-    return source
+    return apply_warmup_load_selector_contract(source)
 
 
 def _muscle_item_replacement(match: re.Match[str]) -> str:
