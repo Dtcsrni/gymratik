@@ -3302,7 +3302,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 <section class="sessionCompletionPanel" id="sessionCompletionPanel" aria-labelledby="session-completion-title" hidden>
 <div class="completionOrb" aria-hidden="true"><span>✓</span></div>
 <div class="motivationPhotoWrap"><div class="motivationPortrait" aria-label="Retrato de quien dice la frase"><img id="motivationPortrait" alt="" decoding="async" loading="lazy" hidden><span id="motivationInitials" aria-hidden="true">★</span></div><span class="completionSnack" aria-hidden="true">🍎</span><a class="motivationPhotoCredit" id="motivationPhotoCredit" target="_blank" rel="noopener noreferrer" hidden></a></div><div class="sessionCompletionCopy"><div class="sessionCompletionKicker">SESIÓN COMPLETADA</div><h2 id="session-completion-title">Trabajo terminado.</h2><p id="motivationMessage">Una serie a la vez. Hoy cumpliste.</p><a class="motivationNote" id="motivationNote" target="_blank" rel="noopener noreferrer" hidden></a><div class="sessionRecap" id="sessionRecap" role="group" aria-label="Resumen de la sesión">
-<h3 class="sessionRecapTitle">Así fue tu sesión</h3>
+<div class="sessionRecapHeader"><h3 class="sessionRecapTitle">Así fue tu sesión</h3><div class="sessionProgressRing" id="sessionProgressRing" role="img" aria-label="Progreso de series"><svg viewBox="0 0 80 80" aria-hidden="true"><circle class="sessionRingTrack" cx="40" cy="40" r="31"></circle><circle class="sessionRingProgress" id="sessionRingProgress" cx="40" cy="40" r="31" stroke-dasharray="194.78" stroke-dashoffset="194.78"></circle></svg><span class="sessionRingValue"><strong id="sessionRingPercent">0%</strong><small>series</small></span></div></div>
 <dl class="sessionRecapGrid">
 <div class="sessionRecapMetric"><dt>Series confirmadas</dt><dd id="sessionRecapSets">—</dd></div>
 <div class="sessionRecapMetric"><dt>Ejercicios completos</dt><dd id="sessionRecapExercises">—</dd></div>
@@ -3310,6 +3310,32 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 <div class="sessionRecapMetric"><dt>Ejercicios omitidos</dt><dd id="sessionRecapSkipped">—</dd></div>
 <div class="sessionRecapMetric"><dt>Tiempo transcurrido</dt><dd id="sessionRecapDuration">—</dd></div>
 </dl>
+<section class="sessionMuscleViz" id="sessionMuscleViz" aria-labelledby="sessionMuscleTitle">
+<div class="muscleVizHeader"><div><h4 id="sessionMuscleTitle">Músculos trabajados</h4><p>Series confirmadas por zona</p></div><span class="muscleVizPulseLabel"><i aria-hidden="true"></i>PULSO ILUSTRATIVO</span></div>
+<div class="muscleVizLayout">
+<svg class="sessionMuscleMap" id="sessionMuscleMap" viewBox="0 0 200 178" role="img" aria-label="Mapa ilustrativo de las zonas musculares trabajadas">
+<defs><linearGradient id="muscleBodyFill" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#8cb8cb"></stop><stop offset="1" stop-color="#31566d"></stop></linearGradient><radialGradient id="muscleHotFill"><stop offset="0" stop-color="#fff2ae"></stop><stop offset=".38" stop-color="#ffd166"></stop><stop offset="1" stop-color="#ff8d63" stop-opacity=".38"></stop></radialGradient></defs>
+<g class="muscleBodyBase" aria-hidden="true">
+<circle cx="48" cy="15" r="9"></circle><path d="M42 27 34 31 28 43 32 67 37 81 59 81 64 67 68 43 62 31 54 27Z"></path><path d="M34 34 23 42 17 66M62 34 73 42 79 66M40 78 37 103 34 132M56 78 59 103 62 132"></path>
+<circle cx="151" cy="15" r="9"></circle><path d="M145 27 137 31 131 43 135 67 140 81 162 81 167 67 171 43 165 31 157 27Z"></path><path d="M137 34 126 42 120 66M165 34 176 42 182 66M143 78 140 103 137 132M159 78 162 103 165 132"></path>
+<path d="M34 132 30 160M62 132 66 160M137 132 133 160M165 132 169 160"></path>
+</g>
+<g class="muscleHotspots" aria-hidden="true">
+<ellipse class="muscleHotspot" data-muscle-region="shoulders" cx="34" cy="36" rx="9" ry="6"></ellipse><ellipse class="muscleHotspot" data-muscle-region="shoulders" cx="62" cy="36" rx="9" ry="6"></ellipse>
+<ellipse class="muscleHotspot" data-muscle-region="chest" cx="43" cy="47" rx="9" ry="6"></ellipse><ellipse class="muscleHotspot" data-muscle-region="chest" cx="53" cy="47" rx="9" ry="6"></ellipse>
+<ellipse class="muscleHotspot" data-muscle-region="arms" cx="22" cy="51" rx="5" ry="9"></ellipse><ellipse class="muscleHotspot" data-muscle-region="arms" cx="74" cy="51" rx="5" ry="9"></ellipse>
+<ellipse class="muscleHotspot" data-muscle-region="core" cx="48" cy="65" rx="10" ry="11"></ellipse>
+<ellipse class="muscleHotspot" data-muscle-region="back" cx="143" cy="48" rx="8" ry="15"></ellipse><ellipse class="muscleHotspot" data-muscle-region="back" cx="159" cy="48" rx="8" ry="15"></ellipse>
+<ellipse class="muscleHotspot" data-muscle-region="glutes" cx="145" cy="82" rx="8" ry="7"></ellipse><ellipse class="muscleHotspot" data-muscle-region="glutes" cx="157" cy="82" rx="8" ry="7"></ellipse>
+<ellipse class="muscleHotspot" data-muscle-region="legs" cx="41" cy="105" rx="7" ry="17"></ellipse><ellipse class="muscleHotspot" data-muscle-region="legs" cx="55" cy="105" rx="7" ry="17"></ellipse>
+<ellipse class="muscleHotspot" data-muscle-region="legs" cx="144" cy="108" rx="7" ry="17"></ellipse><ellipse class="muscleHotspot" data-muscle-region="legs" cx="158" cy="108" rx="7" ry="17"></ellipse>
+<ellipse class="muscleHotspot" data-muscle-region="calves" cx="37" cy="143" rx="5" ry="11"></ellipse><ellipse class="muscleHotspot" data-muscle-region="calves" cx="59" cy="143" rx="5" ry="11"></ellipse>
+<ellipse class="muscleHotspot" data-muscle-region="calves" cx="140" cy="143" rx="5" ry="11"></ellipse><ellipse class="muscleHotspot" data-muscle-region="calves" cx="162" cy="143" rx="5" ry="11"></ellipse>
+</g><text class="muscleMapCaption" x="48" y="174">FRENTE</text><text class="muscleMapCaption" x="151" y="174">ESPALDA</text>
+</svg>
+<ol class="sessionMuscleRows" id="sessionMuscleRows" aria-live="polite"></ol>
+</div><p class="muscleVizNote">El pulso es decorativo; no mide crecimiento muscular. Una serie puede contar en varias zonas.</p>
+</section>
 <p class="sessionFunFact" id="sessionFunFact" role="status" aria-live="polite"></p>
 <p class="sessionRecapFoot">Solo cuentan series confirmadas; aproximaciones, cargas y repeticiones de calentamiento permanecen aparte. El tiempo incluye descansos.</p>
 </div></div>
@@ -5121,6 +5147,69 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     setText('sessionRecapReps', totalReps ? totalReps : '—');
     setText('sessionRecapSkipped', skippedExercises);
     setText('sessionRecapDuration', duration);
+    const progressRing = document.getElementById('sessionProgressRing');
+    const ringProgress = document.getElementById('sessionRingProgress');
+    const ringPercent = plannedSeries ? Math.round(Math.min(1, doneSeries / plannedSeries) * 100) : 0;
+    if (ringProgress) ringProgress.style.strokeDashoffset = String(194.78 * (1 - ringPercent / 100));
+    setText('sessionRingPercent', `${ringPercent}%`);
+    if (progressRing) progressRing.setAttribute('aria-label', `${doneSeries} de ${plannedSeries} series confirmadas (${ringPercent} %) `);
+
+    const muscleRows = document.getElementById('sessionMuscleRows');
+    const muscleMap = document.getElementById('sessionMuscleMap');
+    if (muscleRows && muscleMap) {
+      const groupCounts = new Map();
+      exerciseItems.forEach((item, index) => {
+        const row = rows[index];
+        if (!row?.done) return;
+        const zone = item.tracker.closest('article.card')?.querySelector('.zone')?.textContent || '';
+        const groups = zone.split('·').slice(1).join('·').trim().split('+').map(group => group.trim()).filter(Boolean);
+        groups.forEach(group => groupCounts.set(group, (groupCounts.get(group) || 0) + row.done));
+      });
+      const normalizeMuscle = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+      const regionsFor = group => {
+        const name = normalizeMuscle(group);
+        const regions = new Set();
+        if (/ESPALDA|DORSAL|TRAPECIO/.test(name)) regions.add('back');
+        if (/PECHO|PECTORAL|CLAVICULAR|ADUCCION/.test(name)) regions.add('chest');
+        if (/HOMBRO|DELTOID/.test(name)) regions.add('shoulders');
+        if (/BICEPS|TRICEPS|BRAZO/.test(name)) regions.add('arms');
+        if (/CORE|ABDOMINAL|ZONA MEDIA/.test(name)) regions.add('core');
+        if (/GLUTEO|GLUTEOS/.test(name)) regions.add('glutes');
+        if (/CUADRICEPS|ISQUIO|ADUCTOR|ABDUCTOR|PIERNA/.test(name)) regions.add('legs');
+        if (/PANTORRILLA/.test(name)) regions.add('calves');
+        return [...regions];
+      };
+      const entries = [...groupCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'es'));
+      const maxGroupCount = Math.max(1, ...entries.map(([, count]) => count));
+      const activeRegions = new Set(entries.flatMap(([group]) => regionsFor(group)));
+      muscleMap.querySelectorAll('.muscleHotspot').forEach(hotspot => hotspot.classList.toggle('isActive', activeRegions.has(hotspot.dataset.muscleRegion)));
+      muscleRows.replaceChildren();
+      if (!entries.length) {
+        const empty = document.createElement('li');
+        empty.className = 'sessionMuscleEmpty';
+        empty.textContent = 'Aún no hay series confirmadas para mostrar.';
+        muscleRows.append(empty);
+      } else entries.forEach(([group, count], index) => {
+        const row = document.createElement('li');
+        row.className = 'sessionMuscleRow';
+        row.style.animationDelay = `${Math.min(index, 8) * 45}ms`;
+        row.dataset.muscleRegion = regionsFor(group).join(' ');
+        const label = document.createElement('span');
+        label.className = 'sessionMuscleRowLabel';
+        label.textContent = group;
+        const value = document.createElement('strong');
+        value.className = 'sessionMuscleRowCount';
+        value.textContent = `${count} ${count === 1 ? 'serie' : 'series'}`;
+        const bar = document.createElement('span');
+        bar.className = 'sessionMuscleBar';
+        bar.setAttribute('aria-hidden', 'true');
+        const fill = document.createElement('span');
+        fill.style.width = `${Math.round(count / maxGroupCount * 100)}%`;
+        bar.append(fill);
+        row.append(label, value, bar);
+        muscleRows.append(row);
+      });
+    }
     const kicker = completionPanel.querySelector('.sessionCompletionKicker');
     const title = document.getElementById('session-completion-title');
     if (kicker) kicker.textContent = complete ? 'RUTINA COMPLETADA · GUARDADO AUTOMÁTICO' : 'SESIÓN GUARDADA · PROGRESO PARCIAL';
@@ -8171,7 +8260,7 @@ button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gra
 @media(prefers-reduced-motion:reduce){#floatingSessionSummary,#summaryToggle{scroll-behavior:auto!important;transition:none!important}}
 </style>
 
-<style data-enhancement="exercise-focus-occupied-quote-v4">
+<style data-enhancement="exercise-focus-occupied-quote-v5">
 /* Separa visualmente cada ejercicio y reserva el ámbar para una máquina ocupada. */
 main.cards article.card[data-exercise-index]{--exercise-accent:#72dcff;position:relative;border:1px solid color-mix(in srgb,var(--exercise-accent) 30%,transparent);transition:border-color .24s ease,box-shadow .24s ease,transform .24s ease}
 main.cards article.card[data-exercise-index]:focus-within,main.cards article.card[data-exercise-index].is-exercise-focused{border-color:var(--exercise-accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--exercise-accent) 22%,transparent),0 18px 42px rgba(0,0,0,.24)}
@@ -8197,13 +8286,45 @@ main.cards article.card[data-machine-occupied="true"] .machinePendingToggle{posi
 .sessionCompletionPanel.isPartial{border-color:rgba(255,209,102,.52)!important;background:radial-gradient(ellipse at 0 0,rgba(177,123,35,.17),transparent 52%),linear-gradient(145deg,rgba(55,43,24,.98),rgba(19,27,38,.99))!important}
 .sessionCompletionPanel.isPartial .sessionCompletionKicker{border-color:rgba(255,209,102,.4);background:rgba(111,77,22,.24);color:#ffdc8c}
 .sessionRecap{margin-top:.8rem;padding:.8rem;border:1px solid rgba(114,220,255,.2);border-radius:.9rem;background:linear-gradient(135deg,rgba(4,22,34,.7),rgba(14,34,48,.7));animation:recapReveal .5s cubic-bezier(.2,.8,.2,1) both}
-.sessionRecapTitle{margin:0 0 .55rem;color:#dff8ff;font-size:.72rem;font-weight:950;letter-spacing:.1em;text-transform:uppercase}
-.sessionRecapGrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.42rem;margin:0}
+.sessionRecapHeader{display:flex;align-items:center;justify-content:space-between;gap:.8rem;margin-bottom:.65rem}
+.sessionRecapTitle{margin:0;color:#dff8ff;font-size:clamp(1rem,2.2vw,1.35rem);font-weight:950;letter-spacing:.06em;text-transform:uppercase}
+.sessionProgressRing{position:relative;flex:0 0 4.6rem;width:4.6rem;height:4.6rem;filter:drop-shadow(0 0 14px rgba(101,242,221,.16))}
+.sessionProgressRing svg{display:block;width:100%;height:100%;transform:rotate(-90deg)}
+.sessionProgressRing circle{fill:none;stroke-width:7}
+.sessionRingTrack{stroke:rgba(157,204,218,.2)}
+.sessionRingProgress{stroke:#65f2dd;stroke-linecap:round;transition:stroke-dashoffset .65s cubic-bezier(.2,.8,.2,1)}
+.sessionRingValue{position:absolute;inset:0;display:grid;align-content:center;justify-items:center;color:#eafffc}
+.sessionRingValue strong{font-size:1rem;line-height:1;font-variant-numeric:tabular-nums}
+.sessionRingValue small{margin-top:.16rem;color:#a9d2d6;font-size:.57rem;font-weight:850;text-transform:uppercase;letter-spacing:.1em}
+.sessionRecapGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem;margin:0}
 .sessionRecapMetric{min-width:0;padding:.5rem .55rem;border:1px solid rgba(157,204,218,.12);border-radius:.65rem;background:rgba(3,16,25,.5);animation:recapMetricIn .42s cubic-bezier(.2,.8,.2,1) both}
 .sessionRecapMetric:nth-child(2){animation-delay:.05s}.sessionRecapMetric:nth-child(3){animation-delay:.1s}.sessionRecapMetric:nth-child(4){animation-delay:.15s}.sessionRecapMetric:nth-child(5){animation-delay:.2s}
 .sessionRecapMetric dt{color:#91adba;font-size:.6rem;font-weight:800;line-height:1.2}
 .sessionRecapMetric dd{margin:.2rem 0 0;color:#a9f1dd;font-size:clamp(.86rem,1.5vw,1.12rem);font-weight:950;line-height:1.1;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .sessionCompletionPanel.isPartial .sessionRecapMetric dd{color:#ffe0a0}
+.sessionMuscleViz{margin-top:.7rem;padding:.7rem;border:1px solid rgba(101,242,221,.24);border-radius:.85rem;background:radial-gradient(ellipse at 0 0,rgba(26,123,119,.18),transparent 58%),rgba(3,16,25,.48)}
+.muscleVizHeader{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.45rem}
+.muscleVizHeader h4{margin:0;color:#e4fbff;font-size:clamp(.92rem,2vw,1.12rem);font-weight:950}
+.muscleVizHeader p{margin:.15rem 0 0;color:#a9c7d2;font-size:.72rem;font-weight:750}
+.muscleVizPulseLabel{display:inline-flex;align-items:center;gap:.32rem;padding:.24rem .4rem;border:1px solid rgba(255,209,102,.32);border-radius:999px;color:#ffe0a0;font-size:.55rem;font-weight:950;letter-spacing:.07em;white-space:nowrap}
+.muscleVizPulseLabel i{width:.42rem;height:.42rem;border-radius:50%;background:#ffd166;box-shadow:0 0 10px #ffd166;animation:musclePulseDot 1.8s ease-in-out infinite}
+.muscleVizLayout{display:grid;grid-template-columns:minmax(6rem,.75fr) minmax(0,1.5fr);align-items:center;gap:.55rem}
+.sessionMuscleMap{display:block;width:100%;max-height:12rem;overflow:visible}
+.muscleBodyBase circle{fill:url(#muscleBodyFill);stroke:rgba(201,234,246,.65);stroke-width:1.4}
+.muscleBodyBase path{fill:none;stroke:rgba(169,211,226,.68);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+.muscleBodyBase path:nth-of-type(1),.muscleBodyBase path:nth-of-type(3){fill:url(#muscleBodyFill);stroke-width:1.3}
+.muscleHotspot{fill:url(#muscleHotFill);opacity:.06;transform-box:fill-box;transform-origin:center}
+.muscleHotspot.isActive{opacity:.86;animation:muscleGrowthPulse 2.4s ease-in-out infinite}
+.muscleHotspot.isActive:nth-child(even){animation-delay:-1.2s}
+.muscleMapCaption{fill:#a9c7d2;font-size:7px;font-weight:900;text-anchor:middle;letter-spacing:.08em}
+.sessionMuscleRows{display:grid;gap:.34rem;min-width:0;margin:0;padding:0;list-style:none}
+.sessionMuscleRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.14rem .4rem;align-items:center;min-width:0;padding:.3rem .42rem;border:1px solid rgba(157,204,218,.12);border-radius:.52rem;background:rgba(11,32,45,.72);animation:recapMetricIn .35s both}
+.sessionMuscleRowLabel{overflow:hidden;color:#e2f6fa;font-size:.72rem;font-weight:850;text-overflow:ellipsis;white-space:nowrap}
+.sessionMuscleRowCount{color:#a9f1dd;font-size:.68rem;font-weight:950;white-space:nowrap;font-variant-numeric:tabular-nums}
+.sessionMuscleBar{grid-column:1/-1;height:.32rem;overflow:hidden;border-radius:99px;background:rgba(157,204,218,.13)}
+.sessionMuscleBar span{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#28c4bd,#65f2dd,#ffd166);box-shadow:0 0 10px rgba(101,242,221,.38);transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.sessionMuscleEmpty{grid-column:1/-1;margin:0;padding:.7rem;color:#b9d2db;font-size:.78rem;line-height:1.4}
+.muscleVizNote{margin:.45rem 0 0;color:#9cb4bf;font-size:.64rem;line-height:1.35}
 .sessionFunFact{margin:.55rem 0 0;padding:.55rem .65rem;border-left:3px solid #ffd166;border-radius:.25rem .6rem .6rem .25rem;background:rgba(117,79,18,.16);color:#ffe6b3;font-size:.76rem;font-weight:850;line-height:1.4;animation:factReveal .6s .12s both}
 .sessionRecapFoot{margin:.38rem 0 0;color:#8fa9b6;font-size:.61rem;line-height:1.35}
 .motivationPortrait.isMascot{border-radius:50%!important;border-color:rgba(101,242,221,.72)!important;background:radial-gradient(circle at 50% 38%,rgba(101,242,221,.24),rgba(9,34,48,.96) 72%)!important;box-shadow:0 0 0 3px rgba(101,242,221,.09),0 7px 20px rgba(0,0,0,.28),0 0 22px rgba(101,242,221,.18)!important}
@@ -8218,8 +8339,10 @@ main.cards article.card[data-machine-occupied="true"] .machinePendingToggle{posi
 @keyframes exerciseBarPulse{from{filter:brightness(1)}to{filter:brightness(1.22)}}
 @keyframes completionMascotBounce{0%,100%{transform:translateY(1px) rotate(-2deg) scale(1)}50%{transform:translateY(-3px) rotate(2deg) scale(1.045)}}
 @keyframes completionSparkle{0%,100%{opacity:.48;transform:scale(.78) rotate(-12deg)}50%{opacity:1;transform:scale(1.16) rotate(16deg)}}
+@keyframes muscleGrowthPulse{0%,100%{transform:scale(.94);filter:brightness(.88);opacity:.64}50%{transform:scale(1.12);filter:brightness(1.35);opacity:1}}
+@keyframes musclePulseDot{0%,100%{transform:scale(.78);opacity:.65}50%{transform:scale(1.15);opacity:1}}
 @keyframes snackOffer{0%,100%{transform:translate(0,0) rotate(5deg) scale(.94)}45%{transform:translate(-5px,-5px) rotate(-9deg) scale(1.06)}70%{transform:translate(-2px,-1px) rotate(2deg) scale(1)}}
-@media(max-width:640px){.floatingSessionSummary .summaryFocusBadge{font-size:.55rem}.sessionCompletionCopy p#motivationMessage{padding:.75rem .8rem .75rem 1.05rem}.sessionRecap{padding:.62rem}.sessionRecapGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:.35rem}.sessionRecapMetric{padding:.45rem}.sessionRecapMetric dt{font-size:.57rem}.sessionFunFact{font-size:.7rem}
+@media(max-width:640px){.floatingSessionSummary .summaryFocusBadge{font-size:.55rem}.sessionCompletionCopy p#motivationMessage{padding:.75rem .8rem .75rem 1.05rem}.sessionRecap{padding:.62rem}.sessionRecapGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:.35rem}.sessionRecapMetric{padding:.45rem}.sessionRecapMetric dt{font-size:.64rem}.sessionRecapMetric dd{font-size:.92rem}.sessionFunFact{font-size:.78rem}.sessionRecapHeader{margin-bottom:.5rem}.sessionRecapTitle{font-size:1.04rem}.sessionProgressRing{flex-basis:4rem;width:4rem;height:4rem}.sessionMuscleViz{padding:.56rem}.muscleVizLayout{grid-template-columns:minmax(5.4rem,.65fr) minmax(0,1.5fr);gap:.4rem}.sessionMuscleRowLabel{font-size:.68rem}.sessionMuscleRowCount{font-size:.64rem}.muscleVizNote{font-size:.66rem}
   .sessionCompletionPanel:not([hidden]){grid-template-columns:minmax(0,1fr) 3.15rem!important;grid-template-rows:auto auto auto auto auto auto!important;align-items:start!important;gap:.3rem .45rem!important;padding:.65rem .72rem!important;overflow:hidden!important}
   .sessionCompletionPanel:not([hidden])>*{min-width:0!important;max-width:100%!important}
   .sessionCompletionPanel .completionOrb{display:none!important}
@@ -8234,20 +8357,24 @@ main.cards article.card[data-machine-occupied="true"] .machinePendingToggle{posi
   .sessionCompletionPanel #motivationMessage::before{left:.24rem!important;top:.08rem!important}
   .sessionCompletionPanel .motivationNote{grid-column:1/-1!important;grid-row:4!important;margin:.05rem 0 .12rem!important;font-size:.58rem!important;line-height:1.2!important}
   .sessionCompletionPanel .sessionRecap{grid-column:1/-1!important;grid-row:5!important;margin:.12rem 0 0!important;padding:.48rem!important;border-radius:.68rem!important}
-  .sessionCompletionPanel .sessionRecapTitle{margin:0 0 .35rem!important;font-size:.62rem!important}
-  .sessionCompletionPanel .sessionRecapGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:.28rem!important}
+  .sessionCompletionPanel .sessionRecapTitle{margin:0!important;font-size:.92rem!important}
+  .sessionCompletionPanel .sessionProgressRing{flex-basis:3.9rem!important;width:3.9rem!important;height:3.9rem!important}
+  .sessionCompletionPanel .sessionRecapGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:.34rem!important}
   .sessionCompletionPanel .sessionRecapMetric{padding:.34rem .38rem!important;border-radius:.5rem!important}
-  .sessionCompletionPanel .sessionRecapMetric dt{font-size:.52rem!important;line-height:1.1!important}
-  .sessionCompletionPanel .sessionRecapMetric dd{margin-top:.13rem!important;font-size:.76rem!important;line-height:1.08!important}
+  .sessionCompletionPanel .sessionRecapMetric dt{font-size:.64rem!important;line-height:1.15!important}
+  .sessionCompletionPanel .sessionRecapMetric dd{margin-top:.16rem!important;font-size:.9rem!important;line-height:1.1!important}
+  .sessionCompletionPanel .sessionMuscleViz{grid-column:1/-1!important;margin:.35rem 0 0!important;padding:.58rem!important}
+  .sessionCompletionPanel .muscleVizHeader h4{font-size:.95rem!important}.sessionCompletionPanel .muscleVizHeader p{font-size:.68rem!important}.sessionCompletionPanel .muscleVizPulseLabel{font-size:.5rem!important}
+  .sessionCompletionPanel .sessionMuscleMap{max-height:10rem!important}.sessionCompletionPanel .sessionMuscleRow{padding:.28rem .34rem!important}.sessionCompletionPanel .sessionMuscleRowLabel{font-size:.65rem!important}.sessionCompletionPanel .sessionMuscleRowCount{font-size:.62rem!important}
   .sessionCompletionPanel .sessionFunFact{grid-column:1/-1!important;margin:.3rem 0 0!important;padding:.35rem .45rem!important;font-size:.64rem!important;line-height:1.25!important}
   .sessionCompletionPanel .sessionRecapFoot{margin:.24rem 0 0!important;font-size:.53rem!important;line-height:1.22!important}
   .sessionCompletionPanel .sessionCompletionActions{grid-column:1/-1!important;grid-row:6!important;gap:.3rem!important;margin:.12rem 0 0!important}
   .sessionCompletionPanel .newMotivation,.sessionCompletionPanel .soundToggle,.sessionCompletionPanel .hapticsToggle{flex:1 1 8rem!important;min-width:0!important;min-height:40px!important;padding:.32rem .42rem!important;font-size:.62rem!important;line-height:1.15!important}
 }
 @media(max-width:380px){.sessionCompletionPanel:not([hidden]){grid-template-columns:minmax(0,1fr) 2.7rem!important;padding:.58rem!important}.sessionCompletionPanel .motivationPhotoWrap{width:2.55rem!important}.sessionCompletionPanel .motivationPortrait{width:2.55rem!important;height:2.55rem!important}.sessionCompletionPanel .sessionRecapGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.sessionCompletionPanel #session-completion-title{font-size:1.08rem!important}.sessionCompletionPanel #motivationMessage{font-size:.85rem!important}}
-@media(prefers-reduced-motion:reduce){.floatingSessionSummary.is-exercise-focused .summaryFocusBadge,.floatingSessionSummary.is-exercise-focused .summaryToggle,.summaryExercise.isCurrent,.sessionRecap,.sessionRecapMetric,.sessionFunFact,.motivationPortrait.isMascot img,.motivationPhotoWrap::after,.completionSnack{animation:none!important}main.cards article.card[data-exercise-index]{transition:none}}
+@media(prefers-reduced-motion:reduce){.floatingSessionSummary.is-exercise-focused .summaryFocusBadge,.floatingSessionSummary.is-exercise-focused .summaryToggle,.summaryExercise.isCurrent,.sessionRecap,.sessionRecapMetric,.sessionFunFact,.motivationPortrait.isMascot img,.motivationPhotoWrap::after,.completionSnack,.muscleHotspot,.muscleVizPulseLabel i{animation:none!important}.sessionRingProgress,.sessionMuscleBar span{transition:none!important}main.cards article.card[data-exercise-index]{transition:none}}
 </style>
-<script data-enhancement="exercise-focus-occupied-quote-v4">
+<script data-enhancement="exercise-focus-occupied-quote-v5">
 (() => {
   const cards = [...document.querySelectorAll('main.cards article.card[data-exercise-index]')];
   const summary = document.querySelector('.floatingSessionSummary');

@@ -1882,6 +1882,10 @@ def validate_completed_session_celebration(browser, name: str, sex: str, variant
     page.wait_for_function("document.querySelector('#summaryActivityStatus')?.dataset.activity === 'complete'")
     page.wait_for_function("expected => window.gymratikMascotVariant === expected", arg=variant)
     assert_mascot(page, variant, "celebration")
+    recap_graphs = page.locator("#sessionRecap").evaluate("element => ({percent: element.querySelector('#sessionRingPercent')?.textContent, ringLabel: element.querySelector('#sessionProgressRing')?.getAttribute('aria-label'), muscleRows: element.querySelectorAll('.sessionMuscleRow').length, activeRegions: element.querySelectorAll('.muscleHotspot.isActive').length, hotspotMotion: getComputedStyle(element.querySelector('.muscleHotspot.isActive')).animationName})")
+    if recap_graphs["percent"] != "100%" or "series confirmadas" not in (recap_graphs["ringLabel"] or "") or recap_graphs["muscleRows"] < 1 or recap_graphs["activeRegions"] < 1 or recap_graphs["hotspotMotion"] != "muscleGrowthPulse":
+        context.close()
+        raise AssertionError(f"{name}: faltan gráficas de progreso o activación muscular: {recap_graphs}")
     if page.locator(".exerciseTimerChip[data-kind^='active-']").count() != 0:
         context.close()
         raise AssertionError(f"{name}: quedó animado un cronómetro de serie/descanso tras completar la rutina")

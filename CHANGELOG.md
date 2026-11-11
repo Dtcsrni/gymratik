@@ -2,6 +2,13 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.15] - 2026-11-10
+
+### Changed
+
+- El cierre de sesión presenta un anillo de progreso, barras por zona y un mapa muscular animado con datos de series confirmadas; el pulso se identifica como decorativo y respeta movimiento reducido.
+- El resumen móvil amplía las métricas y conserva la variante de mascota configurada.
+
 ## [0.7.14] - 2026-11-10
 
 ### Changed

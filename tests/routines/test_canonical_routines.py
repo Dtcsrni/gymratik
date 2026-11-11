@@ -126,6 +126,20 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
                 self.assertIn("@keyframes completionMascotBounce", source)
                 self.assertIn("@media(prefers-reduced-motion:reduce)", source)
 
+    def test_session_completion_graphs_confirmed_series_and_muscle_zones_on_all_days(self) -> None:
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            source = path.read_text(encoding="utf-8")
+            with self.subTest(routine=path.name):
+                self.assertIn('id="sessionProgressRing"', source)
+                self.assertIn('id="sessionRingProgress"', source)
+                self.assertIn('id="sessionMuscleMap"', source)
+                self.assertIn('id="sessionMuscleRows"', source)
+                self.assertIn("const groupCounts = new Map()", source)
+                self.assertIn("if (!row?.done) return", source)
+                self.assertIn("muscleGrowthPulse", source)
+                self.assertIn("El pulso es decorativo; no mide crecimiento muscular", source)
+                self.assertIn("sessionRingPercent", source)
+
     def test_translucent_summary_state_colors_keep_wcag_aa_text_contrast(self) -> None:
         def luminance(color: tuple[int, int, int]) -> float:
             channels = [value / 255 for value in color]
@@ -1480,7 +1494,7 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
         for path in sorted(CANONICAL.glob("*.html")):
             with self.subTest(routine=path.name):
                 source = path.read_text(encoding="utf-8")
-                self.assertEqual(source.count('data-enhancement="exercise-focus-occupied-quote-v4"'), 2)
+                self.assertEqual(source.count('data-enhancement="exercise-focus-occupied-quote-v5"'), 2)
                 self.assertEqual(source.count('data-enhancement="section-ledger-load-v2"'), 2)
                 self.assertIn('data-machine-occupied="true"', source)
                 self.assertIn("setFocusedCard", source)
