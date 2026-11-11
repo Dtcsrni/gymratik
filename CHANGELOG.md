@@ -2,6 +2,13 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.8] - 2026-11-10
+
+### Changed
+
+- La barra flotante móvil ocupa menos alto, conserva el estado y el ejercicio en foco sin duplicar su nombre, y usa fondos ligeramente translúcidos con contraste de texto suficiente.
+- Se refuerza el diseño adaptable de las posiciones y el recorrido para evitar columnas angostas y texto fragmentado en pantallas móviles.
+
 ## [0.7.7] - 2026-11-10
 
 ### Fixed

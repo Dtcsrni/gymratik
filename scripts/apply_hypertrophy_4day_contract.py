@@ -339,6 +339,38 @@ main.cards article.card[data-machine-occupied="true"] .machinePendingToggle{posi
 })();
 </script>'''
 
+MOBILE_SUMMARY_REDESIGN = r'''<style data-enhancement="mobile-summary-layout-v1">
+@media(max-width:640px){
+  #floatingSessionSummary{right:max(.45rem,env(safe-area-inset-right))!important;bottom:max(.45rem,env(safe-area-inset-bottom))!important;width:min(340px,calc(100vw - .9rem))!important;max-height:min(36dvh,260px)!important;border-radius:.82rem!important;background:rgba(6,24,37,.94)!important;backdrop-filter:blur(14px) saturate(1.08)!important;-webkit-backdrop-filter:blur(14px) saturate(1.08)!important}
+  #summaryToggle{grid-template-columns:auto minmax(0,1fr) 48px auto!important;grid-template-rows:auto auto!important;min-height:54px!important;gap:.12rem .38rem!important;padding:.3rem .46rem!important}
+  #summaryToggle #summaryHeadline{grid-column:2;grid-row:1;font-size:.7rem!important;line-height:1.15!important}
+  #summaryToggle #summaryActivityHeadline{grid-column:2;grid-row:2;display:block!important;font-size:.62rem!important;line-height:1.1!important}
+  #summaryToggle .summaryMascotWrap{grid-column:3;grid-row:1/3!important;width:46px!important;height:46px!important;border-radius:.68rem!important}
+  #summaryToggle #summaryActivityMascot{width:42px!important;height:42px!important}
+  #summaryToggle .summaryChevron{grid-column:4;grid-row:1/3!important;font-size:.85rem!important}
+  #summaryToggle.isResting{background:linear-gradient(105deg,rgba(112,79,21,.94),rgba(83,61,29,.94))!important}
+  #summaryToggle.isActive{background:linear-gradient(105deg,rgba(19,105,91,.94),rgba(19,73,72,.94))!important}
+  #summaryToggle.isPreparing{background:linear-gradient(105deg,rgba(24,75,101,.94),rgba(15,45,65,.94))!important}
+  #summaryToggle.isComplete{background:linear-gradient(105deg,rgba(112,79,21,.94),rgba(72,51,80,.94))!important}
+  #summaryToggle[aria-expanded="true"]{grid-template-rows:auto auto!important;min-height:54px!important}
+  #summaryToggle[aria-expanded="true"] #summaryActivityHeadline{display:block!important}
+  #summaryToggle[aria-expanded="true"] .summaryMascotWrap{width:46px!important;height:46px!important}
+  #summaryToggle[aria-expanded="true"] #summaryActivityMascot{width:42px!important;height:42px!important}
+  #summaryToggle[aria-expanded="true"] + #summaryBody{max-height:min(26dvh,190px)!important;padding:.28rem .42rem .36rem!important;gap:.24rem!important}
+  #summaryToggle[aria-expanded="true"] + #summaryBody .summaryActivityStatus{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+  #summaryToggle[aria-expanded="true"] + #summaryBody #summaryElapsed{display:none!important}
+  #floatingSessionSummary .summaryFocusBadge{margin:0!important;padding:.14rem .34rem!important;font-size:.51rem!important;line-height:1.12!important}
+  #floatingSessionSummary .sessionSummaryList{max-height:min(17dvh,110px)!important}
+  main.cards article.card .phaseRow{grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr)!important;gap:6px!important;align-items:start!important}
+  main.cards article.card .phaseRow>.phaseCol{min-width:0!important;width:auto!important}
+  main.cards article.card .phaseRow>.routineSectionStamp{grid-column:1/-1!important;width:100%!important}
+  main.cards article.card .phaseRow .phaseLabel{max-width:100%!important;white-space:normal!important;word-break:normal!important;overflow-wrap:normal!important;line-height:1.2!important}
+  main.cards article.card .phaseRow .source{min-width:0!important;max-width:100%!important;word-break:normal!important;overflow-wrap:break-word!important;hyphens:auto}
+}
+@media(max-width:360px){.performanceRepsControl{grid-template-columns:40px minmax(0,1fr) 40px!important;gap:.25rem!important}.performanceRepsNudge{min-width:40px!important;min-height:44px!important}.performanceFieldTitleRow{flex-wrap:wrap!important;justify-content:flex-start!important;gap:.25rem .4rem!important}.performanceFieldLabel{flex:1 1 120px!important;flex-wrap:wrap!important}.performanceRequired{margin-left:26px!important}}
+@media(prefers-reduced-motion:reduce){#floatingSessionSummary,#summaryToggle{scroll-behavior:auto!important;transition:none!important}}
+</style>'''
+
 
 SECTION_LOAD_REDESIGN = r'''<style data-enhancement="section-ledger-load-v2">
 /* Los bloques de cada ejercicio tienen rótulos, bordes y tonos propios. */
@@ -382,7 +414,7 @@ SECTION_LOAD_REDESIGN = r'''<style data-enhancement="section-ledger-load-v2">
       stamp.className = 'routineSectionStamp';
       stamp.dataset.section = section;
       stamp.textContent = label;
-      block.insertBefore(stamp, block.firstChild);
+      if (selector === '.phaseRow') block.before(stamp); else block.insertBefore(stamp, block.firstChild);
     });
     const panel = card.querySelector('.performanceEntry');
     const item = panel?.__routineItem;
@@ -568,6 +600,14 @@ SESSION_COMPLETION_UPDATE = r'''  const renderSessionRecap = complete => {
 def apply_interaction_redesign(source: str) -> str:
     if './page-update-client.js' not in source:
         source = source.replace('</head>', '  <script src="../../../page-update-client.js" defer></script>\n</head>', 1)
+    source = source.replace(
+        'const activityText = `${displayActivity.label} · ${displayActivity.clock}`;',
+        "const compactActivityLabels = { rest: 'Descanso', ready: 'Descanso listo', approximation: 'Aproximación', preparing: 'Preparación', strength: displayActivity.label.split(' · ')[0], cardio: 'Calentamiento · cardio', mobility: 'Calentamiento · movilidad', complete: 'Rutina completada', start: 'Listo para iniciar' };\n      const activityText = `${compactActivityLabels[displayActivity.kind] || 'Sesión activa'} · ${displayActivity.clock}`;",
+    )
+    source = source.replace(
+        '      block.insertBefore(stamp, block.firstChild);',
+        "      if (selector === '.phaseRow') block.before(stamp); else block.insertBefore(stamp, block.firstChild);",
+    )
     for previous in ("exercise-focus-occupied-quote-v2", "exercise-focus-occupied-quote-v3", "exercise-focus-occupied-quote-v4", "section-ledger-load-v1", "section-ledger-load-v2"):
         source = re.sub(
             rf'<style\s+data-enhancement="{re.escape(previous)}">.*?</script>',
@@ -731,6 +771,16 @@ def apply_interaction_redesign(source: str) -> str:
         1,
     )
     source = re.sub(r'\n{3,}(?=<style data-enhancement="exercise-focus-occupied-quote-v4">)', '\n\n', source)
+    if 'data-enhancement="mobile-summary-layout-v1"' not in source:
+        source = source.replace('</body>', MOBILE_SUMMARY_REDESIGN + '\n</body>', 1)
+    else:
+        source = re.sub(
+            r'<style data-enhancement="mobile-summary-layout-v1">.*?</style>',
+            lambda _: MOBILE_SUMMARY_REDESIGN,
+            source,
+            count=1,
+            flags=re.S,
+        )
     return source
 
 

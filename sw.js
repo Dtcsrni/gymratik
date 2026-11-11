@@ -1,5 +1,5 @@
-const CACHE_NAME = 'entrenamiento-pwa-231c00070966';
-const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-374dfbc3c2e8';
+const CACHE_NAME = 'entrenamiento-pwa-bea22d634ae2';
+const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-05c0a6f3b72d';
 const PRECACHE = [
   './',
   './index.html',
@@ -230,10 +230,10 @@ const RESOURCE_BYTES = {
   './data/profile/mascot-motion/states-v1/male-mobility.png': 12451,
   './data/profile/mascot-motion/states-v1/male-rest.png': 15701,
   './data/profile/mascot-motion/states-v1/male-approval.png': 12307,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html': 1112646,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html': 2706382,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html': 685888,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html': 690803,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html': 1117258,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html': 2710994,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html': 690500,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html': 695415,
   './assets/branding/gymratik-mascots-mark-v2.png': 338005,
   './data/rutinas_autocontenidas/frases_fitness/fitness_quotes.js': 5148,
   './data/rutinas_autocontenidas/frases_fitness/retratos/arnold-schwarzenegger-eu-2026.jpg': 278839,

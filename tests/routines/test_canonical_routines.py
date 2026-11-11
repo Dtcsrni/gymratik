@@ -45,6 +45,7 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
                 self.assertEqual(source.count("const renderSessionRecap = complete =>"), 1)
                 self.assertEqual(source.count("const updateSessionCompletion = (celebrate = false) =>"), 1)
                 self.assertIn('../../../page-update-client.js', source)
+                self.assertIn('data-enhancement="mobile-summary-layout-v1"', source)
 
     def test_interaction_generator_collapses_repeated_session_recap_blocks(self) -> None:
         path = CANONICAL / "Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html"
@@ -59,6 +60,42 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
         self.assertEqual(normalized.count("const renderSessionRecap = complete =>"), 1)
         self.assertEqual(normalized.count("const updateSessionCompletion = (celebrate = false) =>"), 1)
         self.assertIn('../../../page-update-client.js', normalized)
+
+    def test_mobile_summary_and_motion_layout_are_guarded_on_all_days(self) -> None:
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            source = path.read_text(encoding="utf-8")
+            with self.subTest(routine=path.name):
+                self.assertIn('grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr)', source)
+                self.assertIn('overflow-wrap:break-word', source)
+                self.assertIn('rgba(6,24,37,.94)', source)
+                self.assertIn("compactActivityLabels[displayActivity.kind]", source)
+                self.assertIn("if (selector === '.phaseRow') block.before(stamp)", source)
+                self.assertIn('@media(max-width:360px){.performanceRepsControl{grid-template-columns:40px', source)
+                self.assertIn('.performanceFieldLabel{flex:1 1 120px!important;flex-wrap:wrap!important}', source)
+
+    def test_translucent_summary_state_colors_keep_wcag_aa_text_contrast(self) -> None:
+        def luminance(color: tuple[int, int, int]) -> float:
+            channels = [value / 255 for value in color]
+            linear = [value / 12.92 if value <= 0.04045 else ((value + 0.055) / 1.055) ** 2.4 for value in channels]
+            return sum(value * weight for value, weight in zip(linear, (0.2126, 0.7152, 0.0722)))
+
+        def contrast(foreground: tuple[int, int, int], background: tuple[int, int, int]) -> float:
+            high, low = sorted((luminance(foreground), luminance(background)), reverse=True)
+            return (high + 0.05) / (low + 0.05)
+
+        def composite_on_white(background: tuple[int, int, int], alpha: float = 0.94) -> tuple[int, int, int]:
+            return tuple(round(channel * alpha + 255 * (1 - alpha)) for channel in background)
+
+        state_pairs = (
+            ((255, 228, 164), ((112, 79, 21), (83, 61, 29))),
+            ((185, 255, 241), ((19, 105, 91), (19, 73, 72))),
+            ((216, 245, 255), ((24, 75, 101), (15, 45, 65))),
+            ((255, 240, 180), ((112, 79, 21), (72, 51, 80))),
+        )
+        for foreground, backgrounds in state_pairs:
+            for background in backgrounds:
+                with self.subTest(foreground=foreground, background=background):
+                    self.assertGreaterEqual(contrast(foreground, composite_on_white(background)), 4.5)
 
     def test_repository_validator_blocks_duplicate_session_script_declarations(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

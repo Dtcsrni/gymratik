@@ -79,6 +79,7 @@ button:not(:disabled):active,[role="button"]:not([aria-disabled="true"]):active{
 .performanceLoadOutputRow .performanceClear{min-width:58px}
 button:not(:disabled):focus-visible{outline:2px solid #fff;outline-offset:3px}
 @media(max-width:640px){.performanceEntry{gap:.45rem!important;padding:.55rem!important}.performanceField{padding:.5rem .58rem}.performanceRepsControl{grid-template-columns:48px minmax(0,1fr) 48px;gap:.35rem}.performanceRepsValue{min-height:48px}.performanceRepsNudge{min-width:48px;min-height:48px}.performanceClear{min-height:38px}}
+@media(max-width:360px){.performanceRepsControl{grid-template-columns:40px minmax(0,1fr) 40px;gap:.25rem}.performanceRepsNudge{min-width:40px;min-height:44px}.performanceFieldTitleRow{flex-wrap:wrap;justify-content:flex-start;gap:.25rem .4rem}.performanceFieldLabel{flex:1 1 120px;flex-wrap:wrap}.performanceRequired{margin-left:26px}}
 @media(prefers-reduced-motion:reduce){.performanceRepsNudge,.performanceRepsValue,.performanceClear,.performanceField input[type="range"]::-webkit-slider-thumb,.performanceField input[type="range"]::-moz-range-thumb{transition:none}button:not(:disabled):active,[role="button"]:not([aria-disabled="true"]):active{transform:none;filter:none}}
 </style>'''
 
@@ -607,7 +608,8 @@ REST_TIMING_DISPLAY_CONTRACT = '''  const renderTimingDisplays = () => {
           ? { kind: 'start', label: '¡Rutina iniciada!', clock: 'Vamos', startedAt: Number(root.sessionStartedAt) }
           : { kind: warmupDone || doneSeries > 0 || root?.sessionStartedAt ? 'ready' : 'start', label: warmupDone || doneSeries > 0 || root?.sessionStartedAt ? 'Listo para continuar' : '¡Vamos a entrenar!', clock: warmupDone || doneSeries > 0 || root?.sessionStartedAt ? 'Lista' : 'Iniciar', startedAt: 0 });
       const progressText = `${doneExercises}/${exerciseItems.length} ejercicios · ${doneSeries}/${totalSeries} series`;
-      const activityText = `${displayActivity.label} · ${displayActivity.clock}`;
+      const compactActivityLabels = { rest: 'Descanso', ready: 'Descanso listo', approximation: 'Aproximación', preparing: 'Preparación', strength: displayActivity.label.split(' · ')[0], cardio: 'Calentamiento · cardio', mobility: 'Calentamiento · movilidad', complete: 'Rutina completada', start: 'Listo para iniciar' };
+      const activityText = `${compactActivityLabels[displayActivity.kind] || 'Sesión activa'} · ${displayActivity.clock}`;
       activityHeadline.textContent = progressText;
       if (compactActivityHeadline) compactActivityHeadline.textContent = activityText;
       if (activityLabel) activityLabel.textContent = displayActivity.label;
