@@ -227,7 +227,7 @@ def update_sections(source: str, day: int, count: int, distribution: tuple[int, 
     return source
 
 
-INTERACTION_REDESIGN = r'''<style data-enhancement="exercise-focus-occupied-quote-v7">
+INTERACTION_REDESIGN = r'''<style data-enhancement="exercise-focus-occupied-quote-v8">
 /* Separa visualmente cada ejercicio y reserva el ámbar para una máquina ocupada. */
 main.cards article.card[data-exercise-index]{--exercise-accent:#72dcff;position:relative;border:1px solid color-mix(in srgb,var(--exercise-accent) 30%,transparent);transition:border-color .24s ease,box-shadow .24s ease,transform .24s ease}
 main.cards article.card[data-exercise-index]:focus-within,main.cards article.card[data-exercise-index].is-exercise-focused{border-color:var(--exercise-accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--exercise-accent) 22%,transparent),0 18px 42px rgba(0,0,0,.24)}
@@ -293,28 +293,32 @@ main.cards article.card[data-machine-occupied="true"] .machinePendingToggle{posi
 .sessionMuscleEmpty{grid-column:1/-1;margin:0;padding:.7rem;color:#b9d2db;font-size:.78rem;line-height:1.4}
 .sessionFunFact{margin:.55rem 0 0;padding:.55rem .65rem;border-left:3px solid #ffd166;border-radius:.25rem .6rem .6rem .25rem;background:rgba(117,79,18,.16);color:#ffe6b3;font-size:.76rem;font-weight:850;line-height:1.4;animation:factReveal .6s .12s both}
 .sessionRecapFoot{margin:.38rem 0 0;color:#8fa9b6;font-size:.61rem;line-height:1.35}
-.motivationPortrait.isMascot{border-radius:50%!important;border-color:rgba(101,242,221,.72)!important;background:radial-gradient(circle at 50% 38%,rgba(101,242,221,.24),rgba(9,34,48,.96) 72%)!important;box-shadow:0 0 0 3px rgba(101,242,221,.09),0 7px 20px rgba(0,0,0,.28),0 0 22px rgba(101,242,221,.18)!important}
-.motivationPortrait.isMascot img{object-fit:contain!important;padding:4px;animation:completionMascotBounce 2.8s ease-in-out infinite}
-.completionSnack{position:absolute;right:-.5rem;bottom:-.38rem;z-index:3;display:none;place-items:center;width:1.55rem;height:1.55rem;border:1px solid rgba(255,222,144,.65);border-radius:50%;background:linear-gradient(145deg,#674c1d,#352b20);font-size:.92rem;line-height:1;filter:drop-shadow(0 4px 8px rgba(0,0,0,.4));animation:snackOffer 2.4s cubic-bezier(.4,0,.2,1) infinite}
-.motivationPhotoWrap.hasMascot .completionSnack{display:grid}
-.motivationPhotoWrap::after{position:absolute;right:-.28rem;top:-.38rem;z-index:2;color:#ffe28b;font-size:1rem;content:"✦";pointer-events:none;animation:completionSparkle 1.8s ease-in-out infinite}
+.motivationPhotoWrap.hasMascot{grid-column:2;align-self:center;justify-self:center;width:100%;min-height:10rem;overflow:visible}
+.motivationPhotoWrap.hasMascot .motivationPortrait.isMascot{position:relative;display:block;width:clamp(8rem,16vw,11rem)!important;height:clamp(8rem,16vw,11rem)!important;border:0!important;border-radius:0!important;background-color:transparent!important;background-repeat:no-repeat;background-position:50% 50%;background-size:300% 300%;box-shadow:none!important;filter:drop-shadow(0 0 15px rgba(240,68,93,.42));overflow:hidden;animation:completionPoseCycle 5.2s steps(1,end) infinite,completionMascotPose 2.3s ease-in-out infinite;will-change:background-position,transform}
+.motivationPhotoWrap.hasMascot .motivationPortrait.isMascot[data-mascot-variant="male"]{background-image:url("../../../data/profile/mascot-motion/states-v1/male-pose-atlas.png")}
+.motivationPhotoWrap.hasMascot .motivationPortrait.isMascot[data-mascot-variant="female"]{background-image:url("../../../data/profile/mascot-motion/states-v1/female-pose-atlas.png")}
+.motivationPhotoWrap.hasMascot .motivationPortrait.isMascot[data-mascot-variant="neutral"]{background-image:url("../../../data/profile/mascot-motion/neutral-exercise-25fps.gif");background-size:contain;background-position:center;animation:completionMascotPose 2.3s ease-in-out infinite}
+.motivationPhotoWrap.hasMascot .motivationPortrait.isMascot img,.motivationPhotoWrap.hasMascot #motivationInitials{display:none!important}
+.motivationPhotoWrap.hasMascot::before{position:absolute;inset:12% 8%;border-radius:50%;background:radial-gradient(ellipse,rgba(243,54,83,.3),rgba(243,54,83,.08) 48%,transparent 72%);filter:blur(13px);content:"";pointer-events:none;animation:completionMascotGlow 1.7s ease-in-out infinite}
+.motivationPhotoWrap::after{position:absolute;right:4%;top:5%;z-index:2;color:#ff7280;font-size:1.25rem;content:"✦";pointer-events:none;animation:completionSparkle 1s ease-in-out infinite}
 @keyframes recapReveal{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}
 @keyframes recapMetricIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 @keyframes factReveal{from{opacity:0;filter:blur(3px)}to{opacity:1;filter:blur(0)}}
 @keyframes exerciseFocusReveal{from{opacity:.4;transform:translateY(4px) scale(.98)}to{opacity:1;transform:none}}
 @keyframes exerciseBarPulse{from{filter:brightness(1)}to{filter:brightness(1.22)}}
-@keyframes completionMascotBounce{0%,100%{transform:translateY(1px) rotate(-2deg) scale(1)}50%{transform:translateY(-3px) rotate(2deg) scale(1.045)}}
-@keyframes completionSparkle{0%,100%{opacity:.48;transform:scale(.78) rotate(-12deg)}50%{opacity:1;transform:scale(1.16) rotate(16deg)}}
+@keyframes completionPoseCycle{0%,22%{background-position:50% 0%}25%,47%{background-position:50% 50%}50%,72%{background-position:100% 100%}75%,97%{background-position:0% 100%}}
+@keyframes completionMascotPose{0%,100%{transform:translateY(2px) rotate(-2deg) scale(.98,1)}30%{transform:translateY(-6px) rotate(2deg) scale(1.04,.97)}55%{transform:translateY(-2px) rotate(-1deg) scale(.99,1.03)}78%{transform:translateY(-5px) rotate(1deg) scale(1.025,.98)}}
+@keyframes completionMascotGlow{0%,100%{opacity:.38;transform:scale(.86)}50%{opacity:.92;transform:scale(1.13)}}
+@keyframes completionSparkle{0%,100%{opacity:.45;transform:scale(.72) rotate(-15deg)}50%{opacity:1;transform:scale(1.28) rotate(22deg)}}
 @keyframes muscleGrowthPulse{0%,100%{transform:scale(1)}48%{transform:scale(1.065)}}
 @keyframes muscleTissueGlow{0%,100%{opacity:.28;transform:scale(.78)}48%{opacity:.92;transform:scale(1.16)}}
 @keyframes snackOffer{0%,100%{transform:translate(0,0) rotate(5deg) scale(.94)}45%{transform:translate(-5px,-5px) rotate(-9deg) scale(1.06)}70%{transform:translate(-2px,-1px) rotate(2deg) scale(1)}}
 @media(max-width:640px){.floatingSessionSummary .summaryFocusBadge{font-size:.55rem}.sessionCompletionCopy p#motivationMessage{padding:.75rem .8rem .75rem 1.05rem}.sessionRecap{padding:.62rem}.sessionRecapGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:.35rem}.sessionRecapMetric{padding:.45rem}.sessionRecapMetric dt{font-size:.64rem}.sessionRecapMetric dd{font-size:.92rem}.sessionFunFact{font-size:.78rem}.sessionRecapHeader{margin-bottom:.5rem}.sessionRecapTitle{font-size:1.04rem}.sessionProgressRing{flex-basis:4rem;width:4rem;height:4rem}.sessionMuscleViz{padding:.82rem .56rem .56rem}.muscleVizLayout{grid-template-columns:minmax(6.3rem,.78fr) minmax(0,1.5fr);gap:.4rem}.muscleAnatomyFigure{padding:.2rem}.muscleAnatomyFigure img{height:7.4rem}.muscleAnatomyFigure figcaption{font-size:.45rem}.sessionMuscleRowLabel{font-size:.68rem}.sessionMuscleRowCount{font-size:.64rem}
-  .sessionCompletionPanel:not([hidden]){grid-template-columns:minmax(0,1fr) 3.15rem!important;grid-template-rows:auto auto auto auto auto auto!important;align-items:start!important;gap:.3rem .45rem!important;padding:.65rem .72rem!important;overflow:hidden!important}
+  .sessionCompletionPanel:not([hidden]){grid-template-columns:minmax(0,1fr) minmax(6.2rem,7.2rem)!important;grid-template-rows:auto auto auto auto auto auto!important;align-items:start!important;gap:.3rem .45rem!important;padding:.65rem .72rem!important;overflow:hidden!important}
   .sessionCompletionPanel:not([hidden])>*{min-width:0!important;max-width:100%!important}
   .sessionCompletionPanel .completionOrb{display:none!important}
-  .sessionCompletionPanel .motivationPhotoWrap{grid-column:2!important;grid-row:1/3!important;align-self:start!important;justify-self:end!important;width:2.9rem!important;gap:0!important}
-  .sessionCompletionPanel .motivationPortrait{width:2.9rem!important;height:2.9rem!important;border-radius:50%!important}
-  .sessionCompletionPanel .completionSnack{right:-.32rem!important;bottom:-.28rem!important;width:1.2rem!important;height:1.2rem!important;font-size:.72rem!important}
+  .sessionCompletionPanel .motivationPhotoWrap{grid-column:2!important;grid-row:1/3!important;align-self:center!important;justify-self:center!important;width:100%!important;min-height:6.5rem!important;gap:0!important}
+  .sessionCompletionPanel .motivationPhotoWrap.hasMascot .motivationPortrait{width:min(6.6rem,24vw)!important;height:min(6.6rem,24vw)!important}
   .sessionCompletionPanel .motivationPhotoCredit{display:none!important}
   .sessionCompletionPanel .sessionCompletionCopy{display:contents!important}
   .sessionCompletionPanel .sessionCompletionKicker{grid-column:1!important;grid-row:1!important;align-self:center!important;max-width:100%!important;padding:.18rem .34rem!important;font-size:.55rem!important;letter-spacing:.07em!important;line-height:1.15!important}
@@ -337,10 +341,10 @@ main.cards article.card[data-machine-occupied="true"] .machinePendingToggle{posi
   .sessionCompletionPanel .sessionCompletionActions{grid-column:1/-1!important;grid-row:6!important;gap:.3rem!important;margin:.12rem 0 0!important}
   .sessionCompletionPanel .newMotivation,.sessionCompletionPanel .soundToggle,.sessionCompletionPanel .hapticsToggle{flex:1 1 8rem!important;min-width:0!important;min-height:40px!important;padding:.32rem .42rem!important;font-size:.62rem!important;line-height:1.15!important}
 }
-@media(max-width:380px){.sessionCompletionPanel:not([hidden]){grid-template-columns:minmax(0,1fr) 2.7rem!important;padding:.58rem!important}.sessionCompletionPanel .motivationPhotoWrap{width:2.55rem!important}.sessionCompletionPanel .motivationPortrait{width:2.55rem!important;height:2.55rem!important}.sessionCompletionPanel .sessionRecapGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.sessionCompletionPanel #session-completion-title{font-size:1.08rem!important}.sessionCompletionPanel #motivationMessage{font-size:.85rem!important}}
-@media(prefers-reduced-motion:reduce){.floatingSessionSummary.is-exercise-focused .summaryFocusBadge,.floatingSessionSummary.is-exercise-focused .summaryToggle,.summaryExercise.isCurrent,.sessionRecap,.sessionRecapMetric,.sessionFunFact,.motivationPortrait.isMascot img,.motivationPhotoWrap::after,.completionSnack,.muscleAnatomyFigure img,.muscleAnatomyFigure::after{animation:none!important}.muscleAnatomyFigure img,.muscleAnatomyFigure::after{will-change:auto}.sessionRingProgress,.sessionMuscleBar span{transition:none!important}main.cards article.card[data-exercise-index]{transition:none}}
+@media(max-width:380px){.sessionCompletionPanel:not([hidden]){grid-template-columns:minmax(0,1fr) minmax(5.5rem,6.1rem)!important;padding:.58rem!important}.sessionCompletionPanel .motivationPhotoWrap{width:100%!important;min-height:5.7rem!important}.sessionCompletionPanel .motivationPhotoWrap.hasMascot .motivationPortrait{width:min(5.8rem,23vw)!important;height:min(5.8rem,23vw)!important}.sessionCompletionPanel .sessionRecapGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.sessionCompletionPanel #session-completion-title{font-size:1.08rem!important}.sessionCompletionPanel #motivationMessage{font-size:.85rem!important}}
+@media(prefers-reduced-motion:reduce){.floatingSessionSummary.is-exercise-focused .summaryFocusBadge,.floatingSessionSummary.is-exercise-focused .summaryToggle,.summaryExercise.isCurrent,.sessionRecap,.sessionRecapMetric,.sessionFunFact,.motivationPhotoWrap.hasMascot .motivationPortrait,.motivationPhotoWrap.hasMascot::before,.motivationPhotoWrap::after,.muscleAnatomyFigure img,.muscleAnatomyFigure::after{animation:none!important}.motivationPhotoWrap.hasMascot .motivationPortrait{will-change:auto}.muscleAnatomyFigure img,.muscleAnatomyFigure::after{will-change:auto}.sessionRingProgress,.sessionMuscleBar span{transition:none!important}main.cards article.card[data-exercise-index]{transition:none}}
 </style>
-<script data-enhancement="exercise-focus-occupied-quote-v7">
+<script data-enhancement="exercise-focus-occupied-quote-v8">
 (() => {
   const cards = [...document.querySelectorAll('main.cards article.card[data-exercise-index]')];
   const summary = document.querySelector('.floatingSessionSummary');
@@ -433,15 +437,15 @@ MOBILE_SUMMARY_REDESIGN = r'''<style data-enhancement="mobile-summary-layout-v1"
   main.cards article.card>.meta>.machinePill{order:5!important}
   main.cards article.card>.meta>.referenceRow{order:6!important}
   main.cards article.card>.coach{order:7!important}
-  #floatingSessionSummary{right:max(.45rem,env(safe-area-inset-right))!important;bottom:max(.45rem,env(safe-area-inset-bottom))!important;width:min(340px,calc(100vw - .9rem))!important;max-height:min(36dvh,260px)!important;border-radius:.82rem!important;background:rgba(6,24,37,.94)!important;backdrop-filter:blur(14px) saturate(1.08)!important;-webkit-backdrop-filter:blur(14px) saturate(1.08)!important}
+  #floatingSessionSummary{left:50%!important;right:auto!important;transform:translateX(-50%)!important;bottom:max(.45rem,env(safe-area-inset-bottom))!important;width:min(420px,calc(100vw - .9rem))!important;max-height:min(36dvh,260px)!important;border-radius:.82rem!important;background:rgba(6,24,37,.94)!important;backdrop-filter:blur(14px) saturate(1.08)!important;-webkit-backdrop-filter:blur(14px) saturate(1.08)!important}
   html body .page{padding-bottom:calc(max(10rem,var(--floating-summary-clearance,10rem)) + env(safe-area-inset-bottom,0px))!important}
   main.cards article.card .zone{display:inline-flex!important;align-self:flex-start!important;max-width:100%!important;margin:9px 0 0!important;padding:.34rem .58rem!important;border:1px solid rgba(114,220,255,.28)!important;border-radius:999px!important;background:rgba(14,57,75,.84)!important;color:#d5f5ff!important;font-size:.72rem!important;line-height:1.2!important;font-weight:850!important;overflow-wrap:anywhere!important}
   main.cards article.card .chipRow{display:none!important}
-  #summaryToggle{grid-template-columns:auto minmax(0,1fr) 48px auto!important;grid-template-rows:auto auto!important;min-height:54px!important;gap:.12rem .38rem!important;padding:.3rem .46rem!important}
+  #summaryToggle{grid-template-columns:auto minmax(0,1fr) 68px auto!important;grid-template-rows:auto auto!important;min-height:68px!important;gap:.12rem .42rem!important;padding:.36rem .52rem!important}
   #summaryToggle #summaryHeadline{grid-column:2;grid-row:1;font-size:.7rem!important;line-height:1.15!important}
   #summaryToggle #summaryActivityHeadline{grid-column:2;grid-row:2;display:block!important;font-size:.62rem!important;line-height:1.1!important}
-  #summaryToggle .summaryMascotWrap{grid-column:3;grid-row:1/3!important;width:46px!important;height:46px!important;border-radius:.68rem!important}
-  #summaryToggle #summaryActivityMascot{width:42px!important;height:42px!important}
+  #summaryToggle .summaryMascotWrap{grid-column:3;grid-row:1/3!important;width:66px!important;height:66px!important;border-radius:.78rem!important}
+  #summaryToggle #summaryActivityMascot{width:62px!important;height:62px!important}
   #summaryToggle .summaryChevron{grid-column:4;grid-row:1/3!important;font-size:.85rem!important}
   #summaryToggle.isResting{background:linear-gradient(105deg,rgba(112,79,21,.94),rgba(83,61,29,.94))!important}
   #summaryToggle.isActive{background:linear-gradient(105deg,rgba(19,105,91,.94),rgba(19,73,72,.94))!important}
@@ -449,12 +453,19 @@ MOBILE_SUMMARY_REDESIGN = r'''<style data-enhancement="mobile-summary-layout-v1"
   #summaryToggle.isComplete{background:linear-gradient(105deg,rgba(112,79,21,.94),rgba(72,51,80,.94))!important}
   #summaryToggle[aria-expanded="true"]{grid-template-rows:auto auto!important;min-height:54px!important}
   #summaryToggle[aria-expanded="true"] #summaryActivityHeadline{display:block!important}
-  #summaryToggle[aria-expanded="true"] .summaryMascotWrap{width:46px!important;height:46px!important}
-  #summaryToggle[aria-expanded="true"] #summaryActivityMascot{width:42px!important;height:42px!important}
+  #summaryToggle[aria-expanded="true"] .summaryMascotWrap{width:66px!important;height:66px!important}
+  #summaryToggle[aria-expanded="true"] #summaryActivityMascot{width:62px!important;height:62px!important}
   #summaryToggle[aria-expanded="true"] + #summaryBody{max-height:min(26dvh,190px)!important;padding:.28rem .42rem .36rem!important;gap:.24rem!important}
   #summaryToggle[aria-expanded="true"] + #summaryBody .summaryActivityStatus{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
   #summaryToggle[aria-expanded="true"] + #summaryBody #summaryElapsed{display:none!important}
   #floatingSessionSummary .summaryFocusBadge{margin:0!important;padding:.14rem .34rem!important;font-size:.51rem!important;line-height:1.12!important}
+  #summaryActivityMascot[data-motion="strength"]{animation:mascotBarStrength .9s cubic-bezier(.35,0,.2,1) infinite}
+  #summaryActivityMascot[data-motion="cardio"]{animation:mascotBarCardio .48s cubic-bezier(.4,0,.6,1) infinite}
+  #summaryActivityMascot[data-motion="celebration"]{animation:mascotBarCelebrate 1.1s cubic-bezier(.2,.8,.2,1) infinite;filter:drop-shadow(0 0 12px rgba(255,82,102,.92))}
+  .summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"]){border-color:rgba(255,93,111,.92)!important;background:rgba(130,28,51,.38)!important;box-shadow:0 0 22px rgba(255,55,88,.5)!important}
+  @keyframes mascotBarStrength{0%,100%{transform:translateY(2px) rotate(-2deg) scale(1)}35%{transform:translateY(-6px) rotate(3deg) scale(1.12,.95)}68%{transform:translateY(-1px) rotate(-2deg) scale(.97,1.1)}}
+  @keyframes mascotBarCardio{0%,100%{transform:translateY(1px) rotate(-4deg) scale(.96,1.02)}25%{transform:translateY(-6px) rotate(3deg) scale(1.08,.96)}50%{transform:translateY(0) rotate(-2deg) scale(.96,1.08)}75%{transform:translateY(-4px) rotate(4deg) scale(1.08,.96)}}
+  @keyframes mascotBarCelebrate{0%,100%{transform:translateY(0) rotate(-4deg) scale(1)}24%{transform:translateY(-8px) rotate(6deg) scale(1.16)}48%{transform:translateY(-2px) rotate(-3deg) scale(1.04)}72%{transform:translateY(-6px) rotate(4deg) scale(1.13)}}
   #floatingSessionSummary .sessionSummaryList{max-height:min(17dvh,110px)!important}
   main.cards article.card .phaseRow{grid-template-columns:minmax(0,1fr)!important;gap:.55rem!important;align-items:stretch!important}
   main.cards article.card .phaseRow>.phaseCol{min-width:0!important;width:100%!important}
@@ -462,6 +473,7 @@ MOBILE_SUMMARY_REDESIGN = r'''<style data-enhancement="mobile-summary-layout-v1"
   main.cards article.card .phaseRow .source{min-width:0!important;max-width:100%!important;word-break:normal!important;overflow-wrap:anywhere!important;hyphens:auto}
   main.cards article.card .phaseRow .swap{justify-self:center!important;align-self:center!important;margin:.1rem 0!important;transform:rotate(90deg)!important}
 }
+@media(max-width:380px){#summaryToggle{grid-template-columns:auto minmax(0,1fr) 60px auto!important}#summaryToggle .summaryMascotWrap,#summaryToggle[aria-expanded="true"] .summaryMascotWrap{width:58px!important;height:58px!important}#summaryToggle #summaryActivityMascot,#summaryToggle[aria-expanded="true"] #summaryActivityMascot{width:54px!important;height:54px!important}}
 @media(max-width:360px){.performanceRepsControl{grid-template-columns:40px minmax(0,1fr) 40px!important;gap:.25rem!important}.performanceRepsNudge{min-width:40px!important;min-height:44px!important}.performanceFieldTitleRow{flex-wrap:wrap!important;justify-content:flex-start!important;gap:.25rem .4rem!important}.performanceFieldLabel{flex:1 1 120px!important;flex-wrap:wrap!important}.performanceRequired{margin-left:26px!important}}
 @media(prefers-reduced-motion:reduce){#floatingSessionSummary,#summaryToggle{scroll-behavior:auto!important;transition:none!important}}
 </style>'''
@@ -701,7 +713,7 @@ def apply_interaction_redesign(source: str) -> str:
         '      block.insertBefore(stamp, block.firstChild);',
         "      if (selector === '.phaseRow') block.before(stamp); else block.insertBefore(stamp, block.firstChild);",
     )
-    for previous in ("exercise-focus-occupied-quote-v2", "exercise-focus-occupied-quote-v3", "exercise-focus-occupied-quote-v4", "exercise-focus-occupied-quote-v5", "exercise-focus-occupied-quote-v6", "exercise-focus-occupied-quote-v7", "section-ledger-load-v1", "section-ledger-load-v2"):
+    for previous in ("exercise-focus-occupied-quote-v2", "exercise-focus-occupied-quote-v3", "exercise-focus-occupied-quote-v4", "exercise-focus-occupied-quote-v5", "exercise-focus-occupied-quote-v6", "exercise-focus-occupied-quote-v7", "exercise-focus-occupied-quote-v8", "section-ledger-load-v1", "section-ledger-load-v2"):
         source = re.sub(
             rf'<style\s+data-enhancement="{re.escape(previous)}">.*?</script>',
             "",
@@ -710,7 +722,7 @@ def apply_interaction_redesign(source: str) -> str:
             flags=re.I | re.S,
         )
     source = re.sub(r'(<meta\b(?=[^>]*\bname=["\']viewport["\'])[^>]*\bcontent=["\'])([^"\']*)(["\'][^>]*>)', lambda m: m.group(1) + re.sub(r',?\s*(?:maximum-scale|user-scalable)=[^,]+', '', m.group(2)) + ', maximum-scale=1, user-scalable=no' + m.group(3), source, count=1, flags=re.I)
-    if 'data-enhancement="exercise-focus-occupied-quote-v7"' not in source:
+    if 'data-enhancement="exercise-focus-occupied-quote-v8"' not in source:
         source = source.replace('</body>', INTERACTION_REDESIGN + '\n</body>', 1)
     if 'performancePanel.__routineItem = item;' not in source:
         source = source.replace(
@@ -895,7 +907,7 @@ def apply_interaction_redesign(source: str) -> str:
         "    state = {};\n    delete document.getElementById('finishDay')?.dataset.saveFailed;\n    save();",
         1,
     )
-    source = re.sub(r'\n{3,}(?=<style data-enhancement="exercise-focus-occupied-quote-v7">)', '\n\n', source)
+    source = re.sub(r'\n{3,}(?=<style data-enhancement="exercise-focus-occupied-quote-v8">)', '\n\n', source)
     if 'data-enhancement="mobile-summary-layout-v1"' not in source:
         source = source.replace('</body>', MOBILE_SUMMARY_REDESIGN + '\n</body>', 1)
     else:

@@ -2151,30 +2151,39 @@ def standardize_quote_portrait_loading(source: str) -> str:
       const showInitialFallback = () => { portraitEl.hidden = true; initialsEl.hidden = false; photoCreditEl && (photoCreditEl.hidden = true); };
       const useMascotFallback = () => {
         if (portraitEl.dataset.mascotFallback === 'true') {
-          if (portraitEl.complete && portraitEl.naturalWidth > 0) { portraitEl.hidden = false; initialsEl.hidden = true; }
-          else showInitialFallback();
+          portraitEl.hidden = true;
+          initialsEl.hidden = true;
           return;
         }
         portraitEl.dataset.mascotFallback = 'true';
         portraitEl.classList.add('isMascot');
-        portraitEl.closest('.motivationPhotoWrap')?.classList.add('hasMascot');
-        portraitEl.hidden = true; initialsEl.hidden = false;
+        const stage = portraitEl.closest('.motivationPortrait');
+        stage?.classList.add('isMascot');
+        const wrap = portraitEl.closest('.motivationPhotoWrap');
+        wrap?.classList.add('hasMascot');
+        portraitEl.hidden = true; initialsEl.hidden = true;
         if (photoCreditEl) photoCreditEl.hidden = true;
         const variant = window.gymratikMascotVariant;
-        portraitEl.alt = 'Mascota Gymratik celebrando la sesión';
+        const selectedVariant = ['male', 'female'].includes(variant) ? variant : 'neutral';
+        if (stage) { stage.dataset.mascotVariant = selectedVariant; stage.setAttribute('role', 'img'); stage.setAttribute('aria-label', selectedVariant === 'neutral' ? 'Mascotas Gymratik celebrando la sesión' : 'Mascota Gymratik celebrando la sesión'); }
+        portraitEl.alt = selectedVariant === 'neutral' ? 'Ratas Gymratik celebrando la sesión' : 'Rata Gymratik celebrando la sesión';
         portraitEl.loading = 'eager';
-        portraitEl.src = ['male', 'female'].includes(variant)
-          ? `../../../data/profile/mascot-motion/states-v1/${variant}-approval.png`
-          : '../../../data/profile/mascot-motion/neutral-exercise-still.webp';
+        portraitEl.src = selectedVariant === 'neutral'
+          ? '../../../data/profile/mascot-motion/neutral-exercise-25fps.gif'
+          : `../../../data/profile/mascot-motion/states-v1/${selectedVariant}-pose-atlas.png`;
       };
       portraitEl.onload = () => {
-        if (portraitEl.complete && portraitEl.naturalWidth > 0) { portraitEl.hidden = false; initialsEl.hidden = true; }
+        if (portraitEl.dataset.mascotFallback === 'true') { portraitEl.hidden = true; initialsEl.hidden = true; }
+        else if (portraitEl.complete && portraitEl.naturalWidth > 0) { portraitEl.hidden = false; initialsEl.hidden = true; }
         else useMascotFallback();
       };
       portraitEl.onerror = useMascotFallback;
       if (phrase.portrait) {
         delete portraitEl.dataset.mascotFallback;
         portraitEl.classList.remove('isMascot');
+        const stage = portraitEl.closest('.motivationPortrait');
+        stage?.classList.remove('isMascot');
+        if (stage) { delete stage.dataset.mascotVariant; stage.removeAttribute('role'); stage.setAttribute('aria-label', 'Retrato de quien dice la frase'); }
         portraitEl.closest('.motivationPhotoWrap')?.classList.remove('hasMascot');
         portraitEl.hidden = true; initialsEl.hidden = false;
         portraitEl.alt = `Retrato de ${phrase.author}`;
@@ -2185,12 +2194,7 @@ def standardize_quote_portrait_loading(source: str) -> str:
       }
     }"""
     updated = source[:start] + replacement + suffix + source[end:]
-    if 'class="completionSnack"' not in updated:
-        updated = updated.replace(
-            '</div><a class="motivationPhotoCredit" id="motivationPhotoCredit"',
-            '</div><span class="completionSnack" aria-hidden="true">🍎</span><a class="motivationPhotoCredit" id="motivationPhotoCredit"',
-            1,
-        )
+    updated = re.sub(r'<span\b(?=[^>]*\bclass=["\']completionSnack["\'])[^>]*>.*?</span>', '', updated, flags=re.I | re.S)
     return updated
 
 
@@ -3168,12 +3172,7 @@ def standardize_visual_language(source: str) -> str:
             count=1,
             flags=re.S,
         )
-    if 'class="completionSnack"' not in source:
-        source = source.replace(
-            '</div><a class="motivationPhotoCredit" id="motivationPhotoCredit"',
-            '</div><span class="completionSnack" aria-hidden="true">🍎</span><a class="motivationPhotoCredit" id="motivationPhotoCredit"',
-            1,
-        )
+    source = re.sub(r'<span\b(?=[^>]*\bclass=["\']completionSnack["\'])[^>]*>.*?</span>', '', source, flags=re.I | re.S)
     source = re.sub(
         r'<span class="motivationNote" id="motivationNote" hidden></span>',
         '<a class="motivationNote" id="motivationNote" target="_blank" rel="noopener noreferrer" hidden></a>',

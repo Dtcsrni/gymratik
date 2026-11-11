@@ -2,6 +2,13 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.18] - 2026-11-11
+
+### Changed
+
+- La barra flotante queda centrada en móvil y destaca más la mascota animada seleccionada.
+- El resumen final muestra poses animadas más grandes de la mascota configurada, sin círculo ni manzana.
+
 ## [0.7.17] - 2026-11-11
 
 ### Changed

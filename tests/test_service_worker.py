@@ -179,6 +179,12 @@ class ServiceWorkerContractTests(unittest.TestCase):
                 with self.subTest(variant=variant, state=state):
                     self.assertIn(f"{variant}-{state}-25fps.gif", self.service_worker)
                     self.assertIn(f"{variant}-{state}-still.webp", self.service_worker)
+        for variant in ("female", "male"):
+            atlas = f"./data/profile/mascot-motion/states-v1/{variant}-pose-atlas.png"
+            with self.subTest(atlas=atlas):
+                self.assertIn(atlas, build_precache())
+                self.assertTrue((ROOT / atlas.removeprefix("./")).is_file())
+                self.assertIn(atlas, self.service_worker)
 
     def test_every_warmup_choice_gif_and_poster_is_in_the_offline_precache(self):
         resources = set(build_precache())
@@ -204,7 +210,7 @@ class ServiceWorkerContractTests(unittest.TestCase):
 
     def test_homepage_shows_the_active_service_worker_version(self):
         self.assertIn('id="appVersion"', self.homepage)
-        self.assertIn('class="brand-version" aria-label="Versión 0.7.17">v0.7.17', self.homepage)
+        self.assertIn('class="brand-version" aria-label="Versión 0.7.18">v0.7.18', self.homepage)
         self.assertIn("event.data?.type === 'VERSION_STATUS'", self.homepage)
         self.assertIn("postMessage({ type: 'GET_VERSION_STATUS' })", self.homepage)
         self.assertIn("cacheName: CACHE_NAME", self.service_worker)

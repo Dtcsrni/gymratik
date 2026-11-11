@@ -117,13 +117,17 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
             with self.subTest(routine=path.name):
                 self.assertIn("portraitEl.dataset.mascotFallback = 'true'", source)
                 self.assertIn("classList.add('hasMascot')", source)
-                self.assertIn("states-v1/${variant}-approval.png", source)
-                self.assertIn("neutral-exercise-still.webp", source)
-                self.assertIn('class="completionSnack" aria-hidden="true">🍎</span>', source)
-                self.assertIn(".motivationPhotoWrap.hasMascot .completionSnack{display:grid}", source)
+                self.assertIn("states-v1/${selectedVariant}-pose-atlas.png", source)
+                self.assertIn("data-mascot-variant", source)
+                self.assertIn("neutral-exercise-25fps.gif", source)
+                self.assertNotIn("completionSnack", source)
+                self.assertIn(".motivationPhotoWrap.hasMascot .motivationPortrait.isMascot[data-mascot-variant=\"male\"]", source)
+                self.assertIn("@keyframes completionPoseCycle", source)
+                self.assertIn("background-size:300% 300%", source)
+                self.assertIn("left:50%!important;right:auto!important;transform:translateX(-50%)!important", source)
+                self.assertIn("width:66px!important;height:66px!important", source)
                 self.assertIn(".sessionCompletionPanel .sessionCompletionCopy{display:contents!important}", source)
                 self.assertIn("grid-template-columns:repeat(3,minmax(0,1fr))!important", source)
-                self.assertIn("@keyframes completionMascotBounce", source)
                 self.assertIn("@media(prefers-reduced-motion:reduce)", source)
 
     def test_session_completion_graphs_confirmed_series_and_muscle_zones_on_all_days(self) -> None:
@@ -1504,7 +1508,7 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
         for path in sorted(CANONICAL.glob("*.html")):
             with self.subTest(routine=path.name):
                 source = path.read_text(encoding="utf-8")
-                self.assertEqual(source.count('data-enhancement="exercise-focus-occupied-quote-v7"'), 2)
+                self.assertEqual(source.count('data-enhancement="exercise-focus-occupied-quote-v8"'), 2)
                 self.assertEqual(source.count('data-enhancement="section-ledger-load-v2"'), 2)
                 self.assertIn('data-machine-occupied="true"', source)
                 self.assertIn("setFocusedCard", source)

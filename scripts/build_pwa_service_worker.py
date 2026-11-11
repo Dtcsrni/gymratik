@@ -215,6 +215,10 @@ def build_precache() -> list[str]:
                 "cardio", "mobility", "rest", "approval",
             )
         ],
+        *[
+            f"./data/profile/mascot-motion/states-v1/{variant}-pose-atlas.png"
+            for variant in ("female", "male")
+        ],
     ]
     routines = [f"./data/rutinas_autocontenidas/canonicas/{name}" for name in ROUTINE_FILES]
     resources = set(base + routines)
