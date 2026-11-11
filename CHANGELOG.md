@@ -2,6 +2,12 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.13] - 2026-11-10
+
+### Changed
+
+- En móvil, las imágenes de movimiento aparecen inmediatamente después del nombre de cada ejercicio y antes de la prescripción y los controles.
+
 ## [0.7.12] - 2026-11-10
 
 ### Fixed

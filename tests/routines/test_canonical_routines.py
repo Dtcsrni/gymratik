@@ -96,6 +96,21 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
                 self.assertIn('@media(max-width:360px){.performanceRepsControl{grid-template-columns:40px', source)
                 self.assertIn('.performanceFieldLabel{flex:1 1 120px!important;flex-wrap:wrap!important}', source)
 
+    def test_mobile_exercise_motion_images_precede_prescription_and_controls_on_all_days(self) -> None:
+        expected_order = (
+            'main.cards article.card>.meta{display:contents!important}',
+            'main.cards article.card>.meta>*{order:3!important}',
+            'main.cards article.card>.meta>.exTitle{order:1!important}',
+            'main.cards article.card>.visual{order:2!important}',
+            'main.cards article.card>.meta>.zone{order:3!important}',
+            'main.cards article.card>.coach{order:7!important}',
+        )
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            source = path.read_text(encoding="utf-8")
+            with self.subTest(routine=path.name):
+                for rule in expected_order:
+                    self.assertIn(rule, source)
+
     def test_translucent_summary_state_colors_keep_wcag_aa_text_contrast(self) -> None:
         def luminance(color: tuple[int, int, int]) -> float:
             channels = [value / 255 for value in color]
