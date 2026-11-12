@@ -60,6 +60,18 @@ def capture_visual(page, filename: str) -> None:
     page.screenshot(path=str(SCREENSHOT_DIR / filename), full_page=False)
 
 
+def wait_for_finite_animations(page, selector: str) -> None:
+    """Wait for visible entrance animations without waiting for intentional loops."""
+    page.locator(selector).evaluate("""async root => {
+      await new Promise(requestAnimationFrame);
+      const pending = root.getAnimations({subtree:true}).filter(animation => {
+        const iterations = animation.effect?.getComputedTiming().iterations;
+        return Number.isFinite(iterations) && animation.playState !== 'finished';
+      });
+      await Promise.all(pending.map(animation => animation.finished.catch(() => {})));
+    }""")
+
+
 def validate_home_cover_animation(browser) -> dict:
     """Verify poster artwork with subtle drift and the slow animated loading/update splash."""
     context = browser.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2, is_mobile=True, has_touch=True)
@@ -833,6 +845,9 @@ def validate_missing_performance_confirmation(browser, name: str) -> dict[str, b
     if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "strength":
         context.close()
         raise AssertionError(f"{name}: no se pudo iniciar la serie para probar el diálogo de omisión")
+    # Aproximación y serie efectiva usan borradores separados; registra datos
+    # en la serie actual antes de verificar los controles para quitarlos.
+    select_valid_performance(card)
     click_control(card.locator(".performanceFieldTitleRow .performanceClear"))
     click_control(card.locator(".performanceLoadOutputRow .performanceClear"))
     click_control(button)
@@ -1502,6 +1517,14 @@ def validate_primary_set_buttons(browser, name: str, sex: str, exercise_limit: i
         mascot_variant = sex if sex in {"male", "female"} else "neutral"
         assert_mascot(page, mascot_variant, "start")
 
+        card = page.locator("article.card[data-exercise-index]").nth(index)
+        button = card.locator(".completeSetButton")
+        segments = card.locator(".seriesProgressSegment").count()
+        button.scroll_into_view_if_needed()
+        # Establish the regular-set draft before finishing warm-up. Once the
+        # warm-up is done, the same selector changes to its separate load mode.
+        select_valid_performance(card)
+
         warmup = page.locator("#warmupAction")
         click_control(warmup)
         assert_mascot(page, mascot_variant, "preparing")
@@ -1521,11 +1544,6 @@ def validate_primary_set_buttons(browser, name: str, sex: str, exercise_limit: i
         advance_test_clock(page, 2_600)
         assert_mascot(page, mascot_variant, "ready")
 
-        card = page.locator("article.card[data-exercise-index]").nth(index)
-        button = card.locator(".completeSetButton")
-        segments = card.locator(".seriesProgressSegment").count()
-        button.scroll_into_view_if_needed()
-        select_valid_performance(card)
         if card.locator(".warmupSet").count():
             normal_draft_before = page.evaluate(
                 "exercise => { const key=Object.keys(localStorage).find(value=>/^fitlovers-day\\d+-series-v1$/.test(value)); const state=key?JSON.parse(localStorage.getItem(key)||'{}'):{}; return state.__performanceDraft?.[String(exercise)]; }",
@@ -1545,8 +1563,9 @@ def validate_primary_set_buttons(browser, name: str, sex: str, exercise_limit: i
                 context.close()
                 raise AssertionError(f"{name}: faltó el consejo visual de aproximación cuando correspondía en el ejercicio {index + 1}")
             if card.locator('[data-load-mode="approximation"]').inner_text().strip() != "Peso de aproximación" or card.locator(".performanceLoadValue").get_attribute("data-selected") != "false" or card.locator(".performanceWarmupLoad").count():
+                warmup_control_state = card.evaluate("element => ({mode:element.querySelector('[data-load-mode=approximation]')?.textContent?.trim(),selected:element.querySelector('.performanceLoadValue')?.dataset.selected,warmupLoadControls:element.querySelectorAll('.performanceWarmupLoad').length,loadText:element.querySelector('.performanceLoadValue')?.textContent?.trim(),unit:element.querySelector('.performanceLoadUnit')?.value,normalSnapshot:element.querySelector('.performanceEntry')?.__routineItem?.performanceWarmupNormalSnapshot,warmupMode:element.querySelector('.performanceEntry')?.__routineItem?.performanceWarmupMode})")
                 context.close()
-                raise AssertionError(f"{name}: el selector no entró vacío en modo aproximación independiente en el ejercicio {index + 1}")
+                raise AssertionError(f"{name}: el selector no entró vacío en modo aproximación independiente en el ejercicio {index + 1}: {warmup_control_state}")
             select_valid_performance(card)
             advance_test_clock(page, 20_000)
             click_control(button)
@@ -1866,6 +1885,20 @@ def validate_completed_session_celebration(browser, name: str, sex: str, variant
     context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1', 'true')")
     page = context.new_page()
     install_test_clock(page)
+    page.add_init_script("""(() => {
+      window.__gymratikCountObserved = false;
+      window.__gymratikCountChanged = false;
+      new MutationObserver(records => records.forEach(record => {
+        const node = record.target.nodeType === Node.ELEMENT_NODE ? record.target : record.target.parentElement;
+        if (node?.id !== 'sessionRecapSets') return;
+        if (record.type === 'attributes' && record.attributeName === 'class' &&
+            (node.classList.contains('isCounting') || String(record.oldValue || '').includes('isCounting'))) {
+          window.__gymratikCountObserved = true;
+        }
+        if ((record.type === 'childList' || record.type === 'characterData') && node.classList.contains('isCounting') &&
+            node.textContent !== node.getAttribute('aria-label')) window.__gymratikCountChanged = true;
+      })).observe(document, {subtree:true, attributes:true, attributeFilter:['class'], attributeOldValue:true, childList:true, characterData:true});
+    })()""")
     page.goto(f"http://127.0.0.1:{PORT}/data/rutinas_autocontenidas/canonicas/{quote(name)}", wait_until="networkidle")
     if sex:
         page.evaluate("sex => window.TrainingProgressStore.saveProfile({sex})", sex)
@@ -1887,10 +1920,12 @@ def validate_completed_session_celebration(browser, name: str, sex: str, variant
     page.wait_for_function("document.querySelector('#summaryActivityStatus')?.dataset.activity === 'complete'")
     page.wait_for_function("expected => window.gymratikMascotVariant === expected", arg=variant)
     assert_mascot(page, variant, "celebration")
-    page.wait_for_function("document.querySelector('#sessionRecapSets')?.classList.contains('isCounting')")
+    advance_test_clock(page, 100)
+    page.wait_for_function("window.__gymratikCountObserved === true")
+    page.wait_for_function("window.__gymratikCountChanged === true")
     count_up_start = page.locator("#sessionRecapSets").evaluate("node => ({value:node.getAttribute('aria-label'), active:node.classList.contains('isCounting')})")
     set_totals = [int(value) for value in re.findall(r"\d+", count_up_start["value"] or "")]
-    if len(set_totals) != 2 or set_totals[0] != set_totals[1] or not count_up_start["active"]:
+    if len(set_totals) != 2 or set_totals[0] != set_totals[1]:
         context.close()
         raise AssertionError(f"{name}: las métricas del resumen no iniciaron el conteo animado: {count_up_start}")
     page.locator("#sessionMuscleMap").scroll_into_view_if_needed()
@@ -2204,9 +2239,15 @@ def validate_responsive_layout(browser) -> dict:
                 }""")
                 if overlap["intersects"]:
                     raise AssertionError(f"{name} {width}x{height}: resumen flotante tapa el botón de acción: {overlap}")
-                summary_visible_rows = summary.locator(".sessionSummaryList").evaluate("element => {const bounds=element.getBoundingClientRect(),panel=document.querySelector('#floatingSessionSummary'),body=document.querySelector('#summaryBody');const rect=node=>{const r=node.getBoundingClientRect();return {top:r.top,bottom:r.bottom,height:r.height}};const rows=[...element.querySelectorAll('.summaryExercise')].map(row=>{const r=row.getBoundingClientRect();return {top:r.top,bottom:r.bottom}});return {viewport:[innerWidth,innerHeight],visible:rows.filter(row=>row.top>=bounds.top-1&&row.bottom<=bounds.bottom+1).length,clientHeight:element.clientHeight,scrollHeight:element.scrollHeight,panel:rect(panel),panelMax:getComputedStyle(panel).maxHeight,body:rect(body),bodyChildren:[...body.children].map(node=>({className:node.className,box:rect(node),flex:getComputedStyle(node).flex,minHeight:getComputedStyle(node).minHeight})),rows};}")
+                summary_visible_rows = summary.locator(".sessionSummaryList").evaluate("element => {const bounds=element.getBoundingClientRect(),panel=document.querySelector('#floatingSessionSummary'),toggle=document.querySelector('#summaryToggle'),body=document.querySelector('#summaryBody');const rect=node=>{const r=node.getBoundingClientRect();return {top:r.top,bottom:r.bottom,height:r.height}};const rows=[...element.querySelectorAll('.summaryExercise')].map(row=>{const r=row.getBoundingClientRect();return {top:r.top,bottom:r.bottom}});return {viewport:[innerWidth,innerHeight],visible:rows.filter(row=>row.top>=bounds.top-1&&row.bottom<=bounds.bottom+1).length,clientHeight:element.clientHeight,scrollHeight:element.scrollHeight,panel:rect(panel),panelMax:getComputedStyle(panel).maxHeight,toggleExpanded:toggle?.getAttribute('aria-expanded'),adjacentBody:toggle?.nextElementSibling===body,matchingBodies:[...toggle.parentElement.children].filter(node=>node===body).length,body:rect(body),bodyDisplay:getComputedStyle(body).display,totalsDisplay:getComputedStyle(body.querySelector('.summaryTotals')).display,statusDisplay:getComputedStyle(body.querySelector('.summaryActivityStatus')).display,timeDisplay:getComputedStyle(body.querySelector('#summaryElapsed')).display,bodyChildren:[...body.children].map(node=>({className:node.className,box:rect(node),flex:getComputedStyle(node).flex,minHeight:getComputedStyle(node).minHeight,display:getComputedStyle(node).display,position:getComputedStyle(node).position})),rows};}")
                 if summary_visible_rows["visible"] != 3:
                     raise AssertionError(f"{name} {width}x{height}: el resumen flotante no deja exactamente tres ejercicios visibles: {summary_visible_rows}")
+            if SCREENSHOT_DIR is not None and width in (320, 412):
+                screenshot_card = page.locator('article.card[data-exercise-index="1"]')
+                screenshot_card.evaluate("element => element.scrollIntoView({block:'start',behavior:'instant'})")
+                wait_for_finite_animations(page, 'article.card[data-exercise-index="1"]')
+                page.add_style_tag(content="article.card .meta,article.card .visual,article.card .coach,article.card .phaseRow,article.card .phaseCol,article.card .phaseLabel,article.card .source,article.card .photo,article.card .photo img.realphoto{opacity:1!important;visibility:visible!important;transform:none!important;animation:none!important;transition:none!important}")
+                capture_visual(page, f"responsive-day-{name.split('_')[2]}-{width}x{height}.png")
             results.append({"routine": name, "viewport": f"{width}x{height}", "horizontalOverflow": False, "visualGeometry": visual_audit, "actionPanelOverlap": overlap, "summaryVisibleRows": summary_visible_rows})
             context.close()
     return {"viewports": len(RESPONSIVE_VIEWPORTS), "routineViewportChecks": results}

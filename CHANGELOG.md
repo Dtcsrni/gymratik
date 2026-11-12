@@ -2,6 +2,18 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.21] - 2026-11-12
+
+### Fixed
+
+- La barra expandida conserva el ejercicio elegido al navegar desde la lista y muestra tres ejercicios sin información redundante.
+- La aproximación usa el selector de carga compartido y oculta su bloque tras completarse, sin mezclarse con el borrador de las series normales.
+- La animación de la mascota conserva el movimiento correspondiente a cada estado.
+
+### Changed
+
+- En móvil, los controles de rutina quedan antes de la referencia visual y el resumen mantiene el foco explícito hasta que se desplaza o se interactúa con otra sección.
+
 ## [0.7.20] - 2026-11-12
 
 ### Fixed

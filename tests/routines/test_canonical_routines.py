@@ -96,14 +96,14 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
                 self.assertIn('@media(max-width:360px){.performanceRepsControl{grid-template-columns:40px', source)
                 self.assertIn('.performanceFieldLabel{flex:1 1 120px!important;flex-wrap:wrap!important}', source)
 
-    def test_mobile_exercise_motion_images_precede_prescription_and_controls_on_all_days(self) -> None:
+    def test_mobile_exercise_controls_precede_visual_reference_on_all_days(self) -> None:
         expected_order = (
             'main.cards article.card>.meta{display:contents!important}',
             'main.cards article.card>.meta>*{order:3!important}',
             'main.cards article.card>.meta>.exTitle{order:1!important}',
-            'main.cards article.card>.visual{order:2!important}',
+            'main.cards article.card>.coach{order:2!important}',
+            'main.cards article.card>.visual{order:3!important}',
             'main.cards article.card>.meta>.zone{order:3!important}',
-            'main.cards article.card>.coach{order:7!important}',
         )
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
             source = path.read_text(encoding="utf-8")
@@ -343,7 +343,7 @@ function scheduleAlignment() {}
         result = standardize_summary_navigation(source)
         self.assertNotIn('new MutationObserver(scheduleAlignment)', result)
         self.assertIn('window.gymratikFocusedExerciseIndex', result)
-        self.assertIn("scrollIntoView({behavior:'smooth', block:'start'})", result)
+        self.assertIn("scrollIntoView({behavior:'smooth', block:'center'})", result)
         self.assertIn('max-height:min(24dvh,168px)', result)
         self.assertIn('#floatingSessionSummary .sessionSummaryList{max-height:150px!important}', result)
         self.assertIn('#floatingSessionSummary .sessionSummaryList{max-height:78px!important', result)

@@ -10,7 +10,11 @@ import html
 import re
 from pathlib import Path
 
-from standardize_muscle_visuals import apply_warmup_load_selector_contract, standardize_quote_portrait_loading
+from standardize_muscle_visuals import (
+    apply_warmup_load_selector_contract,
+    standardize_quote_portrait_loading,
+    standardize_shared_session_contract,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -416,9 +420,15 @@ main.cards article.card[data-machine-occupied="true"] .machinePendingToggle{posi
     if (card && ['Enter',' '].includes(event.key)) { event.preventDefault(); event.stopImmediatePropagation(); }
   }, true);
   window.gymratikSyncOccupiedCard = syncOccupiedState;
+  document.addEventListener('wheel', () => { window.gymratikFocusedExerciseIndex = -1; }, { passive: true });
+  document.addEventListener('touchstart', () => { window.gymratikFocusedExerciseIndex = -1; }, { passive: true });
   const visible = new IntersectionObserver(entries => {
     const candidate = entries.filter(entry => entry.isIntersecting).sort((a,b) => b.intersectionRatio-a.intersectionRatio)[0];
-    if (candidate && candidate.intersectionRatio > .28) setFocusedCard(candidate.target);
+    if (candidate && candidate.intersectionRatio > .28) {
+      const selectedIndex = Number.isInteger(window.gymratikFocusedExerciseIndex) ? window.gymratikFocusedExerciseIndex : -1;
+      if (selectedIndex >= 0 && selectedIndex !== Number(candidate.target.dataset.exerciseIndex) - 1) return;
+      setFocusedCard(candidate.target);
+    }
   }, { threshold: [.28,.5,.72] });
   cards.forEach(card => visible.observe(card));
 })();
@@ -426,19 +436,19 @@ main.cards article.card[data-machine-occupied="true"] .machinePendingToggle{posi
 
 MOBILE_SUMMARY_REDESIGN = r'''<style data-enhancement="mobile-summary-layout-v1">
 @media(max-width:640px){
-  /* En móvil, presenta la demostración justo después del nombre; la ficha y
-     los controles quedan después de la referencia visual del movimiento. */
+  /* En móvil, prioriza el registro y mantiene las referencias agrupadas al
+     comienzo de su sección. */
   main.cards article.card>.meta{display:contents!important}
   main.cards article.card>.meta>*{order:3!important}
   main.cards article.card>.meta>.metaTop{order:0!important}
   main.cards article.card>.meta>.exTitle{order:1!important}
-  main.cards article.card>.visual{order:2!important}
+  main.cards article.card>.visual{order:3!important}
   main.cards article.card>.meta>.zone{order:3!important}
   main.cards article.card>.meta>.chipRow{order:4!important}
   main.cards article.card>.meta>.machinePill{order:5!important}
   main.cards article.card>.meta>.referenceRow{order:6!important}
-  main.cards article.card>.coach{order:7!important}
-  #floatingSessionSummary{left:50%!important;right:auto!important;transform:translateX(-50%)!important;bottom:max(.45rem,env(safe-area-inset-bottom))!important;width:min(420px,calc(100vw - .9rem))!important;max-height:min(36dvh,260px)!important;border-radius:.82rem!important;background:rgba(6,24,37,.94)!important;backdrop-filter:blur(14px) saturate(1.08)!important;-webkit-backdrop-filter:blur(14px) saturate(1.08)!important}
+  main.cards article.card>.coach{order:2!important}
+  #floatingSessionSummary{left:50%!important;right:auto!important;transform:translateX(-50%)!important;bottom:max(.45rem,env(safe-area-inset-bottom))!important;width:min(420px,calc(100vw - .9rem))!important;max-height:min(46dvh,280px)!important;border-radius:.82rem!important;background:rgba(6,24,37,.94)!important;backdrop-filter:blur(14px) saturate(1.08)!important;-webkit-backdrop-filter:blur(14px) saturate(1.08)!important}
   html body .page{padding-bottom:calc(max(10rem,var(--floating-summary-clearance,10rem)) + env(safe-area-inset-bottom,0px))!important}
   main.cards article.card .zone{display:inline-flex!important;align-self:flex-start!important;max-width:100%!important;margin:9px 0 0!important;padding:.34rem .58rem!important;border:1px solid rgba(114,220,255,.28)!important;border-radius:999px!important;background:rgba(14,57,75,.84)!important;color:#d5f5ff!important;font-size:.72rem!important;line-height:1.2!important;font-weight:850!important;overflow-wrap:anywhere!important}
   main.cards article.card .chipRow{display:none!important}
@@ -456,18 +466,16 @@ MOBILE_SUMMARY_REDESIGN = r'''<style data-enhancement="mobile-summary-layout-v1"
   #summaryToggle[aria-expanded="true"] #summaryActivityHeadline{display:block!important}
   #summaryToggle[aria-expanded="true"] .summaryMascotWrap{width:66px!important;height:66px!important}
   #summaryToggle[aria-expanded="true"] #summaryActivityMascot{width:62px!important;height:62px!important}
-  #summaryToggle[aria-expanded="true"] + #summaryBody{max-height:min(26dvh,190px)!important;padding:.28rem .42rem .36rem!important;gap:.24rem!important}
-  #summaryToggle[aria-expanded="true"] + #summaryBody .summaryActivityStatus{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+  #summaryToggle[aria-expanded="true"] ~ #summaryBody{display:flex!important;max-height:min(35dvh,190px)!important;min-height:0!important;padding:.28rem .42rem .36rem!important;gap:.2rem!important;overflow:hidden!important}
+  #summaryToggle[aria-expanded="true"] ~ #summaryBody .summaryTotals,
+  #summaryToggle[aria-expanded="true"] ~ #summaryBody .summaryActivityStatus,
+  #summaryToggle[aria-expanded="true"] ~ #summaryBody #summaryElapsed{display:none!important}
+  #summaryToggle[aria-expanded="true"] ~ #summaryBody .summaryOverallProgress{flex:none!important;min-height:2px!important}
   #summaryToggle[aria-expanded="true"] + #summaryBody #summaryElapsed{display:none!important}
   #floatingSessionSummary .summaryFocusBadge{margin:0!important;padding:.14rem .34rem!important;font-size:.51rem!important;line-height:1.12!important}
-  #summaryActivityMascot[data-motion="strength"]{animation:mascotBarStrength .9s cubic-bezier(.35,0,.2,1) infinite}
-  #summaryActivityMascot[data-motion="cardio"]{animation:mascotBarCardio .48s cubic-bezier(.4,0,.6,1) infinite}
-  #summaryActivityMascot[data-motion="celebration"]{animation:mascotBarCelebrate 1.1s cubic-bezier(.2,.8,.2,1) infinite;filter:drop-shadow(0 0 12px rgba(255,82,102,.92))}
+  #summaryActivityMascot[data-motion="celebration"]{filter:drop-shadow(0 0 12px rgba(255,82,102,.92))}
   .summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"]){border-color:rgba(255,93,111,.92)!important;background:rgba(130,28,51,.38)!important;box-shadow:0 0 22px rgba(255,55,88,.5)!important}
-  @keyframes mascotBarStrength{0%,100%{transform:translateY(2px) rotate(-2deg) scale(1)}35%{transform:translateY(-6px) rotate(3deg) scale(1.12,.95)}68%{transform:translateY(-1px) rotate(-2deg) scale(.97,1.1)}}
-  @keyframes mascotBarCardio{0%,100%{transform:translateY(1px) rotate(-4deg) scale(.96,1.02)}25%{transform:translateY(-6px) rotate(3deg) scale(1.08,.96)}50%{transform:translateY(0) rotate(-2deg) scale(.96,1.08)}75%{transform:translateY(-4px) rotate(4deg) scale(1.08,.96)}}
-  @keyframes mascotBarCelebrate{0%,100%{transform:translateY(0) rotate(-4deg) scale(1)}24%{transform:translateY(-8px) rotate(6deg) scale(1.16)}48%{transform:translateY(-2px) rotate(-3deg) scale(1.04)}72%{transform:translateY(-6px) rotate(4deg) scale(1.13)}}
-  #floatingSessionSummary .sessionSummaryList{max-height:min(17dvh,110px)!important}
+  #floatingSessionSummary .sessionSummaryList{flex:1 1 auto!important;min-height:min(132px,24dvh)!important;max-height:min(28dvh,164px)!important}
   main.cards article.card .phaseRow{grid-template-columns:minmax(0,1fr)!important;gap:.55rem!important;align-items:stretch!important}
   main.cards article.card .phaseRow>.phaseCol{min-width:0!important;width:100%!important}
   main.cards article.card .phaseRow .phaseLabel{max-width:100%!important;white-space:normal!important;word-break:normal!important;overflow-wrap:anywhere!important;line-height:1.2!important}
@@ -1016,6 +1024,7 @@ def apply() -> list[str]:
         updated = apply_interaction_redesign(updated)
         updated = standardize_quote_portrait_loading(updated)
         updated = apply_warmup_load_selector_contract(updated)
+        updated = standardize_shared_session_contract(updated)
         if day == 4:
             # El peso muerto cambió de barra libre a Smith: separa su historial
             # del identificador numérico que antes pertenecía al movimiento previo.
