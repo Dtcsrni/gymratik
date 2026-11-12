@@ -2,6 +2,18 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.20] - 2026-11-12
+
+### Fixed
+
+- El contador animado del resumen se mantiene dentro de su función y no bloquea los controles de las rutinas.
+
+## [0.7.19] - 2026-11-11
+
+### Changed
+
+- Las métricas del resumen final cuentan sus valores, también en progreso muscular, con movimiento reducido y valores accesibles.
+
 ## [0.7.18] - 2026-11-11
 
 ### Changed

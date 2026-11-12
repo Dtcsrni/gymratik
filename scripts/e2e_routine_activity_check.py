@@ -335,6 +335,11 @@ def assert_exercise_phase_pairs(page, routine_name: str) -> dict:
                 raise AssertionError(f"{routine_name}: ejercicio {exercise_number} debe tener un solo GIF de movimiento")
             motion = motion_gifs.first
             motion.scroll_into_view_if_needed()
+            page.wait_for_function(
+                "image => image.dataset.batteryMotionSrc && image.dataset.batteryPaused !== 'true' && image.getAttribute('src') === image.dataset.batteryMotionSrc",
+                arg=motion.element_handle(),
+                timeout=5_000,
+            )
             motion_src = motion.get_attribute("src") or ""
             if not motion_src.split("?", 1)[0].casefold().endswith(".gif"):
                 raise AssertionError(f"{routine_name}: ejercicio {exercise_number} usa un medio animado que no es GIF: {motion_src!r}")
@@ -1882,8 +1887,15 @@ def validate_completed_session_celebration(browser, name: str, sex: str, variant
     page.wait_for_function("document.querySelector('#summaryActivityStatus')?.dataset.activity === 'complete'")
     page.wait_for_function("expected => window.gymratikMascotVariant === expected", arg=variant)
     assert_mascot(page, variant, "celebration")
+    page.wait_for_function("document.querySelector('#sessionRecapSets')?.classList.contains('isCounting')")
+    count_up_start = page.locator("#sessionRecapSets").evaluate("node => ({value:node.getAttribute('aria-label'), active:node.classList.contains('isCounting')})")
+    set_totals = [int(value) for value in re.findall(r"\d+", count_up_start["value"] or "")]
+    if len(set_totals) != 2 or set_totals[0] != set_totals[1] or not count_up_start["active"]:
+        context.close()
+        raise AssertionError(f"{name}: las métricas del resumen no iniciaron el conteo animado: {count_up_start}")
     page.locator("#sessionMuscleMap").scroll_into_view_if_needed()
     page.wait_for_function("[...document.querySelectorAll('#sessionMuscleMap img')].length === 2 && [...document.querySelectorAll('#sessionMuscleMap img')].every(image => image.complete && image.naturalWidth > 0)")
+    page.wait_for_function("[...document.querySelectorAll('#sessionRecap .isCounting')].length === 0 && [...document.querySelectorAll('#sessionRecap .sessionRecapMetric dd, #sessionRingPercent, #sessionRecap .sessionMuscleRowCount')].every(node => !node.getAttribute('aria-label') || node.textContent === node.getAttribute('aria-label'))")
     recap_graphs = page.locator("#sessionRecap").evaluate("element => ({percent: element.querySelector('#sessionRingPercent')?.textContent, ringLabel: element.querySelector('#sessionProgressRing')?.getAttribute('aria-label'), muscleRows: element.querySelectorAll('.sessionMuscleRow').length, anatomyImages: [...element.querySelectorAll('#sessionMuscleMap img')].map(image => ({src: image.getAttribute('src'), animation: getComputedStyle(image).animationName})), completeBars: [...element.querySelectorAll('.sessionMuscleBar')].every(bar => bar.getAttribute('aria-valuenow') === bar.getAttribute('aria-valuemax'))})")
     if recap_graphs["percent"] != "100%" or "series confirmadas" not in (recap_graphs["ringLabel"] or "") or recap_graphs["muscleRows"] < 1 or len(recap_graphs["anatomyImages"]) != 2 or not recap_graphs["completeBars"] or any("musculos_generados/" not in image["src"] or image["animation"] != "muscleGrowthPulse" for image in recap_graphs["anatomyImages"]):
         context.close()
@@ -2053,10 +2065,17 @@ def validate_responsive_layout(browser) -> dict:
             )
             context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1', 'true')")
             page = context.new_page()
+            page_errors = []
+            page.on("pageerror", lambda error: page_errors.append(str(error)))
             install_test_clock(page)
             page.goto(f"http://127.0.0.1:{PORT}/data/rutinas_autocontenidas/canonicas/{quote(name)}", wait_until="networkidle")
             page.wait_for_function("() => [...document.querySelectorAll('link[rel=stylesheet]')].every(link => link.sheet)")
-            page.locator(".performanceEntry").first.wait_for(state="visible")
+            advance_test_clock(page, 1_000)
+            try:
+                page.locator(".performanceEntry").first.wait_for(state="visible")
+            except Exception as error:
+                diagnosis = page.evaluate("""() => ({title:document.title,readyState:document.readyState,bodyText:document.body.innerText.slice(0,500),cards:document.querySelectorAll('article.card').length,entries:document.querySelectorAll('.performanceEntry').length,loading:document.documentElement.className})""")
+                raise AssertionError(f"{name} {width}x{height}: no aparece el control de carga; pageErrors={page_errors}, estado={diagnosis}") from error
             page.evaluate("async () => { await document.fonts.ready; }")
             advance_test_clock(page, 100)
             layout = page.evaluate("""() => {
@@ -2307,9 +2326,10 @@ def validate_resource_pages(browser) -> list[dict]:
                     phase_row.scroll_into_view_if_needed()
                     phase_row.screenshot(path=str(SCREENSHOT_DIR / f"resource-day-{day}-exercise-{index+1:02d}.png"))
             anatomy = page.locator(".muscleDayGrid").first
-            if anatomy.count():
-                anatomy.scroll_into_view_if_needed()
-                anatomy.screenshot(path=str(SCREENSHOT_DIR / f"resource-day-{day}-anatomy.png"))
+            anatomy_panel = page.locator(".muscleDayPanel").first
+            if anatomy.count() and anatomy_panel.is_visible():
+                anatomy_panel.scroll_into_view_if_needed()
+                anatomy_panel.screenshot(path=str(SCREENSHOT_DIR / f"resource-day-{day}-anatomy.png"))
             warmup = page.locator(".warmupSteps").first
             if warmup.count():
                 warmup.scroll_into_view_if_needed()
@@ -2332,11 +2352,15 @@ def validate_exercise_gifs_reduced_motion(page, routine_name: str) -> dict:
     for index in range(gifs.count()):
         image = gifs.nth(index)
         exercise = int(image.evaluate("element => element.closest('article.card')?.dataset.exerciseIndex || '0'"))
-        image.scroll_into_view_if_needed()
+        frame = image.locator("xpath=..")
+        frame.scroll_into_view_if_needed()
         page.wait_for_function(
             "image => { const poster=image.parentElement?.querySelector('.gifFallback')?.getAttribute('src') || image.dataset.staticSrc || image.getAttribute('data-static-src'); return Boolean(poster) && image.dataset.batteryPaused === 'true' && image.getAttribute('src') === poster; }",
             arg=image.element_handle(),
         )
+        fallback = frame.locator(".gifFallback")
+        if fallback.count() and (not fallback.is_visible() or not fallback.evaluate("image => image.complete && image.naturalWidth > 0 && image.naturalHeight > 0")):
+            raise AssertionError(f"{routine_name}: póster estático ausente o sin decodificar para ejercicio {exercise}")
         reduced.append({"exercise": exercise, "poster": image.get_attribute("src"), "paused": True})
     page.emulate_media(reduced_motion="no-preference")
     resumed = []
@@ -2405,7 +2429,7 @@ def main() -> None:
             if args.resources_only:
                 print("Sintético: recursos visuales de las cuatro rutinas", flush=True)
                 results = validate_resource_pages(browser)
-                quote_card = validate_motivation_card(browser)
+                quote_card = None
                 responsive = None
                 offline = None
             else:

@@ -4771,6 +4771,50 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     updateTracker(item.tracker, false);
   };
   const renderSessionRecap = complete => {
+    const animateSummaryNumber = (node, nextValue) => {
+      const targetText = String(nextValue);
+      const numberPattern = /\d+(?:[.,]\d+)?/g;
+      const targets = [...targetText.matchAll(numberPattern)].map(match => Number(match[0].replace(',', '.')));
+      if (!targets.length || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        node.textContent = targetText;
+        node.setAttribute('aria-label', targetText);
+        node.classList.remove('isCounting');
+        return;
+      }
+      const currentText = node.textContent || '';
+      const current = [...currentText.matchAll(numberPattern)].map(match => Number(match[0].replace(',', '.')));
+      const starts = targets.map((value, index) => Number.isFinite(current[index]) ? current[index] : 0);
+      if (node.__summaryCountFrame) cancelAnimationFrame(node.__summaryCountFrame);
+      node.setAttribute('aria-label', targetText);
+      node.classList.add('isCounting');
+      const parts = targetText.split(/(\d+(?:[.,]\d+)?)/g);
+      const decimals = [...targetText.matchAll(numberPattern)].map(match => (match[0].split(/[.,]/)[1] || '').length);
+      const startAt = performance.now();
+      const duration = 760;
+      const draw = now => {
+        if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          node.textContent = targetText;
+          node.classList.remove('isCounting');
+          delete node.__summaryCountFrame;
+          return;
+        }
+        const progress = Math.min(1, (now - startAt) / duration);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        node.textContent = parts.map((part, index) => {
+          if (index % 2 === 0) return part;
+          const numberIndex = (index - 1) / 2;
+          const value = starts[numberIndex] + (targets[numberIndex] - starts[numberIndex]) * eased;
+          return decimals[numberIndex] ? value.toFixed(decimals[numberIndex]).replace('.', ',') : String(Math.round(value));
+        }).join('');
+        if (progress < 1) node.__summaryCountFrame = requestAnimationFrame(draw);
+        else {
+          node.textContent = targetText;
+          node.classList.remove('isCounting');
+          delete node.__summaryCountFrame;
+        }
+      };
+      node.__summaryCountFrame = requestAnimationFrame(draw);
+    };
     const rows = exerciseItems.map(snapshot);
     const doneSeries = rows.reduce((sum, row) => sum + row.done, 0);
     const completedExercises = rows.filter(row => row.complete && !row.skipped).length;
@@ -4784,7 +4828,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     }));
     const totalReps = recordedReps.reduce((sum, record) => sum + record.reps, 0);
     const bestSet = recordedReps.reduce((best, record) => !best || record.reps > best.reps ? record : best, null);
-    const setText = (id, value) => { const node = document.getElementById(id); if (node) node.textContent = String(value); };
+    const setText = (id, value) => { const node = document.getElementById(id); if (node) animateSummaryNumber(node, value); };
     const timing = state.__timing || {};
     const elapsedMs = Number(timing.sessionStartedAt) > 0 && Number(timing.sessionEndedAt) >= Number(timing.sessionStartedAt)
       ? Number(timing.sessionEndedAt) - Number(timing.sessionStartedAt) : 0;
@@ -4849,7 +4893,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
         label.textContent = group;
         const value = document.createElement('strong');
         value.className = 'sessionMuscleRowCount';
-        value.textContent = `${count.done}/${count.planned} series`;
+        animateSummaryNumber(value, `${count.done}/${count.planned} series`);
         const bar = document.createElement('span');
         bar.className = 'sessionMuscleBar';
         bar.setAttribute('role', 'progressbar');
@@ -7896,7 +7940,7 @@ button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gra
 @media(prefers-reduced-motion:reduce){#floatingSessionSummary,#summaryToggle{scroll-behavior:auto!important;transition:none!important}}
 </style>
 
-<style data-enhancement="exercise-focus-occupied-quote-v8">
+<style data-enhancement="exercise-focus-occupied-quote-v9">
 /* Separa visualmente cada ejercicio y reserva el ámbar para una máquina ocupada. */
 main.cards article.card[data-exercise-index]{--exercise-accent:#72dcff;position:relative;border:1px solid color-mix(in srgb,var(--exercise-accent) 30%,transparent);transition:border-color .24s ease,box-shadow .24s ease,transform .24s ease}
 main.cards article.card[data-exercise-index]:focus-within,main.cards article.card[data-exercise-index].is-exercise-focused{border-color:var(--exercise-accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--exercise-accent) 22%,transparent),0 18px 42px rgba(0,0,0,.24)}
@@ -7937,6 +7981,7 @@ main.cards article.card[data-machine-occupied="true"] .machinePendingToggle{posi
 .sessionRecapMetric:nth-child(2){animation-delay:.05s}.sessionRecapMetric:nth-child(3){animation-delay:.1s}.sessionRecapMetric:nth-child(4){animation-delay:.15s}.sessionRecapMetric:nth-child(5){animation-delay:.2s}
 .sessionRecapMetric dt{color:#91adba;font-size:.6rem;font-weight:800;line-height:1.2}
 .sessionRecapMetric dd{margin:.2rem 0 0;color:#a9f1dd;font-size:clamp(.86rem,1.5vw,1.12rem);font-weight:950;line-height:1.1;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.sessionRecapMetric dd.isCounting,.sessionRingValue strong.isCounting,.sessionMuscleRowCount.isCounting{color:#fff0f2;text-shadow:0 0 12px rgba(255,80,105,.72)}
 .sessionCompletionPanel.isPartial .sessionRecapMetric dd{color:#ffe0a0}
 .sessionMuscleViz{position:relative;margin-top:.7rem;padding:.82rem .7rem .7rem;border:1px solid rgba(255,91,112,.38);border-radius:.9rem;background:radial-gradient(ellipse at 0 0,rgba(183,42,62,.2),transparent 56%),linear-gradient(145deg,rgba(17,27,43,.94),rgba(3,16,25,.76));box-shadow:inset 0 1px rgba(255,255,255,.045),0 12px 28px rgba(0,0,0,.16);overflow:hidden}
 .sessionMuscleViz::before{position:absolute;top:0;left:.7rem;right:.7rem;height:2px;background:linear-gradient(90deg,transparent,#f0445d 25%,#ff927d 50%,#f0445d 75%,transparent);box-shadow:0 0 14px rgba(240,68,93,.55);content:""}
@@ -8013,7 +8058,7 @@ main.cards article.card[data-machine-occupied="true"] .machinePendingToggle{posi
 @media(max-width:380px){.sessionCompletionPanel:not([hidden]){grid-template-columns:minmax(0,1fr) minmax(5.5rem,6.1rem)!important;padding:.58rem!important}.sessionCompletionPanel .motivationPhotoWrap{width:100%!important;min-height:5.7rem!important}.sessionCompletionPanel .motivationPhotoWrap.hasMascot .motivationPortrait{width:min(5.8rem,23vw)!important;height:min(5.8rem,23vw)!important}.sessionCompletionPanel .sessionRecapGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.sessionCompletionPanel #session-completion-title{font-size:1.08rem!important}.sessionCompletionPanel #motivationMessage{font-size:.85rem!important}}
 @media(prefers-reduced-motion:reduce){.floatingSessionSummary.is-exercise-focused .summaryFocusBadge,.floatingSessionSummary.is-exercise-focused .summaryToggle,.summaryExercise.isCurrent,.sessionRecap,.sessionRecapMetric,.sessionFunFact,.motivationPhotoWrap.hasMascot .motivationPortrait,.motivationPhotoWrap.hasMascot::before,.motivationPhotoWrap::after,.muscleAnatomyFigure img,.muscleAnatomyFigure::after{animation:none!important}.motivationPhotoWrap.hasMascot .motivationPortrait{will-change:auto}.muscleAnatomyFigure img,.muscleAnatomyFigure::after{will-change:auto}.sessionRingProgress,.sessionMuscleBar span{transition:none!important}main.cards article.card[data-exercise-index]{transition:none}}
 </style>
-<script data-enhancement="exercise-focus-occupied-quote-v8">
+<script data-enhancement="exercise-focus-occupied-quote-v9">
 (() => {
   const cards = [...document.querySelectorAll('main.cards article.card[data-exercise-index]')];
   const summary = document.querySelector('.floatingSessionSummary');

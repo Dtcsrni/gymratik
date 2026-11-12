@@ -1508,7 +1508,7 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
         for path in sorted(CANONICAL.glob("*.html")):
             with self.subTest(routine=path.name):
                 source = path.read_text(encoding="utf-8")
-                self.assertEqual(source.count('data-enhancement="exercise-focus-occupied-quote-v8"'), 2)
+                self.assertEqual(source.count('data-enhancement="exercise-focus-occupied-quote-v9"'), 2)
                 self.assertEqual(source.count('data-enhancement="section-ledger-load-v2"'), 2)
                 self.assertIn('data-machine-occupied="true"', source)
                 self.assertIn("setFocusedCard", source)
@@ -1527,6 +1527,11 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 self.assertIn("routineSectionStamp", source)
                 self.assertIn("sessionCompletionCopy p#motivationMessage", source)
                 self.assertIn('id="sessionRecap"', source)
+                self.assertIn("const animateSummaryNumber = (node, nextValue) =>", source)
+                self.assertEqual(source.count("const animateSummaryNumber = (node, nextValue) =>"), 1)
+                self.assertIn("requestAnimationFrame(draw)", source)
+                self.assertIn("prefers-reduced-motion: reduce", source)
+                self.assertIn("node.setAttribute('aria-label', targetText)", source)
                 for recap_id in ("sessionRecapSets", "sessionRecapExercises", "sessionRecapReps", "sessionRecapSkipped", "sessionRecapDuration", "sessionFunFact"):
                     self.assertEqual(source.count(f'id="{recap_id}"'), 1)
                 self.assertIn("series confirmadas", source)
