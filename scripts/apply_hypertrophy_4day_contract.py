@@ -27,6 +27,16 @@ ROUTINES = {
     4: ("Rutina_Dia_4_Pierna_Equilibrio_V1.html", 7, (3, 3, 4, 3, 3, 3, 3), 22),
 }
 
+# Descansos mínimos y ventanas orientativas por ejercicio. Se amplían 15 s en
+# accesorios y 15–30 s en movimientos multiarticulares para mantener calidad
+# de repeticiones sin tratar una duración como óptimo universal.
+REST_INTERVALS = {
+    1: ("2.25–2.75 min", "2.25–2.75 min", "2.25–2.75 min", "1.75–2.25 min", "1.75–2.25 min", "1.75–2.25 min", "2.5–3.5 min"),
+    2: ("3.25–3.75 min", "2.75–3.25 min", "2.5–3.5 min", "2.25–2.75 min", "1.75–2.25 min", "1.75–2.25 min", "1.25–1.75 min"),
+    3: ("2.5–3.5 min", "2.5–3.5 min", "1.75–2.25 min", "2.25–2.75 min", "1.25–1.75 min", "1.5–1.75 min", "1.5–1.75 min"),
+    4: ("2.5–3.5 min", "2.5–3.5 min", "1.75–2.25 min", "1.25–1.75 min", "1.25–1.75 min", "1.25–1.75 min", "1.25–1.75 min"),
+}
+
 # (routine receiving card, source routine, exact source title)
 ADDITIONS = {
     1: [(3, "PRESS DE PECHO SENTADO EN MÁQUINA")],
@@ -102,6 +112,36 @@ def set_rep_range(card: str) -> str:
         r'(<div\s+class=["\']metric reps["\'].*?<div\s+class=["\']metricVal["\']\s*>).*?(</div>)',
         lambda m: m.group(1) + value + m.group(2), card, count=1, flags=re.I | re.S,
     )
+
+
+def set_rest_interval(card: str, cue: str) -> str:
+    updated, count = re.subn(
+        r'(<div\s+class=["\']metric rest["\'].*?<div\s+class=["\']metricVal["\']\s*>).*?(</div>)',
+        lambda match: match.group(1) + f'<strong class="timeCue">{cue}</strong>' + match.group(2),
+        card,
+        count=1,
+        flags=re.I | re.S,
+    )
+    if count != 1:
+        raise ValueError(f"{title_of(card)}: no se pudo establecer el descanso")
+    return updated
+
+
+def standardize_completed_session_footer(source: str) -> str:
+    rules = (
+        ".sessionFooter.is-session-complete{grid-template-columns:minmax(0,1fr)!important}"
+        ".sessionFooter.is-session-complete .sessionResetCopy{display:none!important}"
+        "#finishDay[hidden]{display:none!important}"
+    )
+    pattern = r'<style data-enhancement="weekly-routine-reset-v1">.*?</style>'
+    match = re.search(pattern, source, re.S)
+    if not match:
+        raise ValueError("No se encontró el estilo del pie de sesión")
+    style = match.group(0)
+    if rules not in style:
+        style = style.replace("</style>", rules + "</style>", 1)
+        source = source[:match.start()] + style + source[match.end():]
+    return source
 
 
 def adapt_smith_rdl(card: str) -> str:
@@ -452,11 +492,12 @@ MOBILE_SUMMARY_REDESIGN = r'''<style data-enhancement="mobile-summary-layout-v1"
   html body .page{padding-bottom:calc(max(10rem,var(--floating-summary-clearance,10rem)) + env(safe-area-inset-bottom,0px))!important}
   main.cards article.card .zone{display:inline-flex!important;align-self:flex-start!important;max-width:100%!important;margin:9px 0 0!important;padding:.34rem .58rem!important;border:1px solid rgba(114,220,255,.28)!important;border-radius:999px!important;background:rgba(14,57,75,.84)!important;color:#d5f5ff!important;font-size:.72rem!important;line-height:1.2!important;font-weight:850!important;overflow-wrap:anywhere!important}
   main.cards article.card .chipRow{display:none!important}
-  #summaryToggle{grid-template-columns:auto minmax(0,1fr) 68px auto!important;grid-template-rows:auto auto!important;min-height:68px!important;gap:.12rem .42rem!important;padding:.36rem .52rem!important}
+  #floatingSessionSummary{overflow:visible!important}
+  #summaryToggle{grid-template-columns:auto minmax(0,1fr) 88px auto!important;grid-template-rows:auto auto!important;min-height:78px!important;gap:.12rem .42rem!important;padding:.36rem .52rem!important;overflow:visible!important}
   #summaryToggle #summaryHeadline{grid-column:2;grid-row:1;font-size:.7rem!important;line-height:1.15!important}
   #summaryToggle #summaryActivityHeadline{grid-column:2;grid-row:2;display:block!important;font-size:.62rem!important;line-height:1.1!important}
-  #summaryToggle .summaryMascotWrap{grid-column:3;grid-row:1/3!important;width:66px!important;height:66px!important;border-radius:.78rem!important}
-  #summaryToggle #summaryActivityMascot{width:62px!important;height:62px!important}
+  #summaryToggle .summaryMascotWrap{grid-column:3;grid-row:1/3!important;width:86px!important;height:86px!important;border-radius:.78rem!important;overflow:visible!important;transform:translateY(-8px)}
+  #summaryToggle #summaryActivityMascot{width:82px!important;height:82px!important}
   #summaryToggle .summaryChevron{grid-column:4;grid-row:1/3!important;font-size:.85rem!important}
   #summaryToggle.isResting{background:linear-gradient(105deg,rgba(112,79,21,.94),rgba(83,61,29,.94))!important}
   #summaryToggle.isActive{background:linear-gradient(105deg,rgba(19,105,91,.94),rgba(19,73,72,.94))!important}
@@ -464,8 +505,8 @@ MOBILE_SUMMARY_REDESIGN = r'''<style data-enhancement="mobile-summary-layout-v1"
   #summaryToggle.isComplete{background:linear-gradient(105deg,rgba(112,79,21,.94),rgba(72,51,80,.94))!important}
   #summaryToggle[aria-expanded="true"]{grid-template-rows:auto auto!important;min-height:54px!important}
   #summaryToggle[aria-expanded="true"] #summaryActivityHeadline{display:block!important}
-  #summaryToggle[aria-expanded="true"] .summaryMascotWrap{width:66px!important;height:66px!important}
-  #summaryToggle[aria-expanded="true"] #summaryActivityMascot{width:62px!important;height:62px!important}
+  #summaryToggle[aria-expanded="true"] .summaryMascotWrap{width:86px!important;height:86px!important}
+  #summaryToggle[aria-expanded="true"] #summaryActivityMascot{width:82px!important;height:82px!important}
   #summaryToggle[aria-expanded="true"] ~ #summaryBody{display:flex!important;max-height:min(35dvh,190px)!important;min-height:0!important;padding:.28rem .42rem .36rem!important;gap:.2rem!important;overflow:hidden!important}
   #summaryToggle[aria-expanded="true"] ~ #summaryBody .summaryTotals,
   #summaryToggle[aria-expanded="true"] ~ #summaryBody .summaryActivityStatus,
@@ -482,10 +523,59 @@ MOBILE_SUMMARY_REDESIGN = r'''<style data-enhancement="mobile-summary-layout-v1"
   main.cards article.card .phaseRow .source{min-width:0!important;max-width:100%!important;word-break:normal!important;overflow-wrap:anywhere!important;hyphens:auto}
   main.cards article.card .phaseRow .swap{justify-self:center!important;align-self:center!important;margin:.1rem 0!important;transform:rotate(90deg)!important}
 }
-@media(max-width:380px){#summaryToggle{grid-template-columns:auto minmax(0,1fr) 60px auto!important}#summaryToggle .summaryMascotWrap,#summaryToggle[aria-expanded="true"] .summaryMascotWrap{width:58px!important;height:58px!important}#summaryToggle #summaryActivityMascot,#summaryToggle[aria-expanded="true"] #summaryActivityMascot{width:54px!important;height:54px!important}}
+@media(max-width:380px){#summaryToggle{grid-template-columns:auto minmax(0,1fr) 80px auto!important}#summaryToggle .summaryMascotWrap,#summaryToggle[aria-expanded="true"] .summaryMascotWrap{width:78px!important;height:78px!important}#summaryToggle #summaryActivityMascot,#summaryToggle[aria-expanded="true"] #summaryActivityMascot{width:74px!important;height:74px!important}}
 @media(max-width:360px){.performanceRepsControl{grid-template-columns:40px minmax(0,1fr) 40px!important;gap:.25rem!important}.performanceRepsNudge{min-width:40px!important;min-height:44px!important}.performanceFieldTitleRow{flex-wrap:wrap!important;justify-content:flex-start!important;gap:.25rem .4rem!important}.performanceFieldLabel{flex:1 1 120px!important;flex-wrap:wrap!important}.performanceRequired{margin-left:26px!important}}
 @media(prefers-reduced-motion:reduce){#floatingSessionSummary,#summaryToggle{scroll-behavior:auto!important;transition:none!important}}
 </style>'''
+
+
+UNIFORM_MOBILE_EXERCISE_LAYOUT = r'''<style data-enhancement="uniform-mobile-exercise-layout-v1">
+/* Flujo móvil uniforme: encabezado, referencia visual y controles. */
+#floatingSessionSummary{overflow:visible!important}
+#summaryToggle{position:relative!important;grid-template-columns:auto minmax(0,1fr) 68px auto!important;min-height:68px!important;overflow:visible!important}
+#summaryToggle .summaryMascotWrap{position:absolute!important;z-index:3;top:-10px;right:24px;width:84px!important;height:84px!important;overflow:visible!important}
+#summaryToggle #summaryActivityMascot{width:80px!important;height:80px!important}
+@media(max-width:820px){
+  main.cards article.card{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:10px!important;min-height:0!important;padding:14px!important}
+  main.cards article.card>.meta{display:flex!important;flex:0 0 auto!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:7px!important;width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;order:1!important}
+  main.cards article.card>.meta>*{order:initial!important;min-height:0!important}
+  main.cards article.card>.meta>.metaTop{display:flex!important;min-height:0!important;margin:0!important}
+  main.cards article.card>.meta>.exTitle{display:block!important;min-height:0!important;margin:0!important;padding:0!important;font-size:clamp(1.55rem,7vw,2rem)!important;line-height:1.08!important;overflow-wrap:anywhere!important}
+  main.cards article.card>.meta>.zone{align-self:flex-start!important;margin:0!important}
+  main.cards article.card>.meta>.machinePill{margin:0!important}
+  main.cards article.card>.meta>.referenceRow{margin:0!important}
+  main.cards article.card>.visual{display:block!important;flex:0 0 auto!important;order:2!important;min-width:0!important;min-height:0!important;margin:0!important;padding:0!important}
+  main.cards article.card>.coach{display:flex!important;flex:0 0 auto!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;order:3!important;gap:8px!important;min-width:0!important;min-height:0!important;margin:0!important;padding:12px!important}
+  main.cards article.card>.coach>.coachRibbon,main.cards article.card>.coach>.coachHeader{margin:0!important}
+  main.cards article.card>.coach>.coachRibbon{order:0!important}
+  main.cards article.card>.coach>.coachHeader{order:1!important}
+  main.cards article.card>.coach>.metrics{order:2!important}
+  main.cards article.card>.coach>.exerciseTracker{order:3!important}
+  main.cards article.card>.coach>.techAccordion{order:4!important}
+  main.cards article.card>.coach>.metrics{margin:0!important;gap:7px!important}
+  main.cards article.card .exerciseTracker{margin:0!important}
+  main.cards article.card .techAccordion{margin:0!important}
+}
+@media(max-width:380px){#summaryToggle{grid-template-columns:auto minmax(0,1fr) 60px auto!important}#summaryToggle .summaryMascotWrap{top:-8px;right:21px;width:74px!important;height:74px!important}#summaryToggle #summaryActivityMascot{width:70px!important;height:70px!important}}
+@media(max-width:380px){main.cards article.card{gap:8px!important;padding:12px!important}main.cards article.card>.coach{gap:7px!important;padding:10px!important}}
+@media(prefers-reduced-motion:reduce){main.cards article.card{scroll-behavior:auto}}
+</style>'''
+
+
+def apply_uniform_mobile_exercise_layout(source: str) -> str:
+    """Keep every routine exercise card on the same compact mobile structure."""
+    marker = 'data-enhancement="uniform-mobile-exercise-layout-v1"'
+    if marker in source:
+        source = re.sub(
+            r'<style\b(?=[^>]*data-enhancement="uniform-mobile-exercise-layout-v1")[^>]*>.*?</style\s*>',
+            UNIFORM_MOBILE_EXERCISE_LAYOUT,
+            source,
+            count=1,
+            flags=re.I | re.S,
+        )
+    else:
+        source = source.replace('</body>', UNIFORM_MOBILE_EXERCISE_LAYOUT + '\n</body>', 1)
+    return source
 
 
 SECTION_LOAD_REDESIGN = r'''<style data-enhancement="section-ledger-load-v2">
@@ -734,6 +824,11 @@ SESSION_COMPLETION_UPDATE = r'''  const renderSessionRecap = complete => {
     const rows = exerciseItems.map(snapshot);
     const complete = rows.length > 0 && rows.every(row => row.complete && !row.skipped);
     const partial = !complete && state.__timing?.sessionEndReason === 'partial' && Number(state.__timing?.sessionEndedAt) > 0;
+    const finishDayButton = document.getElementById('finishDay');
+    if (finishDayButton) {
+      finishDayButton.hidden = complete;
+      finishDayButton.closest('.sessionFooter')?.classList.toggle('is-session-complete', complete);
+    }
     if (!complete && !partial) { completionPanel.hidden = true; completionPanel.classList.remove('isPartial'); return; }
     if (summaryToggle && summaryBody) { summaryToggle.setAttribute('aria-expanded', 'false'); summaryBody.hidden = true; }
     renderSessionRecap(complete);
@@ -916,6 +1011,7 @@ def apply_interaction_redesign(source: str) -> str:
     timingRoot.sessionEndReason = 'partial';
     Object.values(timingRoot.exercises || {}).forEach(timing => {
       timing.preparationEndsAt = 0;
+      timing.preparationKind = '';
       timing.seriesStartedAt = 0;
       timing.restStartedAt = 0;
       timing.restNotifiedAt = 0;
@@ -1003,7 +1099,15 @@ def apply() -> list[str]:
             raise ValueError(f"Día {day}: faltan tarjetas base; recibidas={len(original[day])}")
         if len(cards) != expected_count or len(distribution) != expected_count or sum(distribution) != total:
             raise ValueError(f"Día {day}: contrato interno inconsistente")
-        normalized = [set_rep_range(set_series(card, index, distribution[index - 1], appended=index > BASE_COUNTS[day])) for index, card in enumerate(cards, 1)]
+        if len(REST_INTERVALS[day]) != expected_count:
+            raise ValueError(f"Día {day}: número de descansos distinto del número de ejercicios")
+        normalized = [
+            set_rest_interval(
+                set_rep_range(set_series(card, index, distribution[index - 1], appended=index > BASE_COUNTS[day])),
+                REST_INTERVALS[day][index - 1],
+            )
+            for index, card in enumerate(cards, 1)
+        ]
         if day == 4:
             normalized[1] = adapt_smith_rdl(normalized[1])
             normalized[1] = re.sub(
@@ -1021,10 +1125,22 @@ def apply() -> list[str]:
         last = list(CARD_RE.finditer(texts[day]))[-1]
         updated = texts[day][:first.start()] + "\n".join(normalized) + texts[day][last.end():]
         updated = update_sections(updated, day, expected_count, distribution, total)
+        updated = updated.replace(
+            "const minMs = matches.length > 1 ? Math.min(base, matches[1]) : Math.round(base * .85);",
+            "const minMs = matches.length > 1 ? Math.min(base, matches[1]) : base;",
+        )
+        updated = updated.replace(
+            "const maxMs = matches.length > 1 ? Math.max(base, matches[1]) : Math.round(base * 1.15);",
+            "const maxMs = matches.length > 1 ? Math.max(base, matches[1]) : base;",
+        )
+        updated = updated.replace("De 60 s a 2.5 min según el ejercicio", "De 75 s a 3.75 min según el ejercicio")
+        updated = updated.replace("De 90 s a 3 min según el ejercicio", "De 75 s a 3.75 min según el ejercicio")
         updated = apply_interaction_redesign(updated)
+        updated = apply_uniform_mobile_exercise_layout(updated)
         updated = standardize_quote_portrait_loading(updated)
         updated = apply_warmup_load_selector_contract(updated)
         updated = standardize_shared_session_contract(updated)
+        updated = standardize_completed_session_footer(updated)
         if day == 4:
             # El peso muerto cambió de barra libre a Smith: separa su historial
             # del identificador numérico que antes pertenecía al movimiento previo.

@@ -2,6 +2,22 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.23] - 2026-11-13
+
+### Changed
+
+- La aproximación y cada serie tienen 16 s de preparación persistente antes de iniciar su cronómetro.
+- Las fichas comparten el mismo orden móvil: número y título, imagen, prescripción, controles y técnica; se eliminan alturas y márgenes vacíos.
+- La mascota animada de la barra inferior aumenta de tamaño y sobresale ligeramente de la barra.
+- Los descansos se ajustan por ejercicio, con 15–30 s adicionales en sus mínimos según el tipo de movimiento; el temporizador ya no acorta un valor único prescrito.
+- La acción de cierre parcial se oculta al completar todas las series de la rutina.
+
+## [0.7.22] - 2026-11-13
+
+### Added
+
+- La portada muestra las sesiones de la semana como pills animadas y recomienda la siguiente rutina pendiente, alternando grupos musculares cuando el plan lo permite.
+
 ## [0.7.21] - 2026-11-12
 
 ### Fixed

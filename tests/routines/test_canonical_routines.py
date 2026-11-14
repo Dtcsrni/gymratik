@@ -18,7 +18,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from validate_canonical_routines import validate_path  # noqa: E402
 from build_fitness_quotes_js import EDITORIAL_QUOTES, compact_payload  # noqa: E402
-from apply_hypertrophy_4day_contract import apply_interaction_redesign  # noqa: E402
+from apply_hypertrophy_4day_contract import apply_interaction_redesign, cards_of, REST_INTERVALS  # noqa: E402
 import validate_repository  # noqa: E402
 from standardize_muscle_visuals import (  # noqa: E402
     close_unterminated_segmented_progress_style,
@@ -38,6 +38,37 @@ CANONICAL = ROOT / "data" / "rutinas_autocontenidas" / "canonicas"
 
 
 class CanonicalRoutineValidationTests(unittest.TestCase):
+    def test_rest_intervals_match_all_routine_cards_and_minimum_timer_contract(self) -> None:
+        previous_minima_seconds = {
+            1: (120, 120, 120, 90, 90, 90, 120),
+            2: (180, 150, 120, 120, 90, 90, 60),
+            3: (120, 120, 90, 120, 60, 75, 75),
+            4: (120, 120, 90, 60, 60, 60, 60),
+        }
+        routine_paths = sorted(CANONICAL.glob("Rutina_Dia_*_V1.html"))
+        self.assertEqual(len(routine_paths), 4)
+        for day, path in enumerate(routine_paths, 1):
+            source = path.read_text(encoding="utf-8")
+            cards = cards_of(source)
+            self.assertEqual(len(cards), 7, path.name)
+            self.assertEqual(len(REST_INTERVALS[day]), len(cards), path.name)
+            for index, (card, cue, old_minimum) in enumerate(zip(cards, REST_INTERVALS[day], previous_minima_seconds[day]), 1):
+                match = re.search(
+                    r'<div\s+class="metric rest".*?<div\s+class="metricVal">\s*<strong\s+class="timeCue">([^<]+)</strong>',
+                    card,
+                    re.S,
+                )
+                with self.subTest(day=day, exercise=index):
+                    self.assertIsNotNone(match)
+                    self.assertEqual(match.group(1), cue)
+                    first_value = re.search(r"(\d+(?:\.\d+)?)\s*(min|s)", cue)
+                    self.assertIsNotNone(first_value)
+                    minimum_ms = float(first_value.group(1)) * (60000 if first_value.group(2) == "min" else 1000)
+                    self.assertGreaterEqual(minimum_ms, (old_minimum + 15) * 1000)
+            self.assertIn("const minMs = matches.length > 1 ? Math.min(base, matches[1]) : base;", source)
+            self.assertIn("const maxMs = matches.length > 1 ? Math.max(base, matches[1]) : base;", source)
+            self.assertNotIn("Math.round(base * .85)", source)
+
     def test_session_recap_has_one_lexical_declaration_per_routine(self) -> None:
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
             source = path.read_text(encoding="utf-8")
@@ -96,20 +127,21 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
                 self.assertIn('@media(max-width:360px){.performanceRepsControl{grid-template-columns:40px', source)
                 self.assertIn('.performanceFieldLabel{flex:1 1 120px!important;flex-wrap:wrap!important}', source)
 
-    def test_mobile_exercise_controls_precede_visual_reference_on_all_days(self) -> None:
+    def test_mobile_exercise_reference_precedes_controls_on_all_days(self) -> None:
         expected_order = (
-            'main.cards article.card>.meta{display:contents!important}',
-            'main.cards article.card>.meta>*{order:3!important}',
-            'main.cards article.card>.meta>.exTitle{order:1!important}',
-            'main.cards article.card>.coach{order:2!important}',
-            'main.cards article.card>.visual{order:3!important}',
-            'main.cards article.card>.meta>.zone{order:3!important}',
+            'main.cards article.card>.meta{display:flex!important;flex:0 0 auto!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:7px!important;width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;order:1!important}',
+            'main.cards article.card>.meta>.exTitle{display:block!important',
+            'main.cards article.card>.visual{display:block!important;flex:0 0 auto!important;order:2!important',
+            'main.cards article.card>.coach{display:flex!important;flex:0 0 auto!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;order:3!important',
         )
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
             source = path.read_text(encoding="utf-8")
             with self.subTest(routine=path.name):
                 for rule in expected_order:
                     self.assertIn(rule, source)
+                cards = cards_of(source)
+                for card in cards:
+                    self.assertLess(card.index('class="metaTop"'), card.index('class="exTitle"'))
 
     def test_session_completion_is_compact_and_uses_local_mascot_when_quote_art_is_missing(self) -> None:
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
@@ -124,8 +156,12 @@ class CanonicalRoutineValidationTests(unittest.TestCase):
                 self.assertIn(".motivationPhotoWrap.hasMascot .motivationPortrait.isMascot[data-mascot-variant=\"male\"]", source)
                 self.assertIn("@keyframes completionPoseCycle", source)
                 self.assertIn("background-size:300% 300%", source)
+                self.assertIn("finishDayButton.hidden = complete;", source)
+                self.assertIn("finishDayButton.closest('.sessionFooter')?.classList.toggle('is-session-complete', complete);", source)
+                self.assertIn("#finishDay[hidden]{display:none!important}", source)
                 self.assertIn("left:50%!important;right:auto!important;transform:translateX(-50%)!important", source)
-                self.assertIn("width:66px!important;height:66px!important", source)
+                self.assertIn("width:clamp(8rem,16vw,11rem)!important;height:clamp(8rem,16vw,11rem)!important", source)
+                self.assertIn("width:min(6.6rem,24vw)!important;height:min(6.6rem,24vw)!important", source)
                 self.assertIn(".sessionCompletionPanel .sessionCompletionCopy{display:contents!important}", source)
                 self.assertIn("grid-template-columns:repeat(3,minmax(0,1fr))!important", source)
                 self.assertIn("@media(prefers-reduced-motion:reduce)", source)
@@ -347,7 +383,7 @@ function scheduleAlignment() {}
         self.assertIn('max-height:min(24dvh,168px)', result)
         self.assertIn('#floatingSessionSummary .sessionSummaryList{max-height:150px!important}', result)
         self.assertIn('#floatingSessionSummary .sessionSummaryList{max-height:78px!important', result)
-        self.assertIn('width:82px!important;height:82px!important', result)
+        self.assertIn('width:84px!important;height:84px!important', result)
 
     def test_summary_repaint_preserves_manual_scroll_position(self) -> None:
         source = '''<html><head></head><body><script>
@@ -666,7 +702,7 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
         self.assertIn("▶ VIDEO TÉCNICO · Remo horizontal", card)
         self.assertIn("Jl0r78dnqGU", card)
         self.assertIn("8–12 repeticiones", card)
-        self.assertIn("2–2.5 min", card)
+        self.assertIn("2.25–2.75 min", card)
         self.assertIn("7–9 min", card)
 
     def test_all_routines_have_explicit_rest_transition_and_alert_contract(self) -> None:
@@ -696,7 +732,7 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertIn("mantén 5 s para continuar", source)
                 self.assertNotIn("startExerciseButton", source)
                 self.assertNotIn("item.startButton", source)
-                self.assertIn("beginSeries(item, Date.now())", source)
+                self.assertIn("beginSeries(item, timestamp)", source)
                 self.assertIn("}, 5000);", source)
                 self.assertIn(
                     "longPressResetTimer = window.setTimeout(() => { longPressDetected = false; longPressResetTimer = 0; }, 350);",
@@ -718,7 +754,7 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
             source = path.read_text(encoding="utf-8")
             timing_display = source[
                 source.index("const renderTimingDisplays = () => {") : source.index(
-                    "// El cronómetro empieza después de una preparación explícita de 15 segundos."
+                    "const PREPARATION_MS = 16000;"
                 )
             ]
             complete_button = source[
@@ -1030,14 +1066,20 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 self.assertNotIn("loadInput.max =", handler)
                 self.assertNotIn("Math.max(profileMax", html)
 
-    def test_all_routines_use_persistent_fifteen_second_preparation_before_timing(self) -> None:
+    def test_all_routines_use_persistent_sixteen_second_preparation_before_timing(self) -> None:
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
             source = path.read_text(encoding="utf-8")
             with self.subTest(path=path.name):
-                self.assertEqual(source.count("const PREPARATION_MS = 15000;"), 1)
+                self.assertEqual(source.count("const PREPARATION_MS = 16000;"), 1)
                 self.assertIn("warmup.phase = 'preparing'", source)
                 self.assertIn("warmup.preparationEndsAt = warmupPreparationEndsAt", source)
                 self.assertIn("timing.preparationEndsAt = endsAt", source)
+                self.assertIn("timing.preparationKind = kind", source)
+                self.assertIn("const finishExercisePreparation = (item, kind) =>", source)
+                self.assertIn("startSeriesPreparation(item, 'approximation')", source)
+                self.assertIn("timing.warmupStartedAt = timestamp", source)
+                self.assertIn("preparationKind === 'approximation' ? 'approximation' : 'series'", source)
+                self.assertIn("if (!Number(getExerciseTiming(item).warmupStartedAt)) return", source)
                 self.assertIn("if (restoredWarmup.phase === 'preparing')", source)
                 self.assertIn("Omitir ejercicio · mantén 10 s", source)
                 self.assertIn("setTimeout(() => { skipHoldTimer = 0", source)
@@ -1061,6 +1103,32 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                     "const preparing = isSeriesPreparing(item);",
                     source,
                 )
+                self.assertIn('data-enhancement="uniform-mobile-exercise-layout-v1"', source)
+                self.assertIn("main.cards article.card>.meta{display:flex!important", source)
+                self.assertIn("main.cards article.card>.visual{display:block!important;flex:0 0 auto!important;order:2!important", source)
+                self.assertIn("main.cards article.card>.coach{display:flex!important", source)
+
+    def test_mobile_exercise_layout_is_identical_across_all_routines(self) -> None:
+        layout_styles = []
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            source = path.read_text(encoding="utf-8")
+            match = re.search(
+                r'<style data-enhancement="uniform-mobile-exercise-layout-v1">.*?</style>',
+                source,
+                flags=re.S,
+            )
+            with self.subTest(path=path.name):
+                self.assertIsNotNone(match, "la rutina debe usar la hoja común móvil")
+                layout_styles.append(match.group(0))
+                cards = cards_of(source)
+                self.assertTrue(cards)
+                for index, card in enumerate(cards, 1):
+                    with self.subTest(path=path.name, exercise=index):
+                        self.assertIn('class="meta"', card)
+                        self.assertIn('class="exTitle"', card)
+                        self.assertIn('class="visual"', card)
+                        self.assertIn('class="coach"', card)
+        self.assertEqual(len(set(layout_styles)), 1, "los cuatro días deben compartir exactamente el mismo layout móvil")
 
     def test_all_routines_expose_direct_decimal_load_entry_and_hold_feedback(self) -> None:
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
@@ -1187,8 +1255,8 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 self.assertIn('class="routineContextHint">Objetivo y músculos del día', context)
                 self.assertLess(context.index('class="heroSummary"'), context.index('class="muscleDayPanel"'))
                 self.assertIn('@media(max-width:820px)', source)
-                self.assertIn('article.card>.coach{order:2!important}', source)
-                self.assertIn('article.card>.visual{order:3!important}', source)
+                self.assertIn('main.cards article.card>.coach{display:flex!important;flex:0 0 auto!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;order:3!important', source)
+                self.assertIn('main.cards article.card>.visual{display:block!important;flex:0 0 auto!important;order:2!important', source)
                 self.assertEqual(source.count('data-enhancement="technique-accordion-v1"'), len(re.findall(r'<article\b(?=[^>]*\bdata-exercise-index="\d+")[^>]*>', source)))
 
     def test_routine_navigation_targets_every_exercise_card_in_the_document(self) -> None:
@@ -1432,7 +1500,7 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 self.assertIn('data-enhancement="summary-free-navigation-v1"', source)
                 self.assertNotIn("new MutationObserver(scheduleAlignment)", source)
                 self.assertIn("scrollIntoView({behavior:'smooth', block:'start'})", source)
-                self.assertIn("width:82px!important;height:82px!important", source)
+                self.assertIn("width:84px!important;height:84px!important", source)
         self.assertEqual(set(TECHNIQUE_CUES) - seen_titles, {"PESO MUERTO RUMANO CON BARRA"})
 
     def test_day_four_uses_smith_romanian_deadlift_and_owned_local_media(self) -> None:

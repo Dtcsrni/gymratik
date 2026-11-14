@@ -25,8 +25,8 @@ class HomepageContractTests(unittest.TestCase):
         self.assertEqual(self.manifest["name"], "Gymratik: Rutinas y progreso")
         self.assertEqual(self.manifest["short_name"], "Gymratik")
         self.assertIn("Gymratik: Rutinas y progreso", self.html)
-        self.assertIn('aria-label="Gymratik v0.7.21, inicio"', self.html)
-        self.assertIn('class="brand-version" aria-label="Versión 0.7.21">v0.7.21', self.html)
+        self.assertIn('aria-label="Gymratik v0.7.23, inicio"', self.html)
+        self.assertIn('class="brand-version" aria-label="Versión 0.7.23">v0.7.23', self.html)
         self.assertIn('<span class="brand-mark" aria-hidden="true"><img src="./assets/branding/gymratik-mascots-mark-v2.png" alt=""></span>', self.html)
         self.assertIn("background:rgba(11,16,23,.72)", self.html)
         self.assertIn(".hero-strength-stage", self.html)
@@ -292,6 +292,11 @@ class HomepageContractTests(unittest.TestCase):
     def test_homepage_prioritizes_next_session_and_gym_flow(self):
         self.assertIn('id="pageTitle">Empieza a tu ritmo.', self.html)
         self.assertIn('id="nextSessionCta"', self.html)
+        self.assertIn('id="weekTrainingCount"', self.html)
+        self.assertIn('id="weekTrainingPills"', self.html)
+        self.assertIn('id="nextSessionReason"', self.html)
+        self.assertIn('@keyframes weekTrainingPillIn', self.html)
+        self.assertIn('.week-training-pill { animation:none!important; }', self.html)
         self.assertIn('id="nextSessionLink"', self.html)
         self.assertIn('function renderNextSession', self.html)
         self.assertIn("pageTitle.textContent = continuing", self.html)
@@ -398,33 +403,42 @@ class HomepageContractTests(unittest.TestCase):
     def test_homepage_selects_active_session_or_next_routine_from_latest_activity(self):
         next_session = self.html.split('function renderNextSession', 1)[1].split('function renderProgress', 1)[0]
         self.assertIn('activeToday', next_session)
-        self.assertIn('progressIsNewer', next_session)
-        self.assertIn('(baseIndex + 1) % baseRoutineCatalog.length', next_session)
-        self.assertIn('const baseRoutineCatalog = routineCatalog.filter((routine) => !routine.optional)', next_session)
+        self.assertIn('activeProgressToday', next_session)
+        self.assertIn('recommendedRoutineForWeek(history, now, dashboard.routines)', next_session)
         self.assertIn('const dashboard = await window.TrainingProgressStore.getDashboard();', self.html)
         self.assertIn('const history = await window.TrainingProgressStore.getHistory(100);', self.html)
 
     def test_homepage_weekly_rotation_ignores_previous_week_history(self):
-        marker = "function latestSessionInCurrentWeek"
+        marker = "function localWeekBounds"
         self.assertIn(marker, self.html, "La rotación debe tener una regla de semana local que se pueda probar")
         start = self.html.index(marker)
-        end = self.html.index("\n    function ", start + len(marker))
+        end = self.html.index("\n    function renderNextSession", start + len(marker))
         helper = self.html[start:end]
         script = f"""
 const assert = require('assert');
 {helper}
+const routineCatalog = [
+  {{routineId:'day1',trainingGroup:'upper',totalSeries:23}},
+  {{routineId:'day2',trainingGroup:'lower',totalSeries:23}},
+  {{routineId:'day3',trainingGroup:'upper',totalSeries:22}},
+  {{routineId:'day4',trainingGroup:'lower',optional:true,totalSeries:22}}
+];
 const tuesday = new Date(2026, 9, 13, 9, 0, 0);
 const previousSaturday = new Date(2026, 9, 10, 18, 0, 0).getTime();
-const oldHistory = [{{ routineId: 'day1', startedAt: previousSaturday }}];
-assert.strictEqual(latestSessionInCurrentWeek(oldHistory, new Set(['day1','day2','day3','day4']), tuesday), null,
-  'Tuesday with only a previous-week workout must restart the rotation at Day 1');
+const oldHistory = [{{ sessionId:'old',routineId:'day1',startedAt:previousSaturday,completedSeries:20 }}];
+assert.strictEqual(currentWeekTrainingSessions(oldHistory, tuesday).length, 0,
+  'Tuesday with only a previous-week workout must have no weekly sessions');
+assert.strictEqual(recommendedRoutineForWeek(oldHistory, tuesday).routine.routineId, 'day1',
+  'Tuesday with only previous-week training must start the rotation at Day 1');
 const thisMonday = new Date(2026, 9, 12, 8, 0, 0).getTime();
 const currentWeekHistory = [
-  {{ routineId: 'day1', startedAt: previousSaturday }},
-  {{ routineId: 'day3', startedAt: thisMonday }}
+  {{ sessionId:'old',routineId:'day1',startedAt:previousSaturday,completedSeries:20 }},
+  {{ sessionId:'current',routineId:'day3',startedAt:thisMonday,completedSeries:1 }}
 ];
-assert.strictEqual(latestSessionInCurrentWeek(currentWeekHistory, new Set(['day1','day2','day3','day4']), tuesday), currentWeekHistory[1],
-  'the latest workout within this week remains the basis for rotation');
+assert.deepStrictEqual(currentWeekTrainingSessions(currentWeekHistory, tuesday).map(session=>session.sessionId), ['current'],
+  'only sessions within the current local week count');
+assert.strictEqual(recommendedRoutineForWeek(currentWeekHistory, tuesday).routine.routineId, 'day2',
+  'the recommendation should alternate from the latest upper-body session');
 console.log(JSON.stringify({{ok:true}}));
 """
         result = subprocess.run(["node", "-e", script], cwd=ROOT, check=False, capture_output=True, text=True)
@@ -540,19 +554,23 @@ console.log(JSON.stringify({{ok:true}}));
         script = r"""
 const fs = require('fs'), vm = require('vm'), assert = require('assert');
 const html = fs.readFileSync(process.argv[1], 'utf8');
-const match = html.match(/function renderNextSession\(dashboard, history = recentSessions\) \{[\s\S]*?(?=\n    function renderProgress)/);
+const match = html.match(/function renderNextSession\(dashboard, history = recentSessions, now = new Date\(\)\) \{[\s\S]*?(?=\n    function renderProgress)/);
 assert.ok(match, 'homepage session CTA renderer must exist');
-const weeklyRotation = html.match(/function latestSessionInCurrentWeek\([\s\S]*?(?=\n    function renderNextSession)/);
-assert.ok(weeklyRotation, 'weekly session filter must exist');
-const nodes = Object.fromEntries(['pageTitle','nextSessionCta','nextSessionLink','nextSessionImage','nextSessionKicker','nextSessionTitle','nextSessionSummary','nextSessionMeta'].map(id => [id, { textContent: '', href: '', src: '', alt: '' }]));
+const weeklyRotation = html.match(/function localWeekBounds\([\s\S]*?(?=\n    function renderNextSession)/);
+assert.ok(weeklyRotation, 'weekly session filter and recommendation must exist');
+const nodes = Object.fromEntries(['pageTitle','nextSessionCta','nextSessionLink','nextSessionImage','nextSessionKicker','nextSessionTitle','nextSessionSummary','nextSessionMeta','nextSessionReason'].map(id => [id, { textContent: '', href: '', src: '', alt: '' }]));
 const context = {
   Date,
+  Intl,
+  document: { createElement: () => ({ style: { setProperty() {} }, setAttribute() {}, append() {} }) },
   recentSessions: [],
+  weekTrainingCount: { textContent: '' },
+  weekTrainingPills: { replaceChildren() {}, append() {} },
   routineCatalog: [
-    { routineId: 'day1', day: 'Día 1', title: 'Tirón', summary: '', totalExercises: 6, totalSeries: 20, image: 'day1.webp', href: 'day1.html' },
-    { routineId: 'day2', day: 'Día 2', title: 'Pierna', summary: '', totalExercises: 6, totalSeries: 20, image: 'day2.webp', href: 'day2.html' },
-    { routineId: 'day3', day: 'Día 3', title: 'Empuje', summary: '', totalExercises: 7, totalSeries: 22, image: 'day3.webp', href: 'day3.html' },
-    { routineId: 'day4', day: 'Día 4', title: 'Pierna y core', summary: '', totalExercises: 7, totalSeries: 22, optional: true, image: 'day4.webp', href: 'day4.html' }
+    { routineId: 'day1', day: 'Día 1', title: 'Tirón', summary: '', trainingGroup: 'upper', totalExercises: 6, totalSeries: 20, image: 'day1.webp', href: 'day1.html' },
+    { routineId: 'day2', day: 'Día 2', title: 'Pierna', summary: '', trainingGroup: 'lower', totalExercises: 6, totalSeries: 20, image: 'day2.webp', href: 'day2.html' },
+    { routineId: 'day3', day: 'Día 3', title: 'Empuje', summary: '', trainingGroup: 'upper', totalExercises: 7, totalSeries: 22, image: 'day3.webp', href: 'day3.html' },
+    { routineId: 'day4', day: 'Día 4', title: 'Pierna y core', summary: '', trainingGroup: 'lower', optional: true, totalExercises: 7, totalSeries: 22, image: 'day4.webp', href: 'day4.html' }
   ],
   ...nodes
 };
@@ -574,26 +592,30 @@ console.log(JSON.stringify({ ok: true }));
         script = r"""
 const fs = require('fs'), vm = require('vm'), assert = require('assert');
 const html = fs.readFileSync(process.argv[1], 'utf8');
-const match = html.match(/function renderNextSession\(dashboard, history = recentSessions\) \{[\s\S]*?(?=\n    function renderProgress)/);
+const match = html.match(/function renderNextSession\(dashboard, history = recentSessions, now = new Date\(\)\) \{[\s\S]*?(?=\n    function renderProgress)/);
 assert.ok(match, 'homepage session CTA renderer must exist');
-const weeklyRotation = html.match(/function latestSessionInCurrentWeek\([\s\S]*?(?=\n    function renderNextSession)/);
-assert.ok(weeklyRotation, 'weekly session filter must exist');
-const nodes = Object.fromEntries(['pageTitle','nextSessionCta','nextSessionLink','nextSessionImage','nextSessionKicker','nextSessionTitle','nextSessionSummary','nextSessionMeta'].map(id => [id, { textContent: '', href: '', src: '', alt: '' }]));
+const weeklyRotation = html.match(/function localWeekBounds\([\s\S]*?(?=\n    function renderNextSession)/);
+assert.ok(weeklyRotation, 'weekly session filter and recommendation must exist');
+const nodes = Object.fromEntries(['pageTitle','nextSessionCta','nextSessionLink','nextSessionImage','nextSessionKicker','nextSessionTitle','nextSessionSummary','nextSessionMeta','nextSessionReason'].map(id => [id, { textContent: '', href: '', src: '', alt: '' }]));
 const context = {
   Date,
+  Intl,
+  document: { createElement: () => ({ style: { setProperty() {} }, setAttribute() {}, append() {} }) },
   recentSessions: [],
+  weekTrainingCount: { textContent: '' },
+  weekTrainingPills: { replaceChildren() {}, append() {} },
   routineCatalog: [
-    { routineId: 'day1', day: 'Día 1', title: 'Tirón', summary: '', totalExercises: 6, totalSeries: 20, image: 'day1.webp', href: 'day1.html' },
-    { routineId: 'day2', day: 'Día 2', title: 'Pierna', summary: '', totalExercises: 6, totalSeries: 20, image: 'day2.webp', href: 'day2.html' },
-    { routineId: 'day3', day: 'Día 3', title: 'Empuje', summary: '', totalExercises: 7, totalSeries: 22, image: 'day3.webp', href: 'day3.html' },
-    { routineId: 'day4', day: 'Día 4', title: 'Pierna y core', summary: '', totalExercises: 7, totalSeries: 22, optional: true, image: 'day4.webp', href: 'day4.html' }
+    { routineId: 'day1', day: 'Día 1', title: 'Tirón', summary: '', trainingGroup: 'upper', totalExercises: 6, totalSeries: 20, image: 'day1.webp', href: 'day1.html' },
+    { routineId: 'day2', day: 'Día 2', title: 'Pierna', summary: '', trainingGroup: 'lower', totalExercises: 6, totalSeries: 20, image: 'day2.webp', href: 'day2.html' },
+    { routineId: 'day3', day: 'Día 3', title: 'Empuje', summary: '', trainingGroup: 'upper', totalExercises: 7, totalSeries: 22, image: 'day3.webp', href: 'day3.html' },
+    { routineId: 'day4', day: 'Día 4', title: 'Pierna y core', summary: '', trainingGroup: 'lower', optional: true, totalExercises: 7, totalSeries: 22, image: 'day4.webp', href: 'day4.html' }
   ],
   ...nodes
 };
 vm.createContext(context);
 vm.runInContext(`${weeklyRotation[0]}\n${match[0]}`, context);
 const routines = context.routineCatalog.map(item => ({ routineId: item.routineId, doneSeries: 0, updatedAt: 0, sessionStartedAt: 0, sessionEndedAt: 0 }));
-routines[1] = { ...routines[1], doneSeries: 12, updatedAt: Date.now() - 60000 };
+routines[1] = { ...routines[1], doneSeries: 12, updatedAt: Date.now() - 60000, sessionStartedAt: Date.now() - 60000, sessionEndedAt: Date.now() - 30000 };
 context.renderNextSession({ routines, todaySeries: 0 }, []);
 assert.strictEqual(context.nextSessionCta.textContent, 'Empezar Día 3');
 assert.strictEqual(context.pageTitle.textContent, 'Tu siguiente sesión es Día 3.');
@@ -613,12 +635,69 @@ context.renderNextSession({ routines: context.routineCatalog.map(item => ({ rout
   { routineId: 'day2', startedAt: optionalDayCompleted.getTime(), completedSeries: 23, totalSeries: 23 },
   { routineId: 'day4', startedAt: optionalDayCompleted.getTime() + 1000, completedSeries: 22, totalSeries: 22 }
 ]);
-assert.strictEqual(context.nextSessionCta.textContent, 'Empezar Día 3', 'optional Day 4 must not displace the three-day base rotation');
+assert.strictEqual(context.nextSessionCta.textContent, 'Empezar Día 1', 'a logged optional lower-body day should alternate to a pending upper-body base day');
 console.log(JSON.stringify({ ok: true }));
 """
         result = subprocess.run(["node", "-e", script, str(INDEX)], cwd=ROOT, check=False, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads(result.stdout), {"ok": True})
+
+    def test_homepage_weekly_pills_and_recommendation_use_local_completed_training(self):
+        script = r"""
+const fs = require('fs'), vm = require('vm'), assert = require('assert');
+const html = fs.readFileSync(process.argv[1], 'utf8');
+const helpers = html.match(/function localWeekBounds\([\s\S]*?(?=\n    function renderNextSession)/);
+assert.ok(helpers, 'weekly summary and recommendation helpers must exist');
+const pills = [];
+const context = {
+  Date, Intl,
+  document: { createElement: () => ({ style:{setProperty(){}}, setAttribute(){}, append(){}, textContent:'', className:'', title:'' }) },
+  weekTrainingCount: { textContent:'' },
+  weekTrainingPills: { replaceChildren(){ pills.length=0; }, append(node){ pills.push(node); } },
+  routineCatalog: [
+    {routineId:'day1',day:'Día 1',title:'Tren superior A',trainingGroup:'upper',weekFocus:'Espalda y bíceps',totalSeries:23},
+    {routineId:'day2',day:'Día 2',title:'Tren inferior A',trainingGroup:'lower',weekFocus:'Pierna y glúteo',totalSeries:23},
+    {routineId:'day3',day:'Día 3',title:'Tren superior B',trainingGroup:'upper',weekFocus:'Pecho y hombros',totalSeries:22},
+    {routineId:'day4',day:'Día 4',title:'Opcional posterior',trainingGroup:'lower',weekFocus:'Posterior y core',optional:true,totalSeries:22}
+  ]
+};
+vm.createContext(context); vm.runInContext(helpers[0], context);
+const now = new Date(2026,10,13,12), monday = new Date(2026,10,9,9);
+const sessions = [
+  {sessionId:'s1',routineId:'day1',startedAt:monday.getTime(),completedSeries:23,totalSeries:23,status:'completed',completionKind:'complete'},
+  {sessionId:'s1',routineId:'day1',startedAt:monday.getTime(),completedSeries:23,totalSeries:23,status:'completed',completionKind:'complete'},
+  {sessionId:'s2',routineId:'day2',startedAt:new Date(2026,10,11,9).getTime(),completedSeries:8,totalSeries:23,status:'completed',completionKind:'partial'},
+  {sessionId:'s3',routineId:'day3',startedAt:new Date(2026,10,12,9).getTime(),completedSeries:1,totalSeries:22,status:'active'},
+  {sessionId:'old',routineId:'day4',startedAt:new Date(2026,10,8,9).getTime(),completedSeries:22,totalSeries:22,status:'completed'},
+  {sessionId:'future',routineId:'day2',startedAt:new Date(2026,10,16,9).getTime(),completedSeries:23,totalSeries:23,status:'completed'},
+  {sessionId:'empty',routineId:'day4',startedAt:new Date(2026,10,12,10).getTime(),completedSeries:0,totalSeries:22,status:'completed'}
+];
+const week = context.currentWeekTrainingSessions(sessions, now);
+assert.deepStrictEqual(Array.from(week, item => item.sessionId), ['s1','s2','s3']);
+context.renderWeeklyTrainingSummary(sessions, now);
+assert.strictEqual(context.weekTrainingCount.textContent, '3 entrenamientos');
+assert.strictEqual(pills.length, 3);
+assert.match(pills[1].className, /week-training-pill--lower/);
+assert.match(pills[1].title, /Parcial/);
+assert.match(pills[2].className, /week-training-pill--active/);
+assert.strictEqual(context.recommendedRoutineForWeek([sessions[0]], now).routine.routineId, 'day2');
+assert.strictEqual(context.recommendedRoutineForWeek(sessions.slice(0,4), now).routine.routineId, 'day4');
+const basesThenLower = [
+  {sessionId:'b1',routineId:'day1',startedAt:new Date(2026,10,9,9).getTime(),completedSeries:23,totalSeries:23,status:'completed'},
+  {sessionId:'b2',routineId:'day2',startedAt:new Date(2026,10,10,9).getTime(),completedSeries:23,totalSeries:23,status:'completed'},
+  {sessionId:'b3',routineId:'day3',startedAt:new Date(2026,10,11,9).getTime(),completedSeries:22,totalSeries:22,status:'completed'},
+  {sessionId:'b4',routineId:'day2',startedAt:new Date(2026,10,12,9).getTime(),completedSeries:23,totalSeries:23,status:'completed'}
+];
+const optionalAfterLower = context.recommendedRoutineForWeek(basesThenLower, now);
+assert.strictEqual(optionalAfterLower.routine.routineId, 'day4');
+assert.strictEqual(optionalAfterLower.recoverySuggested, true);
+const full = [...sessions.slice(0,4), {sessionId:'s4',routineId:'day4',startedAt:new Date(2026,10,13,9).getTime(),completedSeries:22,totalSeries:22,status:'completed'}];
+assert.strictEqual(context.recommendedRoutineForWeek(full, now).planComplete, true);
+console.log(JSON.stringify({ok:true,weekSessions:week.length,recommendations:['day2','day4','rest']}));
+"""
+        result = subprocess.run(["node", "-e", script, str(INDEX)], cwd=ROOT, check=False, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), {"ok": True, "weekSessions": 3, "recommendations": ["day2", "day4", "rest"]})
 
     def test_homepage_discloses_local_data_location_and_formats(self):
         self.assertIn('id="localDataBackupNotice"', self.html)

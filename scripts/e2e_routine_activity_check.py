@@ -827,7 +827,7 @@ def validate_missing_performance_confirmation(browser, name: str) -> dict[str, b
         raise AssertionError(f"{name}: repeticiones y carga deben presentarse como requeridas; etiquetas={required_labels}")
     warmup = page.locator("#warmupAction")
     click_control(warmup)
-    advance_test_clock(page, 15_000)
+    advance_test_clock(page, 16_000)
     click_control(warmup)
     click_control(warmup)
     card = page.locator("article.card[data-exercise-index]").first
@@ -841,7 +841,7 @@ def validate_missing_performance_confirmation(browser, name: str) -> dict[str, b
     else:
         advance_test_clock(page, 180_000)
         click_control(button)  # preparación de la primera serie efectiva
-    advance_test_clock(page, 15_000)
+    advance_test_clock(page, 16_000)
     if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "strength":
         context.close()
         raise AssertionError(f"{name}: no se pudo iniciar la serie para probar el diálogo de omisión")
@@ -1120,12 +1120,12 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
     if "isCurrent" not in target_summary_row.get_attribute("class"):
         raise AssertionError(f"{name}: tocar una fila no mantiene enfocado ese ejercicio en la barra")
 
-    # Calentamiento completo, con su mínimo de preparación de 15 s.
+    # Calentamiento completo, con su mínimo de preparación de 16 s.
     warmup = page.locator("#warmupAction")
     click_control(warmup)
-    page.wait_for_timeout(15_000)
+    page.wait_for_timeout(16_000)
     if warmup.get_attribute("data-phase") != "cardio":
-        raise AssertionError(f"{name}: el calentamiento no terminó la preparación de 15 s")
+        raise AssertionError(f"{name}: el calentamiento no terminó la preparación de 16 s")
     exercise_gif = assert_mascot(page, variant, "cardio")
     assert_animation_changes(page, page.locator("#summaryActivityMascot"))
     click_control(warmup)
@@ -1143,12 +1143,15 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
     button = first.locator(".completeSetButton")
     select_valid_performance(first)
     click_control(button)
+    page.wait_for_function("document.querySelector('#summaryActivityStatus')?.dataset.activity === 'preparing'")
+    if "Preparación de aproximación" not in button.inner_text():
+        raise AssertionError(f"{name}: el control no identifica la cuenta atrás de aproximación")
+    page.wait_for_timeout(16_000)
     if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "approximation":
-        raise AssertionError(f"{name}: el inicio de aproximación no refleja actividad en la portada flotante")
+        raise AssertionError(f"{name}: la aproximación no inicia tras los 16 s de preparación")
     page.wait_for_timeout(5_000)
     page.reload(wait_until="networkidle")
     page.wait_for_function("document.querySelector('#summaryActivityStatus')?.dataset.activity === 'approximation'")
-    page.wait_for_timeout(15_000)
     select_valid_performance(first)
     click_control(button)
     try:
@@ -1170,10 +1173,10 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
         raise AssertionError(f"{name}: completar aproximación no inició descanso")
     if first.locator(".exerciseProgress").inner_text().strip() != f"0/{first.locator('.seriesProgressSegment').count()}":
         raise AssertionError(f"{name}: aproximación sumada incorrectamente a series efectivas")
-    # Mantener 5 s omite solo el descanso; siguen siendo obligatorios 15 s de preparación.
+    # Mantener 5 s omite solo el descanso; siguen siendo obligatorios 16 s de preparación.
     dispatch_touch_hold(page, button, 5_150, virtual_clock=False)
     page.wait_for_function("document.querySelector('#summaryActivityStatus')?.dataset.activity === 'preparing'")
-    page.wait_for_timeout(15_000)
+    page.wait_for_timeout(16_000)
     activity = page.locator("#summaryActivityStatus")
     if activity.get_attribute("data-activity") != "strength":
         raise AssertionError(f"{name}: la serie efectiva no aparece activa tras la preparación")
@@ -1322,9 +1325,9 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
     dispatch_touch_hold(page, rest_button, 5_150, virtual_clock=False)
     if activity.get_attribute("data-activity") != "preparing":
         raise AssertionError(f"{name}: mantener 5 s no omitió el descanso e inició preparación")
-    page.wait_for_timeout(15_000)
+    page.wait_for_timeout(16_000)
     if activity.get_attribute("data-activity") != "strength":
-        raise AssertionError(f"{name}: la preparación de 15 s no inició la serie después del descanso omitido")
+        raise AssertionError(f"{name}: la preparación de 16 s no inició la serie después del descanso omitido")
     assert_activity_feedback(page, "strength")
 
     if errors:
@@ -1456,7 +1459,7 @@ def validate_approximation_moves_to_first_available(browser, name: str, sex: str
         first, second = cards.nth(0), cards.nth(1)
         warmup = page.locator("#warmupAction")
         click_control(warmup)
-        advance_test_clock(page, 15_000)
+        advance_test_clock(page, 16_000)
         click_control(warmup)
         click_control(warmup)
         if warmup.get_attribute("data-phase") != "done":
@@ -1528,7 +1531,7 @@ def validate_primary_set_buttons(browser, name: str, sex: str, exercise_limit: i
         warmup = page.locator("#warmupAction")
         click_control(warmup)
         assert_mascot(page, mascot_variant, "preparing")
-        advance_test_clock(page, 15_000)
+        advance_test_clock(page, 16_000)
         if warmup.get_attribute("data-phase") != "cardio":
             context.close()
             raise AssertionError(f"{name}: no se pudo completar el calentamiento antes del botón del ejercicio {index + 1}")
@@ -1605,7 +1608,7 @@ def validate_primary_set_buttons(browser, name: str, sex: str, exercise_limit: i
         if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "preparing":
             status = page.evaluate("() => ({activity:document.querySelector('#summaryActivityStatus')?.dataset.activity, button:document.querySelector('article.card[data-exercise-index] .completeSetButton')?.outerHTML, rest:document.querySelector('article.card[data-exercise-index] .metric.rest .timeCue')?.textContent, timing:Object.values(localStorage).map(raw=>{try{return JSON.parse(raw)}catch{return null}}).find(value=>value?.__timing)?.__timing})")
             raise AssertionError(f"{name}: el botón principal del ejercicio {index + 1} no inició preparación: {status}")
-        advance_test_clock(page, 15_000)
+        advance_test_clock(page, 16_000)
         if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "strength":
             context.close()
             raise AssertionError(f"{name}: el botón principal del ejercicio {index + 1} no pasó de preparación a actividad")
@@ -1671,7 +1674,7 @@ def validate_primary_set_buttons(browser, name: str, sex: str, exercise_limit: i
     page.wait_for_selector("article.card[data-exercise-index] .completeSetButton")
     warmup = page.locator("#warmupAction")
     click_control(warmup)
-    advance_test_clock(page, 15_000)
+    advance_test_clock(page, 16_000)
     click_control(warmup)
     click_control(warmup)
     card = page.locator("article.card[data-exercise-index]").first
@@ -1693,7 +1696,7 @@ def validate_primary_set_buttons(browser, name: str, sex: str, exercise_limit: i
             click_control(button)
             activity_state = page.locator("#summaryActivityStatus").get_attribute("data-activity")
         if activity_state == "preparing":
-            advance_test_clock(page, 15_000)
+            advance_test_clock(page, 16_000)
         if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "strength":
             diagnostic = page.evaluate("""() => ({activity: document.querySelector('#summaryActivityStatus')?.dataset.activity,
               label: document.querySelector('#summaryActivityStatus')?.innerText,
@@ -1720,7 +1723,7 @@ def validate_primary_set_buttons(browser, name: str, sex: str, exercise_limit: i
                 })""")
                 context.close()
                 raise AssertionError(f"{name}: omitir el descanso debe iniciar preparación, no una serie inmediata: {diagnostic}")
-            advance_test_clock(page, 15_000)
+            advance_test_clock(page, 16_000)
             if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "strength":
                 diagnostic = page.evaluate("""() => ({
                   activity:document.querySelector('#summaryActivityStatus')?.dataset.activity || '',
@@ -1729,7 +1732,7 @@ def validate_primary_set_buttons(browser, name: str, sex: str, exercise_limit: i
                   timing:Object.entries(localStorage).filter(([key]) => /timing|series-v1/i.test(key)).map(([key,value]) => ({key,value}))
                 })""")
                 context.close()
-                raise AssertionError(f"{name}: completar preparación de 15 s tras omitir descanso falló después de serie {series_index + 1}: {diagnostic}")
+                raise AssertionError(f"{name}: completar preparación de 16 s tras omitir descanso falló después de serie {series_index + 1}: {diagnostic}")
     if page.locator("#summaryActivityStatus").get_attribute("data-activity") == "rest" and not card.locator(".completeSetButton").get_attribute("aria-label").startswith("Descanso"):
         context.close()
         raise AssertionError(f"{name}: el botón no indica descanso al terminar la última serie del ejercicio")
@@ -1768,7 +1771,7 @@ def validate_every_effective_series(browser, name: str, sex: str) -> dict:
                 page.evaluate("sex => window.TrainingProgressStore.saveProfile({sex})", sex)
             warmup = page.locator("#warmupAction")
             click_control(warmup)
-            advance_test_clock(page, 15_000)
+            advance_test_clock(page, 16_000)
             if warmup.get_attribute("data-phase") != "cardio":
                 raise AssertionError(f"{name}: calentamiento no pasó a cardio antes del ejercicio {exercise_index + 1}")
             click_control(warmup)
@@ -1844,7 +1847,7 @@ def validate_every_effective_series(browser, name: str, sex: str) -> dict:
                     dispatch_touch_hold(page, button, 5_150)
                 if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "preparing":
                     raise AssertionError(f"{name}: ejercicio {exercise_number}, serie {series_index + 1} no inició preparación")
-                advance_test_clock(page, 15_000)
+                advance_test_clock(page, 16_000)
                 if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "strength":
                     raise AssertionError(f"{name}: ejercicio {exercise_number}, serie {series_index + 1} no inició actividad")
                 timer = card.locator('.exerciseTimerChip[data-kind="active-set"]')
@@ -2130,8 +2133,8 @@ def validate_responsive_layout(browser) -> dict:
             if not layout["contextDisclosure"] or not layout["contextDisclosure"]["native"] or layout["contextDisclosure"]["open"] or not layout["contextDisclosure"]["summary"]:
                 raise AssertionError(f"{name} {width}x{height}: el contexto debe ser un desplegable nativo, rotulado y cerrado al entrar")
             card_orders = {child["className"]: child["order"] for child in layout["cardChildren"]}
-            if width <= 820 and not (card_orders.get("meta") == "1" and card_orders.get("coach") == "2" and card_orders.get("visual") == "3"):
-                raise AssertionError(f"{name} {width}x{height}: el registro debe preceder a las referencias en móvil: {card_orders}")
+            if width <= 820 and not (card_orders.get("meta") == "1" and card_orders.get("visual") == "2" and card_orders.get("coach") == "3"):
+                raise AssertionError(f"{name} {width}x{height}: la referencia debe seguir al encabezado y preceder al registro en móvil: {card_orders}")
             if width > 820 and any(card_orders.get(section) != "0" for section in ("meta", "visual", "coach")):
                 raise AssertionError(f"{name} {width}x{height}: el orden de escritorio debe permanecer intacto: {card_orders}")
             disclosure_summary = page.locator(".routineContextDisclosure > summary")
@@ -2207,7 +2210,7 @@ def validate_responsive_layout(browser) -> dict:
                 warmup = page.locator("#warmupAction")
                 warmup.scroll_into_view_if_needed()
                 click_control(warmup)
-                advance_test_clock(page, 15_000)
+                advance_test_clock(page, 16_000)
                 click_control(warmup)
                 click_control(warmup)
                 button = page.locator("article.card[data-exercise-index]").first.locator(".completeSetButton")
@@ -2226,7 +2229,7 @@ def validate_responsive_layout(browser) -> dict:
                       warmup:document.querySelector('#warmupAction')?.innerText,
                       timers:Object.entries(localStorage).filter(([key])=>/timing|series-v1/i.test(key)).map(([key,value])=>({key,value:value.slice(0,500)}))})""")
                     raise AssertionError(f"{name} {width}x{height}: omitir descanso de aproximación no inició la preparación: {state}")
-                advance_test_clock(page, 15_000)
+                advance_test_clock(page, 16_000)
                 summary = page.locator("#floatingSessionSummary")
                 if page.locator("#summaryToggle").get_attribute("aria-expanded") != "true":
                     click_control(page.locator("#summaryToggle"))

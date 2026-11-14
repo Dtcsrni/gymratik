@@ -33,6 +33,7 @@ Cada requisito funcional/no funcional del SRS aparece una sola vez. `Partial` in
 | FUN-PRO-017 | RISK-014 | SDD-004, ADR-013 | TST-PRO-017 | Partial |
 | FUN-PRO-018 | RISK-014 | ADR-018 | TST-PRO-018 | Partial |
 | FUN-PRO-019 | RISK-014 | ADR-018 | TST-PRO-019 | Partial |
+| FUN-PRO-020 | RISK-004 | SDD-004 | TST-PRO-020 | Verified (synthetic mobile; physical/public pending) |
 | FUN-TRN-010 | RISK-004 | SDD-001 | TST-TRN-010 | Partial |
 | FUN-TRN-011 | RISK-004 | SDD-001 | TST-TRN-011 | Partial |
 | FUN-TRN-012 | RISK-004 | SDD-001 | TST-TRN-012 | Partial |
@@ -45,6 +46,7 @@ Cada requisito funcional/no funcional del SRS aparece una sola vez. `Partial` in
 | FUN-TRN-019 | RISK-004 | SDD-001 | TST-CAN-009, TST-UX-001 | Implemented (local static; browser interaction pending) |
 | FUN-TRN-020 | RISK-004 | SDD-001, ADR-015 | TST-CAN-010, TST-PWA-013 | Implemented (local static; browser interaction pending) |
 | FUN-TRN-021 | RISK-004 | SDD-001 | TST-TRN-021 | Implemented (synthetic browser validation pending) |
+| FUN-TRN-022 | RISK-004 | SDD-001 | TST-TRN-022 | Implemented (static contract; mobile interaction pending) |
 | NFR-REL-001 | RISK-004 | ADR-013, ADR-015 | TST-PWA-012 | Partial |
 | NFR-REL-002 | RISK-004 | ADR-015 | TST-PWA-013 | Partial |
 | NFR-AVA-001 | RISK-011 | ADR-017 | TST-PWA-014 | Partial; navegador físico pendiente |

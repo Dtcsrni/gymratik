@@ -883,8 +883,8 @@ MOBILE_FIRST_MUSCLE_STYLE = r'''<style data-enhancement="mobile-first-muscle-gri
 </style>'''
 
 
-PREPARATION_TIMING_CONTRACT = r'''  // El cronómetro empieza después de una preparación explícita de 5 segundos.
-  const PREPARATION_MS = 5000;
+PREPARATION_TIMING_CONTRACT = r'''  // Cada aproximación y serie efectiva inicia tras 16 segundos de preparación.
+  const PREPARATION_MS = 16000;
   let warmupPreparationTimer = 0;
   let warmupPreparationEndsAt = 0;
   const seriesPreparation = new Map();
@@ -976,20 +976,33 @@ PREPARATION_TIMING_CONTRACT = r'''  // El cronómetro empieza después de una pr
     warmupPreparationEndsAt = Number(restoredWarmup.preparationEndsAt) || Date.now();
     warmupPreparationTimer = window.setTimeout(finishWarmupPreparation, Math.max(0, warmupPreparationEndsAt - Date.now()));
   }
-  const startSeriesPreparation = (item) => {
+  const finishExercisePreparation = (item, kind) => {
+    const timing = getExerciseTiming(item);
+    timing.preparationEndsAt = 0;
+    timing.preparationKind = '';
+    const timestamp = Date.now();
+    if (kind === 'approximation') {
+      timing.warmupStartedAt = timestamp;
+      startTiming(item, timestamp);
+    } else {
+      beginSeries(item, timestamp);
+    }
+    save();
+    updateTracker(item.tracker, false);
+    renderTimingDisplays();
+  };
+  const startSeriesPreparation = (item, kind = 'series') => {
     if (seriesPreparation.has(item.index)) return;
     const endsAt = Date.now() + PREPARATION_MS;
     const timing = getExerciseTiming(item);
     timing.preparationEndsAt = endsAt;
+    timing.preparationKind = kind;
     save();
     const timer = window.setTimeout(() => {
       seriesPreparation.delete(item.index);
-      getExerciseTiming(item).preparationEndsAt = 0;
-      beginSeries(item, Date.now());
-      updateTracker(item.tracker, false);
-      renderTimingDisplays();
+      finishExercisePreparation(item, kind);
     }, PREPARATION_MS);
-    seriesPreparation.set(item.index, { endsAt, timer });
+    seriesPreparation.set(item.index, { endsAt, timer, kind });
     updateTracker(item.tracker, false);
     renderTimingDisplays();
   };
@@ -997,20 +1010,20 @@ PREPARATION_TIMING_CONTRACT = r'''  // El cronómetro empieza después de una pr
     const timing = getExerciseTiming(item);
     const endsAt = Number(timing.preparationEndsAt) || 0;
     if (endsAt <= 0) return;
-    if (endsAt <= Date.now()) { timing.preparationEndsAt = 0; save(); return; }
+    if (endsAt <= Date.now()) { finishExercisePreparation(item, timing.preparationKind === 'approximation' ? 'approximation' : 'series'); return; }
+    const kind = timing.preparationKind === 'approximation' ? 'approximation' : 'series';
     const timer = window.setTimeout(() => {
       seriesPreparation.delete(item.index);
-      getExerciseTiming(item).preparationEndsAt = 0;
-      beginSeries(item, Date.now());
-      updateTracker(item.tracker, false);
-      renderTimingDisplays();
+      finishExercisePreparation(item, kind);
     }, endsAt - Date.now());
-    seriesPreparation.set(item.index, { endsAt, timer });
+    seriesPreparation.set(item.index, { endsAt, timer, kind });
   });
   const isSeriesPreparing = item => seriesPreparation.has(item.index);
   const renderPreparationDisplay = item => {
     const preparation = seriesPreparation.get(item.index);
     if (!preparation) return false;
+    const label = preparation.kind === 'approximation' ? 'Preparación de aproximación' : 'Preparación';
+    if (item.timingDisplay) item.timingDisplay.textContent = `⏳ ${label} · ${formatElapsed(Math.max(0, preparation.endsAt - Date.now()))}`;
     return true;
   };
   warmupActionButton?.addEventListener('click', () => {
@@ -1616,12 +1629,12 @@ def standardize_shared_session_contract(source: str) -> str:
     )
     source = source.replace(
         "const PREPARATION_MS = 5000;",
-        "const PREPARATION_MS = 15000;",
+        "const PREPARATION_MS = 16000;",
         1,
     )
     source = source.replace(
         "preparación explícita de 5 segundos",
-        "preparación explícita de 15 segundos",
+        "preparación de 16 segundos",
         1,
     )
     source = re.sub(
@@ -1793,9 +1806,7 @@ def standardize_shared_session_contract(source: str) -> str:
         event.stopImmediatePropagation();
         const warmupKey = String(item.index + 1);
         if (!timing.warmupStartedAt) {
-          timing.warmupStartedAt = Date.now();
-          startTiming(item, timing.warmupStartedAt);
-          save();
+          startSeriesPreparation(item, 'approximation');
           updateTracker(tracker, false);
           return;
         }
@@ -1844,7 +1855,7 @@ def standardize_shared_session_contract(source: str) -> str:
       if (warmup && state[warmup.dataset.key] !== true) {
         event.stopImmediatePropagation();
         const warmupKey = String(item.index + 1);
-        if (!timing.warmupStartedAt) { timing.warmupStartedAt = Date.now(); startTiming(item, timing.warmupStartedAt); save(); updateTracker(tracker, false); return; }
+        if (!timing.warmupStartedAt) { startSeriesPreparation(item, 'approximation'); updateTracker(tracker, false); return; }
         const reps = Number(item.performanceReps?.value);
         const repsSelected = item.performanceReps?.dataset.selected === 'true' && Number.isInteger(reps) && reps >= Math.max(1, item.repMinimum - 3) && reps <= item.repMaximum + 4;
         const load = Number(item.performanceLoadExact);
@@ -2331,9 +2342,10 @@ def standardize_technique_accordion(source: str) -> str:
 SUMMARY_NAVIGATION_STYLE = '''<style data-enhancement="summary-free-navigation-v1">
 .sessionSummaryList{max-height:min(24dvh,168px)!important;overflow-y:auto!important;overscroll-behavior:contain!important;touch-action:pan-y!important;-webkit-overflow-scrolling:touch!important;scrollbar-gutter:stable}
 #floatingSessionSummary .sessionSummaryList{max-height:150px!important}
-#summaryToggle{grid-template-columns:auto minmax(0,1fr) 86px auto!important}
-.summaryMascotWrap{width:82px!important;height:82px!important}.summaryMascotWrap #summaryActivityMascot{width:78px!important;height:78px!important}
-@media(max-width:380px){#summaryToggle{grid-template-columns:auto minmax(0,1fr) 68px auto!important}.summaryMascotWrap{width:64px!important;height:64px!important}.summaryMascotWrap #summaryActivityMascot{width:60px!important;height:60px!important}}
+#floatingSessionSummary{overflow:visible!important}
+#summaryToggle{position:relative!important;grid-template-columns:auto minmax(0,1fr) 68px auto!important;min-height:68px!important;overflow:visible!important}
+.summaryMascotWrap{position:absolute!important;z-index:3;top:-10px;right:24px;width:84px!important;height:84px!important;overflow:visible!important}.summaryMascotWrap #summaryActivityMascot{width:80px!important;height:80px!important}
+@media(max-width:380px){#summaryToggle{grid-template-columns:auto minmax(0,1fr) 60px auto!important}.summaryMascotWrap{top:-8px;right:21px;width:74px!important;height:74px!important}.summaryMascotWrap #summaryActivityMascot{width:70px!important;height:70px!important}}
 @media(max-height:420px) and (max-width:900px){#floatingSessionSummary .sessionSummaryList{max-height:78px!important;gap:.12rem!important}}
 </style>'''
 
@@ -2442,6 +2454,7 @@ def standardize_weekly_progress_reset(source: str) -> str:
     source = re.sub(r'<style data-enhancement="weekly-routine-reset-v1">.*?</style>\s*', "", source, count=1, flags=re.S)
     reset_style = '''<style data-enhancement="weekly-routine-reset-v1">
 .sessionFooter{display:grid!important;grid-template-columns:minmax(0,1fr) repeat(2,minmax(9rem,12rem))!important;align-items:center!important;gap:.8rem!important;width:min(100%,62rem)!important;margin:1.5rem auto calc(10rem + env(safe-area-inset-bottom,0px))!important;padding:1rem!important;border:1px solid rgba(255,157,162,.4)!important;border-radius:1rem!important;background:linear-gradient(115deg,rgba(37,32,49,.96),rgba(17,38,54,.96))!important;box-shadow:0 12px 34px rgba(0,0,0,.2)!important;visibility:visible!important;opacity:1!important}
+.sessionFooter.is-session-complete{grid-template-columns:minmax(0,1fr)!important}.sessionFooter.is-session-complete .sessionResetCopy{display:none!important}#finishDay[hidden]{display:none!important}
 .sessionResetCopy{display:grid;gap:.2rem;min-width:0;color:#f4fbff}.sessionResetCopy strong{font-size:.9rem}.sessionResetCopy span{color:#b8cbd4;font-size:.76rem;line-height:1.4}
 #resetSession{display:block!important;visibility:visible!important;opacity:1!important;width:100%;min-height:52px;margin:0;padding:.72rem 1rem;border:1px solid rgba(255,157,162,.72);border-radius:.8rem;background:linear-gradient(110deg,rgba(113,44,61,.58),rgba(64,42,73,.68));color:#ffe4e6;font:inherit;font-size:.9rem;font-weight:850;cursor:pointer}
 #finishDay{display:block!important;visibility:visible!important;opacity:1!important;width:100%;min-height:52px;margin:0;padding:.72rem 1rem;border:1px solid rgba(101,242,221,.58);border-radius:.8rem;background:linear-gradient(110deg,rgba(18,112,100,.58),rgba(19,78,93,.68));color:#dffff9;font:inherit;font-size:.9rem;font-weight:850;cursor:pointer}
@@ -2487,6 +2500,7 @@ def standardize_weekly_progress_reset(source: str) -> str:
     timingRoot.sessionEndReason = 'partial';
     Object.values(timingRoot.exercises || {}).forEach(timing => {
       timing.preparationEndsAt = 0;
+      timing.preparationKind = '';
       timing.seriesStartedAt = 0;
       timing.restStartedAt = 0;
       timing.restNotifiedAt = 0;
