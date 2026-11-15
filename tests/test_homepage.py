@@ -25,8 +25,8 @@ class HomepageContractTests(unittest.TestCase):
         self.assertEqual(self.manifest["name"], "Gymratik: Rutinas y progreso")
         self.assertEqual(self.manifest["short_name"], "Gymratik")
         self.assertIn("Gymratik: Rutinas y progreso", self.html)
-        self.assertIn('aria-label="Gymratik v0.7.23, inicio"', self.html)
-        self.assertIn('class="brand-version" aria-label="Versión 0.7.23">v0.7.23', self.html)
+        self.assertIn('aria-label="Gymratik v0.7.24, inicio"', self.html)
+        self.assertIn('class="brand-version" aria-label="Versión 0.7.24">v0.7.24', self.html)
         self.assertIn('<span class="brand-mark" aria-hidden="true"><img src="./assets/branding/gymratik-mascots-mark-v2.png" alt=""></span>', self.html)
         self.assertIn("background:rgba(11,16,23,.72)", self.html)
         self.assertIn(".hero-strength-stage", self.html)
@@ -296,7 +296,10 @@ class HomepageContractTests(unittest.TestCase):
         self.assertIn('id="weekTrainingPills"', self.html)
         self.assertIn('id="nextSessionReason"', self.html)
         self.assertIn('@keyframes weekTrainingPillIn', self.html)
-        self.assertIn('.week-training-pill { animation:none!important; }', self.html)
+        self.assertIn('.week-training-pill,.week-training-pill-art,.week-training-pill-art-wrap::before,.week-training-pill-state { animation:none!important; will-change:auto!important; }', self.html)
+        self.assertIn("art.src = routine.image", self.html)
+        self.assertIn("week-training-pill-art-wrap", self.html)
+        self.assertIn("weekTrainingMusclePulse", self.html)
         self.assertIn('id="nextSessionLink"', self.html)
         self.assertIn('function renderNextSession', self.html)
         self.assertIn("pageTitle.textContent = continuing", self.html)
@@ -651,14 +654,14 @@ assert.ok(helpers, 'weekly summary and recommendation helpers must exist');
 const pills = [];
 const context = {
   Date, Intl,
-  document: { createElement: () => ({ style:{setProperty(){}}, setAttribute(){}, append(){}, textContent:'', className:'', title:'' }) },
+  document: { createElement: tag => ({ tag, children:[], style:{setProperty(){}}, attributes:{}, setAttribute(name,value){ this.attributes[name] = value; }, append(...nodes){ this.children.push(...nodes); }, textContent:'', className:'', title:'' }) },
   weekTrainingCount: { textContent:'' },
   weekTrainingPills: { replaceChildren(){ pills.length=0; }, append(node){ pills.push(node); } },
   routineCatalog: [
-    {routineId:'day1',day:'Día 1',title:'Tren superior A',trainingGroup:'upper',weekFocus:'Espalda y bíceps',totalSeries:23},
-    {routineId:'day2',day:'Día 2',title:'Tren inferior A',trainingGroup:'lower',weekFocus:'Pierna y glúteo',totalSeries:23},
-    {routineId:'day3',day:'Día 3',title:'Tren superior B',trainingGroup:'upper',weekFocus:'Pecho y hombros',totalSeries:22},
-    {routineId:'day4',day:'Día 4',title:'Opcional posterior',trainingGroup:'lower',weekFocus:'Posterior y core',optional:true,totalSeries:22}
+    {routineId:'day1',day:'Día 1',title:'Tren superior A',trainingGroup:'upper',weekFocus:'Espalda y bíceps',totalSeries:23,image:'./assets/branding/routine-covers/day1.webp'},
+    {routineId:'day2',day:'Día 2',title:'Tren inferior A',trainingGroup:'lower',weekFocus:'Pierna y glúteo',totalSeries:23,image:'./assets/branding/routine-covers/day2.webp'},
+    {routineId:'day3',day:'Día 3',title:'Tren superior B',trainingGroup:'upper',weekFocus:'Pecho y hombros',totalSeries:22,image:'./assets/branding/routine-covers/day3.webp'},
+    {routineId:'day4',day:'Día 4',title:'Opcional posterior',trainingGroup:'lower',weekFocus:'Posterior y core',optional:true,totalSeries:22,image:'./assets/branding/routine-covers/day4.webp'}
   ]
 };
 vm.createContext(context); vm.runInContext(helpers[0], context);
@@ -678,9 +681,17 @@ context.renderWeeklyTrainingSummary(sessions, now);
 assert.strictEqual(context.weekTrainingCount.textContent, '3 entrenamientos');
 assert.strictEqual(pills.length, 3);
 assert.match(pills[1].className, /week-training-pill--lower/);
+assert.match(pills[1].className, /week-training-pill--partial/);
+assert.strictEqual(pills[1].children[0].children[0].src, './assets/branding/routine-covers/day2.webp');
+assert.strictEqual(pills[1].children[0].attributes['aria-hidden'], 'true');
+assert.strictEqual(pills[1].children[1].children[2].textContent, 'Pierna y glúteo');
+assert.strictEqual(pills[1].children[1].children[3].textContent, '8/23 series · Parcial');
+assert.strictEqual(pills[0].children[0].children[0].src, './assets/branding/routine-covers/day1.webp');
 assert.match(pills[1].title, /Parcial/);
 assert.match(pills[2].className, /week-training-pill--active/);
 assert.strictEqual(context.recommendedRoutineForWeek([sessions[0]], now).routine.routineId, 'day2');
+assert.match(context.recommendedRoutineForWeek([sessions[0]], now).reason, /Te recomendamos Día 2 porque alterna tren superior con tren inferior/);
+assert.match(context.recommendedRoutineForWeek([sessions[0]], now).reason, /también recomendamos descansar/);
 assert.strictEqual(context.recommendedRoutineForWeek(sessions.slice(0,4), now).routine.routineId, 'day4');
 const basesThenLower = [
   {sessionId:'b1',routineId:'day1',startedAt:new Date(2026,10,9,9).getTime(),completedSeries:23,totalSeries:23,status:'completed'},
@@ -691,8 +702,16 @@ const basesThenLower = [
 const optionalAfterLower = context.recommendedRoutineForWeek(basesThenLower, now);
 assert.strictEqual(optionalAfterLower.routine.routineId, 'day4');
 assert.strictEqual(optionalAfterLower.recoverySuggested, true);
+assert.match(optionalAfterLower.reason, /Te recomendamos recuperar antes de hacer Día 4/);
+assert.match(optionalAfterLower.reason, /puedes elegir el día opcional/);
 const full = [...sessions.slice(0,4), {sessionId:'s4',routineId:'day4',startedAt:new Date(2026,10,13,9).getTime(),completedSeries:22,totalSeries:22,status:'completed'}];
-assert.strictEqual(context.recommendedRoutineForWeek(full, now).planComplete, true);
+const completeWeek = context.recommendedRoutineForWeek(full, now);
+assert.strictEqual(completeWeek.planComplete, true);
+assert.match(completeWeek.reason, /Te recomendamos recuperación/);
+assert.match(completeWeek.reason, /empezar con Día 1/);
+const first = context.recommendedRoutineForWeek([], now);
+assert.match(first.reason, /Te recomendamos Día 1/);
+assert.match(first.reason, /también puedes elegir Día 2/);
 console.log(JSON.stringify({ok:true,weekSessions:week.length,recommendations:['day2','day4','rest']}));
 """
         result = subprocess.run(["node", "-e", script, str(INDEX)], cwd=ROOT, check=False, capture_output=True, text=True)

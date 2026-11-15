@@ -2,6 +2,13 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.24] - 2026-11-14
+
+### Changed
+
+- La recomendación semanal explica por qué conviene la siguiente rutina y presenta una alternativa de entrenamiento o recuperación.
+- Los entrenamientos de la semana aparecen como tarjetas compactas animadas con ilustraciones musculares correspondientes al día y estado/series registradas.
+
 ## [0.7.23] - 2026-11-13
 
 ### Changed

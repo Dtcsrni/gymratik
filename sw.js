@@ -1,5 +1,5 @@
-const CACHE_NAME = 'entrenamiento-pwa-0a47d38e4346';
-const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-b0b3e0e071a5';
+const CACHE_NAME = 'entrenamiento-pwa-17164e92db36';
+const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-0a47d38e4346';
 const PRECACHE = [
   './',
   './index.html',
@@ -179,8 +179,8 @@ const PRECACHE = [
 ];
 const PRECACHE_URLS = new Set(PRECACHE.map((path) => new URL(path, self.registration.scope).href));
 const RESOURCE_BYTES = {
-  './': 119375,
-  './index.html': 119375,
+  './': 124718,
+  './index.html': 124718,
   './records.html': 10096,
   './records.css': 30703,
   './records.js': 35445,
