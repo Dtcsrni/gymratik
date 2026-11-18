@@ -3538,6 +3538,9 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
   const performanceStyle = document.createElement('style');
   performanceStyle.textContent = '.performanceEntry{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem;padding:.8rem;border:1px solid rgba(101,242,221,.2);border-radius:.7rem;background:rgba(10,30,42,.56)}.performanceEntry label{display:grid;gap:.35rem;min-width:0;font-size:.76rem;font-weight:800;color:#c9dbe2}.performanceEntry output{min-height:1.35em;color:#72f0d2;font-size:.86rem;font-weight:900}.performanceEntry input[type=range]{width:100%;min-height:30px;margin:0;padding:0;accent-color:#5ce8c8;touch-action:pan-y}.performanceLoadHead{display:flex;align-items:center;justify-content:space-between;gap:.5rem}.performanceLoadUnit{min-height:34px;padding:.3rem .45rem;border:1px solid rgba(164,223,231,.3);border-radius:.45rem;background:#081923;color:#f1ffff;font:inherit;font-size:.78rem}.progressionCue{grid-column:1/-1;margin:0;color:#b8cbd4;font-size:.72rem;line-height:1.4}@media(max-width:520px){.performanceEntry{grid-template-columns:1fr}}';
   document.head.append(performanceStyle);
+  const activityFeedbackStyle = document.createElement('style');
+  activityFeedbackStyle.textContent = '@keyframes gymratikLastSeconds{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.045);filter:brightness(1.25)}}.exerciseTimerChip.is-countdown-final{border-color:rgba(255,210,119,.86);box-shadow:0 0 0 1px rgba(255,210,119,.16),0 0 18px rgba(255,125,108,.18)}.exerciseTimerChip.is-countdown-final .exerciseTimerValue,#warmupAction.is-countdown-final{animation:gymratikLastSeconds .7s ease-in-out infinite;color:#ffe0a0}@media(prefers-reduced-motion:reduce){.exerciseTimerChip.is-countdown-final .exerciseTimerValue,#warmupAction.is-countdown-final{animation:none!important}}';
+  document.head.append(activityFeedbackStyle);
   const plannedSeries = trackers.reduce((sum, tracker) => sum + (tracker.dataset.seriesKeys || '').trim().split(/\s+/).filter(Boolean).length, 0);
   const publishProgress = () => {
     if (!window.GymratikInstallGate?.isInstalled()) return;
@@ -3584,6 +3587,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
   const playMilestoneSound = type => {
     const motifs = {
       warmup: [[392, .1, 0, .026], [494, .1, .15, .028], [587, .15, .3, .03]],
+      countdown: [[880, .075, 0, .018], [1047, .12, .12, .022]],
       cardio: [[440, .075, 0, .026], [554, .075, .12, .028], [659, .11, .24, .03]],
       mobility: [[440, .16, 0, .025], [523, .2, .22, .028]],
       preparation: [[392, .075, 0, .022], [494, .075, .14, .024], [659, .13, .28, .028]],
@@ -3621,13 +3625,15 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
   const playHaptic = type => {
     if (!hapticsEnabled || typeof navigator.vibrate !== 'function') return;
     const patterns = {
-      warmup: [18, 44, 18], cardio: [16, 34, 16, 34, 24], mobility: [20, 70, 20],
+      warmup: [18, 44, 18], countdown: [12], cardio: [16, 34, 16, 34, 24], mobility: [20, 70, 20],
       preparation: [14, 48, 14, 48, 26], activity: [20, 42, 28], series: [24, 54, 34],
       rest: [18, 68, 18, 125, 30], exercise: [28, 55, 28, 55, 42], session: [34, 66, 34, 66, 58]
     };
     try { navigator.vibrate(patterns[type] || []); } catch (_) {}
   };
   const playFeedback = type => { playMilestoneSound(type); playHaptic(type); };
+  const activityPageStartedAt = Date.now();
+  const playedCountdownCues = new Set();
   const fitnessQuotePayload = window.fitnessQuotesData || {};
   const topicLabels = { bodybuilding: "culturismo", weightlifting: "levantamiento de pesas", powerlifting: "powerlifting", boxing: "boxeo", basketball: "baloncesto", football: "fútbol americano", soccer: "fútbol", tennis: "tenis", swim: "natación", swimming: "natación", cycling: "ciclismo", marathon: "maratón", sprint: "atletismo", running: "carrera", wrestling: "lucha", skating: "patinaje", surfing: "surf", yoga: "yoga", pilates: "Pilates", gym: "entrenamiento en gimnasio", fitness: "fitness", workout: "entrenamiento", training: "entrenamiento" };
   const authorContextTopicOrder = ["bodybuilding", "powerlifting", "weightlifting", "boxing", "basketball", "football", "soccer", "tennis", "wrestling", "swimming", "swim", "cycling", "marathon", "sprint", "running", "skating", "surfing", "yoga", "pilates", "athlete", "sportsman", "athletic", "fitness", "workout", "training", "gym"];
@@ -4118,6 +4124,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
           display.append(chip);
         }
         chip.dataset.kind = entry.kind;
+        chip.classList.toggle('is-countdown-final', entry.countdownFinal === true);
         chip.querySelector('.exerciseTimerLabel').textContent = entry.label;
         chip.querySelector('.exerciseTimerValue').textContent = entry.value;
         chip.setAttribute('aria-label', `${entry.label}: ${entry.value}`);
@@ -4151,10 +4158,10 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       if (preparing) {
         const preparation = seriesPreparation.get(item.index);
         const remaining = Math.max(0, (preparation?.endsAt || timing?.preparationEndsAt || now) - now);
-        entries.push({ key: 'preparation', label: 'Preparación', value: formatCountdown(remaining), kind: 'preparation' });
+        entries.push({ key: 'preparation', label: 'Preparación', value: formatCountdown(remaining), kind: 'preparation', countdownFinal: remaining > 0 && remaining <= 3000 });
       } else if (restActive) {
         const elapsed = Math.max(0, recommendation.minMs - restRemaining);
-        entries.push({ key: 'active-rest', label: 'Descanso activo', value: `${formatCountdown(restRemaining)} restante`, kind: 'active-rest', progress: recommendation.minMs ? elapsed / recommendation.minMs : 0 });
+        entries.push({ key: 'active-rest', label: 'Descanso activo', value: `${formatCountdown(restRemaining)} restante`, kind: 'active-rest', progress: recommendation.minMs ? elapsed / recommendation.minMs : 0, countdownFinal: restRemaining > 0 && restRemaining <= 3000 });
       } else if (timing?.restStartedAt && !row.complete && !seriesActive) {
         entries.push({ key: 'rest-ready', label: 'Descanso listo', value: 'Continuar cuando quieras', kind: 'preparation' });
       } else if (seriesActive) {
@@ -4199,9 +4206,9 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       const activity = warmupActive
         ? { kind: 'approximation', label: `Aproximación · ${item.title}`, clock: formatElapsed(now - timing.warmupStartedAt), startedAt: Number(timing.warmupStartedAt) || 0 }
         : restPending
-        ? { kind: restActive ? 'rest' : 'ready', label: restActive ? `Descanso · ${item.title}` : `Descanso listo · ${item.title}`, clock: restActive ? `${formatCountdown(restRemaining)} restantes` : 'Lista', startedAt: Number(timing.restStartedAt) || 0 }
+        ? { kind: restActive ? 'rest' : 'ready', label: restActive ? `Descanso · ${item.title}` : `Descanso listo · ${item.title}`, clock: restActive ? `${formatCountdown(restRemaining)} restantes` : 'Lista', startedAt: Number(timing.restStartedAt) || 0, remainingMs: restActive ? restRemaining : 0 }
         : preparing
-          ? { kind: 'preparing', label: `Preparación · ${item.title}`, clock: formatCountdown((preparation?.endsAt || timing?.preparationEndsAt || now) - now), startedAt: Number(timing?.preparationEndsAt) || now }
+          ? { kind: 'preparing', label: `Preparación · ${item.title}`, clock: formatCountdown((preparation?.endsAt || timing?.preparationEndsAt || now) - now), startedAt: Math.max(0, (preparation?.endsAt || timing?.preparationEndsAt || now) - PREPARATION_MS), remainingMs: Math.max(0, (preparation?.endsAt || timing?.preparationEndsAt || now) - now) }
           : seriesActive
             ? { kind: 'strength', label: `Serie ${row.done + 1} activa · ${item.title}`, clock: formatElapsed(now - timing.seriesStartedAt), startedAt: Number(timing.seriesStartedAt) || 0 }
             : null;
@@ -4245,12 +4252,16 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     const warmup = getWarmupTiming();
     if (warmup.phase === 'preparing') {
       const startedAt = Number(warmup.preparationEndsAt) - PREPARATION_MS;
-      const activity = { kind: 'preparing', label: 'Preparación · Calentamiento', clock: formatCountdown(warmupPreparationRemaining()), startedAt };
+      const activity = { kind: 'preparing', label: 'Preparación · Calentamiento', clock: formatCountdown(warmupPreparationRemaining()), startedAt, remainingMs: warmupPreparationRemaining() };
       if (!currentActivity || activity.startedAt >= currentActivity.startedAt) currentActivity = activity;
     } else if (warmup.phase === 'cardio' || warmup.phase === 'mobility') {
       const startedAt = Number(warmup[`${warmup.phase}StartedAt`]) || 0;
       const activity = { kind: warmup.phase, label: `Calentamiento · ${warmup.phase === 'cardio' ? 'Cardio' : 'Movilidad'}`, clock: formatElapsed(now - startedAt), startedAt };
       if (!currentActivity || activity.startedAt >= currentActivity.startedAt) currentActivity = activity;
+    }
+    if (document.visibilityState === 'visible' && currentActivity?.startedAt >= activityPageStartedAt && currentActivity.remainingMs > 0 && currentActivity.remainingMs <= 3000) {
+      const cueKey = `${currentActivity.kind}:${currentActivity.startedAt}`;
+      if (!playedCountdownCues.has(cueKey)) { playedCountdownCues.add(cueKey); playFeedback('countdown'); }
     }
     const activityButton = document.getElementById('summaryToggle');
     const activityIcon = document.getElementById('summaryActivityIcon');
@@ -4398,6 +4409,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     if (warmupPhaseEl) warmupPhaseEl.textContent = phaseText;
     if (warmupActionButton) {
       warmupActionButton.dataset.phase = warmup.phase;
+      warmupActionButton.classList.toggle('is-countdown-final', preparing && warmupPreparationRemaining() > 0 && warmupPreparationRemaining() <= 3000);
       warmupActionButton.disabled = preparing || warmup.phase === 'done';
       warmupActionButton.textContent = preparing ? `⏳ Preparación · ${formatCountdown(warmupPreparationRemaining())}`
         : warmup.phase === 'idle' ? '▶ Iniciar calentamiento'

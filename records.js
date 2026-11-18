@@ -1,5 +1,8 @@
 (() => {
   'use strict';
+  const syncPageMotionVisibility = () => { document.documentElement.dataset.pageHidden = String(document.hidden); };
+  document.addEventListener('visibilitychange', syncPageMotionVisibility, { passive:true });
+  syncPageMotionVisibility();
   const $ = selector => document.querySelector(selector);
   const status = $('#dataStatus');
   const content = $('#recordsContent');

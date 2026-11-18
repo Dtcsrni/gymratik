@@ -7,7 +7,7 @@
   <meta name="application-name" content="Gymratik">
   <meta name="apple-mobile-web-app-title" content="Gymratik">
   <meta name="description" content="Rutinas visuales para entrenar en el gimnasio con calentamiento, técnica y registro de series.">
-  <meta name="gymratik-resource-estimate" content='{"applicationBytes":"000000005760721","imageBytes":"000000044202834","totalBytes":"000000049963555"}'>
+  <meta name="gymratik-resource-estimate" content='{"applicationBytes":"000000005770651","imageBytes":"000000044202834","totalBytes":"000000049973485"}'>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./assets/branding/gymratik-mascots-mark-v2.png" type="image/png">
   <link rel="apple-touch-icon" sizes="192x192" href="./assets/branding/gymratik-pwa-icon-v8-192.png">
@@ -58,6 +58,12 @@
     .hero-copy { max-width:52ch; margin-bottom:26px; overflow-wrap:anywhere; color:var(--muted); font-size:1.05rem; }
     .hero-motivation { max-width:52ch; margin:-8px 0 22px; padding:12px 15px; border:1px solid rgba(115,230,207,.24); border-left:3px solid var(--accent); border-radius:12px; background:rgba(16,35,49,.72); color:var(--text); font-size:.92rem; font-weight:750; line-height:1.45; overflow-wrap:anywhere; }
     .hero-actions { display:flex; flex-wrap:wrap; align-items:center; gap:11px; }
+    .hero-primary-action { display:grid; flex:1 1 100%; min-width:0; gap:9px; }
+    .hero-primary-action > .button { width:100%; }
+    .recommendation-reason { display:grid; gap:3px; margin:0; padding:9px 12px; border:1px solid rgba(115,230,207,.24); border-left:3px solid var(--accent); border-radius:11px; background:rgba(8,29,39,.76); animation:recommendationReveal .42s cubic-bezier(.2,.8,.2,1) both; }
+    .recommendation-reason-label { color:var(--accent); font-size:.62rem; font-weight:950; letter-spacing:.1em; text-transform:uppercase; }
+    .next-session-reason { margin:0; color:#e0edf1; font-size:.78rem; font-weight:700; line-height:1.4; overflow-wrap:anywhere; }
+    #profileEditor[open] #profileForm { animation:profileFormReveal .38s cubic-bezier(.2,.8,.2,1) both; }
     .button { display:inline-flex; align-items:center; justify-content:center; min-height:47px; padding:11px 17px; border:1px solid transparent; border-radius:13px; color:#09231e; background:var(--accent); box-shadow:0 10px 25px rgba(55,199,173,.16); cursor:pointer; font-weight:900; text-decoration:none; transition:transform .18s ease,background .18s ease,border-color .18s ease; }
     .button:hover { transform:translateY(-2px); background:#8af1dc; }
     .button.secondary { color:var(--text); background:transparent; border-color:var(--line); box-shadow:none; }
@@ -95,7 +101,7 @@
     .week-training-pill--partial .week-training-pill-state { background:#ffd166; }
     .week-training-pill--active .week-training-pill-state { color:#092334; background:#78dcff; animation:weekTrainingActiveDot 1.35s ease-in-out infinite; }
     .week-training-empty { color:#c0d2dc; font-size:.68rem; }
-    .next-session-reason { margin:-4px 0 12px; color:#d1e4eb; font-size:.72rem; line-height:1.4; }
+    html[data-page-hidden="true"] .week-training-summary *,html[data-page-hidden="true"] .week-training-summary *::before,html[data-page-hidden="true"] .week-training-summary *::after { animation-play-state:paused!important; }
     @keyframes weekTrainingPillIn { from { opacity:0; transform:translateY(5px) scale(.97); } to { opacity:1; transform:translateY(0) scale(1); } }
     @keyframes weekTrainingMusclePulse { 0%,100% { transform:translateY(1px) scale(.96); } 50% { transform:translateY(-1px) scale(1.035); } }
     @keyframes weekTrainingMuscleGlow { 0%,100% { opacity:.55; transform:scale(.88); } 50% { opacity:1; transform:scale(1.08); } }
@@ -325,6 +331,8 @@
     @keyframes motivationRefresh { 0% { opacity:.55; transform:translateY(5px) scale(.99); } 55% { opacity:1; transform:translateY(-2px) scale(1.012); box-shadow:0 0 0 3px rgba(92,232,200,.12),0 12px 32px rgba(0,0,0,.22); } 100% { opacity:1; transform:none; } }
     @keyframes mascotDrift { from { transform:translate3d(0,0,0) scale(1); } to { transform:translate3d(-5px,-8px,0) scale(1.012); } }
     @keyframes cardArrive { from { opacity:0; transform:translateY(22px) scale(.985); } to { opacity:1; transform:translateY(0) scale(1); } }
+    @keyframes profileFormReveal { from { opacity:0; transform:translateY(10px); clip-path:inset(0 0 100%); } to { opacity:1; transform:translateY(0); clip-path:inset(0); } }
+    @keyframes recommendationReveal { from { opacity:0; transform:translateY(7px) scale(.985); } to { opacity:1; transform:translateY(0) scale(1); } }
     .hero-actions .button { min-height:51px; }
     .next-session-card { z-index:2; align-self:center; border-radius:29px; background:linear-gradient(145deg,rgba(15,43,55,.97),rgba(6,22,34,.97))!important; box-shadow:0 30px 78px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.1)!important; }
     .next-session-image { box-shadow:0 0 0 1px rgba(255,255,255,.16); }
@@ -358,6 +366,7 @@
       .hero-motivation { margin-bottom:18px; padding:11px 13px; font-size:.87rem; }
       .hero-actions { align-items:stretch; flex-direction:column; gap:8px; }
       .hero-actions .button { width:100%; min-height:47px; }
+      .recommendation-reason { padding:9px 11px; }
       .next-session-card { grid-template-columns:minmax(0,1fr); gap:10px; }
       .next-session-image { width:100%; height:clamp(142px,42vw,176px); min-height:0; border-radius:14px; }
     }
@@ -377,7 +386,7 @@
   </div>
   <div class="shell">
     <header class="topbar">
-      <a class="brand" href="./" aria-label="Gymratik v0.7.25, inicio"><span class="brand-mark" aria-hidden="true"><img src="./assets/branding/gymratik-mascots-mark-v2.png" alt=""></span><span class="brand-name">Gymratik <span class="brand-version" aria-label="Versión 0.7.25">v0.7.25</span></span></a>
+      <a class="brand" href="./" aria-label="Gymratik v0.7.26, inicio"><span class="brand-mark" aria-hidden="true"><img src="./assets/branding/gymratik-mascots-mark-v2.png" alt=""></span><span class="brand-name">Gymratik <span class="brand-version" aria-label="Versión 0.7.26">v0.7.26</span></span></a>
       <div class="topbar-meta"><span class="plan-pill">3 días base + 1 opcional · 90 series máx.</span><a class="topbar-link" href="#progress">Mi avance</a><a class="topbar-link" href="./records.html">Registros</a><a class="profile-chip" href="#profile"><img id="profileAvatarCompact" src="./assets/branding/gymratik-mascots-mark-v2.png" alt="Pareja de mascotas de entrenamiento de Gymratik"><span>Perfil</span></a></div>
     </header>
     <div id="updateNotice" class="update-notice" role="status" aria-live="polite" hidden><img id="updateNoticeArt" src="./assets/branding/gymratik-cover-seated-v1-poster.webp" data-motion-src="./assets/branding/gymratik-cover-seated-breath-30fps.webp" alt="" width="72" height="64"><div><strong id="updateNoticeTitle"></strong><p id="updateNoticeText"></p><button id="manualUpdateButton" class="button secondary" type="button" hidden>Buscar actualización ahora</button></div></div>
@@ -394,7 +403,7 @@
           <p class="hero-copy">Calienta, entrena con técnica y registra cada serie.</p>
           <p id="motivationMessage" class="hero-motivation" role="status" aria-live="polite">Cuida la técnica y registra cada serie: el progreso se construye paso a paso.</p>
           <div id="routineReminder" class="routine-reminder" role="status" hidden><span id="routineReminderText"></span><button id="dismissRoutineReminder" class="button secondary" type="button">Hoy no</button></div>
-          <div class="hero-actions"><a id="nextSessionCta" class="button" href="./data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html">Empezar Día 1</a><a class="button secondary" href="#routines">Ver plan completo</a><a class="button secondary" href="#profile">Mi perfil</a></div>
+          <div class="hero-actions"><div class="hero-primary-action"><a id="nextSessionCta" class="button" href="./data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html">Empezar Día 1</a><div class="recommendation-reason" role="status" aria-live="polite"><span class="recommendation-reason-label">Por qué recomendamos este día</span><p id="nextSessionReason" class="next-session-reason">Rutina base para iniciar la rotación semanal.</p></div></div><a class="button secondary" href="#routines">Ver plan completo</a><a class="button secondary" href="#profile">Mi perfil</a></div>
           <p class="hero-trust"><span class="status-dot" aria-hidden="true"></span>Tu avance se guarda en este dispositivo.</p>
         </div>
         <aside class="next-session-card" aria-labelledby="nextSessionTitle">
@@ -404,7 +413,6 @@
             <h2 id="nextSessionTitle">Día 1 · Tirón: espalda y bíceps</h2>
             <p id="nextSessionSummary" class="next-session-summary">Tracción, remo y trabajo de brazos con instrucciones visuales y registro por ejercicio.</p>
             <div class="session-meta"><span id="nextSessionMeta">6 ejercicios · 20 series</span><span>Calentamiento incluido</span></div>
-            <p id="nextSessionReason" class="next-session-reason">Rutina base para iniciar la rotación semanal.</p>
             <a id="nextSessionLink" class="session-link" href="./data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html">Abrir sesión →</a>
           </div>
         </aside>
@@ -514,6 +522,9 @@
     const updateNoticeArt = document.querySelector('#updateNoticeArt');
     const manualUpdateButton = document.querySelector('#manualUpdateButton');
     const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const syncPageMotionVisibility = () => { document.documentElement.dataset.pageHidden = String(document.hidden); };
+    document.addEventListener('visibilitychange', syncPageMotionVisibility, { passive:true });
+    syncPageMotionVisibility();
     const setCoverArtPlayback = (image, shouldAnimate) => {
       if (!image) return;
       const desiredSrc = shouldAnimate ? image.dataset.motionSrc : image.getAttribute('src').replace(/[^/]+$/, 'gymratik-cover-seated-v1-poster.webp');
@@ -1045,8 +1056,7 @@
 
     function recommendedRoutineForWeek(history, now = new Date(), routinesProgress = []) {
       const sessions = currentWeekTrainingSessions(history, now, routinesProgress);
-      const base = routineCatalog.filter(routine => !routine.optional);
-      const optional = routineCatalog.find(routine => routine.optional);
+      const routines = routineCatalog;
       const detailedHistory = [
         ...(Array.isArray(history) ? history : []),
         ...(Array.isArray(routinesProgress) ? routinesProgress.map(routine => ({
@@ -1064,31 +1074,38 @@
       const sevenDayVolume = measuredMuscleVolume(detailedHistory, now);
       const recentVolume = measuredMuscleVolume(detailedHistory, now, MUSCLE_RECOVERY_CAUTION_MS);
       const detailedDataAvailable = sevenDayVolume.reliable && recentVolume.reliable && sevenDayVolume.recordedSets > 0;
-      const target = muscleVolumeTargets(base);
+      const target = muscleVolumeTargets(routines);
       const actual = sevenDayVolume.volume;
       const latestLogged = [...detailedHistory]
         .filter(session => Number(session.completedSeries) > 0
           && Number(session.startedAt) >= now.getTime() - MUSCLE_VOLUME_LOOKBACK_MS
           && Number(session.startedAt) <= now.getTime()
-          && base.some(routine => routine.routineId === session.routineId))
+          && routines.some(routine => routine.routineId === session.routineId))
         .sort((a, b) => Number(b.startedAt) - Number(a.startedAt))[0];
       const latestRoutine = routineCatalog.find(routine => routine.routineId === latestLogged?.routineId);
-      const latestBaseIndex = base.findIndex(routine => routine.routineId === latestRoutine?.routineId);
-      const rotationStart = latestBaseIndex >= 0 ? latestBaseIndex + 1 : 0;
-      const orderedBase = base.map((_, offset) => base[(rotationStart + offset) % base.length]);
-      const pendingBase = orderedBase.filter(routine => !weekComplete.has(routine.routineId));
+      const latestRoutineIndex = routines.findIndex(routine => routine.routineId === latestRoutine?.routineId);
+      const rotationStart = latestRoutineIndex >= 0 ? latestRoutineIndex + 1 : 0;
+      const orderedRoutines = routines.map((_, offset) => routines[(rotationStart + offset) % routines.length]);
+      const pendingRoutines = orderedRoutines.filter(routine => !weekComplete.has(routine.routineId));
+      const displayDay = routine => `${routine.day}${routine.optional ? ' (opcional)' : ''}`;
 
-      if (pendingBase.length) {
+      if (pendingRoutines.length) {
         if (!detailedDataAvailable) {
-          const routine = pendingBase.find(item => latestRoutine && item.trainingGroup !== latestRoutine.trainingGroup) || pendingBase[0];
+          const routine = pendingRoutines.find(item => latestRoutine && item.trainingGroup !== latestRoutine.trainingGroup) || pendingRoutines[0];
+          const groupLabel = group => group === 'lower' ? 'inferior' : 'superior';
+          const fallbackReason = latestRoutine
+            ? routine.trainingGroup !== latestRoutine.trainingGroup
+              ? `Te recomendamos ${displayDay(routine)} porque alterna el último entrenamiento registrado, ${displayDay(latestRoutine)} de tren ${groupLabel(latestRoutine.trainingGroup)}, con tren ${groupLabel(routine.trainingGroup)}.`
+              : `Te recomendamos ${displayDay(routine)} porque sigue en la rotación pendiente después de ${displayDay(latestRoutine)}.`
+            : `Te recomendamos ${displayDay(routine)} porque inicia la rotación pendiente de las cuatro rutinas.`;
           return {
             routine,
-            reason: `Te recomendamos ${routine.day} para continuar el plan. Faltan registros detallados por ejercicio para comparar el volumen muscular; si hoy no te viene bien, también recomendamos descansar y retomarlo después.`,
+            reason: `${fallbackReason} Faltan registros detallados por ejercicio para comparar el volumen muscular. Si hoy no te viene bien, también recomendamos descansar y retomarlo después.`,
             planComplete: false,
             dataQuality: 'fallback',
           };
         }
-        const ranked = pendingBase.map((routine, order) => ({
+        const ranked = pendingRoutines.map((routine, order) => ({
           routine,
           order,
           coverage: routineCoverageScore(routine, target, actual),
@@ -1097,37 +1114,17 @@
         const selected = ranked[0];
         const deficitLabels = routineDeficitLabels(selected.routine, target, actual);
         const reason = deficitLabels.length
-          ? `Te recomendamos ${selected.routine.day} porque es el día pendiente que mejor cubre los grupos con menos series registradas en los últimos 7 días: ${deficitLabels.join(' y ')}.`
-          : `Te recomendamos ${selected.routine.day} para continuar el volumen previsto en el plan base.`;
+          ? `Te recomendamos ${displayDay(selected.routine)} porque, entre las rutinas pendientes, es la que mejor cubre los grupos con menos series registradas en los últimos 7 días: ${deficitLabels.join(' y ')}.`
+          : `Te recomendamos ${displayDay(selected.routine)} para variar la rotación y continuar el volumen previsto en el plan.`;
         const overlapLabels = selected.recent.groups.map(group => routineMuscleLabels[group] || group);
         const alternative = overlapLabels.length
           ? ` En las últimas 48 horas también hay solapamiento registrado en ${overlapLabels.slice(0, 2).join(' y ')}; si prefieres espaciarlo, también recomendamos descansar y retomarlo después.`
           : ' Si hoy no te viene bien, también recomendamos descansar y retomarlo después.';
         return { routine: selected.routine, reason: reason + alternative, planComplete: false, dataQuality: 'measured' };
       }
-
-      if (optional && !weekComplete.has(optional.routineId)) {
-        const overlap = detailedDataAvailable
-          ? routineRecentOverlap(optional, recentVolume.volume)
-          : latestRoutine?.trainingGroup === optional.trainingGroup ? { ratio: 1, groups: [] } : { ratio: 0, groups: [] };
-        const overlapLabels = overlap.groups.map(group => routineMuscleLabels[group] || group);
-        const recoverySuggested = overlap.ratio > 0 || overlapLabels.length > 0;
-        const coarseOverlap = recoverySuggested && !detailedDataAvailable;
-        return {
-          routine: optional,
-          reason: recoverySuggested
-            ? coarseOverlap
-              ? `Te recomendamos recuperar antes de ${optional.day}, porque tu última rutina también fue de tren inferior. Si ya quieres añadir el día opcional de posterior y core, puedes elegirlo cuando prefieras; esa coincidencia es solo orientativa.`
-              : `Te recomendamos recuperar antes de ${optional.day}: tu registro reciente se solapa en ${overlapLabels.slice(0, 2).join(' y ')}. Si ya quieres añadir el día opcional de posterior y core, puedes elegirlo cuando prefieras. El solapamiento es una señal orientativa, no una medición de recuperación.`
-            : `Te recomendamos ${optional.day} porque ya completaste las tres sesiones base y añade trabajo opcional de posterior y core. Si prefieres no sumar una cuarta rutina, también recomendamos descansar y comenzar el siguiente ciclo con ${base[0].day}.`,
-          planComplete: false,
-          recoverySuggested,
-          dataQuality: detailedDataAvailable ? 'measured' : 'fallback',
-        };
-      }
       return {
-        routine: base[0],
-        reason: `Ya completaste las tres rutinas base y el día opcional. Te recomendamos recuperación; para el siguiente ciclo, también recomendamos empezar con ${base[0].day}.`,
+        routine: routines[0],
+        reason: `Ya completaste las tres sesiones base y el día opcional. Te recomendamos recuperación; para el siguiente ciclo, también recomendamos empezar con ${routines[0].day}.`,
         planComplete: true,
       };
     }
@@ -1159,15 +1156,15 @@
         ? 'Retoma tu sesión.'
         : recommendation.planComplete
           ? '¡Semana completada!'
-          : recommendation.recoverySuggested
-            ? 'Las tres sesiones base están listas.'
+          : catalog.optional
+            ? 'El Día 4 opcional también equilibra tu rotación.'
           : dashboard.todaySeries > 0
           ? 'Hoy ya avanzaste.'
             : weeklySessions.length
               ? `Tu siguiente sesión es ${catalog.day}.`
             : 'Empieza a tu ritmo.';
-      nextSessionKicker.textContent = continuing ? 'Continúa donde te quedaste' : recommendation.planComplete ? 'Próxima rotación' : recommendation.recoverySuggested ? 'Opcional después de recuperar' : 'Siguiente recomendación';
-      nextSessionTitle.textContent = `${catalog.day} · ${catalog.title}`;
+      nextSessionKicker.textContent = continuing ? 'Continúa donde te quedaste' : recommendation.planComplete ? 'Próxima rotación' : catalog.optional ? 'Día opcional · equilibrio semanal' : 'Siguiente recomendación';
+      nextSessionTitle.textContent = `${catalog.day}${catalog.optional ? ' · opcional' : ''} · ${catalog.title}`;
       nextSessionSummary.textContent = catalog.summary;
       if (nextSessionReason) nextSessionReason.textContent = continuing
         ? `Te recomendamos continuar ${catalog.day} porque tienes una sesión activa. Si ahora no puedes, también recomendamos retomarla después; tu avance está guardado.`
@@ -1176,7 +1173,7 @@
       nextSessionImage.src = catalog.image;
       nextSessionImage.alt = `Lámina anatómica: músculos trabajados en ${catalog.title}, destacados en rojo para ${catalog.day}`;
       nextSessionCta.href = catalog.href;
-      nextSessionCta.textContent = continuing ? `Continuar ${catalog.day}` : recommendation.planComplete || recommendation.recoverySuggested ? `Ver ${catalog.day}` : `Empezar ${catalog.day}`;
+      nextSessionCta.textContent = continuing ? `Continuar ${catalog.day}` : recommendation.planComplete ? `Ver ${catalog.day}` : `Empezar ${catalog.day}${catalog.optional ? ' · opcional' : ''}`;
       nextSessionLink.href = catalog.href;
       nextSessionLink.textContent = continuing ? 'Continuar sesión →' : recommendation.planComplete ? 'Ver plan de la próxima semana →' : 'Abrir sesión →';
     }

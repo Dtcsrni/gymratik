@@ -2,6 +2,17 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.26] - 2026-11-17
+
+### Fixed
+
+- El motivo de la rutina recomendada aparece junto al botón principal de inicio, con una explicación explícita para recomendaciones calculadas y para el modo de respaldo sin datos musculares detallados.
+
+### Changed
+
+- Las cuatro rutinas dan un pulso visual y una señal breve, una sola vez, al entrar en los últimos tres segundos de preparación o descanso, según las preferencias activas.
+- El perfil, la justificación de la portada y los detalles de sesión en registros tienen transiciones cortas; el movimiento reducido las desactiva.
+
 ## [0.7.25] - 2026-11-17
 
 ### Changed

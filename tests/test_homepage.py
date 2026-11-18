@@ -25,8 +25,8 @@ class HomepageContractTests(unittest.TestCase):
         self.assertEqual(self.manifest["name"], "Gymratik: Rutinas y progreso")
         self.assertEqual(self.manifest["short_name"], "Gymratik")
         self.assertIn("Gymratik: Rutinas y progreso", self.html)
-        self.assertIn('aria-label="Gymratik v0.7.25, inicio"', self.html)
-        self.assertIn('class="brand-version" aria-label="Versión 0.7.25">v0.7.25', self.html)
+        self.assertIn('aria-label="Gymratik v0.7.26, inicio"', self.html)
+        self.assertIn('class="brand-version" aria-label="Versión 0.7.26">v0.7.26', self.html)
         self.assertIn('<span class="brand-mark" aria-hidden="true"><img src="./assets/branding/gymratik-mascots-mark-v2.png" alt=""></span>', self.html)
         self.assertIn("background:rgba(11,16,23,.72)", self.html)
         self.assertIn(".hero-strength-stage", self.html)
@@ -43,6 +43,33 @@ class HomepageContractTests(unittest.TestCase):
         )
         for path in routine_paths:
             self.assertIn(path, self.html)
+
+    def test_all_routines_expose_final_countdown_feedback(self):
+        for page in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            source = page.read_text(encoding="utf-8")
+            with self.subTest(page=page.name):
+                self.assertIn("countdown: [[880, .075, 0, .018], [1047, .12, .12, .022]]", source)
+                self.assertIn("countdown: [12]", source)
+                self.assertIn("playFeedback('countdown')", source)
+                self.assertIn("chip.classList.toggle('is-countdown-final', entry.countdownFinal === true)", source)
+                self.assertIn("currentActivity.remainingMs > 0 && currentActivity.remainingMs <= 3000", source)
+                self.assertIn("activityPageStartedAt = Date.now()", source)
+                self.assertIn("currentActivity?.startedAt >= activityPageStartedAt", source)
+                self.assertIn("prefers-reduced-motion:reduce", source)
+                self.assertIn("soundEnabled = localStorage.getItem(soundKey) !== 'off'", source)
+
+    def test_homepage_profile_and_records_interactions_have_reduced_motion_aware_transitions(self):
+        self.assertIn("#profileEditor[open] #profileForm { animation:profileFormReveal", self.html)
+        self.assertIn("#profileEditor[open]", self.html)
+        self.assertIn("animation:recommendationReveal", self.html)
+        self.assertIn("document.documentElement.dataset.pageHidden = String(document.hidden)", self.html)
+        self.assertIn('html[data-page-hidden="true"] .week-training-summary', self.html)
+        records_css = (ROOT / "records.css").read_text(encoding="utf-8")
+        records_js = (ROOT / "records.js").read_text(encoding="utf-8")
+        self.assertIn(".session-list details[open] .session-performance { animation:session-detail-reveal", records_css)
+        self.assertIn("select:focus-visible { outline:2px solid var(--cyan)", records_css)
+        self.assertIn("@media(prefers-reduced-motion:reduce)", records_css)
+        self.assertIn("document.documentElement.dataset.pageHidden = String(document.hidden)", records_js)
 
     def test_muscle_volume_profiles_match_all_canonical_exercises_and_series(self):
         raw = re.search(r'<script type="application/json" id="routineMuscleProfileData">([\s\S]*?)</script>', self.html)
@@ -317,6 +344,10 @@ class HomepageContractTests(unittest.TestCase):
         self.assertIn('id="weekTrainingCount"', self.html)
         self.assertIn('id="weekTrainingPills"', self.html)
         self.assertIn('id="nextSessionReason"', self.html)
+        self.assertIn('class="recommendation-reason" role="status" aria-live="polite"', self.html)
+        self.assertIn('Por qué recomendamos este día', self.html)
+        self.assertLess(self.html.index('id="nextSessionCta"'), self.html.index('id="nextSessionReason"'))
+        self.assertLess(self.html.index('id="nextSessionReason"'), self.html.index('class="hero-trust"'))
         self.assertIn('@keyframes weekTrainingPillIn', self.html)
         self.assertIn('.week-training-pill,.week-training-pill-art,.week-training-pill-art-wrap::before,.week-training-pill-state { animation:none!important; will-change:auto!important; }', self.html)
         self.assertIn("art.src = routine.image", self.html)
@@ -466,8 +497,8 @@ const currentWeekHistory = [
 ];
 assert.deepStrictEqual(currentWeekTrainingSessions(currentWeekHistory, tuesday).map(session=>session.sessionId), ['current'],
   'only sessions within the current local week count');
-assert.strictEqual(recommendedRoutineForWeek(currentWeekHistory, tuesday).routine.routineId, 'day2',
-  'the recommendation should alternate from the latest upper-body session');
+assert.strictEqual(recommendedRoutineForWeek(currentWeekHistory, tuesday).routine.routineId, 'day4',
+  'the four-day recommendation should alternate from the latest upper-body session');
 console.log(JSON.stringify({{ok:true}}));
 """
         result = subprocess.run(["node", "-e", script], cwd=ROOT, check=False, capture_output=True, text=True)
@@ -655,6 +686,7 @@ context.renderNextSession({ routines, todaySeries: 0 }, []);
 assert.strictEqual(context.nextSessionCta.textContent, 'Continuar Día 3');
 assert.strictEqual(context.nextSessionCta.href, 'day3.html');
 assert.strictEqual(context.pageTitle.textContent, 'Retoma tu sesión.');
+assert.match(context.nextSessionReason.textContent, /porque tienes una sesión activa/);
 console.log(JSON.stringify({ ok: true }));
 """
         result = subprocess.run(["node", "-e", script, str(INDEX)], cwd=ROOT, check=False, capture_output=True, text=True)
@@ -698,6 +730,7 @@ routines[1] = { ...routines[1], doneSeries: 12, updatedAt: Date.now() - 60000, s
 context.renderNextSession({ routines, todaySeries: 0 }, []);
 assert.strictEqual(context.nextSessionCta.textContent, 'Empezar Día 3');
 assert.strictEqual(context.pageTitle.textContent, 'Tu siguiente sesión es Día 3.');
+assert.match(context.nextSessionReason.textContent, /alterna el último entrenamiento registrado, Día 2 de tren inferior, con tren superior/);
 const thisMonday = new Date();
 thisMonday.setHours(0, 0, 0, 0);
 thisMonday.setDate(thisMonday.getDate() - ((thisMonday.getDay() + 6) % 7));
@@ -708,13 +741,14 @@ context.renderNextSession({ routines: context.routineCatalog.map(item => ({ rout
 ]);
 assert.strictEqual(context.nextSessionCta.textContent, 'Empezar Día 2', 'the rolling window may recommend a different base day while weekly attendance resets');
 assert.strictEqual(context.nextSessionCta.href, 'day2.html');
+assert.match(context.nextSessionReason.textContent, /alterna el último entrenamiento registrado, Día 1 de tren superior, con tren inferior/);
 const optionalDayCompleted = new Date();
 optionalDayCompleted.setHours(0, 0, 0, 0);
 context.renderNextSession({ routines: context.routineCatalog.map(item => ({ routineId: item.routineId, doneSeries: 0, updatedAt: 0, sessionStartedAt: 0, sessionEndedAt: 0 })), todaySeries: 0 }, [
   { routineId: 'day2', startedAt: optionalDayCompleted.getTime(), completedSeries: 23, totalSeries: 23 },
   { routineId: 'day4', startedAt: optionalDayCompleted.getTime() + 1000, completedSeries: 22, totalSeries: 22 }
 ]);
-assert.strictEqual(context.nextSessionCta.textContent, 'Empezar Día 3', 'a logged optional lower-body day should rotate from the latest base routine to an upper-body base day');
+assert.strictEqual(context.nextSessionCta.textContent, 'Empezar Día 1', 'a logged optional lower-body day participates in the four-routine rotation');
 console.log(JSON.stringify({ ok: true }));
 """
         result = subprocess.run(["node", "-e", script, str(INDEX)], cwd=ROOT, check=False, capture_output=True, text=True)
@@ -774,7 +808,7 @@ assert.match(pills[2].className, /week-training-pill--active/);
 assert.strictEqual(context.recommendedRoutineForWeek([sessions[0]], now).routine.routineId, 'day2');
 assert.match(context.recommendedRoutineForWeek([sessions[0]], now).reason, /Faltan registros detallados por ejercicio/);
 assert.match(context.recommendedRoutineForWeek([sessions[0]], now).reason, /también recomendamos descansar/);
-assert.strictEqual(context.recommendedRoutineForWeek(sessions.slice(0,4), now).routine.routineId, 'day2');
+assert.strictEqual(context.recommendedRoutineForWeek(sessions.slice(0,4), now).routine.routineId, 'day4', 'the optional day participates after the latest upper-body session');
 const basesThenLower = [
   {sessionId:'b1',routineId:'day1',startedAt:new Date(2026,10,9,9).getTime(),completedSeries:23,totalSeries:23,status:'completed'},
   {sessionId:'b2',routineId:'day2',startedAt:new Date(2026,10,10,9).getTime(),completedSeries:23,totalSeries:23,status:'completed'},
@@ -783,9 +817,17 @@ const basesThenLower = [
 ];
 const optionalAfterLower = context.recommendedRoutineForWeek(basesThenLower, now);
 assert.strictEqual(optionalAfterLower.routine.routineId, 'day4');
-assert.strictEqual(optionalAfterLower.recoverySuggested, true);
-assert.match(optionalAfterLower.reason, /Te recomendamos recuperar antes de Día 4/);
-assert.match(optionalAfterLower.reason, /puedes elegirlo cuando prefieras/);
+assert.match(optionalAfterLower.reason, /Día 4 \(opcional\)/);
+assert.match(optionalAfterLower.reason, /rotación pendiente/);
+const performanceFor = routineId => context.routineMuscleProfiles[routineId].flatMap(exercise =>
+  Array.from({length:exercise.series}, (_, index) => ({exerciseId:exercise.exerciseId, setKey:`e${exercise.exerciseId}s${index + 1}`})));
+const day1Complete = {sessionId:'e1',routineId:'day1',startedAt:new Date(2026,10,9,9).getTime(),completedSeries:23,totalSeries:23,status:'completed',completionKind:'complete',performance:performanceFor('day1')};
+const day3Complete = {sessionId:'e3',routineId:'day3',startedAt:new Date(2026,10,10,9).getTime(),completedSeries:22,totalSeries:22,status:'completed',completionKind:'complete',performance:performanceFor('day3')};
+const day2PartialPerformance = performanceFor('day2').slice(0,10);
+const day2Partial = {sessionId:'e2',routineId:'day2',startedAt:new Date(2026,10,12,9).getTime(),completedSeries:day2PartialPerformance.length,totalSeries:23,status:'completed',completionKind:'partial',performance:day2PartialPerformance};
+const optionalByDeficit = context.recommendedRoutineForWeek([day1Complete,day3Complete,day2Partial], now);
+assert.strictEqual(optionalByDeficit.routine.routineId, 'day4', 'the optional day is compared with unfinished base routines before all bases are complete');
+assert.match(optionalByDeficit.reason, /Día 4 \(opcional\).*mejor cubre/);
 const full = [
   {sessionId:'f1',routineId:'day1',startedAt:new Date(2026,10,9,9).getTime(),completedSeries:23,totalSeries:23,status:'completed'},
   {sessionId:'f2',routineId:'day2',startedAt:new Date(2026,10,10,9).getTime(),completedSeries:23,totalSeries:23,status:'completed'},
