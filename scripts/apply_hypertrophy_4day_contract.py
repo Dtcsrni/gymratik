@@ -570,6 +570,7 @@ UNIFORM_MOBILE_EXERCISE_LAYOUT = r'''<style data-enhancement="uniform-mobile-exe
   main.cards article.card>.meta>.referenceRow{margin:0!important}
   main.cards article.card>.visual{display:block!important;flex:0 0 auto!important;order:2!important;min-width:0!important;min-height:0!important;margin:0!important;padding:0!important}
   main.cards article.card>.coach{display:flex!important;flex:0 0 auto!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;order:3!important;gap:8px!important;min-width:0!important;min-height:0!important;margin:0!important;padding:12px!important}
+  main.cards article.card>.coach>.metrics{align-self:stretch!important;width:100%!important;max-width:100%!important;grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr))!important}
   main.cards article.card>.coach>.coachRibbon,main.cards article.card>.coach>.coachHeader{margin:0!important}
   main.cards article.card>.coach>.coachRibbon{order:0!important}
   main.cards article.card>.coach>.coachHeader{order:1!important}

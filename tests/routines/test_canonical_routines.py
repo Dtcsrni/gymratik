@@ -935,6 +935,20 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertIn("button:not(:disabled):active", source)
                 self.assertNotIn("Number(item.performanceReps.value) > 0 ?", source)
 
+    def test_mobile_prescription_metrics_fill_available_width_on_every_day(self) -> None:
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            with self.subTest(routine=path.name):
+                source = path.read_text(encoding="utf-8")
+                style_match = re.search(
+                    r'<style data-enhancement="uniform-mobile-exercise-layout-v1">(.*?)</style>',
+                    source,
+                    re.S,
+                )
+                self.assertIsNotNone(style_match)
+                style = style_match.group(1)
+                self.assertIn("main.cards article.card>.coach>.metrics{align-self:stretch!important;width:100%!important;max-width:100%!important;", style)
+                self.assertIn("grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr))!important", style)
+
     def test_floating_mascot_is_larger_and_has_no_square_frame_on_every_day(self) -> None:
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
             with self.subTest(routine=path.name):
