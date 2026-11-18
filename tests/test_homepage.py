@@ -25,8 +25,8 @@ class HomepageContractTests(unittest.TestCase):
         self.assertEqual(self.manifest["name"], "Gymratik: Rutinas y progreso")
         self.assertEqual(self.manifest["short_name"], "Gymratik")
         self.assertIn("Gymratik: Rutinas y progreso", self.html)
-        self.assertIn('aria-label="Gymratik v0.7.24, inicio"', self.html)
-        self.assertIn('class="brand-version" aria-label="Versión 0.7.24">v0.7.24', self.html)
+        self.assertIn('aria-label="Gymratik v0.7.25, inicio"', self.html)
+        self.assertIn('class="brand-version" aria-label="Versión 0.7.25">v0.7.25', self.html)
         self.assertIn('<span class="brand-mark" aria-hidden="true"><img src="./assets/branding/gymratik-mascots-mark-v2.png" alt=""></span>', self.html)
         self.assertIn("background:rgba(11,16,23,.72)", self.html)
         self.assertIn(".hero-strength-stage", self.html)
@@ -43,6 +43,28 @@ class HomepageContractTests(unittest.TestCase):
         )
         for path in routine_paths:
             self.assertIn(path, self.html)
+
+    def test_muscle_volume_profiles_match_all_canonical_exercises_and_series(self):
+        raw = re.search(r'<script type="application/json" id="routineMuscleProfileData">([\s\S]*?)</script>', self.html)
+        self.assertIsNotNone(raw)
+        profiles = json.loads(raw.group(1))["routines"]
+        canonical_files = sorted(CANONICAL.glob("Rutina_Dia_*_V1.html"))
+        self.assertEqual(len(canonical_files), 4)
+        allowed = set(json.loads(raw.group(1))["labels"])
+        catalog = re.search(r"const routineCatalog = \[([\s\S]*?)\n    \];", self.html).group(1)
+        for index, page in enumerate(canonical_files, start=1):
+            routine_id = f"day{index}"
+            trackers = re.findall(r'<div class="exerciseTracker"[^>]*data-exercise="(\d+)"[^>]*data-series-keys="([^"]+)"', page.read_text(encoding="utf-8"))
+            expected = {exercise: len(keys.split()) for exercise, keys in trackers}
+            actual = {item["exerciseId"]: item["series"] for item in profiles[routine_id]}
+            self.assertEqual(actual, expected, routine_id)
+            self.assertTrue(all(item["primary"] for item in profiles[routine_id]))
+            for item in profiles[routine_id]:
+                self.assertTrue(set(item["primary"] + item["secondary"]).issubset(allowed))
+                self.assertFalse(set(item["primary"]) & set(item["secondary"]))
+        for day, total in ((1, 23), (2, 23), (3, 22), (4, 22)):
+            self.assertIn(f"routineId: 'day{day}'", catalog)
+            self.assertEqual(sum(item["series"] for item in profiles[f"day{day}"]), total)
 
     def test_routine_names_describe_the_programmed_focus(self):
         for title in (
@@ -411,14 +433,18 @@ class HomepageContractTests(unittest.TestCase):
         self.assertIn('const dashboard = await window.TrainingProgressStore.getDashboard();', self.html)
         self.assertIn('const history = await window.TrainingProgressStore.getHistory(100);', self.html)
 
-    def test_homepage_weekly_rotation_ignores_previous_week_history(self):
+    def test_homepage_weekly_recommendation_uses_rolling_muscle_volume_without_changing_weekly_pills(self):
         marker = "function localWeekBounds"
         self.assertIn(marker, self.html, "La rotación debe tener una regla de semana local que se pueda probar")
         start = self.html.index(marker)
         end = self.html.index("\n    function renderNextSession", start + len(marker))
         helper = self.html[start:end]
-        script = f"""
+        script = fr"""
 const assert = require('assert');
+const profileData = JSON.parse(require('fs').readFileSync('index.html','utf8').match(/<script type="application\/json" id="routineMuscleProfileData">([\s\S]*?)<\/script>/)[1]);
+const routineMuscleProfiles = profileData.routines, routineMuscleLabels = profileData.labels;
+const MILLISECONDS_PER_DAY = 86400000, MUSCLE_VOLUME_LOOKBACK_MS = 7*MILLISECONDS_PER_DAY;
+const MUSCLE_RECOVERY_CAUTION_MS = 48*60*60*1000, INDIRECT_SET_WEIGHT = 0.5;
 {helper}
 const routineCatalog = [
   {{routineId:'day1',trainingGroup:'upper',totalSeries:23}},
@@ -431,8 +457,8 @@ const previousSaturday = new Date(2026, 9, 10, 18, 0, 0).getTime();
 const oldHistory = [{{ sessionId:'old',routineId:'day1',startedAt:previousSaturday,completedSeries:20 }}];
 assert.strictEqual(currentWeekTrainingSessions(oldHistory, tuesday).length, 0,
   'Tuesday with only a previous-week workout must have no weekly sessions');
-assert.strictEqual(recommendedRoutineForWeek(oldHistory, tuesday).routine.routineId, 'day1',
-  'Tuesday with only previous-week training must start the rotation at Day 1');
+assert.strictEqual(recommendedRoutineForWeek(oldHistory, tuesday).routine.routineId, 'day2',
+  'a prior-week upper-body session still informs the rolling-volume recommendation');
 const thisMonday = new Date(2026, 9, 12, 8, 0, 0).getTime();
 const currentWeekHistory = [
   {{ sessionId:'old',routineId:'day1',startedAt:previousSaturday,completedSeries:20 }},
@@ -447,6 +473,44 @@ console.log(JSON.stringify({{ok:true}}));
         result = subprocess.run(["node", "-e", script], cwd=ROOT, check=False, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads(result.stdout), {"ok": True})
+
+    def test_muscle_volume_recommendation_counts_confirmed_direct_and_indirect_sets(self):
+        helper = self.html[self.html.index("function localWeekBounds"):self.html.index("\n    function renderNextSession")]
+        script = f"""
+const assert=require('assert'), fs=require('fs');
+const data=JSON.parse(fs.readFileSync('index.html','utf8').match(/<script type="application\\/json" id="routineMuscleProfileData">([\\s\\S]*?)<\\/script>/)[1]);
+const routineMuscleProfiles=data.routines, routineMuscleLabels=data.labels;
+const MILLISECONDS_PER_DAY=86400000, MUSCLE_VOLUME_LOOKBACK_MS=7*MILLISECONDS_PER_DAY, MUSCLE_RECOVERY_CAUTION_MS=48*60*60*1000, INDIRECT_SET_WEIGHT=0.5;
+{helper}
+const routineCatalog=[
+  {{routineId:'day1',day:'Día 1',trainingGroup:'upper',totalSeries:23}},
+  {{routineId:'day2',day:'Día 2',trainingGroup:'lower',totalSeries:23}},
+  {{routineId:'day3',day:'Día 3',trainingGroup:'upper',totalSeries:22}},
+  {{routineId:'day4',day:'Día 4',trainingGroup:'lower',optional:true,totalSeries:22}}
+];
+function recordsFor(routineId) {{ return routineMuscleProfiles[routineId].flatMap(ex => Array.from({{length:ex.series}}, (_,n)=>({{exerciseId:ex.exerciseId,setKey:`e${{ex.exerciseId}}s${{n+1}}`}}))); }}
+const now=new Date(2026,10,13,12);
+const fullDay1={{sessionId:'full1',routineId:'day1',startedAt:new Date(2026,10,9,9).getTime(),completedSeries:23,totalSeries:23,status:'completed',completionKind:'complete',performance:recordsFor('day1')}};
+const partialDay2={{sessionId:'partial2',routineId:'day2',startedAt:new Date(2026,10,10,9).getTime(),completedSeries:1,totalSeries:23,status:'completed',completionKind:'partial',performance:[{{exerciseId:'1',setKey:'e1s1'}}]}};
+const measured=measuredMuscleVolume([fullDay1,partialDay2],now);
+assert.strictEqual(measured.reliable,true);
+assert.strictEqual(measured.volume.lats,9.5);
+assert.strictEqual(measured.volume.biceps,11.5);
+assert.strictEqual(measured.volume.quads,1);
+assert.strictEqual(measured.volume.glutes,0.5);
+assert.strictEqual(measuredMuscleVolume([fullDay1,partialDay2],now,MUSCLE_RECOVERY_CAUTION_MS).recordedSets,0,'exposure older than 48h is not treated as recent overlap');
+const recommendation=recommendedRoutineForWeek([fullDay1,partialDay2],now);
+assert.strictEqual(recommendation.routine.routineId,'day3','after a full upper-body day and one partial lower-body set, the complete upper-body B session best covers the remaining plan deficits');
+assert.strictEqual(recommendation.dataQuality,'measured');
+assert.strictEqual(recommendedRoutineForWeek([{{...fullDay1,performance:undefined}}],now).dataQuality,'fallback');
+assert.strictEqual(recommendedRoutineForWeek([],now).dataQuality,'fallback');
+console.log(JSON.stringify({{measured:measured.volume,recommended:recommendation.routine.routineId}}));
+"""
+        result = subprocess.run(["node", "-e", script], cwd=ROOT, check=False, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        data = json.loads(result.stdout)
+        self.assertEqual(data["measured"]["biceps"], 11.5)
+        self.assertEqual(data["recommended"], "day3")
 
     def test_homepage_exposes_local_profile_and_backup_controls(self):
         for marker in (
@@ -565,6 +629,12 @@ const nodes = Object.fromEntries(['pageTitle','nextSessionCta','nextSessionLink'
 const context = {
   Date,
   Intl,
+  MILLISECONDS_PER_DAY: 86400000,
+  MUSCLE_VOLUME_LOOKBACK_MS: 7*86400000,
+  MUSCLE_RECOVERY_CAUTION_MS: 48*60*60*1000,
+  INDIRECT_SET_WEIGHT: 0.5,
+  routineMuscleProfiles: JSON.parse(html.match(/<script type="application\/json" id="routineMuscleProfileData">([\s\S]*?)<\/script>/)[1]).routines,
+  routineMuscleLabels: JSON.parse(html.match(/<script type="application\/json" id="routineMuscleProfileData">([\s\S]*?)<\/script>/)[1]).labels,
   document: { createElement: () => ({ style: { setProperty() {} }, setAttribute() {}, append() {} }) },
   recentSessions: [],
   weekTrainingCount: { textContent: '' },
@@ -603,6 +673,12 @@ const nodes = Object.fromEntries(['pageTitle','nextSessionCta','nextSessionLink'
 const context = {
   Date,
   Intl,
+  MILLISECONDS_PER_DAY: 86400000,
+  MUSCLE_VOLUME_LOOKBACK_MS: 7*86400000,
+  MUSCLE_RECOVERY_CAUTION_MS: 48*60*60*1000,
+  INDIRECT_SET_WEIGHT: 0.5,
+  routineMuscleProfiles: JSON.parse(html.match(/<script type="application\/json" id="routineMuscleProfileData">([\s\S]*?)<\/script>/)[1]).routines,
+  routineMuscleLabels: JSON.parse(html.match(/<script type="application\/json" id="routineMuscleProfileData">([\s\S]*?)<\/script>/)[1]).labels,
   document: { createElement: () => ({ style: { setProperty() {} }, setAttribute() {}, append() {} }) },
   recentSessions: [],
   weekTrainingCount: { textContent: '' },
@@ -630,15 +706,15 @@ lastSaturday.setDate(lastSaturday.getDate() - 2);
 context.renderNextSession({ routines: context.routineCatalog.map(item => ({ routineId: item.routineId, doneSeries: 0, updatedAt: 0, sessionStartedAt: 0, sessionEndedAt: 0 })), todaySeries: 0 }, [
   { routineId: 'day1', startedAt: lastSaturday.getTime(), completedSeries: 20, totalSeries: 20 }
 ]);
-assert.strictEqual(context.nextSessionCta.textContent, 'Empezar Día 1', 'last week history must not carry the rotation into this week');
-assert.strictEqual(context.nextSessionCta.href, 'day1.html');
+assert.strictEqual(context.nextSessionCta.textContent, 'Empezar Día 2', 'the rolling window may recommend a different base day while weekly attendance resets');
+assert.strictEqual(context.nextSessionCta.href, 'day2.html');
 const optionalDayCompleted = new Date();
 optionalDayCompleted.setHours(0, 0, 0, 0);
 context.renderNextSession({ routines: context.routineCatalog.map(item => ({ routineId: item.routineId, doneSeries: 0, updatedAt: 0, sessionStartedAt: 0, sessionEndedAt: 0 })), todaySeries: 0 }, [
   { routineId: 'day2', startedAt: optionalDayCompleted.getTime(), completedSeries: 23, totalSeries: 23 },
   { routineId: 'day4', startedAt: optionalDayCompleted.getTime() + 1000, completedSeries: 22, totalSeries: 22 }
 ]);
-assert.strictEqual(context.nextSessionCta.textContent, 'Empezar Día 1', 'a logged optional lower-body day should alternate to a pending upper-body base day');
+assert.strictEqual(context.nextSessionCta.textContent, 'Empezar Día 3', 'a logged optional lower-body day should rotate from the latest base routine to an upper-body base day');
 console.log(JSON.stringify({ ok: true }));
 """
         result = subprocess.run(["node", "-e", script, str(INDEX)], cwd=ROOT, check=False, capture_output=True, text=True)
@@ -654,6 +730,12 @@ assert.ok(helpers, 'weekly summary and recommendation helpers must exist');
 const pills = [];
 const context = {
   Date, Intl,
+  MILLISECONDS_PER_DAY: 86400000,
+  MUSCLE_VOLUME_LOOKBACK_MS: 7*86400000,
+  MUSCLE_RECOVERY_CAUTION_MS: 48*60*60*1000,
+  INDIRECT_SET_WEIGHT: 0.5,
+  routineMuscleProfiles: JSON.parse(html.match(/<script type="application\/json" id="routineMuscleProfileData">([\s\S]*?)<\/script>/)[1]).routines,
+  routineMuscleLabels: JSON.parse(html.match(/<script type="application\/json" id="routineMuscleProfileData">([\s\S]*?)<\/script>/)[1]).labels,
   document: { createElement: tag => ({ tag, children:[], style:{setProperty(){}}, attributes:{}, setAttribute(name,value){ this.attributes[name] = value; }, append(...nodes){ this.children.push(...nodes); }, textContent:'', className:'', title:'' }) },
   weekTrainingCount: { textContent:'' },
   weekTrainingPills: { replaceChildren(){ pills.length=0; }, append(node){ pills.push(node); } },
@@ -690,9 +772,9 @@ assert.strictEqual(pills[0].children[0].children[0].src, './assets/branding/rout
 assert.match(pills[1].title, /Parcial/);
 assert.match(pills[2].className, /week-training-pill--active/);
 assert.strictEqual(context.recommendedRoutineForWeek([sessions[0]], now).routine.routineId, 'day2');
-assert.match(context.recommendedRoutineForWeek([sessions[0]], now).reason, /Te recomendamos Día 2 porque alterna tren superior con tren inferior/);
+assert.match(context.recommendedRoutineForWeek([sessions[0]], now).reason, /Faltan registros detallados por ejercicio/);
 assert.match(context.recommendedRoutineForWeek([sessions[0]], now).reason, /también recomendamos descansar/);
-assert.strictEqual(context.recommendedRoutineForWeek(sessions.slice(0,4), now).routine.routineId, 'day4');
+assert.strictEqual(context.recommendedRoutineForWeek(sessions.slice(0,4), now).routine.routineId, 'day2');
 const basesThenLower = [
   {sessionId:'b1',routineId:'day1',startedAt:new Date(2026,10,9,9).getTime(),completedSeries:23,totalSeries:23,status:'completed'},
   {sessionId:'b2',routineId:'day2',startedAt:new Date(2026,10,10,9).getTime(),completedSeries:23,totalSeries:23,status:'completed'},
@@ -702,16 +784,21 @@ const basesThenLower = [
 const optionalAfterLower = context.recommendedRoutineForWeek(basesThenLower, now);
 assert.strictEqual(optionalAfterLower.routine.routineId, 'day4');
 assert.strictEqual(optionalAfterLower.recoverySuggested, true);
-assert.match(optionalAfterLower.reason, /Te recomendamos recuperar antes de hacer Día 4/);
-assert.match(optionalAfterLower.reason, /puedes elegir el día opcional/);
-const full = [...sessions.slice(0,4), {sessionId:'s4',routineId:'day4',startedAt:new Date(2026,10,13,9).getTime(),completedSeries:22,totalSeries:22,status:'completed'}];
+assert.match(optionalAfterLower.reason, /Te recomendamos recuperar antes de Día 4/);
+assert.match(optionalAfterLower.reason, /puedes elegirlo cuando prefieras/);
+const full = [
+  {sessionId:'f1',routineId:'day1',startedAt:new Date(2026,10,9,9).getTime(),completedSeries:23,totalSeries:23,status:'completed'},
+  {sessionId:'f2',routineId:'day2',startedAt:new Date(2026,10,10,9).getTime(),completedSeries:23,totalSeries:23,status:'completed'},
+  {sessionId:'f3',routineId:'day3',startedAt:new Date(2026,10,11,9).getTime(),completedSeries:22,totalSeries:22,status:'completed'},
+  {sessionId:'f4',routineId:'day4',startedAt:new Date(2026,10,12,9).getTime(),completedSeries:22,totalSeries:22,status:'completed'}
+];
 const completeWeek = context.recommendedRoutineForWeek(full, now);
 assert.strictEqual(completeWeek.planComplete, true);
 assert.match(completeWeek.reason, /Te recomendamos recuperación/);
 assert.match(completeWeek.reason, /empezar con Día 1/);
 const first = context.recommendedRoutineForWeek([], now);
 assert.match(first.reason, /Te recomendamos Día 1/);
-assert.match(first.reason, /también puedes elegir Día 2/);
+assert.match(first.reason, /Faltan registros detallados por ejercicio/);
 console.log(JSON.stringify({ok:true,weekSessions:week.length,recommendations:['day2','day4','rest']}));
 """
         result = subprocess.run(["node", "-e", script, str(INDEX)], cwd=ROOT, check=False, capture_output=True, text=True)

@@ -2,6 +2,14 @@
 
 Los cambios notables se documentarán siguiendo Keep a Changelog y versionado semántico una vez exista software distribuible.
 
+## [0.7.25] - 2026-11-17
+
+### Changed
+
+- La recomendación de portada compara el volumen por músculo registrado en los últimos siete días con el volumen previsto del plan y sugiere la rutina completa pendiente que mejor cubre los déficits.
+- El trabajo secundario aporta media serie estimada; el solapamiento de 48 horas solo da una cautela informativa. Cuando faltan datos por ejercicio, la portada lo indica y usa la rotación como respaldo.
+- Las pills mantienen el recuento de la semana local y el Día 4 sigue siendo opcional.
+
 ## [0.7.24] - 2026-11-14
 
 ### Changed

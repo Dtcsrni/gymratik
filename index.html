@@ -7,7 +7,7 @@
   <meta name="application-name" content="Gymratik">
   <meta name="apple-mobile-web-app-title" content="Gymratik">
   <meta name="description" content="Rutinas visuales para entrenar en el gimnasio con calentamiento, técnica y registro de series.">
-  <meta name="gymratik-resource-estimate" content='{"applicationBytes":"000000005737771","imageBytes":"000000044202834","totalBytes":"000000049940605"}'>
+  <meta name="gymratik-resource-estimate" content='{"applicationBytes":"000000005760721","imageBytes":"000000044202834","totalBytes":"000000049963555"}'>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./assets/branding/gymratik-mascots-mark-v2.png" type="image/png">
   <link rel="apple-touch-icon" sizes="192x192" href="./assets/branding/gymratik-pwa-icon-v8-192.png">
@@ -377,7 +377,7 @@
   </div>
   <div class="shell">
     <header class="topbar">
-      <a class="brand" href="./" aria-label="Gymratik v0.7.24, inicio"><span class="brand-mark" aria-hidden="true"><img src="./assets/branding/gymratik-mascots-mark-v2.png" alt=""></span><span class="brand-name">Gymratik <span class="brand-version" aria-label="Versión 0.7.24">v0.7.24</span></span></a>
+      <a class="brand" href="./" aria-label="Gymratik v0.7.25, inicio"><span class="brand-mark" aria-hidden="true"><img src="./assets/branding/gymratik-mascots-mark-v2.png" alt=""></span><span class="brand-name">Gymratik <span class="brand-version" aria-label="Versión 0.7.25">v0.7.25</span></span></a>
       <div class="topbar-meta"><span class="plan-pill">3 días base + 1 opcional · 90 series máx.</span><a class="topbar-link" href="#progress">Mi avance</a><a class="topbar-link" href="./records.html">Registros</a><a class="profile-chip" href="#profile"><img id="profileAvatarCompact" src="./assets/branding/gymratik-mascots-mark-v2.png" alt="Pareja de mascotas de entrenamiento de Gymratik"><span>Perfil</span></a></div>
     </header>
     <div id="updateNotice" class="update-notice" role="status" aria-live="polite" hidden><img id="updateNoticeArt" src="./assets/branding/gymratik-cover-seated-v1-poster.webp" data-motion-src="./assets/branding/gymratik-cover-seated-breath-30fps.webp" alt="" width="72" height="64"><div><strong id="updateNoticeTitle"></strong><p id="updateNoticeText"></p><button id="manualUpdateButton" class="button secondary" type="button" hidden>Buscar actualización ahora</button></div></div>
@@ -463,6 +463,51 @@
     </main>
       <footer><p>Material de entrenamiento general. Respeta el calentamiento indicado y ajusta la sesión a tu situación.</p><div class="footer-actions"><p id="resetNote" class="progress-note" role="status" aria-live="polite">Los registros se conservan en este dispositivo.</p><button id="resetAllButton" class="button secondary reset-button" type="button">Reiniciar registros</button></div><p id="updateState" class="update-state" role="status" aria-live="polite">Aplicación y recursos offline: comprobando actualización…</p><span id="appVersion" class="app-version" aria-label="Versión de la aplicación" hidden></span></footer>
   </div>
+  <script type="application/json" id="routineMuscleProfileData">
+    {
+      "labels": {
+        "lats": "dorsal ancho", "upper_back": "espalda alta", "rear_delts": "deltoides posterior", "biceps": "bíceps", "chest": "pecho", "triceps": "tríceps", "front_delts": "deltoides anterior", "side_delts": "deltoides lateral", "quads": "cuádriceps", "glutes": "glúteos", "hamstrings": "isquiosurales", "calves": "pantorrillas", "hip_abductors": "abductores de cadera", "hip_adductors": "aductores de cadera", "abs": "abdominales"
+      },
+      "routines": {
+        "day1": [
+          { "exerciseId": "1", "series": 4, "primary": ["lats"], "secondary": ["biceps"] },
+          { "exerciseId": "2", "series": 4, "primary": ["lats"], "secondary": ["upper_back", "rear_delts", "biceps"] },
+          { "exerciseId": "3", "series": 3, "primary": ["upper_back"], "secondary": ["lats", "rear_delts", "biceps"] },
+          { "exerciseId": "4", "series": 3, "primary": ["rear_delts"], "secondary": ["upper_back"] },
+          { "exerciseId": "5", "series": 3, "primary": ["biceps"], "secondary": [] },
+          { "exerciseId": "6", "series": 3, "primary": ["biceps"], "secondary": [] },
+          { "exerciseId": "7", "series": 3, "primary": ["chest"], "secondary": ["triceps", "front_delts"] }
+        ],
+        "day2": [
+          { "exerciseId": "1", "series": 3, "primary": ["quads"], "secondary": ["glutes", "hip_adductors"] },
+          { "exerciseId": "2", "series": 3, "primary": ["glutes"], "secondary": ["hamstrings", "hip_adductors"] },
+          { "exerciseId": "3", "series": 3, "primary": ["quads"], "secondary": ["glutes", "hip_adductors", "hamstrings"] },
+          { "exerciseId": "4", "series": 4, "primary": ["hamstrings"], "secondary": ["calves"] },
+          { "exerciseId": "5", "series": 4, "primary": ["quads"], "secondary": [] },
+          { "exerciseId": "6", "series": 3, "primary": ["calves"], "secondary": [] },
+          { "exerciseId": "7", "series": 3, "primary": ["hip_abductors"], "secondary": ["glutes"] }
+        ],
+        "day3": [
+          { "exerciseId": "1", "series": 4, "primary": ["chest"], "secondary": ["triceps", "front_delts"] },
+          { "exerciseId": "2", "series": 3, "primary": ["chest"], "secondary": ["front_delts", "triceps"] },
+          { "exerciseId": "3", "series": 3, "primary": ["chest"], "secondary": ["front_delts"] },
+          { "exerciseId": "4", "series": 3, "primary": ["front_delts", "side_delts"], "secondary": ["triceps"] },
+          { "exerciseId": "5", "series": 3, "primary": ["side_delts"], "secondary": [] },
+          { "exerciseId": "6", "series": 3, "primary": ["triceps"], "secondary": [] },
+          { "exerciseId": "7", "series": 3, "primary": ["triceps"], "secondary": [] }
+        ],
+        "day4": [
+          { "exerciseId": "1", "series": 3, "primary": ["quads"], "secondary": ["glutes", "hamstrings"] },
+          { "exerciseId": "2", "series": 3, "primary": ["glutes", "hamstrings"], "secondary": [] },
+          { "exerciseId": "3", "series": 4, "primary": ["hamstrings"], "secondary": ["calves"] },
+          { "exerciseId": "4", "series": 3, "primary": ["hip_abductors"], "secondary": ["glutes"] },
+          { "exerciseId": "5", "series": 3, "primary": ["hip_adductors"], "secondary": [] },
+          { "exerciseId": "6", "series": 3, "primary": ["calves"], "secondary": [] },
+          { "exerciseId": "7", "series": 3, "primary": ["abs"], "secondary": [] }
+        ]
+      }
+    }
+  </script>
   <script>
     const splashPoseArt = document.querySelector('#splashPoseArt');
     const updateNotice = document.querySelector('#updateNotice');
@@ -552,6 +597,12 @@
     const SYNC_TIMEOUT_MS = 20000;
     const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
     const MOTIVATION_RECENT_WINDOW_MS = 7 * MILLISECONDS_PER_DAY;
+    const MUSCLE_VOLUME_LOOKBACK_MS = 7 * MILLISECONDS_PER_DAY;
+    const MUSCLE_RECOVERY_CAUTION_MS = 48 * 60 * 60 * 1000;
+    const INDIRECT_SET_WEIGHT = 0.5;
+    const routineMuscleProfileData = JSON.parse(document.querySelector('#routineMuscleProfileData')?.textContent || '{}');
+    const routineMuscleLabels = routineMuscleProfileData.labels || {};
+    const routineMuscleProfiles = routineMuscleProfileData.routines || {};
     const routineCatalog = [
       { routineId: 'day1', day: 'Día 1', title: 'Tren superior A · espalda y bíceps', summary: 'Espalda y bíceps en máquinas, con press de pecho complementario.', trainingGroup: 'upper', weekFocus: 'Espalda y bíceps', totalExercises: 7, totalSeries: 23, image: './assets/branding/routine-covers/day1.webp', href: './data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html' },
       { routineId: 'day2', day: 'Día 2', title: 'Tren inferior A · cuádriceps y glúteos', summary: 'Cuádriceps y glúteos en máquinas, más isquiosurales, abductores y pantorrilla.', trainingGroup: 'lower', weekFocus: 'Pierna y glúteo', totalExercises: 7, totalSeries: 23, image: './assets/branding/routine-covers/day2.webp', href: './data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html' },
@@ -836,6 +887,102 @@
       });
     }
 
+    function addMuscleVolume(volume, groups, sets, weight = 1) {
+      groups.forEach(group => { volume[group] = (volume[group] || 0) + Number(sets) * weight; });
+    }
+
+    function plannedMuscleVolume(routineId) {
+      const volume = {};
+      (routineMuscleProfiles[routineId] || []).forEach(exercise => {
+        addMuscleVolume(volume, exercise.primary || [], exercise.series, 1);
+        addMuscleVolume(volume, exercise.secondary || [], exercise.series, INDIRECT_SET_WEIGHT);
+      });
+      return volume;
+    }
+
+    function measuredMuscleVolume(history, now = new Date(), lookbackMs = MUSCLE_VOLUME_LOOKBACK_MS) {
+      const start = now.getTime() - lookbackMs;
+      const byRoutine = new Map(routineCatalog.map(routine => [routine.routineId, routine]));
+      const seenSessions = new Set();
+      const volume = {};
+      let reliable = true;
+      let recordedSets = 0;
+      const rows = [...(Array.isArray(history) ? history : [])].sort((a, b) => Number(a.startedAt) - Number(b.startedAt));
+      rows.forEach(session => {
+        const startedAt = Number(session.startedAt) || 0;
+        if (startedAt < start || startedAt > now.getTime() || Number(session.completedSeries) <= 0 || !byRoutine.has(session.routineId)) return;
+        const sessionKey = session.sessionId || `${session.routineId}:${startedAt}`;
+        if (seenSessions.has(sessionKey)) return;
+        seenSessions.add(sessionKey);
+        const completedSeries = Math.max(0, Math.floor(Number(session.completedSeries) || 0));
+        const performance = Array.isArray(session.performance) ? session.performance : [];
+        const profileByExercise = new Map((routineMuscleProfiles[session.routineId] || []).map(item => [String(item.exerciseId), item]));
+        const uniqueSets = new Map();
+        performance.forEach(record => {
+          const exerciseId = String(record?.exerciseId || '').replace(/^e/i, '');
+          const setKey = String(record?.setKey || '');
+          const match = setKey.match(/^e(\d+)s(\d+)$/i);
+          if (!match || match[1] !== exerciseId) { reliable = false; return; }
+          uniqueSets.set(setKey, { record, exerciseId });
+        });
+        if (uniqueSets.size !== completedSeries) reliable = false;
+        uniqueSets.forEach(({ exerciseId }) => {
+          const exercise = profileByExercise.get(exerciseId);
+          if (!exercise) { reliable = false; return; }
+          addMuscleVolume(volume, exercise.primary || [], 1, 1);
+          addMuscleVolume(volume, exercise.secondary || [], 1, INDIRECT_SET_WEIGHT);
+          recordedSets += 1;
+        });
+      });
+      return { volume, reliable, recordedSets };
+    }
+
+    function muscleVolumeTargets(routines) {
+      const target = {};
+      routines.forEach(routine => {
+        const contribution = plannedMuscleVolume(routine.routineId);
+        Object.entries(contribution).forEach(([muscle, sets]) => { target[muscle] = (target[muscle] || 0) + sets; });
+      });
+      return target;
+    }
+
+    function routineCoverageScore(routine, target, actual) {
+      const contribution = plannedMuscleVolume(routine.routineId);
+      const prescribed = Object.values(contribution).reduce((sum, sets) => sum + sets, 0);
+      if (!prescribed) return 0;
+      const useful = Object.entries(contribution).reduce((sum, [muscle, sets]) => {
+        const deficit = Math.max(0, (target[muscle] || 0) - (actual[muscle] || 0));
+        return sum + Math.min(sets, deficit);
+      }, 0);
+      return useful / prescribed;
+    }
+
+    function routineRecentOverlap(routine, recentVolume) {
+      const contribution = plannedMuscleVolume(routine.routineId);
+      const prescribed = Object.values(contribution).reduce((sum, sets) => sum + sets, 0);
+      if (!prescribed) return { ratio: 0, groups: [] };
+      let overlap = 0;
+      const groups = [];
+      Object.entries(contribution).forEach(([muscle, sets]) => {
+        const shared = Math.min(sets, recentVolume[muscle] || 0);
+        if (shared > 0) { overlap += shared; groups.push(muscle); }
+      });
+      return { ratio: overlap / prescribed, groups };
+    }
+
+    function routineDeficitLabels(routine, target, actual) {
+      return Object.entries(plannedMuscleVolume(routine.routineId))
+        .map(([muscle, candidateSets]) => {
+          const planned = target[muscle] || 0;
+          const deficit = Math.max(0, planned - (actual[muscle] || 0));
+          return { muscle, deficit, ratio: planned ? deficit / planned : 0, covered: Math.min(deficit, candidateSets) };
+        })
+        .filter(item => item.covered > 0)
+        .sort((a, b) => b.ratio - a.ratio || b.covered - a.covered)
+        .slice(0, 2)
+        .map(item => routineMuscleLabels[item.muscle] || item.muscle);
+    }
+
     function renderWeeklyTrainingSummary(history = recentSessions, now = new Date(), routinesProgress = []) {
       if (!weekTrainingCount || !weekTrainingPills) return [];
       const sessions = currentWeekTrainingSessions(history, now, routinesProgress);
@@ -900,46 +1047,89 @@
       const sessions = currentWeekTrainingSessions(history, now, routinesProgress);
       const base = routineCatalog.filter(routine => !routine.optional);
       const optional = routineCatalog.find(routine => routine.optional);
-      if (!sessions.length) {
-        const firstFocus = base[0].weekFocus || (base[0].trainingGroup === 'lower' ? 'pierna y glúteo' : 'tren superior');
-        const alternative = base[1] || base[0];
-        const alternativeFocus = alternative.weekFocus || (alternative.trainingGroup === 'lower' ? 'pierna y glúteo' : 'tren superior');
-        return {
-          routine: base[0],
-          reason: `Te recomendamos ${base[0].day} para iniciar la rotación con ${firstFocus.toLowerCase()}. Si prefieres empezar con ${alternativeFocus.toLowerCase()}, también puedes elegir ${alternative.day}.`,
-          planComplete: false,
-        };
+      const detailedHistory = [
+        ...(Array.isArray(history) ? history : []),
+        ...(Array.isArray(routinesProgress) ? routinesProgress.map(routine => ({
+          sessionId: routine.sessionId || '', routineId: routine.routineId, startedAt: routine.sessionStartedAt,
+          completedSeries: routine.doneSeries, totalSeries: routine.totalSeries,
+          status: routine.sessionEndedAt ? 'completed' : 'active',
+          completionKind: routine.sessionEndReason === 'partial' ? 'partial' : routine.sessionEndedAt ? 'complete' : 'active',
+        })) : []),
+      ];
+      const weekComplete = new Set(sessions.filter(session => {
+        const routine = routineCatalog.find(item => item.routineId === session.routineId);
+        return routine && session.status !== 'active' && session.completionKind !== 'partial'
+          && Number(session.completedSeries) >= Number(session.totalSeries || routine.totalSeries);
+      }).map(session => session.routineId));
+      const sevenDayVolume = measuredMuscleVolume(detailedHistory, now);
+      const recentVolume = measuredMuscleVolume(detailedHistory, now, MUSCLE_RECOVERY_CAUTION_MS);
+      const detailedDataAvailable = sevenDayVolume.reliable && recentVolume.reliable && sevenDayVolume.recordedSets > 0;
+      const target = muscleVolumeTargets(base);
+      const actual = sevenDayVolume.volume;
+      const latestLogged = [...detailedHistory]
+        .filter(session => Number(session.completedSeries) > 0
+          && Number(session.startedAt) >= now.getTime() - MUSCLE_VOLUME_LOOKBACK_MS
+          && Number(session.startedAt) <= now.getTime()
+          && base.some(routine => routine.routineId === session.routineId))
+        .sort((a, b) => Number(b.startedAt) - Number(a.startedAt))[0];
+      const latestRoutine = routineCatalog.find(routine => routine.routineId === latestLogged?.routineId);
+      const latestBaseIndex = base.findIndex(routine => routine.routineId === latestRoutine?.routineId);
+      const rotationStart = latestBaseIndex >= 0 ? latestBaseIndex + 1 : 0;
+      const orderedBase = base.map((_, offset) => base[(rotationStart + offset) % base.length]);
+      const pendingBase = orderedBase.filter(routine => !weekComplete.has(routine.routineId));
+
+      if (pendingBase.length) {
+        if (!detailedDataAvailable) {
+          const routine = pendingBase.find(item => latestRoutine && item.trainingGroup !== latestRoutine.trainingGroup) || pendingBase[0];
+          return {
+            routine,
+            reason: `Te recomendamos ${routine.day} para continuar el plan. Faltan registros detallados por ejercicio para comparar el volumen muscular; si hoy no te viene bien, también recomendamos descansar y retomarlo después.`,
+            planComplete: false,
+            dataQuality: 'fallback',
+          };
+        }
+        const ranked = pendingBase.map((routine, order) => ({
+          routine,
+          order,
+          coverage: routineCoverageScore(routine, target, actual),
+          recent: routineRecentOverlap(routine, recentVolume.volume),
+        })).sort((a, b) => b.coverage - a.coverage || a.recent.ratio - b.recent.ratio || a.order - b.order);
+        const selected = ranked[0];
+        const deficitLabels = routineDeficitLabels(selected.routine, target, actual);
+        const reason = deficitLabels.length
+          ? `Te recomendamos ${selected.routine.day} porque es el día pendiente que mejor cubre los grupos con menos series registradas en los últimos 7 días: ${deficitLabels.join(' y ')}.`
+          : `Te recomendamos ${selected.routine.day} para continuar el volumen previsto en el plan base.`;
+        const overlapLabels = selected.recent.groups.map(group => routineMuscleLabels[group] || group);
+        const alternative = overlapLabels.length
+          ? ` En las últimas 48 horas también hay solapamiento registrado en ${overlapLabels.slice(0, 2).join(' y ')}; si prefieres espaciarlo, también recomendamos descansar y retomarlo después.`
+          : ' Si hoy no te viene bien, también recomendamos descansar y retomarlo después.';
+        return { routine: selected.routine, reason: reason + alternative, planComplete: false, dataQuality: 'measured' };
       }
 
-      const completedIds = new Set(sessions.map(session => session.routineId));
-      const latest = sessions[sessions.length - 1];
-      const latestRoutine = routineCatalog.find(routine => routine.routineId === latest.routineId);
-      const latestBaseIndex = base.findIndex(routine => routine.routineId === latest.routineId);
-      const orderedBase = base.map((_, offset) => base[(latestBaseIndex + offset + 1 + base.length) % base.length]);
-      const pendingBase = orderedBase.filter(routine => !completedIds.has(routine.routineId));
-      const alternatingBase = pendingBase.find(routine => routine.trainingGroup !== latestRoutine?.trainingGroup);
-      if (alternatingBase || pendingBase.length) {
-        const routine = alternatingBase || pendingBase[0];
-        const alternates = routine.trainingGroup !== latestRoutine?.trainingGroup;
-        const reason = alternates
-          ? `Te recomendamos ${routine.day} porque alterna tren ${latestRoutine?.trainingGroup === 'lower' ? 'inferior' : 'superior'} con tren ${routine.trainingGroup === 'lower' ? 'inferior' : 'superior'}. Si hoy no te viene bien, también recomendamos descansar y retomarla cuando estés recuperado.`
-          : `Te recomendamos ${routine.day} como siguiente rutina base; considera recuperar antes de repetir tren ${routine.trainingGroup === 'lower' ? 'inferior' : 'superior'}. Si hoy no estás listo, también recomendamos descansar y retomarla después.`;
-        return { routine, reason, planComplete: false };
-      }
-
-      const baseComplete = base.every(routine => completedIds.has(routine.routineId));
-      if (baseComplete && optional && !completedIds.has(optional.routineId)) {
-        const recoverySuggested = latestRoutine?.trainingGroup === optional.trainingGroup;
+      if (optional && !weekComplete.has(optional.routineId)) {
+        const overlap = detailedDataAvailable
+          ? routineRecentOverlap(optional, recentVolume.volume)
+          : latestRoutine?.trainingGroup === optional.trainingGroup ? { ratio: 1, groups: [] } : { ratio: 0, groups: [] };
+        const overlapLabels = overlap.groups.map(group => routineMuscleLabels[group] || group);
+        const recoverySuggested = overlap.ratio > 0 || overlapLabels.length > 0;
+        const coarseOverlap = recoverySuggested && !detailedDataAvailable;
         return {
           routine: optional,
           reason: recoverySuggested
-            ? `Te recomendamos recuperar antes de hacer ${optional.day}, porque tu última sesión también trabajó tren inferior. Si ya te sientes recuperado, puedes elegir el día opcional de posterior y core.`
-            : `Te recomendamos ${optional.day} porque ya registraste las tres sesiones base y añade trabajo opcional de posterior y core. Si prefieres no sumar una cuarta rutina, también recomendamos descansar y empezar el siguiente ciclo con ${base[0].day}.`,
+            ? coarseOverlap
+              ? `Te recomendamos recuperar antes de ${optional.day}, porque tu última rutina también fue de tren inferior. Si ya quieres añadir el día opcional de posterior y core, puedes elegirlo cuando prefieras; esa coincidencia es solo orientativa.`
+              : `Te recomendamos recuperar antes de ${optional.day}: tu registro reciente se solapa en ${overlapLabels.slice(0, 2).join(' y ')}. Si ya quieres añadir el día opcional de posterior y core, puedes elegirlo cuando prefieras. El solapamiento es una señal orientativa, no una medición de recuperación.`
+            : `Te recomendamos ${optional.day} porque ya completaste las tres sesiones base y añade trabajo opcional de posterior y core. Si prefieres no sumar una cuarta rutina, también recomendamos descansar y comenzar el siguiente ciclo con ${base[0].day}.`,
           planComplete: false,
           recoverySuggested,
+          dataQuality: detailedDataAvailable ? 'measured' : 'fallback',
         };
       }
-      return { routine: base[0], reason: `Ya completaste las tres rutinas base y el día opcional. Te recomendamos recuperación; para el siguiente ciclo, también recomendamos empezar con ${base[0].day}.`, planComplete: true };
+      return {
+        routine: base[0],
+        reason: `Ya completaste las tres rutinas base y el día opcional. Te recomendamos recuperación; para el siguiente ciclo, también recomendamos empezar con ${base[0].day}.`,
+        planComplete: true,
+      };
     }
 
     function renderNextSession(dashboard, history = recentSessions, now = new Date()) {
