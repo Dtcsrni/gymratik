@@ -130,7 +130,7 @@ button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gra
 .summaryActivityStatus.isResting .summaryActivityIndicator{background:#ffd277;box-shadow:0 0 .55rem #ffd277;animation:restSlowPulse 2.4s ease-in-out infinite}
 .summaryActivityStatus.isActive .summaryActivityIndicator{background:#65f2dd;box-shadow:0 0 .55rem #65f2dd;animation:activityFastPulse .68s ease-in-out infinite}
 .summaryActivityStatus.isPreparing .summaryActivityIndicator{background:#72dcff;box-shadow:0 0 .55rem #72dcff;animation:preparationPulse 1.3s ease-in-out infinite}
-.summaryMascotWrap{position:relative;grid-column:3;grid-row:1/3;display:grid;width:68px;height:68px;place-items:center;align-self:center;overflow:visible;border:1px solid rgba(155,222,241,.24);border-radius:1rem;background:radial-gradient(circle at 50% 75%,rgba(23,91,105,.42),rgba(6,21,31,.68) 72%);box-shadow:inset 0 0 16px rgba(101,242,221,.08)}
+.summaryMascotWrap{position:relative;grid-column:3;grid-row:1/3;display:grid;width:68px;height:68px;place-items:center;align-self:center;overflow:visible;border:0;border-radius:0;background:transparent;box-shadow:none}
 #summaryActivityMascot{display:block;width:70px;height:70px;object-fit:contain;transform-origin:50% 82%;transition:filter .2s ease;image-rendering:auto}
 #summaryToggle.isResting #summaryActivityMascot{filter:drop-shadow(0 0 8px rgba(255,210,119,.36))}
 #summaryToggle.isActive #summaryActivityMascot{filter:drop-shadow(0 0 8px rgba(101,242,221,.3))}
@@ -143,7 +143,7 @@ button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gra
 #summaryActivityMascot[data-motion="mobility"]{animation:mascotMobilityFlow 2.4s cubic-bezier(.4,0,.6,1) infinite}
 #summaryActivityMascot[data-motion="rest"]{animation:mascotRecoveryBreath 3.6s ease-in-out infinite}
 #summaryActivityMascot[data-motion="celebration"]{animation:mascotApprovalCelebrate 1.8s cubic-bezier(.2,.8,.2,1) infinite;filter:drop-shadow(0 0 9px rgba(255,220,116,.85))}
-.summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"]){border-color:rgba(255,220,116,.8);background:rgba(122,81,21,.28);box-shadow:0 0 18px rgba(255,220,116,.35)}
+.summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"]){border:0;border-radius:0;background:transparent;box-shadow:none}
 .summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"])::before,.summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"])::after{position:absolute;z-index:2;color:#ffe18a;font-size:14px;line-height:1;pointer-events:none;animation:mascotSparkle .9s ease-in-out infinite alternate}
 .summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"])::before{content:"✦";top:-5px;right:-4px}
 .summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"])::after{content:"✧";bottom:-3px;left:-4px;animation-delay:.3s}
@@ -670,6 +670,9 @@ REST_TIMING_DISPLAY_CONTRACT = '''  const renderTimingDisplays = () => {
       activityButton.classList.toggle('isPreparing', displayActivity.kind === 'preparing');
       activityButton.classList.toggle('isApproximation', displayActivity.kind === 'approximation');
       activityButton.classList.toggle('isComplete', displayActivity.kind === 'complete');
+      activityButton.classList.toggle('isReady', displayActivity.kind === 'ready');
+      activityButton.classList.toggle('isWaiting', displayActivity.kind === 'start');
+      activityButton.dataset.activity = displayActivity.kind;
       if (activityIcon) activityIcon.textContent = displayActivity.kind === 'complete' ? '🎉' : displayActivity.kind === 'start' ? '🚀' : displayActivity.kind === 'ready' ? '✨' : displayActivity.kind === 'rest' ? '⏳' : displayActivity.kind === 'cardio' ? '🏃' : displayActivity.kind === 'strength' ? '🏋️' : displayActivity.kind === 'approximation' ? '⚖️' : displayActivity.kind === 'mobility' ? '↔' : displayActivity.kind === 'preparing' ? '◷' : '📋';
     }
   };'''
@@ -2343,9 +2346,9 @@ SUMMARY_NAVIGATION_STYLE = '''<style data-enhancement="summary-free-navigation-v
 .sessionSummaryList{max-height:min(24dvh,168px)!important;overflow-y:auto!important;overscroll-behavior:contain!important;touch-action:pan-y!important;-webkit-overflow-scrolling:touch!important;scrollbar-gutter:stable}
 #floatingSessionSummary .sessionSummaryList{max-height:150px!important}
 #floatingSessionSummary{overflow:visible!important}
-#summaryToggle{position:relative!important;grid-template-columns:auto minmax(0,1fr) 68px auto!important;min-height:68px!important;overflow:visible!important}
-.summaryMascotWrap{position:absolute!important;z-index:3;top:-10px;right:24px;width:84px!important;height:84px!important;overflow:visible!important}.summaryMascotWrap #summaryActivityMascot{width:80px!important;height:80px!important}
-@media(max-width:380px){#summaryToggle{grid-template-columns:auto minmax(0,1fr) 60px auto!important}.summaryMascotWrap{top:-8px;right:21px;width:74px!important;height:74px!important}.summaryMascotWrap #summaryActivityMascot{width:70px!important;height:70px!important}}
+#summaryToggle{position:relative!important;grid-template-columns:auto minmax(0,1fr) 96px auto!important;min-height:68px!important;overflow:visible!important}
+.summaryMascotWrap{position:absolute!important;z-index:3;top:-14px;right:24px;width:96px!important;height:96px!important;overflow:visible!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}.summaryMascotWrap #summaryActivityMascot{width:94px!important;height:94px!important;object-fit:contain!important}
+@media(max-width:380px){#summaryToggle{grid-template-columns:auto minmax(0,1fr) 72px auto!important}.summaryMascotWrap{top:-12px;right:18px;width:86px!important;height:86px!important}.summaryMascotWrap #summaryActivityMascot{width:84px!important;height:84px!important}}
 @media(max-height:420px) and (max-width:900px){#floatingSessionSummary .sessionSummaryList{max-height:78px!important;gap:.12rem!important}}
 </style>'''
 
@@ -2735,10 +2738,12 @@ def standardize_muscle_visuals(source: str) -> str:
         const startAt = now + delay;
         const oscillator = audioContext.createOscillator();
         const envelope = audioContext.createGain();
+        // Duplica la amplitud (+6 dB aprox.) con margen para evitar picos excesivos.
+        const peakGain = Math.min(.09, gain * 2);
         oscillator.type = type === 'cardio' ? 'triangle' : 'sine';
         oscillator.frequency.setValueAtTime(frequency, startAt);
         envelope.gain.setValueAtTime(.0001, startAt);
-        envelope.gain.exponentialRampToValueAtTime(gain, startAt + .022);
+        envelope.gain.exponentialRampToValueAtTime(peakGain, startAt + .022);
         envelope.gain.exponentialRampToValueAtTime(.0001, startAt + duration);
         oscillator.connect(envelope).connect(audioContext.destination);
         oscillator.start(startAt);

@@ -935,6 +935,29 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertIn("button:not(:disabled):active", source)
                 self.assertNotIn("Number(item.performanceReps.value) > 0 ?", source)
 
+    def test_floating_mascot_is_larger_and_has_no_square_frame_on_every_day(self) -> None:
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            with self.subTest(routine=path.name):
+                source = path.read_text(encoding="utf-8")
+                style_match = re.search(
+                    r'<style data-enhancement="uniform-mobile-exercise-layout-v1">(.*?)</style>',
+                    source,
+                    re.S,
+                )
+                self.assertIsNotNone(style_match)
+                style = style_match.group(1)
+                self.assertIn("width:96px!important;height:96px!important", style)
+                self.assertIn("width:94px!important;height:94px!important", style)
+                self.assertIn("border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important", style)
+                self.assertIn("width:86px!important;height:86px!important", style)
+                self.assertIn("width:84px!important;height:84px!important", style)
+                for activity in ("start", "ready", "rest", "preparing", "approximation", "strength", "cardio", "mobility", "complete"):
+                    self.assertIn(f'#summaryToggle[data-activity="{activity}"]::after', style)
+                self.assertIn("activityButton.dataset.activity = displayActivity.kind;", source)
+                self.assertIn("activityButton.classList.toggle('isReady', displayActivity.kind === 'ready');", source)
+                self.assertIn("activityButton.classList.toggle('isWaiting', displayActivity.kind === 'start');", source)
+                self.assertIn("@media(prefers-reduced-motion:reduce){#summaryToggle::after", style)
+
     def test_all_26_exercises_have_explicit_orientative_load_profiles(self) -> None:
         source = (ROOT / "scripts" / "standardize_muscle_visuals.py").read_text(encoding="utf-8")
         profile_start = source.index("    load_profile_block = \"\"\"")
@@ -1375,6 +1398,8 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 self.assertIn('id="hapticsToggle"', source)
                 self.assertEqual(source.count('id="hapticsToggle"'), 1)
                 self.assertIn("exponentialRampToValueAtTime", source)
+                self.assertIn("const peakGain = Math.min(.09, gain * 2);", source)
+                self.assertIn("exponentialRampToValueAtTime(peakGain, startAt + .022)", source)
                 for cue in expected_cues:
                     self.assertIn(f"{cue}:", source)
 

@@ -496,8 +496,8 @@ MOBILE_SUMMARY_REDESIGN = r'''<style data-enhancement="mobile-summary-layout-v1"
   #summaryToggle{grid-template-columns:auto minmax(0,1fr) 88px auto!important;grid-template-rows:auto auto!important;min-height:78px!important;gap:.12rem .42rem!important;padding:.36rem .52rem!important;overflow:visible!important}
   #summaryToggle #summaryHeadline{grid-column:2;grid-row:1;font-size:.7rem!important;line-height:1.15!important}
   #summaryToggle #summaryActivityHeadline{grid-column:2;grid-row:2;display:block!important;font-size:.62rem!important;line-height:1.1!important}
-  #summaryToggle .summaryMascotWrap{grid-column:3;grid-row:1/3!important;width:86px!important;height:86px!important;border-radius:.78rem!important;overflow:visible!important;transform:translateY(-8px)}
-  #summaryToggle #summaryActivityMascot{width:82px!important;height:82px!important}
+  #summaryToggle .summaryMascotWrap{grid-column:3;grid-row:1/3!important;width:96px!important;height:96px!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;transform:translateY(-10px)}
+  #summaryToggle #summaryActivityMascot{width:94px!important;height:94px!important;object-fit:contain!important}
   #summaryToggle .summaryChevron{grid-column:4;grid-row:1/3!important;font-size:.85rem!important}
   #summaryToggle.isResting{background:linear-gradient(105deg,rgba(112,79,21,.94),rgba(83,61,29,.94))!important}
   #summaryToggle.isActive{background:linear-gradient(105deg,rgba(19,105,91,.94),rgba(19,73,72,.94))!important}
@@ -505,8 +505,8 @@ MOBILE_SUMMARY_REDESIGN = r'''<style data-enhancement="mobile-summary-layout-v1"
   #summaryToggle.isComplete{background:linear-gradient(105deg,rgba(112,79,21,.94),rgba(72,51,80,.94))!important}
   #summaryToggle[aria-expanded="true"]{grid-template-rows:auto auto!important;min-height:54px!important}
   #summaryToggle[aria-expanded="true"] #summaryActivityHeadline{display:block!important}
-  #summaryToggle[aria-expanded="true"] .summaryMascotWrap{width:86px!important;height:86px!important}
-  #summaryToggle[aria-expanded="true"] #summaryActivityMascot{width:82px!important;height:82px!important}
+  #summaryToggle[aria-expanded="true"] .summaryMascotWrap{width:96px!important;height:96px!important}
+  #summaryToggle[aria-expanded="true"] #summaryActivityMascot{width:94px!important;height:94px!important}
   #summaryToggle[aria-expanded="true"] ~ #summaryBody{display:flex!important;max-height:min(35dvh,190px)!important;min-height:0!important;padding:.28rem .42rem .36rem!important;gap:.2rem!important;overflow:hidden!important}
   #summaryToggle[aria-expanded="true"] ~ #summaryBody .summaryTotals,
   #summaryToggle[aria-expanded="true"] ~ #summaryBody .summaryActivityStatus,
@@ -515,7 +515,7 @@ MOBILE_SUMMARY_REDESIGN = r'''<style data-enhancement="mobile-summary-layout-v1"
   #summaryToggle[aria-expanded="true"] + #summaryBody #summaryElapsed{display:none!important}
   #floatingSessionSummary .summaryFocusBadge{margin:0!important;padding:.14rem .34rem!important;font-size:.51rem!important;line-height:1.12!important}
   #summaryActivityMascot[data-motion="celebration"]{filter:drop-shadow(0 0 12px rgba(255,82,102,.92))}
-  .summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"]){border-color:rgba(255,93,111,.92)!important;background:rgba(130,28,51,.38)!important;box-shadow:0 0 22px rgba(255,55,88,.5)!important}
+  .summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"]){border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
   #floatingSessionSummary .sessionSummaryList{flex:1 1 auto!important;min-height:min(132px,24dvh)!important;max-height:min(28dvh,164px)!important}
   main.cards article.card .phaseRow{grid-template-columns:minmax(0,1fr)!important;gap:.55rem!important;align-items:stretch!important}
   main.cards article.card .phaseRow>.phaseCol{min-width:0!important;width:100%!important}
@@ -523,7 +523,7 @@ MOBILE_SUMMARY_REDESIGN = r'''<style data-enhancement="mobile-summary-layout-v1"
   main.cards article.card .phaseRow .source{min-width:0!important;max-width:100%!important;word-break:normal!important;overflow-wrap:anywhere!important;hyphens:auto}
   main.cards article.card .phaseRow .swap{justify-self:center!important;align-self:center!important;margin:.1rem 0!important;transform:rotate(90deg)!important}
 }
-@media(max-width:380px){#summaryToggle{grid-template-columns:auto minmax(0,1fr) 80px auto!important}#summaryToggle .summaryMascotWrap,#summaryToggle[aria-expanded="true"] .summaryMascotWrap{width:78px!important;height:78px!important}#summaryToggle #summaryActivityMascot,#summaryToggle[aria-expanded="true"] #summaryActivityMascot{width:74px!important;height:74px!important}}
+@media(max-width:380px){#summaryToggle{grid-template-columns:auto minmax(0,1fr) 72px auto!important}#summaryToggle .summaryMascotWrap,#summaryToggle[aria-expanded="true"] .summaryMascotWrap{width:86px!important;height:86px!important}#summaryToggle #summaryActivityMascot,#summaryToggle[aria-expanded="true"] #summaryActivityMascot{width:84px!important;height:84px!important}}
 @media(max-width:360px){.performanceRepsControl{grid-template-columns:40px minmax(0,1fr) 40px!important;gap:.25rem!important}.performanceRepsNudge{min-width:40px!important;min-height:44px!important}.performanceFieldTitleRow{flex-wrap:wrap!important;justify-content:flex-start!important;gap:.25rem .4rem!important}.performanceFieldLabel{flex:1 1 120px!important;flex-wrap:wrap!important}.performanceRequired{margin-left:26px!important}}
 @media(prefers-reduced-motion:reduce){#floatingSessionSummary,#summaryToggle{scroll-behavior:auto!important;transition:none!important}}
 </style>'''
@@ -533,8 +533,32 @@ UNIFORM_MOBILE_EXERCISE_LAYOUT = r'''<style data-enhancement="uniform-mobile-exe
 /* Flujo móvil uniforme: encabezado, referencia visual y controles. */
 #floatingSessionSummary{overflow:visible!important}
 #summaryToggle{position:relative!important;grid-template-columns:auto minmax(0,1fr) 68px auto!important;min-height:68px!important;overflow:visible!important}
-#summaryToggle .summaryMascotWrap{position:absolute!important;z-index:3;top:-10px;right:24px;width:84px!important;height:84px!important;overflow:visible!important}
-#summaryToggle #summaryActivityMascot{width:80px!important;height:80px!important}
+#summaryToggle .summaryMascotWrap{position:absolute!important;z-index:3;top:-14px;right:24px;width:96px!important;height:96px!important;overflow:visible!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+#summaryToggle #summaryActivityMascot{width:94px!important;height:94px!important;object-fit:contain!important}
+#summaryToggle .summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"]){border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+#summaryToggle{isolation:isolate}
+#summaryToggle>*{position:relative;z-index:1}
+#summaryToggle::before{position:relative;z-index:1}
+#summaryToggle::after{position:absolute;z-index:0;inset:0;content:"";border-radius:inherit;opacity:.08;transform:scaleX(.24);transform-origin:left center;pointer-events:none;background:linear-gradient(105deg,transparent 0%,rgba(114,220,255,.5) 48%,rgba(101,242,221,.12) 72%,transparent 100%)}
+#summaryToggle[data-activity="start"]::after{animation:summaryBarWaiting 5.2s ease-in-out infinite}
+#summaryToggle[data-activity="ready"]::after{background-image:linear-gradient(105deg,transparent 0%,rgba(114,220,255,.56) 48%,rgba(101,242,221,.14) 72%,transparent 100%);animation:summaryBarReady 3.8s ease-in-out infinite}
+#summaryToggle[data-activity="rest"]::after{background-image:linear-gradient(105deg,transparent 0%,rgba(255,210,119,.62) 45%,rgba(255,164,82,.18) 72%,transparent 100%);animation:summaryBarRest 3.2s ease-in-out infinite}
+#summaryToggle[data-activity="preparing"]::after{background-image:linear-gradient(105deg,transparent 0%,rgba(114,220,255,.72) 45%,rgba(194,164,255,.22) 72%,transparent 100%);animation:summaryBarPreparing 1.35s ease-in-out infinite}
+#summaryToggle[data-activity="approximation"]::after{background-image:linear-gradient(105deg,transparent 0%,rgba(101,242,221,.68) 45%,rgba(114,220,255,.22) 72%,transparent 100%);animation:summaryBarWarmup 2.1s ease-in-out infinite}
+#summaryToggle[data-activity="strength"]::after{background-image:linear-gradient(105deg,transparent 0%,rgba(101,242,221,.76) 45%,rgba(114,220,255,.22) 72%,transparent 100%);animation:summaryBarStrength 1.1s ease-in-out infinite}
+#summaryToggle[data-activity="cardio"]::after{background-image:linear-gradient(105deg,transparent 0%,rgba(114,220,255,.78) 45%,rgba(101,242,221,.2) 72%,transparent 100%);animation:summaryBarCardio .72s ease-in-out infinite}
+#summaryToggle[data-activity="mobility"]::after{background-image:linear-gradient(105deg,transparent 0%,rgba(101,242,221,.62) 45%,rgba(114,220,255,.2) 72%,transparent 100%);animation:summaryBarMobility 2.6s ease-in-out infinite}
+#summaryToggle[data-activity="complete"]::after{background-image:linear-gradient(105deg,transparent 0%,rgba(255,82,102,.72) 45%,rgba(255,220,116,.3) 72%,transparent 100%);animation:summaryBarComplete 2.2s ease-in-out infinite}
+@keyframes summaryBarWaiting{0%,100%{opacity:.06;transform:scaleX(.22)}50%{opacity:.2;transform:scaleX(.58)}}
+@keyframes summaryBarReady{0%,100%{opacity:.08;transform:scaleX(.28)}50%{opacity:.24;transform:scaleX(.72)}}
+@keyframes summaryBarRest{0%,100%{opacity:.1;transform:scaleX(.38)}50%{opacity:.28;transform:scaleX(.82)}}
+@keyframes summaryBarPreparing{0%,100%{opacity:.1;transform:scaleX(.08)}55%{opacity:.34;transform:scaleX(1)}}
+@keyframes summaryBarWarmup{0%,100%{opacity:.1;transform:translateX(-5%) scaleX(.82)}50%{opacity:.3;transform:translateX(5%) scaleX(.92)}}
+@keyframes summaryBarStrength{0%,100%{opacity:.1;transform:translateX(-9px) scaleX(.84)}50%{opacity:.34;transform:translateX(9px) scaleX(.96)}}
+@keyframes summaryBarCardio{0%,100%{opacity:.08;transform:translateX(-13px) scaleX(.82)}50%{opacity:.38;transform:translateX(13px) scaleX(1)}}
+@keyframes summaryBarMobility{0%,100%{opacity:.1;transform:translateX(5px) scaleX(.84)}50%{opacity:.26;transform:translateX(-5px) scaleX(.92)}}
+@keyframes summaryBarComplete{0%,100%{opacity:.1;transform:scaleX(.3)}45%{opacity:.34;transform:scaleX(1)}}
+@media(prefers-reduced-motion:reduce){#summaryToggle::after{animation:none!important;opacity:.12!important;transform:none!important}}
 @media(max-width:820px){
   main.cards article.card{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:10px!important;min-height:0!important;padding:14px!important}
   main.cards article.card>.meta{display:flex!important;flex:0 0 auto!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:7px!important;width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;order:1!important}
@@ -556,7 +580,7 @@ UNIFORM_MOBILE_EXERCISE_LAYOUT = r'''<style data-enhancement="uniform-mobile-exe
   main.cards article.card .exerciseTracker{margin:0!important}
   main.cards article.card .techAccordion{margin:0!important}
 }
-@media(max-width:380px){#summaryToggle{grid-template-columns:auto minmax(0,1fr) 60px auto!important}#summaryToggle .summaryMascotWrap{top:-8px;right:21px;width:74px!important;height:74px!important}#summaryToggle #summaryActivityMascot{width:70px!important;height:70px!important}}
+@media(max-width:380px){#summaryToggle{grid-template-columns:auto minmax(0,1fr) 72px auto!important}#summaryToggle .summaryMascotWrap{top:-12px;right:18px;width:86px!important;height:86px!important}#summaryToggle #summaryActivityMascot{width:84px!important;height:84px!important}}
 @media(max-width:380px){main.cards article.card{gap:8px!important;padding:12px!important}main.cards article.card>.coach{gap:7px!important;padding:10px!important}}
 @media(prefers-reduced-motion:reduce){main.cards article.card{scroll-behavior:auto}}
 </style>'''
