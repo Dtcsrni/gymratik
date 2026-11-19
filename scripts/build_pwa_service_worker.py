@@ -12,6 +12,9 @@ from pathlib import Path, PurePosixPath
 ROOT = Path(__file__).resolve().parents[1]
 CANONICAL_DIR = ROOT / "data" / "rutinas_autocontenidas" / "canonicas"
 OUTPUT = ROOT / "sw.js"
+APP_VERSION_FILE = ROOT / "app-version.json"
+RELEASE_MANIFEST_FILE = ROOT / "release-manifest.json"
+RELEASE_MANIFEST_PATH = "./release-manifest.json"
 ROUTINE_FILES = (
     "Rutina_Dia_1_Espalda_Biceps_V1.html",
     "Rutina_Dia_2_Pierna_Gluteo_V1.html",
@@ -182,6 +185,7 @@ def build_precache() -> list[str]:
     base = [
         "./",
         "./index.html",
+        RELEASE_MANIFEST_PATH,
         "./records.html",
         "./records.css",
         "./records.js",
@@ -232,6 +236,35 @@ def build_precache() -> list[str]:
     return base + routines + sorted(resources - set(base + routines))
 
 
+def release_manifest(resources: list[str]) -> dict:
+    """Construye metadatos deterministas para preparar recursos por hash."""
+    try:
+        version_data = json.loads(APP_VERSION_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise SystemExit(f"No se pudo leer {APP_VERSION_FILE.name}: {error}") from error
+    version = version_data.get("version") if isinstance(version_data, dict) else None
+    if not isinstance(version, str) or not re.fullmatch(r"\d+\.\d+\.\d+", version):
+        raise SystemExit("app-version.json debe contener una versión semántica estable: X.Y.Z")
+    entries = []
+    for resource in resources:
+        if resource == RELEASE_MANIFEST_PATH:
+            continue
+        target = ROOT / Path(resource.removeprefix("./"))
+        if target.is_dir():
+            target = target / "index.html"
+        content = fingerprint_content(target)
+        entries.append({"url": resource, "sha256": hashlib.sha256(content).hexdigest(), "size": len(content)})
+    generator_digest = hashlib.sha256(fingerprint_content(Path(__file__))).hexdigest()
+    identity = json.dumps({"version": version, "generatorSha256": generator_digest, "resources": entries}, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return {"schemaVersion": 1, "version": version, "buildId": hashlib.sha256(identity).hexdigest()[:16], "generatorSha256": generator_digest, "resources": entries}
+
+
+def write_release_manifest(resources: list[str]) -> dict:
+    manifest = release_manifest(resources)
+    RELEASE_MANIFEST_FILE.write_text(json.dumps(manifest, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8", newline="\n")
+    return manifest
+
+
 def fingerprint_content(target: Path) -> bytes:
     content = target.read_bytes()
     if target.suffix.lower() in TEXT_RESOURCE_SUFFIXES:
@@ -268,6 +301,17 @@ def update_resource_estimate(resources: list[str]) -> None:
     )
     if count != 1:
         raise SystemExit("Se esperaba exactamente un meta de estimación de recursos en index.html")
+    version_data = json.loads(APP_VERSION_FILE.read_text(encoding="utf-8"))
+    version = version_data["version"]
+    updated, label_count = re.subn(
+        r'(<a class="brand" href="\./" aria-label="Gymratik v)\d+\.\d+\.\d+(, inicio">.*?<span class="brand-version" aria-label="Versión )\d+\.\d+\.\d+(">)v\d+\.\d+\.\d+(</span>)',
+        lambda match: f"{match.group(1)}{version}{match.group(2)}{version}{match.group(3)}v{version}{match.group(4)}",
+        updated,
+        count=1,
+        flags=re.S,
+    )
+    if label_count != 1:
+        raise SystemExit("No se pudo sincronizar la versión visible en la marca de Gymratik")
     html_path.write_text(updated, encoding="utf-8", newline="\n")
 
 
@@ -290,9 +334,16 @@ def render(resources: list[str]) -> str:
         resource: resource_size(ROOT / Path(resource.removeprefix("./")))
         for resource in resources
     }
+    release = json.loads(RELEASE_MANIFEST_FILE.read_text(encoding="utf-8"))
+    release_resources = json.dumps(release["resources"], ensure_ascii=False, separators=(",", ":"))
     size_map = ",\n  ".join(f"{resource!r}: {size}" for resource, size in sizes.items())
     return rf"""const CACHE_NAME = 'entrenamiento-pwa-{fingerprint}';
 const PREVIOUS_CACHE_NAME = '{previous_cache}';
+const APP_VERSION = {json.dumps(release['version'])};
+const BUILD_ID = {json.dumps(release['buildId'])};
+const GENERATOR_SHA256 = {json.dumps(release['generatorSha256'])};
+const RELEASE_MANIFEST_PATH = {json.dumps(RELEASE_MANIFEST_PATH)};
+const RELEASE_RESOURCES = new Map({release_resources}.map((entry) => [entry.url, entry]));
 const PRECACHE = [
   {precache}
 ];
@@ -304,9 +355,9 @@ const CACHE_COMPLETE_KEY = new URL('./__gymratik_complete__', self.registration.
 
 async function reportProgress(completed, bytesCompleted, current = '') {{
   const clients = await self.clients.matchAll({{ type: 'window', includeUncontrolled: true }});
-  const totalBytes = Object.values(RESOURCE_BYTES).reduce((sum, size) => sum + size, 0);
+  const totalBytes = self.__gymratikTransferTotalBytes ?? Object.values(RESOURCE_BYTES).reduce((sum, size) => sum + size, 0);
   clients.forEach((client) => client.postMessage({{
-    type: 'PRECACHE_PROGRESS', cacheName: CACHE_NAME, completed,
+    type: 'PRECACHE_PROGRESS', cacheName: CACHE_NAME, version: APP_VERSION, buildId: BUILD_ID, completed,
     total: PRECACHE.length, bytesCompleted, totalBytes, current
   }}));
 }}
@@ -343,7 +394,7 @@ async function preserveOneCompleteCache() {{
 async function notifyClientsAppUpdated() {{
   const updatedAt = Date.now();
   const clients = await self.clients.matchAll({{ type: 'window', includeUncontrolled: true }});
-  clients.forEach((client) => client.postMessage({{ type: 'APP_UPDATED', updatedAt, cacheName: CACHE_NAME }}));
+  clients.forEach((client) => client.postMessage({{ type: 'APP_UPDATED', updatedAt, cacheName: CACHE_NAME, version: APP_VERSION, buildId: BUILD_ID }}));
 }}
 
 self.addEventListener('install', (event) => {{
@@ -353,26 +404,67 @@ self.addEventListener('install', (event) => {{
       let completed = 0;
       let bytesCompleted = 0;
       try {{
+        const previous = PREVIOUS_CACHE_NAME ? await caches.open(PREVIOUS_CACHE_NAME) : null;
+        const previousMarker = previous ? await previous.match(CACHE_COMPLETE_KEY) : null;
+        const previousComplete = Boolean(previousMarker);
+        const reusable = new Map();
+        const manifestPath = RELEASE_MANIFEST_PATH;
+        const installResources = PRECACHE.filter((path) => path !== manifestPath);
+        let transferTotalBytes = RESOURCE_BYTES[manifestPath] || 0;
+        for (const path of installResources) {{
+          const entry = RELEASE_RESOURCES.get(path);
+          if (!entry) throw new Error(`Falta metadata de integridad para ${{path}}`);
+          const cached = previousComplete ? await previous.match(new URL(path, self.registration.scope)) : null;
+          if (cached) {{
+            const bytes = await cached.clone().arrayBuffer();
+            const digest = await crypto.subtle.digest('SHA-256', bytes);
+            const hex = [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+            if (bytes.byteLength === entry.size && hex === entry.sha256) reusable.set(path, cached);
+          }}
+          if (!reusable.has(path)) transferTotalBytes += entry.size;
+        }}
+        self.__gymratikTransferTotalBytes = transferTotalBytes;
         await reportProgress(completed, bytesCompleted);
+        const manifestResponse = await fetch(new Request(manifestPath, {{ cache: 'reload' }}));
+        if (!manifestResponse.ok) throw new Error(`No se pudo validar el manifiesto de versión (${{manifestResponse.status}})`);
+        const manifestBytes = await manifestResponse.clone().arrayBuffer();
+        if (manifestBytes.byteLength !== RESOURCE_BYTES[manifestPath]) throw new Error('El tamaño del manifiesto publicado no coincide con la versión verificada');
+        const manifest = await manifestResponse.clone().json();
+        const expectedResources = [...RELEASE_RESOURCES.values()];
+        const manifestMatches = manifest?.schemaVersion === 1 && manifest.version === APP_VERSION && manifest.buildId === BUILD_ID && manifest.generatorSha256 === GENERATOR_SHA256
+          && Array.isArray(manifest.resources) && manifest.resources.length === expectedResources.length
+          && manifest.resources.every((entry, index) => entry.url === expectedResources[index].url && entry.sha256 === expectedResources[index].sha256 && entry.size === expectedResources[index].size);
+        if (!manifestMatches) throw new Error('El manifiesto publicado no coincide con la versión verificada del Service Worker');
+        await cache.put(new URL(manifestPath, self.registration.scope), manifestResponse.clone());
+        bytesCompleted += manifestBytes.byteLength;
+        completed += 1;
+        await reportProgress(completed, bytesCompleted, manifestPath);
         let nextIndex = 0;
         let firstError = null;
         const downloadNext = async () => {{
           while (!firstError) {{
             const index = nextIndex++;
-            if (index >= PRECACHE.length) return;
-            const path = PRECACHE[index];
+            if (index >= installResources.length) return;
+            const path = installResources[index];
+            const entry = RELEASE_RESOURCES.get(path);
             try {{
-              const request = new Request(path, {{ cache: 'reload' }});
-              const response = await fetch(request);
-              if (!response.ok) throw new Error(`No se pudo descargar ${{path}} (${{response.status}})`);
-              await cache.put(request, response);
+              let response = reusable.get(path);
+              if (!response) {{
+                response = await fetch(new Request(path, {{ cache: 'reload' }}));
+                if (!response.ok) throw new Error(`No se pudo descargar ${{path}} (${{response.status}})`);
+                const bytes = await response.clone().arrayBuffer();
+                const digest = await crypto.subtle.digest('SHA-256', bytes);
+                const hex = [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+                if (bytes.byteLength !== entry.size || hex !== entry.sha256) throw new Error(`La verificación de integridad falló para ${{path}}`);
+                bytesCompleted += bytes.byteLength;
+              }}
+              await cache.put(new URL(path, self.registration.scope), response.clone());
               completed += 1;
-              bytesCompleted += RESOURCE_BYTES[path] || 0;
               await reportProgress(completed, bytesCompleted, path);
             }} catch (error) {{ firstError = firstError || error; }}
           }}
         }};
-        await Promise.all(Array.from({{ length: Math.min(6, PRECACHE.length) }}, downloadNext));
+        await Promise.all(Array.from({{ length: Math.min(6, installResources.length) }}, downloadNext));
         if (firstError) throw firstError;
         await cache.put(CACHE_COMPLETE_KEY, new Response(JSON.stringify({{ cacheName: CACHE_NAME, completedAt: Date.now() }}), {{ headers: {{ 'content-type': 'application/json' }} }}));
         break;
@@ -383,7 +475,7 @@ self.addEventListener('install', (event) => {{
       }}
     }}
     // La primera instalación toma control al completar el paquete. Una versión
-    // posterior espera la autorización de la portada y se activa en otra apertura.
+    // posterior espera la autorización de la portada y se activa al quedar lista.
     // El progreso permanece en IndexedDB/localStorage, fuera de Cache API.
     if (!self.registration.active) await self.skipWaiting();
   }})());
@@ -393,7 +485,7 @@ self.addEventListener('message', (event) => {{
   // El mensaje se envía directamente al worker en espera; `self` aquí es el global, no un objeto ServiceWorker.
   if (event.data?.type === 'ACTIVATE_UPDATE') event.waitUntil(self.skipWaiting());
   if (event.data?.type === 'GET_VERSION_STATUS') {{
-    event.source?.postMessage({{ type: 'VERSION_STATUS', cacheName: CACHE_NAME, total: PRECACHE.length }});
+    event.source?.postMessage({{ type: 'VERSION_STATUS', cacheName: CACHE_NAME, version: APP_VERSION, buildId: BUILD_ID, total: PRECACHE.length }});
   }}
 }});
 
@@ -444,9 +536,11 @@ self.addEventListener('fetch', (event) => {{
 
 def main() -> None:
     resources = build_precache()
+    write_release_manifest(resources)
     for _ in range(5):
         previous_size = OUTPUT.stat().st_size if OUTPUT.is_file() else -1
         update_resource_estimate(resources)
+        write_release_manifest(resources)
         generated = render(resources)
         OUTPUT.write_text(generated, encoding="utf-8", newline="\n")
         if len(generated.encode("utf-8")) == previous_size:

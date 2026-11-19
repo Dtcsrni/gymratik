@@ -30,12 +30,12 @@ La compatibilidad efectiva depende del navegador y el sistema operativo. Las pru
 
 - **FUN-PWA-001 · P0:** el inicio deberá distinguir la lectura de datos locales de la comprobación y preparación de recursos; solo mostrará porcentajes medibles.
   - Aceptación: el progreso de descarga informa recursos completados y total; la lectura local no se cancela por un timeout fijo; los errores explican la causa disponible y ofrecen reintentar sin borrar datos.
-- **FUN-PWA-002 · P0:** la inicialización local y la preparación de recursos deberán poder avanzar en paralelo sin interrumpir una rutina abierta.
-  - Aceptación: la versión completa previa sigue utilizable ante una actualización fallida; la actualización pendiente se informa y no fuerza una recarga durante la sesión.
+- **FUN-PWA-002 · P0:** la inicialización local y la preparación de recursos deberán poder avanzar en paralelo; cuando una actualización esté lista, se aplicará de inmediato y recargará las pantallas abiertas.
+  - Aceptación: el avance personal se conserva fuera de Cache API; el cambio de controlador recarga cada pantalla una sola vez; ante error al iniciar la nueva versión, se conserva la caché activa y se ofrece reintentar.
 - **FUN-PWA-003 · P0:** la preparación offline deberá incluir la portada, las cuatro rutinas canónicas y el inventario visual local vigente.
   - Aceptación: solo se declara completo el paquete después de guardar todo el inventario requerido; las cuatro rutinas abren sin red y muestran los recursos locales disponibles.
 - **FUN-PWA-004 · P1:** el usuario podrá elegir `Preguntar cada vez` (predeterminado), `Permitir siempre` o `Solo Wi-Fi` para descargas gestionadas por la PWA.
-  - Aceptación: una autorización temporal solo dura la apertura actual; la preferencia queda local; si el navegador no identifica Wi-Fi, no se inicia una descarga automática bajo `Solo Wi-Fi`; la interfaz ofrece continuar sin descargar.
+  - Aceptación: con `Preguntar cada vez`, la aplicación solicita una acción antes de comprobar/descargar una actualización en red móvil o de tipo desconocido; la autorización manual solo dura esa comprobación; la preferencia queda local; `Solo Wi-Fi` no inicia descarga automática si el navegador no identifica Wi-Fi.
 - **FUN-PWA-005 · P0:** una descarga interrumpida o un error de cuota no deberá eliminar la versión offline completa anterior ni los datos de usuario.
   - Aceptación: la descarga incompleta no se activa; la recuperación elimina solo cachés Gymratik obsoletas/incompletas y reintenta una vez; los almacenes de progreso no se borran.
 - **FUN-PWA-006 · P1:** el splash deberá animar los personajes locales y respetar `prefers-reduced-motion`.
@@ -44,10 +44,14 @@ La compatibilidad efectiva depende del navegador y el sistema operativo. Las pru
   - Aceptación: las actualizaciones preservan stores y registros; si falta el registro central se recuperan snapshots conocidos de las cuatro rutinas antes de consultar historial. En una pestaña no instalada se pueden consultar rutinas, pero no leer ni guardar progreso personal; en modo instalado se habilitan perfil e historial.
 - **FUN-PWA-008 · P1:** durante actividad y descanso de una sesión, el resumen podrá mostrar una mascota animada local según el perfil instalado.
   - Aceptación: usa variante neutral si no hay preferencia aplicable; los recursos se sirven offline, se ocultan fuera de actividad/descanso y respetan `prefers-reduced-motion`.
-- **FUN-PWA-009 · P1:** las actualizaciones deberán respetar la política de red y no reemplazar la versión activa durante la apertura que detectó la actualización.
-  - Aceptación: la primera instalación toma control al completar el inventario; una versión nueva queda en espera hasta una apertura o acción permitida; tipo de conexión desconocido no autoriza descarga automática bajo `Preguntar cada vez` o `Solo Wi-Fi`; solicitudes runtime no amplían la caché fuera del inventario.
+- **FUN-PWA-009 · P1:** las actualizaciones deberán respetar la política de red y aplicarse de inmediato al quedar completamente preparadas.
+  - Aceptación: la primera instalación toma control al completar el inventario; la aplicación conserva una versión completa durante la descarga y recarga al cambiar el controlador; bajo `Preguntar cada vez`, red móvil o desconocida requiere acción explícita antes de una comprobación iniciada por la aplicación; solicitudes runtime no amplían la caché fuera del inventario.
 - **FUN-PWA-010 · P1:** el manifiesto declarará iconos raster locales válidos de 192×192 y 512×512, incluidos en el paquete offline.
   - Aceptación: dimensiones, rutas y archivos coinciden; iconos externos, ausentes o inválidos fallan la validación.
+- **FUN-PWA-011 · P0:** cada compilación PWA tendrá una versión semántica explícita y un manifiesto de lanzamiento determinista con tamaño y SHA-256 por recurso precacheado.
+  - Aceptación: la versión visible, el Service Worker y el manifiesto coinciden; antes de activar, el Service Worker verifica el manifiesto y el tamaño/hash de cada recurso; una discrepancia cancela la instalación y conserva la versión activa.
+- **FUN-PWA-012 · P1:** las actualizaciones reutilizarán desde la última caché completa los recursos cuyos bytes coincidan con el manifiesto nuevo.
+  - Aceptación: pruebas con inventario sin cambios reutilizan todos los recursos; al modificar uno, solo ese recurso y el manifiesto se descargan; cachés previas incompletas no se usan como fuente incremental.
 
 ### 4.2 Perfil, sesiones e historial local
 

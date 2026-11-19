@@ -7,7 +7,7 @@
   <meta name="application-name" content="Gymratik">
   <meta name="apple-mobile-web-app-title" content="Gymratik">
   <meta name="description" content="Rutinas visuales para entrenar en el gimnasio con calentamiento, técnica y registro de series.">
-  <meta name="gymratik-resource-estimate" content='{"applicationBytes":"000000005855840","imageBytes":"000000044207892","totalBytes":"000000050063732"}'>
+  <meta name="gymratik-resource-estimate" content='{"applicationBytes":"000000005927878","imageBytes":"000000044207892","totalBytes":"000000050135770"}'>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./assets/branding/gymratik-mascots-mark-v2.png" type="image/png">
   <link rel="apple-touch-icon" sizes="192x192" href="./assets/branding/gymratik-pwa-icon-v8-192.png">
@@ -468,7 +468,7 @@
             <p class="profile-status" id="localDataBackupNotice">Tus datos residen en este origen y perfil del navegador: IndexedDB «entrenamiento-progress» v3; fallback localStorage «entrenamiento-progress-fallback-v3»; snapshots JSON «fitlovers-dayN-series-v1» y archivo «gymratik-legacy-progress-archive-v1». La exportación manual genera JSON «gymratik-backup», esquema 3.</p>
             <div class="data-actions"><button id="exportDataButton" class="button secondary" type="button">Exportar datos</button><label class="button secondary" for="importDataInput">Importar respaldo</label><input id="importDataInput" class="file-input" type="file" accept="application/json,.json"></div>
             </form>
-            <fieldset class="routine-days"><legend>Red para actualizaciones</legend><label class="profile-field" for="networkPreference"><span>Descarga automática de versiones y recursos offline</span><select id="networkPreference"><option value="ask">Automática en Wi‑Fi; manual en datos</option><option value="always">Siempre, incluso datos móviles</option><option value="wifi">Solo Wi‑Fi</option></select></label><p id="networkPreferenceStatus" class="profile-status" role="status">Actualización automática temporalmente habilitada también con datos móviles.</p></fieldset>
+            <fieldset class="routine-days"><legend>Red para actualizaciones</legend><label class="profile-field" for="networkPreference"><span>Descarga automática de versiones y recursos offline</span><select id="networkPreference"><option value="ask">Automática en Wi‑Fi; preguntar en otras redes</option><option value="always">Siempre, incluso datos móviles</option><option value="wifi">Solo Wi‑Fi</option></select></label><p id="networkPreferenceStatus" class="profile-status" role="status">Preferencia predeterminada: automática en Wi‑Fi; en datos móviles o red no identificada, se pedirá autorización.</p></fieldset>
           </details>
       <aside class="profile-history" aria-labelledby="historyTitle"><h3 id="historyTitle">Sesiones recientes</h3><div id="sessionHistory" class="session-history" aria-live="polite"><p class="session-history-empty" data-loading="true" aria-busy="true">Cargando historial…</p></div><p class="profile-status">Para borrar sesiones, utiliza «Reiniciar registros» al final de la portada.</p></aside>
         </div>
@@ -617,7 +617,7 @@
     const exportDataButton = document.querySelector('#exportDataButton');
     const importDataInput = document.querySelector('#importDataInput');
     const LAST_UPDATE_KEY = 'gymratik-last-update-v1';
-    const NETWORK_PREFERENCE_KEY = 'gymratik-network-preference-v1';
+    const NETWORK_PREFERENCE_KEY = 'gymratik-network-preference-v2';
     const NETWORK_PERMISSION_KEY = 'gymratik-network-permission-v1';
     const MANUAL_UPDATE_REQUEST_KEY = 'gymratik-manual-update-request-at-v1';
     const MANUAL_UPDATE_REQUEST_TTL_MS = 5 * 60 * 1000;
@@ -1265,19 +1265,14 @@
     }
 
     try { renderLastUpdate(localStorage.getItem(LAST_UPDATE_KEY)); } catch (_) { renderLastUpdate(0); }
-    try { networkPreference.value = localStorage.getItem(NETWORK_PREFERENCE_KEY) || 'always'; } catch (_) { networkPreference.value = 'always'; }
-    // Temporary release override requested by the user: do not defer service
-    // worker updates merely because Android reports a metered connection.
-    networkPreference.value = 'always';
-    networkPreference.disabled = true;
-    try { localStorage.setItem(NETWORK_PREFERENCE_KEY, 'always'); } catch (_) {}
+    try { networkPreference.value = localStorage.getItem(NETWORK_PREFERENCE_KEY) || 'ask'; } catch (_) { networkPreference.value = 'ask'; }
     networkPreference.addEventListener('change', () => {
       try { localStorage.setItem(NETWORK_PREFERENCE_KEY, networkPreference.value); } catch (_) {}
       networkPreferenceStatus.textContent = networkPreference.value === 'wifi'
-        ? 'Preferencia guardada. La versión nueva se instalará automáticamente al tener Wi‑Fi; en otra red, arrastra hacia abajo o usa el botón de actualización manual cuando aparezca.'
+        ? 'Preferencia guardada. La aplicación comprobará y descargará versiones automáticamente cuando el navegador identifique Wi‑Fi; puedes iniciar una comprobación manual desde otra red.'
         : networkPreference.value === 'always'
           ? 'Preferencia guardada. Las versiones nuevas se instalarán automáticamente con cualquier conexión.'
-          : 'Preferencia guardada. Se actualizará automáticamente en Wi‑Fi; en datos móviles, arrastra hacia abajo desde el borde superior o usa el botón manual cuando aparezca.';
+          : 'Preferencia guardada. En redes móviles o de tipo desconocido, la aplicación esperará a que pulses el botón de comprobación antes de descargar.';
     });
     persistButton.addEventListener('click', async () => { if (!window.GymratikInstallGate?.isInstalled()) return; persistButton.disabled = true; const granted = await window.TrainingProgressStore?.requestPersistence(); progressNote.textContent = granted ? 'El navegador protegió este almacenamiento contra limpieza automática.' : 'El navegador no concedió protección adicional; conserva una copia del dispositivo.'; persistButton.disabled = false; });
     profileForm.addEventListener('submit', async (event) => {
@@ -1411,10 +1406,11 @@
       updateNotice.dataset.detected = String(versionDetected);
       updateNoticeTitle.textContent = versionReady ? 'Nueva versión lista' : versionDetected ? 'Nueva versión detectada' : 'Actualización automática pausada';
       updateNoticeText.textContent = versionReady
-        ? `No se aplicará automáticamente porque ${networkReason}. Arrastra hacia abajo desde el borde superior o pulsa el botón para aplicarla.`
+        ? `Gymratik encontró una versión lista, pero no descargará ni aplicará cambios automáticamente porque ${networkReason}. Pulsa para descargar y aplicar.`
         : versionDetected
-          ? `La nueva versión se está preparando. Como ${networkReason}, arrastra hacia abajo desde el borde superior o pulsa el botón para aplicarla.`
-          : `La actualización automática está pausada porque ${networkReason}. Arrastra hacia abajo desde el borde superior o pulsa el botón para comprobarla.`;
+          ? `Hay una instalación de versión en curso. Como ${networkReason}, no se aplicará hasta que pulses el botón.`
+          : `La comprobación automática está pausada porque ${networkReason}. Pulsa para comprobar si hay una versión nueva y autorizar su descarga.`;
+      manualUpdateButton.textContent = versionReady ? 'Aplicar actualización' : 'Comprobar y descargar';
       manualUpdateButton.hidden = false;
       updateNotice.hidden = false;
       syncCoverArtMotion();
@@ -1465,10 +1461,10 @@
       showSyncProgress(event.data);
       if (event.data?.type === 'APP_UPDATED') rememberLastUpdate(event.data.updatedAt);
       if (event.data?.type === 'VERSION_STATUS' && typeof event.data.cacheName === 'string') {
-        const version = event.data.cacheName.match(/entrenamiento-pwa-([a-f0-9]{12})/i)?.[1];
-        if (version && appVersion) {
-          appVersion.textContent = `v${version.slice(0, 8)}`;
-          appVersion.title = `Versión del Service Worker: ${version}`;
+        const version = event.data.version;
+        if (typeof version === 'string' && /^\d+\.\d+\.\d+$/.test(version) && appVersion) {
+          appVersion.textContent = `v${version}`;
+          appVersion.title = `Versión Gymratik ${version} · compilación ${event.data.buildId || 'desconocida'}`;
           appVersion.hidden = false;
         }
       }
@@ -1491,6 +1487,7 @@
         const waitingAtOpen = Boolean(registration?.waiting);
         const preference = networkPreference.value;
         const connectionType = navigator.connection?.type;
+        const effectiveType = navigator.connection?.effectiveType;
         const isWifi = connectionType === 'wifi' && navigator.connection?.saveData !== true;
         const isCellular = connectionType === 'cellular';
         const isDataSaver = navigator.connection?.saveData === true;
@@ -1517,7 +1514,7 @@
         }
         if (!allowed) {
           const networkUpdateDeferred = navigator.onLine && !firstInstall && preference !== 'always' && !isWifi;
-          const deferredNetworkReason = isCellular
+          const deferredNetworkReason = isCellular || ['2g', '3g', '4g', 'slow-2g'].includes(effectiveType)
             ? 'la conexión usa datos móviles'
             : isDataSaver
               ? 'está activado el ahorro de datos'
@@ -1643,6 +1640,7 @@
       if (syncTimedOut) updateState.textContent = 'Actualización en segundo plano; sigue disponible la última versión completa.';
       document.documentElement.classList.remove('gymratik-loading');
       document.querySelector('#appSplash')?.setAttribute('aria-hidden', 'true');
+      window.dispatchEvent(new Event('gymratik-startup-ready'));
     }
     splashRetry.addEventListener('click', async () => {
       splashRetry.disabled = true;
@@ -1654,6 +1652,7 @@
         if (activeWorkerAvailable) {
           document.documentElement.classList.remove('gymratik-loading');
           document.querySelector('#appSplash')?.setAttribute('aria-hidden', 'true');
+          window.dispatchEvent(new Event('gymratik-startup-ready'));
         } else {
           splashTitle.textContent = 'Esperando recursos offline';
           splashDetail.textContent = 'La lectura local se completó; falta una versión offline completa. Se reintentará automáticamente.';

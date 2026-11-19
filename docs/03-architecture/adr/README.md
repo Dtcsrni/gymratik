@@ -2,7 +2,7 @@
 
 Estados documentales: `Proposed`, `Accepted`, `Superseded`, `Rejected`.
 `Accepted` en un ADR histórico no lo incorpora al alcance vigente. El producto
-activo es la PWA; solo ADR-013 a ADR-017 describen decisiones directamente
+activo es la PWA; ADR-013 a ADR-019 describen decisiones directamente
 relacionadas con su estado actual. Las decisiones de Android, servidor,
 nutrición, IA e integraciones quedan diferidas.
 
@@ -24,8 +24,9 @@ nutrición, IA e integraciones quedan diferidas.
 | [ADR-014](ADR-014-progresion-e-horarios-locales-pwa.md) | Progresión, días habituales y avisos locales de la PWA | Superseded |
 | [ADR-015](ADR-015-base-local-v3-exclusiva.md) | Uso exclusivo de la base local y respaldos v3 | Accepted |
 | [ADR-016](ADR-016-actualizacion-segura-pwa.md) | Inicio y actualización segura de la PWA | Superseded |
-| [ADR-017](ADR-017-politica-de-actualizacion-y-cache-pwa.md) | Política de actualización, red y caché acotada de la PWA | Accepted |
+| [ADR-017](ADR-017-politica-de-actualizacion-y-cache-pwa.md) | Política de actualización, red y caché acotada de la PWA | Superseded |
 | [ADR-018](ADR-018-retencion-manual-de-datos-pwa.md) | Retención manual de datos y archivo semanal | Accepted |
+| [ADR-019](ADR-019-actualizacion-incremental-pwa.md) | Versionado explícito y actualización incremental verificable de la PWA | Accepted |
 
 ## Plantilla
 

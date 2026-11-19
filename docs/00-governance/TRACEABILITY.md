@@ -4,16 +4,18 @@ Cada requisito funcional/no funcional del SRS aparece una sola vez. `Partial` in
 
 | Requisito | Riesgo | Diseño/ADR | Prueba o evidencia | Estado |
 |---|---|---|---|---|
-| FUN-PWA-001 | RISK-011 | ADR-017 | TST-PWA-001 | Partial |
-| FUN-PWA-002 | RISK-011 | ADR-017 | TST-PWA-002 | Partial |
+| FUN-PWA-001 | RISK-011 | ADR-019 | TST-PWA-001 | Partial |
+| FUN-PWA-002 | RISK-011 | ADR-019 | TST-PWA-002 | Partial |
 | FUN-PWA-003 | RISK-011 | ADR-017 | TST-PWA-003 | Partial |
-| FUN-PWA-004 | RISK-011 | ADR-017 | TST-PWA-004 | Partial |
-| FUN-PWA-005 | RISK-011 | ADR-017 | TST-PWA-005 | Partial |
+| FUN-PWA-004 | RISK-011 | ADR-019 | TST-PWA-004 | Partial |
+| FUN-PWA-005 | RISK-011 | ADR-019 | TST-PWA-005 | Partial |
 | FUN-PWA-006 | RISK-011 | ADR-016 | TST-PWA-006 | Partial |
 | FUN-PWA-007 | RISK-004 | ADR-015 | TST-PWA-029 | Partial |
 | FUN-PWA-008 | RISK-011 | SDD-004 | TST-PWA-030 | Partial |
-| FUN-PWA-009 | RISK-011 | ADR-017 | TST-PWA-031 | Partial |
+| FUN-PWA-009 | RISK-011 | ADR-019 | TST-PWA-031 | Partial |
 | FUN-PWA-010 | RISK-011 | ADR-017 | TST-PWA-032 | Partial |
+| FUN-PWA-011 | RISK-011 | ADR-019 | TST-PWA-033 | Partial |
+| FUN-PWA-012 | RISK-011 | ADR-019 | TST-PWA-034 | Partial |
 | FUN-PRO-001 | RISK-004 | ADR-013 | TST-PRO-001 | Partial |
 | FUN-PRO-002 | RISK-004, RISK-014 | ADR-015 | TST-PRO-002 | Partial |
 | FUN-PRO-003 | RISK-004 | ADR-013 | TST-PRO-003 | Partial |

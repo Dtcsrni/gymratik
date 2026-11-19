@@ -14,6 +14,7 @@ from scripts.build_pwa_service_worker import (
     manifest_icon_resources,
     quote_portrait_resources,
     render,
+    release_manifest,
     resource_size,
     routine_resources,
 )
@@ -132,7 +133,7 @@ class ServiceWorkerContractTests(unittest.TestCase):
         for source in (self.service_worker, self.generator):
             with self.subTest(source=source[:40]):
                 self.assertIn("PRECACHE_PROGRESS", source)
-                self.assertIn("Math.min(6, PRECACHE.length)", source)
+                self.assertIn("Math.min(6, installResources.length)", source)
                 self.assertIn("await Promise.all(Array.from", source)
                 self.assertIn("if (firstError) throw firstError", source)
                 self.assertIn("if (!self.registration.active) await self.skipWaiting()", source)
@@ -209,12 +210,44 @@ class ServiceWorkerContractTests(unittest.TestCase):
                 self.assertIn("PREVIOUS_CACHE_NAME", source)
 
     def test_homepage_shows_the_active_service_worker_version(self):
+        release = json.loads((ROOT / "release-manifest.json").read_text(encoding="utf-8"))
+        version = json.loads((ROOT / "app-version.json").read_text(encoding="utf-8"))["version"]
         self.assertIn('id="appVersion"', self.homepage)
-        self.assertIn('class="brand-version" aria-label="Versión 0.7.26">v0.7.26', self.homepage)
+        self.assertIn(f'class="brand-version" aria-label="Versión {version}">v{version}', self.homepage)
         self.assertIn("event.data?.type === 'VERSION_STATUS'", self.homepage)
         self.assertIn("postMessage({ type: 'GET_VERSION_STATUS' })", self.homepage)
         self.assertIn("cacheName: CACHE_NAME", self.service_worker)
-        self.assertIn("appVersion.textContent = `v${version.slice(0, 8)}`", self.homepage)
+        self.assertIn("appVersion.textContent = `v${version}`", self.homepage)
+        self.assertEqual(release["version"], version)
+        self.assertEqual(release["buildId"], re.search(r'const BUILD_ID = "([^"]+)"', self.service_worker).group(1))
+        self.assertEqual(release, release_manifest(build_precache()))
+
+    def test_release_manifest_verifies_integrity_and_reuses_unchanged_resources(self):
+        manifest = json.loads((ROOT / "release-manifest.json").read_text(encoding="utf-8"))
+        resources = {entry["url"]: entry for entry in manifest["resources"]}
+        self.assertNotIn("./release-manifest.json", resources)
+        self.assertEqual(set(resources), set(build_precache()) - {"./release-manifest.json"})
+        for entry in resources.values():
+            self.assertRegex(entry["sha256"], r"^[0-9a-f]{64}$")
+            self.assertGreater(entry["size"], 0)
+        for marker in (
+            "crypto.subtle.digest('SHA-256'",
+            "const previousComplete = Boolean(previousMarker)",
+            "if (bytes.byteLength === entry.size && hex === entry.sha256)",
+            "const manifestMatches = manifest?.schemaVersion === 1",
+            "self.__gymratikTransferTotalBytes ??",
+        ):
+            self.assertIn(marker, self.service_worker)
+
+    def test_new_version_startup_failure_offers_retry_without_automatic_rollback(self):
+        client = (ROOT / "page-update-client.js").read_text(encoding="utf-8")
+        self.assertIn("activationKey", client)
+        self.assertIn("La versión nueva encontró un error al iniciar", client)
+        self.assertIn("Reintentar Gymratik", client)
+        self.assertIn("retryPanel", client)
+        self.assertIn("document.body?.append(retryPanel)", client)
+        self.assertIn("gymratik-startup-ready", client)
+        self.assertNotIn("unregister()", client)
 
     def test_deep_offline_navigation_fallback_anchors_shell_to_registration_scope(self):
         for source in (self.service_worker, self.generator):

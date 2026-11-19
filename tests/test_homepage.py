@@ -238,16 +238,17 @@ class HomepageContractTests(unittest.TestCase):
         self.assertEqual(int(estimate["imageBytes"]), actual_images)
         self.assertEqual(int(estimate["applicationBytes"]), actual_total - actual_images)
 
-    def test_cellular_update_is_temporarily_forced_and_detected_version_uses_the_mascot_animation(self):
+    def test_cellular_updates_require_explicit_check_and_use_the_mascot_animation(self):
         self.assertIn('id="updateNotice" class="update-notice"', self.html)
         self.assertIn('id="updateNoticeArt"', self.html)
         self.assertIn('id="manualUpdateButton"', self.html)
         self.assertIn('data-motion-src="./assets/branding/gymratik-cover-seated-breath-30fps.webp"', self.html)
         self.assertIn("connectionType === 'cellular'", self.html)
         self.assertIn("preference === 'always' || isWifi", self.html)
-        self.assertIn("networkPreference.value = 'always';", self.html)
-        self.assertIn("networkPreference.disabled = true;", self.html)
-        self.assertNotIn("preference === 'ask' && !isCellular", self.html)
+        self.assertIn("localStorage.getItem(NETWORK_PREFERENCE_KEY) || 'ask'", self.html)
+        self.assertIn("gymratik-network-preference-v2", self.html)
+        self.assertNotIn("networkPreference.disabled = true", self.html)
+        self.assertIn("Comprobar y descargar", self.html)
         self.assertIn("(!firstInstall && isManualReload)", self.html)
         self.assertIn("consumeManualUpdateRequest()", self.html)
         self.assertIn("MANUAL_UPDATE_REQUEST_TTL_MS", self.html)
@@ -255,7 +256,9 @@ class HomepageContractTests(unittest.TestCase):
         self.assertIn("showUpdateDetectedAnimation()", self.html)
         self.assertIn("if (!document.documentElement.classList.contains('gymratik-loading'))", self.html)
         self.assertIn("updateNotice.dataset.detected = 'true'", self.html)
-        self.assertIn("Actualización automática temporalmente habilitada también con datos móviles.", self.html)
+        self.assertIn("la aplicación esperará a que pulses el botón de comprobación", self.html)
+        self.assertIn("['2g', '3g', '4g', 'slow-2g'].includes(effectiveType)", self.html)
+        self.assertIn("Preferencia predeterminada: automática en Wi‑Fi", self.html)
         self.assertIn(".app-splash.update-detected .splash-mascot-poses", self.html)
         self.assertIn("prefers-reduced-motion:reduce", self.html)
 
@@ -333,17 +336,16 @@ class HomepageContractTests(unittest.TestCase):
 
     def test_detected_pwa_updates_activate_automatically_on_allowed_networks(self):
         self.assertIn("preference === 'always' || isWifi", self.html)
-        self.assertNotIn("preference === 'ask' && !isCellular", self.html)
+        self.assertIn("localStorage.getItem(NETWORK_PREFERENCE_KEY) || 'ask'", self.html)
+        self.assertIn("(!firstInstall && isManualReload)", self.html)
         self.assertIn("networkUpdateDeferred", self.html)
         self.assertIn("no se pudo confirmar Wi‑Fi", self.html)
         self.assertIn("preference === 'always'", self.html)
         self.assertIn("registration.waiting.postMessage({ type: 'ACTIVATE_UPDATE' })", self.html)
         self.assertIn("Actualización completa detectada; se está aplicando automáticamente.", self.html)
-        self.assertNotIn("if (waitingAtOpen || isManualReload)", self.html)
         self.assertLess(self.html.index("if (!allowed) {"), self.html.index("if (registration.waiting) {", self.html.index("const updateResult")))
-        self.assertNotIn("se aplicará al abrir Gymratik de nuevo", self.html)
-        self.assertIn("se instalará automáticamente al tener Wi‑Fi", self.html)
-        self.assertIn("arrastra hacia abajo desde el borde superior", self.html)
+        self.assertIn("la aplicación esperará a que pulses el botón de comprobación", self.html)
+        self.assertIn("Comprobar y descargar", self.html)
 
     def test_homepage_prioritizes_next_session_and_gym_flow(self):
         self.assertIn('id="pageTitle">Empieza a tu ritmo.', self.html)
