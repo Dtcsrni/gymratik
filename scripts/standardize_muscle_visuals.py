@@ -1769,6 +1769,7 @@ def standardize_shared_session_contract(source: str) -> str:
     const label = resting && restRemaining > 0 ? `Descanso · ${formatElapsed(restRemaining)}`
       : complete ? state.__skippedExercises?.[String(item.index + 1)] === true ? '↷ Ejercicio omitido' : '✓ Ejercicio completado'
       : !globalWarmupComplete ? 'Completa calentamiento'
+      : preparing && preparation?.kind === 'approximation' ? `⏳ Preparación de aproximación · ${formatElapsed(preparation ? Math.max(0, preparation.endsAt - Date.now()) : 0)}`
       : warmupDue ? warmupStartedAt ? `Aproximación activa · ${formatElapsed(Date.now() - warmupStartedAt)} · completar` : 'Iniciar serie de aproximación'
       : preparing ? `⏳ Preparación · ${formatElapsed(preparation ? Math.max(0, preparation.endsAt - Date.now()) : 0)}`
       : seriesActive ? `Completar serie ${nextIndex + 1} de ${item.seriesKeys.length}`
@@ -3358,6 +3359,71 @@ def standardize_series_entry_zone(source: str) -> str:
             dialog_helper + "  const trackers = [...document.querySelectorAll('.exerciseTracker')];",
             1,
         )
+    weight_confirmation_helper = """  const confirmSuspiciousLoad = async item => {
+    const entered = Number(item.performanceLoadExact);
+    const unit = item.performanceLoadUnit === 'lb' ? 'lb' : 'kg';
+    const enteredKg = unit === 'lb' ? entered * 0.45359237 : entered;
+    if (!item.performanceLoadSelected || !Number.isFinite(enteredKg) || enteredKg <= 0) return true;
+    if (Number.isFinite(item.confirmedWeightKg) && Math.abs(item.confirmedWeightKg - enteredKg) < 0.01) return true;
+    const exerciseId = String(item.index + 1);
+    const profile = item.performanceLoadProfile;
+    const history = (item.performanceHistory || []).slice(0, 10);
+    const sessionMaxima = history.map(session => (session.performance || [])
+      .filter(record => record.exerciseId === exerciseId && Number.isInteger(Number(record.reps)) && Number(record.reps) >= 1 && Number(record.reps) <= 100 && record.load !== null && record.load !== undefined && record.loadSelected !== false)
+      .map(record => Number.isFinite(Number(record.loadKg)) ? Number(record.loadKg) : record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load))
+      .filter(loadKg => Number.isFinite(loadKg) && loadKg > 0 && loadKg >= profile.minKg && loadKg <= profile.maxKg)
+      .reduce((maximum, loadKg) => Math.max(maximum, loadKg), 0))
+      .filter(loadKg => loadKg > 0).slice(0, 5).sort((a, b) => a - b);
+    if (!sessionMaxima.length) return true;
+    const middle = Math.floor(sessionMaxima.length / 2);
+    const baselineKg = sessionMaxima.length % 2 ? sessionMaxima[middle] : (sessionMaxima[middle - 1] + sessionMaxima[middle]) / 2;
+    const lbInterpretationKg = enteredKg * 0.45359237;
+    const resemblesPounds = unit === 'kg' && enteredKg >= baselineKg * 1.8 && Math.abs(lbInterpretationKg - baselineKg) <= baselineKg * 0.12;
+    const unusuallyHigh = enteredKg >= baselineKg * 2;
+    if (!resemblesPounds && !unusuallyHigh) return true;
+    let dialog = document.getElementById('performanceLoadWarningDialog');
+    if (!dialog) {
+      dialog = document.createElement('dialog');
+      dialog.id = 'performanceLoadWarningDialog';
+      dialog.className = 'performanceMissingDialog';
+      dialog.setAttribute('aria-labelledby', 'performanceLoadWarningTitle');
+      dialog.setAttribute('aria-describedby', 'performanceLoadWarningDescription');
+      dialog.innerHTML = '<h2 id="performanceLoadWarningTitle">Revisa esta carga</h2><p id="performanceLoadWarningDescription"></p><div class="dialogActions"><button type="button" value="cancel">Revisar peso</button><button type="button" value="continue">Sí, registrar</button></div>';
+      dialog.querySelector('[value="cancel"]').addEventListener('click', () => dialog.close('cancel'));
+      dialog.querySelector('[value="continue"]').addEventListener('click', () => dialog.close('continue'));
+      document.body.append(dialog);
+    }
+    const formatted = Number.isInteger(entered) ? String(entered) : entered.toFixed(1);
+    const previous = `${baselineKg.toFixed(1)} kg`;
+    dialog.querySelector('#performanceLoadWarningDescription').textContent = resemblesPounds
+      ? `Tu historial de ${item.title} ronda ${previous}. ¿Estás seguro de que son ${formatted} kg y no ${formatted} lb? Si confirmas, guardaremos este peso.`
+      : `El peso indicado (${formatted} ${unit}) es al menos el doble de tu referencia histórica de ${previous} para ${item.title}. Comprueba la unidad y confirma si el dato es correcto.`;
+    return new Promise(resolve => {
+      dialog.addEventListener('close', () => {
+        const confirmed = dialog.returnValue === 'continue';
+        if (confirmed) item.confirmedWeightKg = enteredKg;
+        resolve(confirmed);
+      }, { once: true });
+      dialog.showModal();
+    });
+  };
+"""
+    if "const confirmSuspiciousLoad = async item =>" not in source:
+        source = source.replace(
+            "  const trackers = [...document.querySelectorAll('.exerciseTracker')];",
+            weight_confirmation_helper + "  const trackers = [...document.querySelectorAll('.exerciseTracker')];",
+            1,
+        )
+    source = source.replace(
+        "if (missingPerformance.length && !(await confirmMissingPerformance(missingPerformance))) return;\n        const completedAt = Date.now();\n        if (!state.__warmupPerformance)",
+        "if (!(await confirmSuspiciousLoad(item))) return;\n        if (missingPerformance.length && !(await confirmMissingPerformance(missingPerformance))) return;\n        const completedAt = Date.now();\n        if (!state.__warmupPerformance)",
+        1,
+    )
+    source = source.replace(
+        "if (missingPerformance.length && !(await confirmMissingPerformance(missingPerformance))) return;\n      if (state[nextKey] === true) return;",
+        "if (!(await confirmSuspiciousLoad(item))) return;\n      if (missingPerformance.length && !(await confirmMissingPerformance(missingPerformance))) return;\n      if (state[nextKey] === true) return;",
+        1,
+    )
     source = source.replace(
         "const repsTitle = document.createElement('span'); repsTitle.textContent = 'Repeticiones realizadas · opcional'; const repsClear = document.createElement('button');",
         "const repsLabelText = document.createElement('span'); repsLabelText.textContent = 'Repeticiones'; const repsIcon = createPerformanceIcon('repeat-2'); const repsRequired = document.createElement('span'); repsRequired.className = 'performanceRequired'; repsRequired.textContent = 'Requerido'; const repsFieldLabel = document.createElement('span'); repsFieldLabel.className = 'performanceFieldLabel'; if (repsIcon) repsFieldLabel.append(repsIcon); repsFieldLabel.append(repsLabelText); const repsTitle = document.createElement('span'); repsTitle.className = 'performanceFieldTitleRow'; repsTitle.append(repsFieldLabel, repsRequired); const repsClear = document.createElement('button');",

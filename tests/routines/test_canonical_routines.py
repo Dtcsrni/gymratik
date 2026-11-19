@@ -1027,6 +1027,18 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
             self.assertNotIn("const unitStep = pounds ? 5", html)
             self.assertNotIn("Number(record.load)}${record.loadUnit", html)
 
+    def test_suspicious_load_confirmation_is_shared_and_blocks_save_until_confirmed(self) -> None:
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            with self.subTest(routine=path.name):
+                source = path.read_text(encoding="utf-8")
+                self.assertEqual(source.count("const confirmSuspiciousLoad = async item =>"), 1)
+                self.assertEqual(source.count("await confirmSuspiciousLoad(item)"), 2)
+                self.assertIn("enteredKg >= baselineKg * 2", source)
+                self.assertIn("¿Estás seguro de que son ${formatted} kg y no ${formatted} lb?", source)
+                self.assertIn('value="cancel">Revisar peso</button>', source)
+                self.assertIn('value="continue">Sí, registrar</button>', source)
+                self.assertLess(source.index("await confirmSuspiciousLoad(item)"), source.index("state[nextKey] === true"))
+
     def test_machine_load_conversion_keeps_real_stack_steps_and_saved_kilograms(self) -> None:
         source = (CANONICAL / "Rutina_Dia_1_Espalda_Biceps_V1.html").read_text(encoding="utf-8")
         helper = re.search(r"const loadMath = (\{.*?\n    \});", source, re.S)

@@ -839,12 +839,23 @@ def validate_missing_performance_confirmation(browser, name: str) -> dict[str, b
     if getattr(page, "_gt6_physical_hold", None):
         dispatch_touch_hold(page, button, 5_150)
     else:
-        advance_test_clock(page, 180_000)
+        # El descanso mínimo incluye el margen agregado de la rutina; 5 min
+        # virtuales aseguran que el control ya pueda avanzar a la preparación.
+        advance_test_clock(page, 300_000)
         click_control(button)  # preparación de la primera serie efectiva
     advance_test_clock(page, 16_000)
     if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "strength":
+        diagnostic = page.evaluate("""() => {
+          const button=document.querySelector('article.card[data-exercise-index="0"] .completeSetButton');
+          const timingKey=Object.keys(localStorage).find(key=>/^fitlovers-day\\d+-series-v1$/.test(key));
+          const saved=timingKey?JSON.parse(localStorage.getItem(timingKey)||'{}'):{};
+          const activity=document.querySelector('#summaryActivityStatus');
+          return {activity:activity?.dataset.activity,activityText:activity?.innerText,button:button?.innerText,
+            aria:button?.getAttribute('aria-label'),disabled:button?.disabled,
+            timing:saved.__timing?.exercises?.['1'],warmupPerformance:saved.__warmupPerformance?.['1']};
+        }""")
         context.close()
-        raise AssertionError(f"{name}: no se pudo iniciar la serie para probar el diálogo de omisión")
+        raise AssertionError(f"{name}: no se pudo iniciar la serie para probar el diálogo de omisión: {diagnostic}")
     # Aproximación y serie efectiva usan borradores separados; registra datos
     # en la serie actual antes de verificar los controles para quitarlos.
     select_valid_performance(card)
@@ -872,6 +883,74 @@ def validate_missing_performance_confirmation(browser, name: str) -> dict[str, b
         raise AssertionError(f"{name}: aceptar no guardó explícitamente los campos omitidos como nulos: {record}")
     context.close()
     return {"cancelKeepsSetActive": True, "acceptSavesNullRepsAndLoad": True}
+
+
+def validate_suspicious_load_confirmation(browser, name: str) -> dict[str, bool]:
+    """Confirma que una carga compatible con confusión lb/kg requiera decisión explícita."""
+    context = browser.new_context(viewport={"width": 412, "height": 915}, is_mobile=True, has_touch=True)
+    context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1', 'true')")
+    page = context.new_page()
+    install_test_clock(page)
+    url = f"http://127.0.0.1:{PORT}/data/rutinas_autocontenidas/canonicas/{quote(name)}"
+    page.goto(url, wait_until="domcontentloaded")
+    page.wait_for_selector("article.card[data-exercise-index] .completeSetButton")
+    exercise_name = page.locator("article.card[data-exercise-index]").first.locator(".exTitle").inner_text().strip()
+    page.evaluate("""async name => {
+      await window.TrainingProgressStore.clearAll();
+      await window.TrainingProgressStore.saveProfile({displayName:'E2E carga', sex:'male', units:'metric'});
+      const started = Date.now() - 86400000;
+      const day = location.pathname.match(/Rutina_Dia_(\\d)/)?.[1] || '1';
+      await window.TrainingProgressStore.capture({routineId:`day${day}`, state:{
+        e1s1:true, __timing:{sessionStartedAt:started, sessionEndedAt:started+600000, sessionEndReason:'completed', warmup:{phase:'done'}},
+        __performance:{'1':{e1s1:{title:name,reps:12,load:50,loadUnit:'kg',loadKg:50,durationMs:60000}}}
+      }});
+    }""", exercise_name)
+    page.reload(wait_until="domcontentloaded")
+    page.wait_for_selector("article.card[data-exercise-index] input.performanceLoad")
+    card = page.locator("article.card[data-exercise-index]").first
+    page.wait_for_function("""() => document.querySelector('article.card[data-exercise-index] .performanceLoadValue')?.dataset.selected === 'true'""")
+    load = card.locator("input.performanceLoad")
+    warmup = page.locator("#warmupAction")
+    click_control(warmup)
+    advance_test_clock(page, 16_000)
+    click_control(warmup)
+    click_control(warmup)
+    button = card.locator(".completeSetButton")
+    click_control(button)
+    advance_test_clock(page, 16_000)
+    reps = card.locator("input.performanceReps")
+    reps.evaluate("element => { element.value = String(Math.max(Number(element.min) || 8, 10)); element.dispatchEvent(new Event('input',{bubbles:true})); }")
+    load.evaluate("element => { element.value = '100'; element.dispatchEvent(new Event('input',{bubbles:true})); }")
+    if card.locator(".performanceLoadValue").get_attribute("data-selected") != "true" or card.locator(".performanceRepsValue").get_attribute("data-selected") != "true":
+        context.close()
+        raise AssertionError(f"{name}: no se pudo seleccionar el peso alto de la prueba")
+    click_control(button)
+    dialog = page.locator("#performanceLoadWarningDialog")
+    if not dialog.is_visible() or "kg y no" not in dialog.inner_text() or "lb" not in dialog.inner_text():
+        diagnostic = page.evaluate("""async () => ({dialog:document.querySelector('#performanceLoadWarningDialog')?.innerText,
+          activity:document.querySelector('#summaryActivityStatus')?.dataset.activity,
+          warningDebug:window.__gymratikLoadWarningDebug,
+          button:document.querySelector('article.card[data-exercise-index] .completeSetButton')?.innerText,
+          load:document.querySelector('article.card[data-exercise-index] input.performanceLoad')?.value,
+          selected:document.querySelector('article.card[data-exercise-index] .performanceLoadValue')?.dataset.selected,
+          history:(await window.TrainingProgressStore.getHistory(3)).map(row=>({routineId:row.routineId,performance:row.performance})),
+          localStorage:Object.keys(localStorage).map(key=>({key,value:localStorage.getItem(key)?.slice(0,160)}))})""")
+        context.close()
+        raise AssertionError(f"{name}: falta confirmación explícita kg/lb para una carga que duplica la referencia: {diagnostic}")
+    click_control(dialog.locator("button[value='cancel']"))
+    state = page.evaluate("""() => Object.values(localStorage).map(value=>{try{return JSON.parse(value)}catch(_){return null}}).find(value=>value?.__warmupPerformance)?.__warmupPerformance""")
+    if state and state.get("1"):
+        context.close()
+        raise AssertionError(f"{name}: cancelar la advertencia guardó la aproximación: {state}")
+    click_control(button)
+    if not dialog.is_visible():
+        context.close()
+        raise AssertionError(f"{name}: no volvió a pedir confirmación tras cancelar")
+    click_control(dialog.locator("button[value='continue']"))
+    page.wait_for_function("""() => Object.values(localStorage).map(value=>{try{return JSON.parse(value)}catch(_){return null}})
+      .some(value=>value?.__warmupPerformance?.['1']?.loadKg === 100)""")
+    context.close()
+    return {"poundsInterpretationWarned": True, "cancelPreservesDraft": True, "explicitConfirmationRecords": True}
 
 
 def assert_background_timing_pauses(page, routine_name: str) -> dict:
@@ -1554,9 +1633,13 @@ def validate_primary_set_buttons(browser, name: str, sex: str, exercise_limit: i
             )
             click_control(button)
             warmup_progress = card.locator(".approximationProgress")
+            if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "preparing" or "Preparación de aproximación" not in button.inner_text():
+                context.close()
+                raise AssertionError(f"{name}: al iniciar la aproximación no mostró su preparación de 16 s en el ejercicio {index + 1}")
+            advance_test_clock(page, 16_000)
             if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "approximation" or not warmup_progress.is_visible():
                 context.close()
-                raise AssertionError(f"{name}: la aproximación no inició actividad ni mostró su progreso separado en el ejercicio {index + 1}")
+                raise AssertionError(f"{name}: la aproximación no inició actividad ni mostró su progreso separado tras 16 s en el ejercicio {index + 1}")
             assert_mascot(page, mascot_variant, "approximation")
             if warmup_progress.get_attribute("aria-valuenow") != "0" or card.locator(".exerciseProgress").inner_text().strip() != f"0/{segments}":
                 context.close()
@@ -1823,8 +1906,11 @@ def validate_every_effective_series(browser, name: str, sex: str) -> dict:
             select_valid_performance(card)
             if card.locator(".warmupSet").count():
                 click_control(button)
+                if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "preparing" or "Preparación de aproximación" not in button.inner_text():
+                    raise AssertionError(f"{name}: ejercicio {exercise_number} no indicó la preparación de 16 s de la aproximación")
+                advance_test_clock(page, 16_000)
                 if page.locator("#summaryActivityStatus").get_attribute("data-activity") != "approximation":
-                    raise AssertionError(f"{name}: ejercicio {exercise_number} no inició la aproximación separada")
+                    raise AssertionError(f"{name}: ejercicio {exercise_number} no inició la aproximación tras 16 s de preparación")
                 advance_test_clock(page, 20_000)
                 click_control(button)
                 warmup_record = page.evaluate(
@@ -2093,6 +2179,7 @@ def validate_installed_offline_package(browser) -> dict:
 def validate_responsive_layout(browser) -> dict:
     """Comprueba desbordamientos, controles y solapamiento con el resumen en tamaños móviles."""
     results = []
+    suspicious_load = None
     for name, _sex, _variant in ROUTINES:
         for width, height in RESPONSIVE_VIEWPORTS:
             context = browser.new_context(
@@ -2435,6 +2522,7 @@ def main() -> None:
     parser.add_argument("--day", type=int, choices=range(1, 5), help="limita el E2E funcional a un día para diagnóstico reproducible")
     parser.add_argument("--offline-only", action="store_true", help="ejecuta solo la validación offline del precache y rutas profundas")
     parser.add_argument("--quote-only", action="store_true", help="valida solo selección aleatoria y retrato/fallback de la frase")
+    parser.add_argument("--load-warning-only", action="store_true", help="valida solo la confirmación de cargas sospechosas kg/lb")
     args = parser.parse_args()
     SCREENSHOT_DIR = args.screenshot_dir
     server = create_isolated_server()
@@ -2449,6 +2537,11 @@ def main() -> None:
                 result = validate_installed_offline_package(browser)
                 browser.close()
                 print(json.dumps({"status": "E2E_OFFLINE_OK", "result": result}, ensure_ascii=False, indent=2))
+                return
+            if args.load_warning_only:
+                result = validate_suspicious_load_confirmation(browser, ROUTINES[0][0])
+                browser.close()
+                print(json.dumps({"status": "E2E_LOAD_WARNING_OK", "result": result}, ensure_ascii=False, indent=2))
                 return
             if args.celebration_only:
                 results = [validate_completed_session_celebration(browser, name, sex, variant) for name, sex, variant in ROUTINES]
@@ -2489,6 +2582,8 @@ def main() -> None:
                     day_result.update(validate_completed_session_celebration(browser, name, sex, variant))
                     results.append(day_result)
                     print(f"Sintético: día validado {name}", flush=True)
+                print("Sintético: confirmación de carga sospechosa kg/lb", flush=True)
+                suspicious_load = validate_suspicious_load_confirmation(browser, ROUTINES[0][0])
                 offline = None if args.functional_only else validate_installed_offline_package(browser)
             else:
                 offline = None
@@ -2497,7 +2592,7 @@ def main() -> None:
         server.shutdown()
         server.server_close()
         thread.join(timeout=3)
-    print(json.dumps({"status": "E2E_ROUTINES_OK", "days": len(results), "results": results, "coverAnimation": cover_animation, "quoteCard": quote_card, "responsive": responsive, "offlinePackage": offline}, ensure_ascii=False, indent=2))
+    print(json.dumps({"status": "E2E_ROUTINES_OK", "days": len(results), "results": results, "suspiciousLoad": suspicious_load, "coverAnimation": cover_animation, "quoteCard": quote_card, "responsive": responsive, "offlinePackage": offline}, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":
