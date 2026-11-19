@@ -98,18 +98,25 @@ class HomepageContractTests(unittest.TestCase):
             "Tren superior A · espalda y bíceps",
             "Tren inferior A · cuádriceps y glúteos",
             "Tren superior B · pecho y hombros",
-            "Opcional · posterior y core",
+            "Pierna posterior y core",
         ):
             self.assertIn(title, self.html)
         self.assertIn("routineId: 'day1'", self.html)
         self.assertIn("routineId: 'day4'", self.html)
 
-    def test_homepage_summary_marks_three_base_days_and_one_optional_day(self):
+    def test_homepage_summary_marks_four_days_in_the_rotation(self):
         self.assertIn("Calienta, entrena con técnica y registra cada serie.", self.html)
-        self.assertIn('<span class="plan-pill">3 días base + 1 opcional · 90 series máx.</span>', self.html)
-        self.assertIn('<div class="quick-stat"><strong>3</strong><span>sesiones base por semana</span></div>', self.html)
-        self.assertIn('<div class="quick-stat"><strong>68</strong><span>series efectivas base</span></div>', self.html)
-        self.assertIn('Día 4 · opcional', self.html)
+        self.assertIn('<span class="plan-pill">4 días en rotación · 90 series</span>', self.html)
+        self.assertIn('<div class="quick-stat"><strong>4</strong><span>días en la rotación</span></div>', self.html)
+        self.assertIn('<div class="quick-stat"><strong>90</strong><span>series efectivas por ciclo</span></div>', self.html)
+        self.assertIn('Día 4</span>', self.html)
+        self.assertIn("title: 'Pierna posterior y core'", self.html)
+        self.assertNotIn('Día 4 · opcional', self.html)
+        self.assertNotIn('Día 4 opcional', self.html)
+        self.assertNotIn('optional: true', self.html)
+        day4 = (CANONICAL / 'Rutina_Dia_4_Pierna_Equilibrio_V1.html').read_text(encoding='utf-8')
+        self.assertIn('DÍA 4 · PIERNA POSTERIOR Y CORE', day4)
+        self.assertNotIn('DÍA 4 · OPCIONAL', day4)
         self.assertIn('id="nextSessionTitle"', self.html)
         self.assertIn('href="#routines">Ver plan completo</a>', self.html)
 
@@ -487,7 +494,7 @@ const routineCatalog = [
   {{routineId:'day1',trainingGroup:'upper',totalSeries:23}},
   {{routineId:'day2',trainingGroup:'lower',totalSeries:23}},
   {{routineId:'day3',trainingGroup:'upper',totalSeries:22}},
-  {{routineId:'day4',trainingGroup:'lower',optional:true,totalSeries:22}}
+  {{routineId:'day4',trainingGroup:'lower',totalSeries:22}}
 ];
 const tuesday = new Date(2026, 9, 13, 9, 0, 0);
 const previousSaturday = new Date(2026, 9, 10, 18, 0, 0).getTime();
@@ -523,7 +530,7 @@ const routineCatalog=[
   {{routineId:'day1',day:'Día 1',trainingGroup:'upper',totalSeries:23}},
   {{routineId:'day2',day:'Día 2',trainingGroup:'lower',totalSeries:23}},
   {{routineId:'day3',day:'Día 3',trainingGroup:'upper',totalSeries:22}},
-  {{routineId:'day4',day:'Día 4',trainingGroup:'lower',optional:true,totalSeries:22}}
+  {{routineId:'day4',day:'Día 4',trainingGroup:'lower',totalSeries:22}}
 ];
 function recordsFor(routineId) {{ return routineMuscleProfiles[routineId].flatMap(ex => Array.from({{length:ex.series}}, (_,n)=>({{exerciseId:ex.exerciseId,setKey:`e${{ex.exerciseId}}s${{n+1}}`}}))); }}
 const now=new Date(2026,10,13,12);
@@ -680,7 +687,7 @@ const context = {
     { routineId: 'day1', day: 'Día 1', title: 'Tirón', summary: '', trainingGroup: 'upper', totalExercises: 6, totalSeries: 20, image: 'day1.webp', href: 'day1.html' },
     { routineId: 'day2', day: 'Día 2', title: 'Pierna', summary: '', trainingGroup: 'lower', totalExercises: 6, totalSeries: 20, image: 'day2.webp', href: 'day2.html' },
     { routineId: 'day3', day: 'Día 3', title: 'Empuje', summary: '', trainingGroup: 'upper', totalExercises: 7, totalSeries: 22, image: 'day3.webp', href: 'day3.html' },
-    { routineId: 'day4', day: 'Día 4', title: 'Pierna y core', summary: '', trainingGroup: 'lower', optional: true, totalExercises: 7, totalSeries: 22, image: 'day4.webp', href: 'day4.html' }
+    { routineId: 'day4', day: 'Día 4', title: 'Pierna posterior y core', summary: '', trainingGroup: 'lower', totalExercises: 7, totalSeries: 22, image: 'day4.webp', href: 'day4.html' }
   ],
   ...nodes
 };
@@ -725,7 +732,7 @@ const context = {
     { routineId: 'day1', day: 'Día 1', title: 'Tirón', summary: '', trainingGroup: 'upper', totalExercises: 6, totalSeries: 20, image: 'day1.webp', href: 'day1.html' },
     { routineId: 'day2', day: 'Día 2', title: 'Pierna', summary: '', trainingGroup: 'lower', totalExercises: 6, totalSeries: 20, image: 'day2.webp', href: 'day2.html' },
     { routineId: 'day3', day: 'Día 3', title: 'Empuje', summary: '', trainingGroup: 'upper', totalExercises: 7, totalSeries: 22, image: 'day3.webp', href: 'day3.html' },
-    { routineId: 'day4', day: 'Día 4', title: 'Pierna y core', summary: '', trainingGroup: 'lower', optional: true, totalExercises: 7, totalSeries: 22, image: 'day4.webp', href: 'day4.html' }
+    { routineId: 'day4', day: 'Día 4', title: 'Pierna posterior y core', summary: '', trainingGroup: 'lower', totalExercises: 7, totalSeries: 22, image: 'day4.webp', href: 'day4.html' }
   ],
   ...nodes
 };
@@ -783,7 +790,7 @@ const context = {
     {routineId:'day1',day:'Día 1',title:'Tren superior A',trainingGroup:'upper',weekFocus:'Espalda y bíceps',totalSeries:23,image:'./assets/branding/routine-covers/day1.webp'},
     {routineId:'day2',day:'Día 2',title:'Tren inferior A',trainingGroup:'lower',weekFocus:'Pierna y glúteo',totalSeries:23,image:'./assets/branding/routine-covers/day2.webp'},
     {routineId:'day3',day:'Día 3',title:'Tren superior B',trainingGroup:'upper',weekFocus:'Pecho y hombros',totalSeries:22,image:'./assets/branding/routine-covers/day3.webp'},
-    {routineId:'day4',day:'Día 4',title:'Opcional posterior',trainingGroup:'lower',weekFocus:'Posterior y core',optional:true,totalSeries:22,image:'./assets/branding/routine-covers/day4.webp'}
+    {routineId:'day4',day:'Día 4',title:'Pierna posterior y core',trainingGroup:'lower',weekFocus:'Posterior y core',totalSeries:22,image:'./assets/branding/routine-covers/day4.webp'}
   ]
 };
 vm.createContext(context); vm.runInContext(helpers[0], context);
@@ -814,7 +821,7 @@ assert.match(pills[2].className, /week-training-pill--active/);
 assert.strictEqual(context.recommendedRoutineForWeek([sessions[0]], now).routine.routineId, 'day2');
 assert.match(context.recommendedRoutineForWeek([sessions[0]], now).reason, /Faltan registros detallados por ejercicio/);
 assert.match(context.recommendedRoutineForWeek([sessions[0]], now).reason, /también recomendamos descansar/);
-assert.strictEqual(context.recommendedRoutineForWeek(sessions.slice(0,4), now).routine.routineId, 'day4', 'the optional day participates after the latest upper-body session');
+assert.strictEqual(context.recommendedRoutineForWeek(sessions.slice(0,4), now).routine.routineId, 'day4', 'the fourth routine participates after the latest upper-body session');
 const basesThenLower = [
   {sessionId:'b1',routineId:'day1',startedAt:new Date(2026,10,9,9).getTime(),completedSeries:23,totalSeries:23,status:'completed'},
   {sessionId:'b2',routineId:'day2',startedAt:new Date(2026,10,10,9).getTime(),completedSeries:23,totalSeries:23,status:'completed'},
@@ -823,7 +830,7 @@ const basesThenLower = [
 ];
 const optionalAfterLower = context.recommendedRoutineForWeek(basesThenLower, now);
 assert.strictEqual(optionalAfterLower.routine.routineId, 'day4');
-assert.match(optionalAfterLower.reason, /Día 4 \(opcional\)/);
+assert.match(optionalAfterLower.reason, /Día 4/);
 assert.match(optionalAfterLower.reason, /rotación pendiente/);
 const performanceFor = routineId => context.routineMuscleProfiles[routineId].flatMap(exercise =>
   Array.from({length:exercise.series}, (_, index) => ({exerciseId:exercise.exerciseId, setKey:`e${exercise.exerciseId}s${index + 1}`})));
@@ -832,8 +839,8 @@ const day3Complete = {sessionId:'e3',routineId:'day3',startedAt:new Date(2026,10
 const day2PartialPerformance = performanceFor('day2').slice(0,10);
 const day2Partial = {sessionId:'e2',routineId:'day2',startedAt:new Date(2026,10,12,9).getTime(),completedSeries:day2PartialPerformance.length,totalSeries:23,status:'completed',completionKind:'partial',performance:day2PartialPerformance};
 const optionalByDeficit = context.recommendedRoutineForWeek([day1Complete,day3Complete,day2Partial], now);
-assert.strictEqual(optionalByDeficit.routine.routineId, 'day4', 'the optional day is compared with unfinished base routines before all bases are complete');
-assert.match(optionalByDeficit.reason, /Día 4 \(opcional\).*mejor cubre/);
+assert.strictEqual(optionalByDeficit.routine.routineId, 'day4', 'the fourth day is compared with all unfinished routines');
+assert.match(optionalByDeficit.reason, /Día 4.*mejor cubre/);
 const full = [
   {sessionId:'f1',routineId:'day1',startedAt:new Date(2026,10,9,9).getTime(),completedSeries:23,totalSeries:23,status:'completed'},
   {sessionId:'f2',routineId:'day2',startedAt:new Date(2026,10,10,9).getTime(),completedSeries:23,totalSeries:23,status:'completed'},
@@ -843,6 +850,7 @@ const full = [
 const completeWeek = context.recommendedRoutineForWeek(full, now);
 assert.strictEqual(completeWeek.planComplete, true);
 assert.match(completeWeek.reason, /Te recomendamos recuperación/);
+assert.match(completeWeek.reason, /completaste los cuatro días de la rotación/);
 assert.match(completeWeek.reason, /empezar con Día 1/);
 const first = context.recommendedRoutineForWeek([], now);
 assert.match(first.reason, /Te recomendamos Día 1/);

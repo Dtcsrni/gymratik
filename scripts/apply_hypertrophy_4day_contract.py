@@ -243,8 +243,8 @@ def update_sections(source: str, day: int, count: int, distribution: tuple[int, 
             "Rutina de tren superior equilibrada, con trabajo de pecho, hombros y tríceps.": "Tren superior B: pecho, hombros y tríceps.",
         },
         4: {
-            "DÍA 1 · TREN SUPERIOR A: ESPALDA Y BÍCEPS": "DÍA 4 · OPCIONAL: POSTERIOR Y CORE",
-            "DÍA 4 · PIERNA Y CORE: CADERA Y ESTABILIDAD": "DÍA 4 · OPCIONAL: POSTERIOR Y CORE",
+            "DÍA 1 · TREN SUPERIOR A: ESPALDA Y BÍCEPS": "DÍA 4 · PIERNA POSTERIOR Y CORE",
+            "DÍA 4 · PIERNA Y CORE: CADERA Y ESTABILIDAD": "DÍA 4 · PIERNA POSTERIOR Y CORE",
             "Rutina de tren inferior equilibrada, con trabajo de rodilla, cadera, pantorrilla y core.": "Tren inferior B: bisagra en Smith, flexión y extensión de rodilla, cadera, pantorrilla y core.",
         },
     }
@@ -255,7 +255,7 @@ def update_sections(source: str, day: int, count: int, distribution: tuple[int, 
         1: "Día 1 · Tren superior A: espalda y bíceps · rutina v3",
         2: "Día 2 · Tren inferior A: cuádriceps y glúteos · rutina v3",
         3: "Día 3 · Tren superior B: pecho y hombros · rutina v3",
-        4: "Día 4 · Opcional: posterior y core · rutina v3",
+        4: "Día 4 · Pierna posterior y core · rutina v3",
     }
     source = re.sub(r'<title>.*?</title>', f'<title>{page_titles[day]}</title>', source, count=1, flags=re.I | re.S)
     source = re.sub(r'(data-label=["\'])[^"\']*(Día\s+\d+)[^"\']*(["\'])', lambda m: f'{m.group(1)}{page_titles[day]}{m.group(3)}', source, count=1, flags=re.I)

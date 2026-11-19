@@ -1,5 +1,5 @@
-const CACHE_NAME = 'entrenamiento-pwa-7b2ecae20719';
-const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-fbb1e2b19081';
+const CACHE_NAME = 'entrenamiento-pwa-d593498adea4';
+const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-7b2ecae20719';
 const PRECACHE = [
   './',
   './index.html',
@@ -180,8 +180,8 @@ const PRECACHE = [
 ];
 const PRECACHE_URLS = new Set(PRECACHE.map((path) => new URL(path, self.registration.scope).href));
 const RESOURCE_BYTES = {
-  './': 140761,
-  './index.html': 140761,
+  './': 140248,
+  './index.html': 140248,
   './records.html': 10096,
   './records.css': 31246,
   './records.js': 35685,
@@ -239,7 +239,7 @@ const RESOURCE_BYTES = {
   './data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html': 1161323,
   './data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html': 2755272,
   './data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html': 734572,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html': 739511,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html': 739502,
   './assets/branding/gymratik-mascots-mark-v2.png': 338005,
   './data/rutinas_autocontenidas/frases_fitness/fitness_quotes.js': 5148,
   './data/rutinas_autocontenidas/frases_fitness/retratos/arnold-schwarzenegger-eu-2026.jpg': 278839,

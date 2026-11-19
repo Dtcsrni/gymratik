@@ -19,7 +19,7 @@ totales falsos.
 | 1 | `data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html` | 7 ejercicios; 23 series; `4 + 4 + 3 + 3 + 3 + 3 + 3` (contenido v3) |
 | 2 | `data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html` | 7 ejercicios; 23 series; `3 + 3 + 3 + 4 + 4 + 3 + 3` (contenido v3) |
 | 3 | `data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html` | 7 ejercicios; 22 series; `4 + 3 + 3 + 3 + 3 + 3 + 3` (contenido v3) |
-| 4 | `data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html` | 7 ejercicios; 22 series; `3 + 3 + 4 + 3 + 3 + 3 + 3` (contenido v3, opcional) |
+| 4 | `data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html` | 7 ejercicios; 22 series; `3 + 3 + 4 + 3 + 3 + 3 + 3` (contenido v3, parte de la rotación) |
 
 El contrato del plan v3 debe mantenerse explícito: todo cambio de distribución,
 equipo o rango requiere actualizar SRS, SDD-001, salida y trazabilidad en el mismo cambio.
@@ -88,7 +88,7 @@ solo difieren en prescripción, contenido visual y contrato específico del día
 
 **Preparación:** validar cada tarjeta de las cuatro salidas canónicas v3.
 
-**Comprobaciones:** días 1–3 suman 21–24 series (68 total); día 4 opcional suma 22 (90 si se realizan los cuatro); ninguna rutina supera 7 ejercicios; cada ejercicio tiene al menos 3 series y declara 8–12 repeticiones; Día 4 usa peso muerto rumano en Smith; el HTML declara `data-routine-content-version="3"`. La portada rota solo por los tres días base y permite continuar una sesión activa del opcional. El E2E funcional ejecuta cada serie efectiva. Las cargas del selector son orientativas hasta identificar el modelo físico exacto.
+**Comprobaciones:** las cuatro rutinas suman 90 series por ciclo; ninguna rutina supera 7 ejercicios; cada ejercicio tiene al menos 3 series y declara 8–12 repeticiones; Día 4 usa peso muerto rumano en Smith; el HTML declara `data-routine-content-version="3"`. La portada rota por los cuatro días y permite continuar una sesión activa. El E2E funcional ejecuta cada serie efectiva. Las cargas del selector son orientativas hasta identificar el modelo físico exacto.
 
 ### TST-CAN-007 — Contador de ejercicios en estado de sesión
 
