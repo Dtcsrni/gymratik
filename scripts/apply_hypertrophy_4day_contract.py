@@ -15,6 +15,7 @@ from standardize_muscle_visuals import (
     standardize_quote_portrait_loading,
     standardize_shared_session_contract,
 )
+from plate_picker_contract import apply_plate_picker_contract
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -1164,6 +1165,7 @@ def apply() -> list[str]:
         updated = apply_uniform_mobile_exercise_layout(updated)
         updated = standardize_quote_portrait_loading(updated)
         updated = apply_warmup_load_selector_contract(updated)
+        updated = apply_plate_picker_contract(updated)
         updated = standardize_shared_session_contract(updated)
         updated = standardize_completed_session_footer(updated)
         if day == 4:

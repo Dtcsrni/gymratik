@@ -2857,6 +2857,23 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 @media(max-width:520px){.sessionFooter{grid-template-columns:1fr!important;gap:.55rem!important;padding:.75rem!important}.sessionResetCopy strong{font-size:.82rem}.sessionResetCopy span{font-size:.7rem}}
 .sessionFooter.is-session-complete{grid-template-columns:minmax(0,1fr)!important}.sessionFooter.is-session-complete .sessionResetCopy{display:none!important}#finishDay[hidden]{display:none!important}</style>
   <script src="../../../page-update-client.js" defer></script>
+<style data-enhancement="plate-picker-v1">
+.platePickerToggle{display:flex;align-items:center;justify-content:space-between;gap:.65rem;width:100%;min-height:48px;margin-top:.45rem;padding:.55rem .75rem;border:1px solid rgba(105,215,255,.3);border-radius:.7rem;background:linear-gradient(110deg,rgba(14,43,61,.94),rgba(7,28,42,.9));color:#e8faff;font:inherit;font-size:.84rem;font-weight:850;text-align:left;cursor:pointer}
+.platePickerToggle:focus-visible,.platePickerOption:focus-visible,.platePickerRemove:focus-visible,.platePickerAction:focus-visible{outline:3px solid #5ce8c8;outline-offset:2px}
+.platePickerToggleLabel{display:flex;align-items:center;gap:.5rem}.platePickerToggleTotal{margin-left:auto;color:#5ce8c8;font-size:.8rem;font-weight:950}
+.platePicker{display:grid;gap:.6rem;margin-top:.5rem;padding:.65rem;border:1px solid rgba(105,215,255,.26);border-radius:.8rem;background:linear-gradient(145deg,rgba(10,33,48,.98),rgba(5,22,34,.98))}
+.platePicker[hidden]{display:none!important}.platePickerHelp{margin:0;color:#a9c3cd;font-size:.7rem;line-height:1.4}
+.platePickerSelection{display:grid;gap:.35rem;padding:.55rem;border-radius:.6rem;background:rgba(7,23,36,.72)}
+.platePickerSelectionTitle{color:#9fbac5;font-size:.67rem;font-weight:800}.platePickerComposition{min-height:1.25em;color:#e8faff;font-size:.76rem;font-weight:800;overflow-wrap:anywhere}.platePickerTotal{color:#5ce8c8;font-size:1rem;font-weight:950}.platePickerStatus{min-height:1.1em;margin:0;color:#ffcf85;font-size:.68rem;line-height:1.35}
+.platePickerUnit{display:grid;gap:.35rem}.platePickerUnitTitle{margin:0;color:#5ce8c8;font-size:.72rem;font-weight:900;letter-spacing:.035em}
+.platePickerGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.35rem}
+.platePickerItem{position:relative;display:grid;min-width:0;min-height:88px;grid-template-rows:48px auto;justify-items:center;align-items:center;gap:.15rem;padding:.35rem .2rem;border:1px solid rgba(120,163,183,.2);border-radius:.6rem;background:rgba(7,25,39,.6)}
+.platePickerOption{display:grid;justify-items:center;align-content:center;gap:.15rem;width:100%;min-width:0;padding:0;border:0;background:transparent;color:#e7f5fa;font:inherit;font-size:.69rem;font-weight:850;cursor:pointer;touch-action:manipulation}
+.platePickerOption img{display:block;width:44px;height:44px;object-fit:contain}.platePickerCount{min-height:.9em;color:#5ce8c8;font-size:.62rem;font-weight:900}
+.platePickerRemove{position:absolute;top:.15rem;right:.15rem;display:grid;place-items:center;width:28px;height:28px;padding:0;border:1px solid rgba(105,215,255,.22);border-radius:50%;background:#0b2238;color:#cdebf2;font:inherit;font-size:1rem;font-weight:900;cursor:pointer}.platePickerRemove[hidden]{display:none}
+.platePickerActions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:.45rem}.platePickerAction{min-height:42px;padding:.45rem .55rem;border:1px solid rgba(105,215,255,.32);border-radius:.65rem;background:#0b2238;color:#dff7fb;font:inherit;font-size:.75rem;font-weight:850;cursor:pointer}.platePickerActionPrimary{border-color:transparent;background:linear-gradient(100deg,#5ce8c8,#45d4f1);color:#06222b}.platePickerAction:disabled{opacity:.48;cursor:not-allowed}
+@media(max-width:360px){.platePickerGrid{grid-template-columns:repeat(3,minmax(0,1fr))}.platePicker{padding:.5rem}.platePickerItem{min-height:82px}}
+</style>
 </head><body><svg id="gymratikLucideSprite" class="gymratikIconSprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
 <symbol id="gymratik-icon-activity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></symbol>
 <symbol id="gymratik-icon-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></symbol>
@@ -3892,6 +3909,18 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     const loadClear = document.createElement('button'); loadClear.type = 'button'; loadClear.className = 'performanceClear'; loadClear.textContent = 'Quitar'; loadClear.setAttribute('aria-label', `No registrar carga de ${item.title}`); loadClear.hidden = true; loadHead.append(loadTitle, loadUnitSelect);
     const loadOutput = document.createElement('button'); loadOutput.type = 'button'; loadOutput.className = 'performanceLoadValue'; loadOutput.textContent = 'Sin registrar · tocar para añadir'; loadOutput.setAttribute('aria-label', `Tocar para editar la carga de ${item.title}`); const loadOutputRow = document.createElement('div'); loadOutputRow.className = 'performanceLoadOutputRow'; loadOutputRow.append(loadOutput, loadClear);
     const loadInput = document.createElement('input'); loadInput.className = 'performanceLoad'; loadInput.type = 'range'; loadInput.min = '0'; loadInput.max = '1000'; loadInput.step = '2.5'; loadInput.value = '0'; loadInput.setAttribute('aria-label', `Carga utilizada en ${item.title}`); loadLabel.append(loadHead, loadOutputRow, loadInput);
+    const platePickerToggle = document.createElement('button'); platePickerToggle.type = 'button'; platePickerToggle.className = 'platePickerToggle'; platePickerToggle.setAttribute('aria-expanded', 'false');
+    const platePickerLabel = document.createElement('span'); platePickerLabel.className = 'platePickerToggleLabel'; const platePickerIcon = createPerformanceIcon('weight'); if (platePickerIcon) platePickerLabel.append(platePickerIcon); const platePickerTitle = document.createElement('span'); platePickerTitle.textContent = 'Discos'; platePickerLabel.append(platePickerTitle);
+    const platePickerHeaderTotal = document.createElement('span'); platePickerHeaderTotal.className = 'platePickerToggleTotal'; platePickerHeaderTotal.textContent = item.performanceLoadSelected ? loadOutput.textContent : 'Elegir'; platePickerToggle.append(platePickerLabel, platePickerHeaderTotal);
+    const platePickerPanel = document.createElement('section'); platePickerPanel.className = 'platePicker'; platePickerPanel.hidden = true; platePickerPanel.setAttribute('aria-label', 'Selector de discos'); platePickerPanel.id = `plate-picker-${item.index + 1}`; platePickerToggle.setAttribute('aria-controls', platePickerPanel.id);
+    const platePickerHelp = document.createElement('p'); platePickerHelp.className = 'platePickerHelp'; platePickerHelp.textContent = 'Toca un disco para agregarlo. Puedes combinar libras y kilogramos.';
+    const platePickerSelection = document.createElement('div'); platePickerSelection.className = 'platePickerSelection'; const platePickerSelectionTitle = document.createElement('span'); platePickerSelectionTitle.className = 'platePickerSelectionTitle'; platePickerSelectionTitle.textContent = 'Discos seleccionados'; const platePickerComposition = document.createElement('output'); platePickerComposition.className = 'platePickerComposition'; platePickerComposition.setAttribute('aria-live', 'polite'); platePickerComposition.textContent = 'Selecciona discos para ver la suma'; const platePickerTotal = document.createElement('output'); platePickerTotal.className = 'platePickerTotal'; platePickerTotal.textContent = '0.0 kg'; const platePickerStatus = document.createElement('p'); platePickerStatus.className = 'platePickerStatus'; platePickerStatus.setAttribute('role', 'status'); platePickerSelection.append(platePickerSelectionTitle, platePickerComposition, platePickerTotal, platePickerStatus);
+    const platePickerGrid = document.createElement('div'); platePickerGrid.className = 'platePickerGrid'; const platePickerCounts = new Map();
+    const platePickerOptions = [['lb',[45,35,25,20,15,10,5,2.5]],['kg',[25,20,15,10,5,2.5,1.25,0.5,0.25]]];
+    platePickerOptions.forEach(([unit,values]) => { const group = document.createElement('section'); group.className = 'platePickerUnit'; const heading = document.createElement('h4'); heading.className = 'platePickerUnitTitle'; heading.textContent = unit === 'lb' ? 'Discos en lb' : 'Discos en kg'; const grid = document.createElement('div'); grid.className = 'platePickerGrid'; values.forEach(weight => { const key = `${unit}:${weight}`; const tile = document.createElement('div'); tile.className = 'platePickerItem'; const add = document.createElement('button'); add.type = 'button'; add.className = 'platePickerOption'; add.setAttribute('aria-label', `Agregar disco de ${weight} ${unit}`); const plateImage = document.createElement('img'); plateImage.src = '../../../assets/branding/gymratik-plate-dark.webp'; plateImage.alt = ''; plateImage.loading = 'lazy'; plateImage.decoding = 'async'; const label = document.createElement('span'); label.textContent = `${weight} ${unit}`; const count = document.createElement('span'); count.className = 'platePickerCount'; add.append(plateImage,label,count); const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'platePickerRemove'; remove.textContent = '−'; remove.hidden = true; remove.setAttribute('aria-label', `Quitar un disco de ${weight} ${unit}`); const renderCount = () => { const amount = platePickerCounts.get(key) || 0; count.textContent = amount ? `×${amount}` : ''; remove.hidden = !amount; add.setAttribute('aria-label', `${amount ? 'Agregar otro' : 'Agregar'} disco de ${weight} ${unit}${amount ? `; seleccionados ${amount}` : ''}`); }; add.addEventListener('click', () => { platePickerCounts.set(key,(platePickerCounts.get(key)||0)+1); renderCount(); renderPlatePicker(); }); remove.addEventListener('click', () => { const amount = (platePickerCounts.get(key)||0)-1; if (amount > 0) platePickerCounts.set(key,amount); else platePickerCounts.delete(key); renderCount(); renderPlatePicker(); }); tile.append(add,remove); grid.append(tile); }); group.append(heading,grid); platePickerGrid.append(group); });
+    const platePickerActions = document.createElement('div'); platePickerActions.className = 'platePickerActions'; const platePickerApply = document.createElement('button'); platePickerApply.type = 'button'; platePickerApply.className = 'platePickerAction platePickerActionPrimary'; platePickerApply.textContent = 'Aplicar carga'; platePickerApply.disabled = true; const platePickerClear = document.createElement('button'); platePickerClear.type = 'button'; platePickerClear.className = 'platePickerAction'; platePickerClear.textContent = 'Limpiar selección'; platePickerActions.append(platePickerApply,platePickerClear);
+    platePickerPanel.append(platePickerHelp,platePickerSelection,platePickerGrid,platePickerActions); loadLabel.append(platePickerToggle,platePickerPanel);
+
     const progressionCue = document.createElement('p'); progressionCue.className = 'progressionCue'; progressionCue.setAttribute('role', 'status'); progressionCue.textContent = `Registra repeticiones y carga para completar. Si no conoces algún dato, toca «Quitar» y podrás continuar después de confirmar que quedará sin registrar. Rango de carga: ${item.performanceLoadProfile.minKg}–${item.performanceLoadProfile.maxKg} kg.`;
     performancePanel.append(repsLabel, loadLabel, progressionCue);
     item.performancePanel = performancePanel; performancePanel.__routineItem = item; performancePanel.__routineState = state; performancePanel.__persistRoutineState = save;
@@ -4003,6 +4032,20 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       state.__performanceDraft[exerciseId] = { reps: item.performanceReps.dataset.selected === 'true' ? item.performanceReps.value : '0', load: item.performanceLoadSelected ? String(item.performanceLoadExact) : '', loadSelected: item.performanceLoadSelected, loadUnit: item.performanceLoadUnit };
       save();
     };
+
+    const renderPlatePicker = () => {
+      let totalKg = 0; const parts = [];
+      for (const [key,count] of platePickerCounts) { const [unit,raw] = key.split(':'); const weight = Number(raw); totalKg += loadMath.toKg(weight * count, unit); parts.push(`${weight} ${unit} × ${count}`); }
+      const displayKg = loadMath.normalizeKg(totalKg, item.performanceLoadProfile); const valid = totalKg > 0 && Number.isFinite(displayKg) && displayKg >= item.performanceLoadProfile.minKg && displayKg <= item.performanceLoadProfile.maxKg;
+      platePickerComposition.textContent = parts.length ? parts.join(' + ') : 'Selecciona discos para ver la suma'; platePickerTotal.textContent = `${totalKg.toFixed(1)} kg`; platePickerApply.textContent = `Aplicar ${totalKg.toFixed(1)} kg`; platePickerApply.disabled = !valid;
+      platePickerStatus.textContent = totalKg > 0 && !valid ? `La suma debe estar entre ${item.performanceLoadProfile.minKg} y ${item.performanceLoadProfile.maxKg} kg.` : 'El total suma los discos seleccionados; no incluye barra o máquina.';
+      platePickerHeaderTotal.textContent = parts.length ? `${totalKg.toFixed(1)} kg` : item.performanceLoadSelected ? loadOutput.textContent : 'Elegir';
+    };
+    platePickerToggle.addEventListener('click', () => { const open = platePickerPanel.hidden; platePickerPanel.hidden = !open; platePickerToggle.setAttribute('aria-expanded', String(open)); if (open) renderPlatePicker(); });
+    platePickerClear.addEventListener('click', () => { platePickerCounts.clear(); platePickerPanel.querySelectorAll('.platePickerCount').forEach(count => { count.textContent = ''; }); platePickerPanel.querySelectorAll('.platePickerRemove').forEach(remove => { remove.hidden = true; }); renderPlatePicker(); });
+    platePickerApply.addEventListener('click', () => { let totalKg = 0; for (const [key,count] of platePickerCounts) { const [unit,raw] = key.split(':'); totalKg += loadMath.toKg(Number(raw) * count, unit); } if (!Number.isFinite(totalKg) || totalKg <= 0 || totalKg < item.performanceLoadProfile.minKg || totalKg > item.performanceLoadProfile.maxKg) return; const normalizedKg = loadMath.normalizeKg(totalKg, item.performanceLoadProfile); item.performanceLoadExact = loadMath.toDisplay(normalizedKg, item.performanceLoadUnit); item.performanceLoadSelected = true; loadInput.value = String(item.performanceLoadExact); updateLoadControl(); savePerformanceDraft(); platePickerHeaderTotal.textContent = loadOutput.textContent; platePickerPanel.hidden = true; platePickerToggle.setAttribute('aria-expanded','false'); });
+    item.performanceLoadClear.addEventListener('click', () => { platePickerCounts.clear(); platePickerPanel.querySelectorAll('.platePickerCount').forEach(count => { count.textContent = ''; }); platePickerPanel.querySelectorAll('.platePickerRemove').forEach(remove => { remove.hidden = true; }); renderPlatePicker(); platePickerHeaderTotal.textContent = 'Elegir'; });
+
     const savedReps = Number(savedDraft?.reps); const savedRepsValid = Number.isInteger(savedReps) && savedReps >= item.repMinimum && savedReps <= item.repMaximum + 4; item.performanceReps.value = String(savedRepsValid ? savedReps : item.repMinimum); item.performanceReps.dataset.selected = String(savedRepsValid); if (item.performanceLoadSelected) item.performanceLoad.value = savedDraft.load;
     const repFeedbackZone = value => {
       if (value < item.repMinimum) return 'below';
@@ -4174,7 +4217,6 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
           display.append(chip);
         }
         chip.dataset.kind = entry.kind;
-        chip.classList.toggle('is-countdown-final', entry.countdownFinal === true);
         chip.querySelector('.exerciseTimerLabel').textContent = entry.label;
         chip.querySelector('.exerciseTimerValue').textContent = entry.value;
         chip.setAttribute('aria-label', `${entry.label}: ${entry.value}`);
@@ -4208,10 +4250,10 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       if (preparing) {
         const preparation = seriesPreparation.get(item.index);
         const remaining = Math.max(0, (preparation?.endsAt || timing?.preparationEndsAt || now) - now);
-        entries.push({ key: 'preparation', label: 'Preparación', value: formatCountdown(remaining), kind: 'preparation', countdownFinal: remaining > 0 && remaining <= 3000 });
+        entries.push({ key: 'preparation', label: 'Preparación', value: formatCountdown(remaining), kind: 'preparation' });
       } else if (restActive) {
         const elapsed = Math.max(0, recommendation.minMs - restRemaining);
-        entries.push({ key: 'active-rest', label: 'Descanso activo', value: `${formatCountdown(restRemaining)} restante`, kind: 'active-rest', progress: recommendation.minMs ? elapsed / recommendation.minMs : 0, countdownFinal: restRemaining > 0 && restRemaining <= 3000 });
+        entries.push({ key: 'active-rest', label: 'Descanso activo', value: `${formatCountdown(restRemaining)} restante`, kind: 'active-rest', progress: recommendation.minMs ? elapsed / recommendation.minMs : 0 });
       } else if (timing?.restStartedAt && !row.complete && !seriesActive) {
         entries.push({ key: 'rest-ready', label: 'Descanso listo', value: 'Continuar cuando quieras', kind: 'preparation' });
       } else if (seriesActive) {
@@ -4256,9 +4298,9 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       const activity = warmupActive
         ? { kind: 'approximation', label: `Aproximación · ${item.title}`, clock: formatElapsed(now - timing.warmupStartedAt), startedAt: Number(timing.warmupStartedAt) || 0 }
         : restPending
-        ? { kind: restActive ? 'rest' : 'ready', label: restActive ? `Descanso · ${item.title}` : `Descanso listo · ${item.title}`, clock: restActive ? `${formatCountdown(restRemaining)} restantes` : 'Lista', startedAt: Number(timing.restStartedAt) || 0, remainingMs: restActive ? restRemaining : 0 }
+        ? { kind: restActive ? 'rest' : 'ready', label: restActive ? `Descanso · ${item.title}` : `Descanso listo · ${item.title}`, clock: restActive ? `${formatCountdown(restRemaining)} restantes` : 'Lista', startedAt: Number(timing.restStartedAt) || 0 }
         : preparing
-          ? { kind: 'preparing', label: `Preparación · ${item.title}`, clock: formatCountdown((preparation?.endsAt || timing?.preparationEndsAt || now) - now), startedAt: Math.max(0, (preparation?.endsAt || timing?.preparationEndsAt || now) - PREPARATION_MS), remainingMs: Math.max(0, (preparation?.endsAt || timing?.preparationEndsAt || now) - now) }
+          ? { kind: 'preparing', label: `Preparación · ${item.title}`, clock: formatCountdown((preparation?.endsAt || timing?.preparationEndsAt || now) - now), startedAt: Number(timing?.preparationEndsAt) || now }
           : seriesActive
             ? { kind: 'strength', label: `Serie ${row.done + 1} activa · ${item.title}`, clock: formatElapsed(now - timing.seriesStartedAt), startedAt: Number(timing.seriesStartedAt) || 0 }
             : null;
@@ -4302,16 +4344,12 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     const warmup = getWarmupTiming();
     if (warmup.phase === 'preparing') {
       const startedAt = Number(warmup.preparationEndsAt) - PREPARATION_MS;
-      const activity = { kind: 'preparing', label: 'Preparación · Calentamiento', clock: formatCountdown(warmupPreparationRemaining()), startedAt, remainingMs: warmupPreparationRemaining() };
+      const activity = { kind: 'preparing', label: 'Preparación · Calentamiento', clock: formatCountdown(warmupPreparationRemaining()), startedAt };
       if (!currentActivity || activity.startedAt >= currentActivity.startedAt) currentActivity = activity;
     } else if (warmup.phase === 'cardio' || warmup.phase === 'mobility') {
       const startedAt = Number(warmup[`${warmup.phase}StartedAt`]) || 0;
       const activity = { kind: warmup.phase, label: `Calentamiento · ${warmup.phase === 'cardio' ? 'Cardio' : 'Movilidad'}`, clock: formatElapsed(now - startedAt), startedAt };
       if (!currentActivity || activity.startedAt >= currentActivity.startedAt) currentActivity = activity;
-    }
-    if (document.visibilityState === 'visible' && currentActivity?.startedAt >= activityPageStartedAt && currentActivity.remainingMs > 0 && currentActivity.remainingMs <= 3000) {
-      const cueKey = `${currentActivity.kind}:${currentActivity.startedAt}`;
-      if (!playedCountdownCues.has(cueKey)) { playedCountdownCues.add(cueKey); playFeedback('countdown'); }
     }
     const activityButton = document.getElementById('summaryToggle');
     const activityIcon = document.getElementById('summaryActivityIcon');
@@ -4813,7 +4851,6 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     const label = resting && restRemaining > 0 ? `Descanso · ${formatElapsed(restRemaining)}`
       : complete ? state.__skippedExercises?.[String(item.index + 1)] === true ? '↷ Ejercicio omitido' : '✓ Ejercicio completado'
       : !globalWarmupComplete ? 'Completa calentamiento'
-      : preparing && preparation?.kind === 'approximation' ? `⏳ Preparación de aproximación · ${formatElapsed(preparation ? Math.max(0, preparation.endsAt - Date.now()) : 0)}`
       : preparing && preparation?.kind === 'approximation' ? `⏳ Preparación de aproximación · ${formatElapsed(preparation ? Math.max(0, preparation.endsAt - Date.now()) : 0)}`
       : warmupDue ? warmupStartedAt ? `Aproximación activa · ${formatElapsed(Date.now() - warmupStartedAt)} · completar` : 'Iniciar serie de aproximación'
       : preparing ? `⏳ Preparación · ${formatElapsed(preparation ? Math.max(0, preparation.endsAt - Date.now()) : 0)}`
@@ -8052,8 +8089,8 @@ button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gra
   #summaryToggle{grid-template-columns:auto minmax(0,1fr) 88px auto!important;grid-template-rows:auto auto!important;min-height:78px!important;gap:.12rem .42rem!important;padding:.36rem .52rem!important;overflow:visible!important}
   #summaryToggle #summaryHeadline{grid-column:2;grid-row:1;font-size:.7rem!important;line-height:1.15!important}
   #summaryToggle #summaryActivityHeadline{grid-column:2;grid-row:2;display:block!important;font-size:.62rem!important;line-height:1.1!important}
-  #summaryToggle .summaryMascotWrap{grid-column:3;grid-row:1/3!important;width:86px!important;height:86px!important;border-radius:.78rem!important;overflow:visible!important;transform:translateY(-8px)}
-  #summaryToggle #summaryActivityMascot{width:82px!important;height:82px!important}
+  #summaryToggle .summaryMascotWrap{grid-column:3;grid-row:1/3!important;width:96px!important;height:96px!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;transform:translateY(-10px)}
+  #summaryToggle #summaryActivityMascot{width:94px!important;height:94px!important;object-fit:contain!important}
   #summaryToggle .summaryChevron{grid-column:4;grid-row:1/3!important;font-size:.85rem!important}
   #summaryToggle.isResting{background:linear-gradient(105deg,rgba(112,79,21,.94),rgba(83,61,29,.94))!important}
   #summaryToggle.isActive{background:linear-gradient(105deg,rgba(19,105,91,.94),rgba(19,73,72,.94))!important}
@@ -8061,8 +8098,8 @@ button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gra
   #summaryToggle.isComplete{background:linear-gradient(105deg,rgba(112,79,21,.94),rgba(72,51,80,.94))!important}
   #summaryToggle[aria-expanded="true"]{grid-template-rows:auto auto!important;min-height:54px!important}
   #summaryToggle[aria-expanded="true"] #summaryActivityHeadline{display:block!important}
-  #summaryToggle[aria-expanded="true"] .summaryMascotWrap{width:86px!important;height:86px!important}
-  #summaryToggle[aria-expanded="true"] #summaryActivityMascot{width:82px!important;height:82px!important}
+  #summaryToggle[aria-expanded="true"] .summaryMascotWrap{width:96px!important;height:96px!important}
+  #summaryToggle[aria-expanded="true"] #summaryActivityMascot{width:94px!important;height:94px!important}
   #summaryToggle[aria-expanded="true"] ~ #summaryBody{display:flex!important;max-height:min(35dvh,190px)!important;min-height:0!important;padding:.28rem .42rem .36rem!important;gap:.2rem!important;overflow:hidden!important}
   #summaryToggle[aria-expanded="true"] ~ #summaryBody .summaryTotals,
   #summaryToggle[aria-expanded="true"] ~ #summaryBody .summaryActivityStatus,
@@ -8071,7 +8108,7 @@ button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gra
   #summaryToggle[aria-expanded="true"] + #summaryBody #summaryElapsed{display:none!important}
   #floatingSessionSummary .summaryFocusBadge{margin:0!important;padding:.14rem .34rem!important;font-size:.51rem!important;line-height:1.12!important}
   #summaryActivityMascot[data-motion="celebration"]{filter:drop-shadow(0 0 12px rgba(255,82,102,.92))}
-  .summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"]){border-color:rgba(255,93,111,.92)!important;background:rgba(130,28,51,.38)!important;box-shadow:0 0 22px rgba(255,55,88,.5)!important}
+  .summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"]){border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
   #floatingSessionSummary .sessionSummaryList{flex:1 1 auto!important;min-height:min(132px,24dvh)!important;max-height:min(28dvh,164px)!important}
   main.cards article.card .phaseRow{grid-template-columns:minmax(0,1fr)!important;gap:.55rem!important;align-items:stretch!important}
   main.cards article.card .phaseRow>.phaseCol{min-width:0!important;width:100%!important}
@@ -8079,7 +8116,7 @@ button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gra
   main.cards article.card .phaseRow .source{min-width:0!important;max-width:100%!important;word-break:normal!important;overflow-wrap:anywhere!important;hyphens:auto}
   main.cards article.card .phaseRow .swap{justify-self:center!important;align-self:center!important;margin:.1rem 0!important;transform:rotate(90deg)!important}
 }
-@media(max-width:380px){#summaryToggle{grid-template-columns:auto minmax(0,1fr) 80px auto!important}#summaryToggle .summaryMascotWrap,#summaryToggle[aria-expanded="true"] .summaryMascotWrap{width:78px!important;height:78px!important}#summaryToggle #summaryActivityMascot,#summaryToggle[aria-expanded="true"] #summaryActivityMascot{width:74px!important;height:74px!important}}
+@media(max-width:380px){#summaryToggle{grid-template-columns:auto minmax(0,1fr) 72px auto!important}#summaryToggle .summaryMascotWrap,#summaryToggle[aria-expanded="true"] .summaryMascotWrap{width:86px!important;height:86px!important}#summaryToggle #summaryActivityMascot,#summaryToggle[aria-expanded="true"] #summaryActivityMascot{width:84px!important;height:84px!important}}
 @media(max-width:360px){.performanceRepsControl{grid-template-columns:40px minmax(0,1fr) 40px!important;gap:.25rem!important}.performanceRepsNudge{min-width:40px!important;min-height:44px!important}.performanceFieldTitleRow{flex-wrap:wrap!important;justify-content:flex-start!important;gap:.25rem .4rem!important}.performanceFieldLabel{flex:1 1 120px!important;flex-wrap:wrap!important}.performanceRequired{margin-left:26px!important}}
 @media(prefers-reduced-motion:reduce){#floatingSessionSummary,#summaryToggle{scroll-behavior:auto!important;transition:none!important}}
 </style>

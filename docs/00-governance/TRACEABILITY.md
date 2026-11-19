@@ -35,6 +35,7 @@ Cada requisito funcional/no funcional del SRS aparece una sola vez. `Partial` in
 | FUN-PRO-019 | RISK-014 | ADR-018 | TST-PRO-019 | Partial |
 | FUN-PRO-020 | RISK-004 | SDD-004 | TST-PRO-020 | Verified (synthetic mobile; physical/public pending) |
 | FUN-PRO-021 | RISK-004 | SDD-004 | TST-PRO-021 | Implemented (static contract; visual mobile pending) |
+| FUN-PRO-022 | RISK-004 | SDD-001 | TST-PRO-022 | Partial |
 | FUN-TRN-010 | RISK-004 | SDD-001 | TST-TRN-010 | Partial |
 | FUN-TRN-011 | RISK-004 | SDD-001 | TST-TRN-011 | Partial |
 | FUN-TRN-012 | RISK-004 | SDD-001 | TST-TRN-012 | Partial |

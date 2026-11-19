@@ -1,5 +1,5 @@
-const CACHE_NAME = 'entrenamiento-pwa-d26239aead6f';
-const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-ddc44e2b9e14';
+const CACHE_NAME = 'entrenamiento-pwa-992c9ba7e9c9';
+const PREVIOUS_CACHE_NAME = 'entrenamiento-pwa-bfb5578733a6';
 const PRECACHE = [
   './',
   './index.html',
@@ -13,6 +13,7 @@ const PRECACHE = [
   './assets/branding/gymratik-pwa-icon-v8-maskable-512.png',
   './assets/branding/gymratik-cover-seated-breath-30fps.webp',
   './assets/branding/gymratik-cover-seated-v1-poster.webp',
+  './assets/branding/gymratik-plate-dark.webp',
   './assets/branding/routine-covers/day1.webp',
   './assets/branding/routine-covers/day2.webp',
   './assets/branding/routine-covers/day3.webp',
@@ -191,6 +192,7 @@ const RESOURCE_BYTES = {
   './assets/branding/gymratik-pwa-icon-v8-maskable-512.png': 221236,
   './assets/branding/gymratik-cover-seated-breath-30fps.webp': 2813316,
   './assets/branding/gymratik-cover-seated-v1-poster.webp': 33354,
+  './assets/branding/gymratik-plate-dark.webp': 5058,
   './assets/branding/routine-covers/day1.webp': 212296,
   './assets/branding/routine-covers/day2.webp': 144640,
   './assets/branding/routine-covers/day3.webp': 201068,
@@ -234,10 +236,10 @@ const RESOURCE_BYTES = {
   './data/profile/mascot-motion/states-v1/male-approval.png': 12307,
   './data/profile/mascot-motion/states-v1/female-pose-atlas.png': 1338514,
   './data/profile/mascot-motion/states-v1/male-pose-atlas.png': 1254970,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html': 1150343,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html': 2744292,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html': 723592,
-  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html': 728505,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_1_Espalda_Biceps_V1.html': 1161323,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_2_Pierna_Gluteo_V1.html': 2755272,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_3_Pecho_Hombro_Triceps_V1.html': 734572,
+  './data/rutinas_autocontenidas/canonicas/Rutina_Dia_4_Pierna_Equilibrio_V1.html': 739511,
   './assets/branding/gymratik-mascots-mark-v2.png': 338005,
   './data/rutinas_autocontenidas/frases_fitness/fitness_quotes.js': 5148,
   './data/rutinas_autocontenidas/frases_fitness/retratos/arnold-schwarzenegger-eu-2026.jpg': 278839,

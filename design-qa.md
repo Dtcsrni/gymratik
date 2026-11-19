@@ -43,3 +43,25 @@ No hay hallazgos accionables P0, P1 o P2.
 - [x] Consola sin errores.
 
 final result: passed
+
+## Selector de discos · opción 2 · 2026-11-19
+
+### Evidencia
+
+- Se integró en el registro de carga de las cuatro rutinas canónicas: panel plegable, discos individuales con arte local, suma mixta kg/lb, ajuste por pieza y aplicación al borrador de carga existente.
+- Se comparó la implementación con el mockup seleccionado en el código y con las comprobaciones estáticas automatizadas. El render del navegador no pudo capturarse en esta ejecución.
+- El navegador en app recibió una página ajena al abrir el puerto local conocido; un puerto libre no permitió enlazar el servidor local en el entorno. La navegación `file://` quedó rechazada por la política del navegador. No se probaron interacciones visuales en navegador.
+
+### Findings
+
+- P0/P1 funcionales conocidos: ninguno en pruebas estáticas.
+- Verificación visual P1: pendiente; no hay evidencia de captura a 390 px ni revisión de contraste/tamaño táctil en navegador.
+
+### Verificaciones disponibles
+
+- [x] 83 pruebas focalizadas de rutina y selector aprobadas.
+- [x] Sintaxis de 68 scripts inline verificada con `node --check`.
+- [x] Validador del repositorio aprobado.
+- [ ] Captura, recorrido de interacción y comparación visual en navegador.
+
+final result: blocked

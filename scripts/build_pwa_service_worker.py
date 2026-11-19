@@ -189,6 +189,7 @@ def build_precache() -> list[str]:
         *manifest_icons,
         "./assets/branding/gymratik-cover-seated-breath-30fps.webp",
         "./assets/branding/gymratik-cover-seated-v1-poster.webp",
+        "./assets/branding/gymratik-plate-dark.webp",
         *[f"./assets/branding/routine-covers/day{day}.webp" for day in range(1, 5)],
         "./install-gate.js",
         "./data/profile/mascot-install-phone.webp",
