@@ -1549,6 +1549,20 @@ def validate_approximation_moves_to_first_available(browser, name: str, sex: str
         if pending.get_attribute("aria-pressed") != "false":
             raise AssertionError(f"{name}: el primer ejercicio no inicia disponible")
         click_control(pending)
+        layer_state = first.evaluate("""card => {
+          const tracker = card.querySelector('.exerciseTracker');
+          const toggle = card.querySelector('.machinePendingToggle');
+          return {
+            trackerZ: Number(getComputedStyle(tracker).zIndex),
+            overlayZ: Number(getComputedStyle(card, '::after').zIndex),
+            toggleFilter: getComputedStyle(toggle).filter,
+            toggleOpacity: Number(getComputedStyle(toggle).opacity),
+          };
+        }""")
+        if layer_state["trackerZ"] <= layer_state["overlayZ"]:
+            raise AssertionError(f"{name}: el selector de máquina pendiente queda debajo del velo ámbar: {layer_state}")
+        if layer_state["toggleFilter"] != "none" or layer_state["toggleOpacity"] < 0.99:
+            raise AssertionError(f"{name}: el selector de máquina pendiente no permanece nítido y visible: {layer_state}")
         first_marker = first.locator(".warmupSet")
         second_marker = second.locator(".warmupSet")
         if first_marker.count() != 0 or second_marker.count() != 1 or second_marker.get_attribute("data-key") != "w2":
@@ -2427,6 +2441,73 @@ def validate_motivation_card(browser, widths=(320, 360, 412, 530)) -> dict:
     return {"viewports": results, "quotePortraitAndTextVerified": True}
 
 
+def validate_plate_picker_layout(browser, routines=ROUTINES) -> list[dict]:
+    """Comprueba grupos, mosaico y recursos del selector de discos en móvil."""
+    results = []
+    for name, _sex, _variant in routines:
+        for width, height in ((320, 568), (412, 915)):
+            context = browser.new_context(
+                viewport={"width": width, "height": height},
+                device_scale_factor=2,
+                is_mobile=True,
+                has_touch=True,
+            )
+            context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1','true')")
+            page = context.new_page()
+            page.goto(f"http://127.0.0.1:{PORT}/data/rutinas_autocontenidas/canonicas/{quote(name)}", wait_until="networkidle")
+            toggle = page.locator("article.card[data-exercise-index] .platePickerToggle").first
+            toggle.evaluate("element => element.scrollIntoView({block:'center',behavior:'instant'})")
+            # La carga del ejercicio permanece deshabilitada hasta iniciar la sesión;
+            # aquí solo se inspecciona el layout del panel, por eso se abre por DOM.
+            toggle.evaluate("element => { element.disabled=false; element.click(); }")
+            panel = page.locator(".platePicker").first
+            panel.wait_for(state="visible", timeout=10_000)
+            if panel.locator(".platePickerUnit").count() != 2:
+                context.close()
+                raise AssertionError(f"{name}: el selector no muestra ambos grupos de discos")
+            page.wait_for_function("() => { const actions=document.querySelector('.platePickerActions')?.getBoundingClientRect(), bar=document.querySelector('#floatingSessionSummary')?.getBoundingClientRect(); return !actions || !bar || actions.bottom <= bar.top - 8; }", timeout=5_000)
+            panel.evaluate("async panel => Promise.all([...panel.querySelectorAll('.platePickerOption img')].map(async image => { image.loading='eager'; try { await image.decode(); } catch (_) {} }))")
+            metrics = panel.evaluate("""panel => {
+              const rect = element => { const r=element.getBoundingClientRect(); return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height}; };
+              const groups=[...panel.querySelectorAll('.platePickerUnit')].map(group => {
+                const grid=group.querySelector('.platePickerGrid');
+                const items=[...group.querySelectorAll('.platePickerItem')].map(item => ({box:rect(item),label:rect(item.querySelector('.platePickerOption span')),image:rect(item.querySelector('img')),loaded:item.querySelector('img').complete&&item.querySelector('img').naturalWidth>0}));
+                return {title:group.querySelector('h4').textContent,box:rect(group),grid:rect(grid),items};
+              });
+              const overlap=(a,b)=>a.x < b.right-1 && a.right > b.x+1 && a.y < b.bottom-1 && a.bottom > b.y+1;
+              const itemOverlap=groups.some(group=>group.items.some((item,i)=>group.items.slice(i+1).some(next=>overlap(item.box,next.box))));
+              const actions=panel.querySelector('.platePickerActions');
+              const bar=document.querySelector('#floatingSessionSummary');
+              const units=panel.querySelector('.platePickerUnits');
+              return {panelWidth:rect(panel).width,panelHeight:rect(panel).height,panelScrollHeight:panel.scrollHeight,scrollWidth:panel.scrollWidth,clientWidth:panel.clientWidth,actions:rect(actions),actionButtons:[...actions.querySelectorAll('button')].map(rect),sessionBar:bar?rect(bar):null,groupsScrollHeight:units.scrollHeight,groupsClientHeight:units.clientHeight,groups,itemOverlap};
+            }""")
+            if metrics["scrollWidth"] > metrics["clientWidth"] + 1 or metrics["itemOverlap"]:
+                context.close()
+                raise AssertionError(f"{name} a {width}px: desbordamiento o discos superpuestos: {metrics}")
+            compact_phone = width >= 390 and height >= 800
+            max_panel_height = min(height * (.52 if compact_phone else .62), 480 if compact_phone else 560)
+            panel_top = panel.evaluate("element => element.getBoundingClientRect().top")
+            panel_bottom = panel.evaluate("element => element.getBoundingClientRect().bottom")
+            if metrics["panelHeight"] > max_panel_height + 1 or metrics["actions"]["y"] < panel_top - 1 or metrics["actions"]["bottom"] > panel_bottom + 1 or metrics["sessionBar"] and metrics["actions"]["bottom"] > metrics["sessionBar"]["y"] - 7 or any(button["height"] < 44 for button in metrics["actionButtons"]):
+                context.close()
+                raise AssertionError(f"{name} a {width}px: el panel o sus acciones exceden el espacio táctil disponible: {metrics}")
+            for group in metrics["groups"]:
+                if group["box"]["width"] < metrics["panelWidth"] * .85 or group["grid"]["width"] < metrics["panelWidth"] * .8:
+                    context.close()
+                    raise AssertionError(f"{name} a {width}px: grupo de discos comprimido: {metrics}")
+                for item in group["items"]:
+                    if not item["loaded"] or item["box"]["width"] < 45 or item["label"]["width"] > item["box"]["width"] + 1:
+                        context.close()
+                        raise AssertionError(f"{name} a {width}px: disco o etiqueta no carga/cabe en su tarjeta: {metrics}")
+            if SCREENSHOT_DIR is not None:
+                SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
+                panel.evaluate("element => { element.scrollTop=0; element.querySelector('.platePickerUnits').scrollTop=0; }")
+                panel.screenshot(path=str(SCREENSHOT_DIR / f"plate-picker-day-{name.split('_')[2]}-{width}.png"))
+            results.append({"routine": name, "viewport": f"{width}x{height}", "panelHeight": round(metrics["panelHeight"]), "panelMaxHeight": round(max_panel_height), "plateListScroll": f'{metrics["groupsClientHeight"]}/{metrics["groupsScrollHeight"]}', "actionHeights": [round(button["height"]) for button in metrics["actionButtons"]], "groupWidths": [round(group["box"]["width"]) for group in metrics["groups"]], "tileWidths": [round(group["items"][0]["box"]["width"]) for group in metrics["groups"]], "imagesLoaded": sum(item["loaded"] for group in metrics["groups"] for item in group["items"])})
+            context.close()
+    return results
+
+
 def validate_resource_pages(browser) -> list[dict]:
     """Recorre todos los recursos visuales de cada plantilla en un viewport móvil realista."""
     results = []
@@ -2523,6 +2604,8 @@ def main() -> None:
     parser.add_argument("--offline-only", action="store_true", help="ejecuta solo la validación offline del precache y rutas profundas")
     parser.add_argument("--quote-only", action="store_true", help="valida solo selección aleatoria y retrato/fallback de la frase")
     parser.add_argument("--load-warning-only", action="store_true", help="valida solo la confirmación de cargas sospechosas kg/lb")
+    parser.add_argument("--plate-picker-only", action="store_true", help="valida el layout móvil del selector de discos en las cuatro rutinas")
+    parser.add_argument("--machine-pending-layer-only", action="store_true", help="valida en móvil que el selector de máquina ocupada quede por encima del velo ámbar")
     args = parser.parse_args()
     SCREENSHOT_DIR = args.screenshot_dir
     server = create_isolated_server()
@@ -2538,6 +2621,14 @@ def main() -> None:
                 browser.close()
                 print(json.dumps({"status": "E2E_OFFLINE_OK", "result": result}, ensure_ascii=False, indent=2))
                 return
+            if args.machine_pending_layer_only:
+                checked = []
+                for name, sex, _variant in ROUTINES:
+                    validate_approximation_moves_to_first_available(browser, name, sex)
+                    checked.append(name)
+                browser.close()
+                print(json.dumps({"status": "E2E_MACHINE_PENDING_LAYER_OK", "routines": checked}, ensure_ascii=False, indent=2))
+                return
             if args.load_warning_only:
                 result = validate_suspicious_load_confirmation(browser, ROUTINES[0][0])
                 browser.close()
@@ -2548,7 +2639,7 @@ def main() -> None:
                 browser.close()
                 print(json.dumps({"status": "E2E_CELEBRATION_OK", "days": len(results), "results": results}, ensure_ascii=False, indent=2))
                 return
-            focused_run = args.resources_only or args.functional_only or args.responsive_only or args.quote_only
+            focused_run = args.resources_only or args.functional_only or args.responsive_only or args.quote_only or args.plate_picker_only or args.machine_pending_layer_only
             if focused_run:
                 cover_animation = None
             else:
@@ -2563,9 +2654,17 @@ def main() -> None:
                 browser.close()
                 print(json.dumps({"status": "E2E_QUOTE_OK", "quoteCard": quote_card}, ensure_ascii=False, indent=2))
                 return
+            if args.plate_picker_only:
+                routines = ROUTINES if args.day is None else [ROUTINES[args.day - 1]]
+                plate_picker = validate_plate_picker_layout(browser, routines)
+                browser.close()
+                print(json.dumps({"status": "E2E_PLATE_PICKER_OK", "viewports": plate_picker}, ensure_ascii=False, indent=2))
+                return
+            suspicious_load = None
             if args.resources_only:
                 print("Sintético: recursos visuales de las cuatro rutinas", flush=True)
                 results = validate_resource_pages(browser)
+                plate_picker = validate_plate_picker_layout(browser)
                 quote_card = None
                 responsive = None
                 offline = None
@@ -2592,7 +2691,7 @@ def main() -> None:
         server.shutdown()
         server.server_close()
         thread.join(timeout=3)
-    print(json.dumps({"status": "E2E_ROUTINES_OK", "days": len(results), "results": results, "suspiciousLoad": suspicious_load, "coverAnimation": cover_animation, "quoteCard": quote_card, "responsive": responsive, "offlinePackage": offline}, ensure_ascii=False, indent=2))
+    print(json.dumps({"status": "E2E_ROUTINES_OK", "days": len(results), "results": results, "suspiciousLoad": suspicious_load, "platePicker": plate_picker if args.resources_only else None, "coverAnimation": cover_animation, "quoteCard": quote_card, "responsive": responsive, "offlinePackage": offline}, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

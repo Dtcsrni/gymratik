@@ -11,6 +11,7 @@ from html import unescape
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote
+from PIL import Image
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -1292,6 +1293,31 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 card_indexes = [int(value) for value in re.findall(r'<article\b(?=[^>]*\bdata-exercise-index="(\d+)")[^>]*>', source)]
                 self.assertEqual(card_indexes, list(range(1, expected_cards[path.name] + 1)))
 
+    def test_day_four_uses_the_same_shared_enhancement_styles_as_all_routines(self) -> None:
+        shared_styles: dict[str, dict[str, str]] = {}
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            source = path.read_text(encoding="utf-8")
+            styles = {
+                name: body.strip()
+                for name, body in re.findall(
+                    r'<style\s+data-enhancement="([^"]+)">(.*?)</style>',
+                    source,
+                    re.S,
+                )
+            }
+            with self.subTest(routine=path.name):
+                for name in (
+                    "plate-picker-v1",
+                    "uniform-mobile-exercise-layout-v1",
+                    "exercise-focus-occupied-quote-v9",
+                    "section-ledger-load-v2",
+                ):
+                    self.assertIn(name, styles)
+                    if name in shared_styles:
+                        self.assertEqual(styles[name], shared_styles[name], f"{name} diverge en {path.name}")
+                    else:
+                        shared_styles[name] = styles[name]
+
     def test_all_routines_share_the_compact_context_and_mobile_logging_order(self) -> None:
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
             source = path.read_text(encoding="utf-8")
@@ -1570,7 +1596,9 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
         self.assertIn("máquina Smith · barra guiada y seguros", source)
         self.assertNotIn("PESO MUERTO EN MÁQUINA", source)
         self.assertNotIn("0578-GUT8I22", source)
-        self.assertEqual(entry["gif"]["frames"], 72)
+        motion = (ROOT / entry["published"]["gif"]).resolve()
+        with Image.open(motion) as gif:
+            self.assertEqual(entry["gif"]["frames"], gif.n_frames)
         self.assertEqual(entry["equipment_identity_status"], "GENERIC_SMITH_SCHEMATIC")
         for key in ("gif", "start", "final", "machine_reference"):
             asset = (ROOT / entry["published"][key]).resolve()
@@ -1632,7 +1660,7 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 self.assertIn('data-machine-occupied="true"', source)
                 self.assertIn("setFocusedCard", source)
                 self.assertIn("syncOccupiedState", source)
-                self.assertIn(".exerciseTracker{border-color:#ffd166!important", source)
+                self.assertIn(".exerciseTracker{position:relative;z-index:2;border-color:#ffd166!important", source)
                 self.assertIn(".exerciseTracker> :not(.exerciseSetButtons)", source)
                 self.assertIn(".exerciseSetButtons>:not(.machinePendingToggle)", source)
                 self.assertIn("pointer-events:none!important", source)

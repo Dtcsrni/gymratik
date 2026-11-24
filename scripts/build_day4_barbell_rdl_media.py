@@ -33,6 +33,20 @@ def _font(size: int) -> ImageFont.ImageFont:
         return ImageFont.load_default()
 
 
+def pose_points(hinge: float) -> dict[str, tuple[float, float]]:
+    """Geometría lateral: la cadera retrocede y la rodilla mantiene flexión leve."""
+    hip = (217 - 37 * hinge, 207 + 4 * hinge)
+    shoulder = (205 + 47 * hinge, 145 + 5 * hinge)
+    return {
+        "hip": hip,
+        "shoulder": shoulder,
+        "head": (shoulder[0] + 4, shoulder[1] - 23),
+        "knee": (217 - 17 * hinge, 250 + 6 * hinge),
+        "ankle": (204, 299),
+        "hand": (218 + hinge, 207 + 55 * hinge),
+    }
+
+
 def render_phase(hinge: float, label: str, *, smith: bool = False) -> Image.Image:
     """Renderiza una bisagra de cadera; con smith dibuja rieles y barra guiada."""
     scale = 2
@@ -49,14 +63,11 @@ def render_phase(hinge: float, label: str, *, smith: bool = False) -> Image.Imag
                            fill=(250, 252, 253), outline=(211, 226, 231), width=2 * scale)
     draw.text((38 * scale, 28 * scale), "PESO MUERTO RUMANO · SMITH" if smith else "PESO MUERTO RUMANO · BARRA LIBRE", font=_font(15 * scale), fill=INK)
     draw.text((38 * scale, 52 * scale), label, font=_font(12 * scale), fill=TEAL)
-    # Perfil esquemático sin rótulos encima del cuerpo: rodillas suaves,
-    # tronco y cadera se desplazan como una unidad durante la bisagra.
-    hip = (217 - 24 * hinge, 207 + 4 * hinge)
-    shoulder = (205 + 47 * hinge, 145 + 5 * hinge)
-    head = (shoulder[0] + 4, shoulder[1] - 23)
-    knee = (217, 250)
-    ankle = (204, 299)
-    hand = (218 + 1 * hinge, 207 + 55 * hinge)
+    # Perfil esquemático: la rodilla conserva una flexión leve mientras
+    # la cadera retrocede y el tronco rota como una unidad.
+    points = pose_points(hinge)
+    hip, shoulder, head = points["hip"], points["shoulder"], points["head"]
+    knee, ankle, hand = points["knee"], points["ankle"], points["hand"]
     bar_y = hand[1] + 1
     # Floor and bar path guide.
     line([(78, 317), (467, 317)], (183, 201, 207), 2)
@@ -124,6 +135,7 @@ def build() -> dict[str, object]:
         frames.append(render_phase(down_up, "BAJA CONTROLADO · SUBE SIN TIRAR DE LA ESPALDA"))
     frames[0].save(motion, format="GIF", save_all=True, append_images=frames[1:], duration=33,
                    loop=0, optimize=True, disposal=2)
+    encoded_frames = Image.open(motion).n_frames
     return {
         "repo_id": "barbell-rdl-v1", "title_es": "Peso muerto rumano con barra",
         "target": "glúteos e isquiosurales", "body_part": "upper legs",
@@ -139,7 +151,7 @@ def build() -> dict[str, object]:
         "sha256": {"source_gif": sha256(motion), "published_gif": sha256(motion),
                    "thumbnail": sha256(reference), "start": sha256(start), "final": sha256(final),
                    "machine_reference": sha256(reference)},
-        "gif": {"width": SIZE[0], "height": SIZE[1], "frames": frame_count, "frame_duration_ms": 33},
+        "gif": {"width": SIZE[0], "height": SIZE[1], "frames": encoded_frames, "frame_duration_ms": 33},
         "visual_review": "SCHEMATIC_RENDERED_AND_FRAME_CHECK_REQUIRED",
         "rights_status": "ORIGINAL_LOCAL_ASSET", "equipment_identity_status": "FREE_BAR_AND_PLATES",
     }
@@ -174,6 +186,7 @@ def build_smith() -> dict[str, object]:
         down_up = (1 - math.cos(phase * math.tau)) / 2
         frames.append(render_phase(down_up, "BISAGRA CONTROLADA · BARRA EN RIELES", smith=True))
     frames[0].save(motion, format="GIF", save_all=True, append_images=frames[1:], duration=33, loop=0, optimize=True, disposal=2)
+    encoded_frames = Image.open(motion).n_frames
     return {
         "repo_id": "smith-rdl-v2", "title_es": "Peso muerto rumano en Smith",
         "target": "glúteos e isquiosurales", "body_part": "upper legs",
@@ -187,7 +200,7 @@ def build_smith() -> dict[str, object]:
         "sha256": {"source_gif": sha256(motion), "published_gif": sha256(motion),
                    "thumbnail": sha256(reference), "start": sha256(start), "final": sha256(final),
                    "machine_reference": sha256(reference)},
-        "gif": {"width": SIZE[0], "height": SIZE[1], "frames": 72, "frame_duration_ms": 33},
+        "gif": {"width": SIZE[0], "height": SIZE[1], "frames": encoded_frames, "frame_duration_ms": 33},
         "visual_review": "SCHEMATIC_RENDERED_AND_FRAME_CHECK_REQUIRED",
         "rights_status": "ORIGINAL_LOCAL_ASSET", "equipment_identity_status": "GENERIC_SMITH_SCHEMATIC"}
 
