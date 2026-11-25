@@ -187,4 +187,17 @@ def apply_plate_picker_contract(source: str) -> str:
         "item.performanceLoadExact = normal.load;\n          item.performanceLoadSelected = normal.loadSelected;",
         "item.performanceLoadExact = normal.load;\n          item.performanceLoadSelected = normal.loadSelected;\n          item.platePickerExactLoadKg = normal.platePickerExactLoadKg ?? null;",
     )
+    # Repeated application must not redeclare consts inside the same routine
+    # initializer. Older generated pages accumulated these lines on every run,
+    # which stopped the whole script at parse time and left progress at 0/total.
+    source = re.sub(
+        r"(?m)^([ \t]*(?:const savedPlateKg = Number\(savedDraft\?\.platePickerExactLoadKg\);|const savedPlateKg = Number\(saved\?\.platePickerExactLoadKg\);|const exactPlate = saved\?\.platePickerExactLoadKg != null && Number\.isFinite\(savedPlateKg\) && savedPlateKg >= item\.performanceLoadProfile\.minKg && savedPlateKg <= item\.performanceLoadProfile\.maxKg;|item\.platePickerExactLoadKg = savedDraft\?\.platePickerExactLoadKg != null && Number\.isFinite\(savedPlateKg\) && savedPlateKg >= item\.performanceLoadProfile\.minKg && savedPlateKg <= item\.performanceLoadProfile\.maxKg \? savedPlateKg : null;|item\.platePickerExactLoadKg = exactPlate \? savedPlateKg : null;)[ \t]*\n)(?:\1)+",
+        r"\1",
+        source,
+    )
+    source = re.sub(
+        r"(, platePickerExactLoadKg: item\.platePickerExactLoadKg)(?:\1)+",
+        r"\1",
+        source,
+    )
     return source

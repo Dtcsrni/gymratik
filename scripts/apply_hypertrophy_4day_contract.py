@@ -13,6 +13,7 @@ from pathlib import Path
 from standardize_muscle_visuals import (
     apply_warmup_load_selector_contract,
     standardize_quote_portrait_loading,
+    standardize_exercise_history_visuals,
     standardize_shared_session_contract,
 )
 from plate_picker_contract import apply_plate_picker_contract
@@ -1167,6 +1168,7 @@ def apply() -> list[str]:
         updated = apply_warmup_load_selector_contract(updated)
         updated = apply_plate_picker_contract(updated)
         updated = standardize_shared_session_contract(updated)
+        updated = standardize_exercise_history_visuals(updated)
         updated = standardize_completed_session_footer(updated)
         if day == 4:
             # El peso muerto cambió de barra libre a Smith: separa su historial

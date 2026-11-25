@@ -1216,6 +1216,24 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 self.assertIn("¡Carga aumentada en ${detail.title}!", source)
                 self.assertIn("Buen ajuste en ${detail.title}", source)
 
+    def test_every_exercise_shows_only_range_valid_historical_max_and_series_metrics(self) -> None:
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            source = path.read_text(encoding="utf-8")
+            with self.subTest(path=path.name):
+                self.assertIn("Máximo histórico válido", source)
+                self.assertIn("exerciseHistorySummary", source)
+                self.assertIn("item.renderExerciseHistory = () =>", source)
+                self.assertIn("Number.isFinite(kg) && kg >= realisticMinKg && kg <= realisticMaxKg", source)
+                self.assertIn("Number(record.reps) >= 1 && Number(record.reps) <= 100", source)
+                self.assertIn("exerciseHistoryBest.textContent =", source)
+                self.assertIn("exerciseSetPills.replaceChildren()", source)
+                self.assertIn("appendMetric(`${reps} rep`)", source)
+                self.assertIn("formatElapsed(duration)", source)
+                self.assertIn("realisticDeltaKg", source)
+                self.assertIn("row.dataset.zone = zone", source)
+                self.assertIn("item.renderExerciseHistory?.();", source)
+                self.assertIn('aria-label="Iniciar serie 1 de ', source)
+
     def test_editable_load_value_persists_decimal_independently_of_slider_step(self) -> None:
         source = (CANONICAL / "Rutina_Dia_1_Espalda_Biceps_V1.html").read_text(encoding="utf-8")
         self.assertIn("item.performanceLoadExact = loadMath.toDisplay(loadMath.normalizeKg(loadMath.toKg(entered, item.performanceLoadUnit), item.performanceLoadProfile), item.performanceLoadUnit)", source)

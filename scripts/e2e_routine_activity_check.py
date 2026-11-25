@@ -75,7 +75,7 @@ def wait_for_finite_animations(page, selector: str) -> None:
 def validate_home_cover_animation(browser) -> dict:
     """Verify poster artwork with subtle drift and the slow animated loading/update splash."""
     context = browser.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2, is_mobile=True, has_touch=True)
-    context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1','true');localStorage.setItem('gymratik-network-preference-v1','always')")
+    context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1','true');localStorage.setItem('gymratik-network-preference-v2','always')")
     page = context.new_page()
     page.goto(f"http://127.0.0.1:{PORT}/", wait_until="domcontentloaded")
     page.wait_for_function("!document.documentElement.classList.contains('gymratik-loading') && getComputedStyle(document.querySelector('#appSplash')).visibility === 'hidden'", timeout=15_000)
@@ -137,7 +137,7 @@ def validate_home_cover_animation(browser) -> dict:
     context.close()
 
     reduced_context = browser.new_context(viewport={"width": 412, "height": 915}, reduced_motion="reduce", is_mobile=True, has_touch=True)
-    reduced_context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1','true');localStorage.setItem('gymratik-network-preference-v1','always')")
+    reduced_context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1','true');localStorage.setItem('gymratik-network-preference-v2','always')")
     reduced_page = reduced_context.new_page()
     reduced_page.goto(f"http://127.0.0.1:{PORT}/", wait_until="domcontentloaded")
     reduced_page.wait_for_function("!document.documentElement.classList.contains('gymratik-loading') && getComputedStyle(document.querySelector('#appSplash')).visibility === 'hidden'", timeout=15_000)
@@ -1017,7 +1017,7 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
         # offline que el propio contexto de prueba impedía instalar.
         service_workers="allow",
     )
-    context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1', 'true');localStorage.setItem('gymratik-network-preference-v1','always')")
+    context.add_init_script("sessionStorage.setItem('gymratik-install-confirmed-v1', 'true');localStorage.setItem('gymratik-network-preference-v2','always')")
     page = context.new_page()
     errors = []
     page.on("pageerror", lambda error: errors.append(str(error)))
@@ -1115,7 +1115,7 @@ def validate_day(browser, name: str, sex: str, variant: str) -> dict:
         fill = reps.evaluate("element => element.style.getPropertyValue('--range-progress')")
         if not fill.endswith("%") or float(fill[:-1]) <= 0:
             raise AssertionError(f"{name}: el slider de repeticiones {index + 1} no refleja el valor en su pista")
-        if card.locator(".lucide-repeat-2").count() != 1 or card.locator(".lucide-weight").count() != 1:
+        if card.locator(".performanceFieldTitleRow .lucide-repeat-2").count() != 1 or card.locator(".performanceLoadHead .lucide-weight").count() != 1:
             raise AssertionError(f"{name}: faltan iconos SVG vectoriales en la zona de registro {index + 1}")
         rep_clear = card.locator(".performanceFieldTitleRow .performanceClear")
         clear_style = rep_clear.evaluate("element => { const style = getComputedStyle(element); const box = element.getBoundingClientRect(); return {border: style.borderStyle, background: style.backgroundColor, color: style.color, height: box.height}; }")
@@ -2073,7 +2073,7 @@ def validate_installed_offline_package(browser) -> dict:
     )
     context.add_init_script(
         "sessionStorage.setItem('gymratik-install-confirmed-v1', 'true');"
-        "localStorage.setItem('gymratik-network-preference-v1', 'always');"
+        "localStorage.setItem('gymratik-network-preference-v2', 'always');"
     )
     page = context.new_page()
     offline_page_errors = []
