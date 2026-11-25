@@ -878,6 +878,7 @@ SESSION_COMPLETION_UPDATE = r'''  const renderSessionRecap = complete => {
 
 
 def apply_interaction_redesign(source: str) -> str:
+    source = normalize_exercise_section_layout(source)
     source = source.replace('<script src="../../../page-update-client.js" defer></script>', '<script src="../../../page-update-client.js"></script>')
     if './page-update-client.js' not in source:
         source = source.replace('</head>', '  <script src="../../../page-update-client.js"></script>\n</head>', 1)
@@ -1106,6 +1107,64 @@ def apply_interaction_redesign(source: str) -> str:
             flags=re.S,
         )
     return source
+
+
+def normalize_exercise_section_layout(source: str) -> str:
+    """Mantiene controles de serie y técnica dentro de su coach y en orden fijo."""
+    control_open = re.compile(r'<div\b(?=[^>]*\bclass=["\'][^"\']*\bexerciseTracker\b)[^>]*>', re.I)
+    technique_open = re.compile(r'<details\b(?=[^>]*\bclass=["\'][^"\']*\btechAccordion\b)[^>]*>', re.I)
+    coach_open = re.compile(r'<div\b(?=[^>]*\bclass=["\'][^"\']*\bcoach\b)[^>]*>', re.I)
+
+    def normalize_card(match: re.Match[str]) -> str:
+        card = match.group(0)
+        coach = coach_open.search(card)
+        controls = list(control_open.finditer(card))
+        techniques = list(technique_open.finditer(card))
+        if not coach or not controls or not techniques:
+            return card
+
+        coach_end = close_div_offset(card, coach.end())
+        trackers_inside = [item for item in controls if coach.start() < item.start() < coach_end]
+        techniques_inside = [item for item in techniques if coach.start() < item.start() < coach_end]
+        if (len(controls) == len(techniques) == 1 and len(trackers_inside) == len(techniques_inside) == 1
+                and trackers_inside[0].start() < techniques_inside[0].start()):
+            return card
+
+        def div_range(opening: re.Match[str]) -> tuple[int, int]:
+            close_start = close_div_offset(card, opening.end())
+            return opening.start(), card.find('>', close_start) + 1
+
+        def detail_range(opening: re.Match[str]) -> tuple[int, int]:
+            close_start = card.find('</details>', opening.end())
+            if close_start < 0:
+                raise ValueError('Acordeón de técnica sin cierre')
+            return opening.start(), close_start + len('</details>')
+
+        blocks = [
+            (opening, div_range(opening), 'controls') for opening in controls
+        ] + [
+            (opening, detail_range(opening), 'technique') for opening in techniques
+        ]
+        # Prefiere el bloque que ya está dentro de .coach y descarta duplicados.
+        selected_inside = {}
+        for kind in ('controls', 'technique'):
+            candidates = [(opening, bounds) for opening, bounds, block_kind in blocks if block_kind == kind]
+            inside = next(((opening, bounds) for opening, bounds in candidates if coach.start() < opening.start() < coach_end), None)
+            opening, bounds = inside or candidates[0]
+            selected_inside[kind] = card[bounds[0]:bounds[1]]
+
+        removals = [bounds for _, bounds, _ in blocks]
+        normalized = card
+        for start, end in sorted(removals, reverse=True):
+            normalized = normalized[:start] + normalized[end:]
+        normalized_coach = coach_open.search(normalized)
+        if not normalized_coach:
+            return card
+        insertion = close_div_offset(normalized, normalized_coach.end())
+        ordered_sections = selected_inside['controls'] + selected_inside['technique']
+        return normalized[:insertion] + ordered_sections + normalized[insertion:]
+
+    return CARD_RE.sub(normalize_card, source)
 
 
 def apply() -> list[str]:

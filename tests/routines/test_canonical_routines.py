@@ -19,7 +19,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from validate_canonical_routines import validate_path  # noqa: E402
 from build_fitness_quotes_js import EDITORIAL_QUOTES, compact_payload  # noqa: E402
-from apply_hypertrophy_4day_contract import apply_interaction_redesign, cards_of, REST_INTERVALS  # noqa: E402
+from apply_hypertrophy_4day_contract import apply_interaction_redesign, cards_of, close_div_offset, normalize_exercise_section_layout, REST_INTERVALS  # noqa: E402
 import validate_repository  # noqa: E402
 from standardize_muscle_visuals import (  # noqa: E402
     close_unterminated_segmented_progress_style,
@@ -1179,6 +1179,30 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                         self.assertIn('class="visual"', card)
                         self.assertIn('class="coach"', card)
         self.assertEqual(len(set(layout_styles)), 1, "los cuatro días deben compartir exactamente el mismo layout móvil")
+
+    def test_every_exercise_keeps_one_ordered_control_and_technique_section_inside_its_coach(self) -> None:
+        coach_open = re.compile(r'<div\b(?=[^>]*\bclass=["\'][^"\']*\bcoach\b)[^>]*>', re.I)
+        tracker_open = re.compile(r'<div\b(?=[^>]*\bclass=["\'][^"\']*\bexerciseTracker\b)[^>]*>', re.I)
+        technique_open = re.compile(r'<details\b(?=[^>]*\bclass=["\'][^"\']*\btechAccordion\b)[^>]*>', re.I)
+        for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
+            original = path.read_text(encoding="utf-8")
+            source = normalize_exercise_section_layout(original)
+            self.assertEqual(normalize_exercise_section_layout(source), source, path.name)
+            for card in cards_of(source):
+                if 'data-exercise-index=' not in card:
+                    continue
+                index = re.search(r'data-exercise-index=["\'](\d+)', card).group(1)
+                coach = coach_open.search(card)
+                trackers = list(tracker_open.finditer(card))
+                techniques = list(technique_open.finditer(card))
+                with self.subTest(path=path.name, exercise=index):
+                    self.assertIsNotNone(coach)
+                    self.assertEqual(len(trackers), 1)
+                    self.assertEqual(len(techniques), 1)
+                    coach_end = close_div_offset(card, coach.end())
+                    self.assertTrue(coach.end() < trackers[0].start() < coach_end)
+                    self.assertTrue(coach.end() < techniques[0].start() < coach_end)
+                    self.assertLess(trackers[0].start(), techniques[0].start())
 
     def test_all_routines_expose_direct_decimal_load_entry_and_hold_feedback(self) -> None:
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
