@@ -22,7 +22,7 @@ EXERCISES = [
         "title": "PRENSA UNILATERAL ALTERNA",
         "zone": "PIERNA · CUÁDRICEPS",
         "equipment": "prensa de piernas con plataforma y apoyo estable",
-        "repo": "2287-V07qpXy",
+        "repo": "1425-WWD6FzI",
         "series": 3,
         "reps": "8–12 por lado",
         "rest": "2–3 min",

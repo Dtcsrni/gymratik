@@ -767,9 +767,10 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
                 self.assertIn("const restRemaining = Math.max(0, recommendation.minMs - restElapsed);", timing_display)
                 self.assertIn("Descanso restante: <strong>${formatCountdown(restRemaining)}</strong>", timing_display)
                 self.assertIn("item.restDisplay.hidden = !restActive", timing_display)
-                self.assertIn("if (!root?.sessionEndedAt && timing?.restStartedAt) notifyRestReady(item, timing, restElapsed);", timing_display)
-                self.assertIn("Boolean(!root?.sessionEndedAt && timing?.restStartedAt && restRemaining > 0)", timing_display)
-                self.assertIn("exerciseItems.some(entry => !snapshot(entry).complete)", source)
+                self.assertIn("if (!row.complete && !root?.sessionEndedAt && timing?.restStartedAt) notifyRestReady(item, timing, restElapsed);", timing_display)
+                self.assertIn("Boolean(!row.complete && !root?.sessionEndedAt && timing?.restStartedAt && restRemaining > 0)", timing_display)
+                self.assertIn("else { timing.restStartedAt = 0; timing.endedAt = timestamp; }", source)
+                self.assertIn("row.complete && timing?.startedAt ? timing.startedAt + recordedElapsed : now", timing_display)
                 self.assertIn("button.classList.toggle('is-resting', resting && restRemaining > 0)", complete_button)
                 self.assertIn("button.classList.toggle('is-series-active', seriesActive && !preparing)", complete_button)
                 self.assertIn("summaryButton.classList.toggle('isResting', restActive)", timing_display)
@@ -896,7 +897,7 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
             ]
             reps_logic = source[
                 source.index("const renderPerformanceReps"):source.index(
-                    "item.performanceLoad.addEventListener"
+                    "item.performanceLoad.addEventListener", source.index("const renderPerformanceReps")
                 )
             ]
             with self.subTest(path=path.name):
@@ -1012,8 +1013,9 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
             html = path.read_text(encoding="utf-8")
             self.assertEqual(html.count("const loadMath = {"), 1, path.name)
             self.assertIn("const { min: profileMin, max: profileMax, step: unitStep } = loadMath.bounds(item.performanceLoadProfile, unit)", html)
-            self.assertIn("loadMath.normalizeKg(loadMath.toKg(entered, item.performanceLoadUnit), item.performanceLoadProfile)", html)
-            self.assertIn("const kilograms = loadMath.toKg(currentLoad, previousUnit)", html)
+            self.assertIn("item.performanceLoadExact = entered", html)
+            self.assertNotIn("item.performanceLoadExact = loadMath.toDisplay(loadMath.normalizeKg(loadMath.toKg(entered", html)
+            self.assertIn("const kilograms = item.platePickerExactLoadKg != null ? Number(item.platePickerExactLoadKg) : loadMath.toKg(currentLoad, previousUnit)", html)
             self.assertNotIn("loadKg: loadSelected ? loadMath.normalizeKg(loadMath.toKg(load, item.performanceLoadUnit), item.performanceLoadProfile)", html)
             self.assertIn("loadUnit: warmupLoadUnit, loadKg: loadSelected ? warmupLoadKg : null", html)
             self.assertIn("loadUnit, loadKg: loadSelected ? loadKg : null", html)
@@ -1023,7 +1025,8 @@ item.performanceRepsOutput.dataset.selected = String(selected); repsClear.hidden
             self.assertIn("savedLoadKg >= item.performanceLoadProfile.minKg && savedLoadKg <= item.performanceLoadProfile.maxKg", html)
             self.assertIn("historyLoadIsValid(record)", html)
             self.assertIn("Number.isFinite(kg) && kg >= item.performanceLoadProfile.minKg && kg <= item.performanceLoadProfile.maxKg", html)
-            self.assertIn("item.performanceLoadSelected = Number.isFinite(enteredKg); updateLoadControl(); savePerformanceDraft();", html)
+            self.assertIn("item.performanceLoadSelected = Number.isFinite(entered); updateLoadControl(); savePerformanceDraft();", html)
+            self.assertIn("loadInput.step = 'any'", html)
             self.assertIn("if (!timing.restStartedAt || Date.now() - timing.restStartedAt >= getRestRecommendation(item).minMs || timing.seriesStartedAt) { longPressDetected = false; return; }", html)
             self.assertNotIn("const unitStep = pounds ? 5", html)
             self.assertNotIn("Number(record.load)}${record.loadUnit", html)
@@ -1055,15 +1058,15 @@ assert.ok(Math.abs(lb.min - 0) < 1e-8);
 assert.ok(Math.abs(lb.max - (175 / 0.45359237)) < 1e-8);
 assert.ok(Math.abs(lb.step - 11.0231131092) < 1e-8);
 const selectedLb = loadMath.toDisplay(30, 'lb');
-assert.ok(Math.abs(loadMath.toKg(selectedLb, 'lb') - 30) < 1e-10);
+assert.ok(Math.abs(loadMath.toKg(selectedLb, 'lb') - 30) < 0.001);
 assert.strictEqual(loadMath.normalizeKg(loadMath.toKg(154.802004495799, 'lb'), panatta), 70);
 assert.strictEqual(loadMath.normalizeKg(30.4, panatta), 30);
 assert.strictEqual(loadMath.normalizeKg(19.23, {{ stepKg: 2.5, minKg: 0, maxKg: 50 }}), 19.2);
-console.log(JSON.stringify({{ savedLoadKg: loadMath.normalizeKg(loadMath.toKg(selectedLb, 'lb'), panatta), labelLb: selectedLb.toFixed(1) }}));
+console.log(JSON.stringify({{ savedLoadKg: loadMath.normalizeKg(loadMath.toKg(selectedLb, 'lb'), panatta), labelLb: selectedLb.toFixed(2) }}));
 """
         result = subprocess.run(["node", "-e", script], cwd=ROOT, capture_output=True, text=True, check=False)
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(json.loads(result.stdout), {"savedLoadKg": 30, "labelLb": "66.1"})
+        self.assertEqual(json.loads(result.stdout), {"savedLoadKg": 30, "labelLb": "66.14"})
 
     def test_orientative_load_range_is_150kg_each_side_and_corrupt_values_cannot_expand_slider(self) -> None:
         source = (CANONICAL / "Rutina_Dia_1_Espalda_Biceps_V1.html").read_text(encoding="utf-8")
@@ -1211,9 +1214,9 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
             source = path.read_text(encoding="utf-8")
             with self.subTest(path=path.name):
                 self.assertIn("loadOutput.addEventListener('click'", source)
-                self.assertIn("editor.step = '0.1'", source)
+                self.assertIn("editor.step = 'any'", source)
                 self.assertIn("entered <= Number(loadInput.max)", source)
-                self.assertIn("item.performanceLoadExact = loadMath.toDisplay(loadMath.normalizeKg(loadMath.toKg(entered, item.performanceLoadUnit), item.performanceLoadProfile), item.performanceLoadUnit)", source)
+                self.assertIn("item.performanceLoadExact = entered; item.performanceLoadSelected = true", source)
                 self.assertIn("load: item.performanceLoadSelected ? String(item.performanceLoadExact) : ''", source)
                 self.assertIn("loadSelected: item.performanceLoadSelected", source)
                 self.assertIn("item.tracker.append(performancePanel)", source)
@@ -1254,9 +1257,13 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 self.assertIn("exerciseHistoryBest.textContent =", source)
                 self.assertIn("item.tracker.append(performancePanel)", source)
                 self.assertIn("item.tracker.querySelector('.exerciseTrackerHead')?.after(display)", source)
-                self.assertIn("entries.push({ key: `set-${index + 1}`, label: `S${index + 1} · ${details}`, value: formatElapsed(duration), kind: 'set' })", source)
+                self.assertIn("entries.push({ key: `set-${index + 1}`, label: `S${index + 1} · ${details}`, value: formatElapsed(duration), kind: 'set', seriesIndex: index + 1 })", source)
                 self.assertNotIn("exerciseSetPills", source)
                 self.assertNotIn("Series de la sesión", source)
+                self.assertIn("seriesIndex: index + 1", source)
+                self.assertIn("chip.dataset.seriesIndex = String(entry.seriesIndex)", source)
+                for series_index in range(1, 6):
+                    self.assertIn(f'data-series-index="{series_index}"', source)
                 self.assertIn('.exerciseTimerChip[data-kind="set"]{border-color:#45d8c4', source)
                 self.assertIn('.exerciseTimerChip[data-kind="rest"]{border-color:#ffc95e', source)
                 self.assertIn('.exerciseTimerChip[data-kind="exercise"]{border-color:#63cfff', source)
@@ -1267,12 +1274,14 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
 
     def test_editable_load_value_persists_decimal_independently_of_slider_step(self) -> None:
         source = (CANONICAL / "Rutina_Dia_1_Espalda_Biceps_V1.html").read_text(encoding="utf-8")
-        self.assertIn("item.performanceLoadExact = loadMath.toDisplay(loadMath.normalizeKg(loadMath.toKg(entered, item.performanceLoadUnit), item.performanceLoadProfile), item.performanceLoadUnit)", source)
+        self.assertIn("item.performanceLoadExact = entered; item.performanceLoadSelected = true", source)
         self.assertIn("load: item.performanceLoadSelected ? String(item.performanceLoadExact) : ''", source)
         self.assertIn("item.performanceLoadSelected = true", source)
         self.assertIn("item.performanceLoadSelected = false", source)
         self.assertIn("const loadValue = Number(item.performanceLoadExact)", source)
-        self.assertIn("item.performanceLoadUnit === 'lb' ? String(Math.round(item.performanceLoadExact))", source)
+        self.assertIn("loadInput.step = 'any'", source)
+        self.assertIn("const displayValue = String(Number(value.toFixed(2)))", source)
+        self.assertIn("const loadKg = load === null ? null : loadUnit === 'lb' ? load * 0.45359237 : load", source)
         self.assertIn("editor.addEventListener('blur', () => queueMicrotask(() => finish(true))", source)
 
     def test_enter_only_commits_load_and_celebration_requires_a_recorded_series(self) -> None:
@@ -1516,10 +1525,9 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
         for path in sorted(CANONICAL.glob("Rutina_Dia_*_V1.html")):
             source = path.read_text(encoding="utf-8")
             with self.subTest(path=path.name):
-                self.assertIn("unit === 'lb' ? String(Math.round(value))", source)
-                self.assertIn("loadUnit === 'lb' ? Math.round(loadValue)", source)
-                self.assertIn("loadUnit === 'lb' ? `${Math.round(load)} lb", source)
-                self.assertIn("unit === 'lb' ? Math.round(Number(record.load))", source)
+                self.assertIn("String(Number(value.toFixed(2)))", source)
+                self.assertIn("String(Number(loadValue.toFixed(2)))", source)
+                self.assertIn("String(Number(Number(record.load).toFixed(2)))", source)
                 self.assertNotIn("Serie completada con ${detail.load} ${detail.loadUnit}", source)
 
     def test_motivation_button_has_multiple_offline_fallback_phrases(self) -> None:
@@ -1535,7 +1543,7 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 for phrase in fallback_phrases:
                     self.assertIn(phrase, source)
 
-    def test_motivation_quotes_are_compact_credited_and_randomized_across_days(self) -> None:
+    def test_motivation_quotes_alternate_credited_featured_and_original_across_days(self) -> None:
         bank_path = ROOT / "data" / "rutinas_autocontenidas" / "frases_fitness" / "fitness_quotes.json"
         compact = compact_payload()
         self.assertEqual(compact["count"], len(EDITORIAL_QUOTES) + 3)
@@ -1566,8 +1574,12 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 self.assertIn('<script defer src="../frases_fitness/fitness_quotes.js"></script>', source)
                 self.assertIn("const fitnessQuotePayload = window.fitnessQuotesData || {};", source)
                 self.assertIn("const motivationKey = 'gymratik-motivation-rotation-v1';", source)
-                self.assertIn("Math.random() * poolSize", source)
-                self.assertIn("if (avoidLast && motivationIndex >= lastMotivationIndex)", source)
+                self.assertIn("const featuredQuoteIndexes = motivationalQuotes.flatMap", source)
+                self.assertIn("quote.quoteLink && quote.author !== 'Gymratik'", source)
+                self.assertIn("const originalQuoteIndexes = motivationalQuotes.flatMap", source)
+                self.assertIn("gymratik-motivation-category-v1", source)
+                self.assertIn("lastMotivationCategory !== 'featured'", source)
+                self.assertIn("const selectionPool = eligiblePool.length ? eligiblePool", source)
                 self.assertNotIn("motivationIndex = (motivationIndex + 1)", source)
                 self.assertIn("window.fitnessQuotesData?.quotes?.length", source)
                 self.assertTrue(
@@ -1633,6 +1645,8 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
         path = CANONICAL / "Rutina_Dia_4_Pierna_Equilibrio_V1.html"
         source = path.read_text(encoding="utf-8")
         manifest = json.loads((ROOT / "data/rutinas_autocontenidas/evidencia/dia4_media_manifest.json").read_text(encoding="utf-8"))
+        manifest_ids = [item["repo_id"] for item in manifest["entries"]]
+        self.assertEqual(len(manifest_ids), len(set(manifest_ids)))
         entry = next(item for item in manifest["entries"] if item["repo_id"] == "smith-rdl-v2")
         self.assertIn("PESO MUERTO RUMANO EN SMITH", source)
         self.assertIn('data-history-exercise-id="day4-smith-rdl-v2"', source)

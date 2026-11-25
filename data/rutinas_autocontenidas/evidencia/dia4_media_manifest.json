@@ -6,7 +6,7 @@
   "equipment_note": "La rutina v2 prioriza máquinas; la bisagra de cadera se hace en Smith. La carga efectiva depende del contrapeso del modelo instalado y no se infiere de esta guía genérica.",
   "entries": [
     {
-      "repo_id": "2287-V07qpXy",
+      "repo_id": "1425-WWD6FzI",
       "title_es": "Prensa unilateral alterna",
       "target": "cuádriceps",
       "body_part": "upper legs",
@@ -17,24 +17,24 @@
       "source_repo": "ejercicios-compartido",
       "source_commit": "7455efae41b330c265e7cd4b78dfa848e7ce5ebd",
       "published": {
-        "gif": "data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/videos/2287-V07qpXy.gif",
-        "thumbnail": "data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/images/2287-V07qpXy.jpg",
-        "start": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/2287-V07qpXy-start.jpg",
-        "final": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/2287-V07qpXy-final.jpg",
-        "machine_reference": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/2287-V07qpXy-machine-reference.png"
+        "gif": "data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/videos/1425-WWD6FzI.gif",
+        "thumbnail": "data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/images/1425-WWD6FzI.jpg",
+        "start": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/1425-WWD6FzI-start.jpg",
+        "final": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/1425-WWD6FzI-final.jpg",
+        "machine_reference": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/1425-WWD6FzI-machine-reference.png"
       },
       "sha256": {
-        "source_gif": "dc94fa4fcef99b39c5e8c215ea06d5cc478cc30fdcd3d3a687c932d320f9d2db",
-        "published_gif": "dc94fa4fcef99b39c5e8c215ea06d5cc478cc30fdcd3d3a687c932d320f9d2db",
-        "thumbnail": "6f80a77e02967ac1cf2d2faafa007d8fc87f7cafd6b8157feac66418d6c9f685",
-        "start": "509e8567cf0967f5f31a834df8ff84a4d94a364bb8d2df5fe678680ca9237005",
-        "final": "48b023ff2b4a7dc3ffb2b4a120903ffd5da4a2374709b37f18c012d3b9fc7a1a",
-        "machine_reference": "1b6118bc476118a136b50c56fb82be6890f4925eb0e979f28272d52e78b198c0"
+        "source_gif": "5ce05ffeaff2de4c4d78ad6228637929563f381c7ca4e6c4012e7d5fab020687",
+        "published_gif": "5ce05ffeaff2de4c4d78ad6228637929563f381c7ca4e6c4012e7d5fab020687",
+        "thumbnail": "55f263d3e326dc6633474f2bb46b51c1f4a129bd4af52cdbb3783994aba2dfad",
+        "start": "6910f3a581c6e58df2152072663ba77b585a056ee6425041b0eb515f5385b1b4",
+        "final": "8990f7caf591f5715e3c4b3b4954dfa2d145ea4050e74cfed960623b8a525c75",
+        "machine_reference": "510b563247532d55e0259320880062277f6d59496aee3d7e1d4d2ba76d033745"
       },
       "gif": {
         "width": 180,
         "height": 180,
-        "frames": 24,
+        "frames": 12,
         "frame_duration_ms": 1000
       },
       "visual_review": "LOOP_AND_FRAME_REVIEWED_LOCAL",
@@ -218,330 +218,6 @@
       "visual_review": "LOOP_AND_FRAME_REVIEWED_LOCAL",
       "rights_status": "CANDIDATES_PENDING_LICENSE_REVIEW",
       "equipment_identity_status": "VISUAL_PATTERN_REFERENCE_ONLY"
-    },
-    {
-      "repo_id": "barbell-rdl-v1",
-      "title_es": "Peso muerto rumano con barra",
-      "target": "glúteos e isquiosurales",
-      "body_part": "upper legs",
-      "secondary": [
-        "cadena posterior",
-        "bisagra de cadera"
-      ],
-      "source_repo": "Gymratik · guía esquemática propia",
-      "source_commit": "",
-      "published": {
-        "gif": "data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/videos/barbell-rdl-v1.gif",
-        "thumbnail": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-machine-reference.png",
-        "start": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-start.jpg",
-        "final": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-final.jpg",
-        "machine_reference": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-machine-reference.png"
-      },
-      "sha256": {
-        "source_gif": "680ae2efa489ee27df4d5b42b0f785ef4402a90f54d9c2b42ccee455c708d826",
-        "published_gif": "680ae2efa489ee27df4d5b42b0f785ef4402a90f54d9c2b42ccee455c708d826",
-        "thumbnail": "443853038fad0ab22aee76a9af384d4dce286d2d50d55d03cc12081bd0302690",
-        "start": "057a3e32af9db39d47afefa8e553f406eeeab90b30d2f27788f0fff7f5cba04a",
-        "final": "9778fbda2e3a2201c778765351260a67a9868b793ce3d9433fcbe9079806f654",
-        "machine_reference": "443853038fad0ab22aee76a9af384d4dce286d2d50d55d03cc12081bd0302690"
-      },
-      "gif": {
-        "width": 540,
-        "height": 360,
-        "frames": 72,
-        "frame_duration_ms": 33
-      },
-      "visual_review": "SCHEMATIC_RENDERED_AND_FRAME_CHECK_REQUIRED",
-      "rights_status": "ORIGINAL_LOCAL_ASSET",
-      "equipment_identity_status": "FREE_BAR_AND_PLATES"
-    },
-    {
-      "repo_id": "barbell-rdl-v1",
-      "title_es": "Peso muerto rumano con barra",
-      "target": "glúteos e isquiosurales",
-      "body_part": "upper legs",
-      "secondary": [
-        "cadena posterior",
-        "bisagra de cadera"
-      ],
-      "source_repo": "Gymratik · guía esquemática propia",
-      "source_commit": "",
-      "published": {
-        "gif": "data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/videos/barbell-rdl-v1.gif",
-        "thumbnail": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-machine-reference.png",
-        "start": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-start.jpg",
-        "final": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-final.jpg",
-        "machine_reference": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-machine-reference.png"
-      },
-      "sha256": {
-        "source_gif": "680ae2efa489ee27df4d5b42b0f785ef4402a90f54d9c2b42ccee455c708d826",
-        "published_gif": "680ae2efa489ee27df4d5b42b0f785ef4402a90f54d9c2b42ccee455c708d826",
-        "thumbnail": "443853038fad0ab22aee76a9af384d4dce286d2d50d55d03cc12081bd0302690",
-        "start": "057a3e32af9db39d47afefa8e553f406eeeab90b30d2f27788f0fff7f5cba04a",
-        "final": "9778fbda2e3a2201c778765351260a67a9868b793ce3d9433fcbe9079806f654",
-        "machine_reference": "443853038fad0ab22aee76a9af384d4dce286d2d50d55d03cc12081bd0302690"
-      },
-      "gif": {
-        "width": 540,
-        "height": 360,
-        "frames": 72,
-        "frame_duration_ms": 33
-      },
-      "visual_review": "SCHEMATIC_RENDERED_AND_FRAME_CHECK_REQUIRED",
-      "rights_status": "ORIGINAL_LOCAL_ASSET",
-      "equipment_identity_status": "FREE_BAR_AND_PLATES"
-    },
-    {
-      "repo_id": "barbell-rdl-v1",
-      "title_es": "Peso muerto rumano con barra",
-      "target": "glúteos e isquiosurales",
-      "body_part": "upper legs",
-      "secondary": [
-        "cadena posterior",
-        "bisagra de cadera"
-      ],
-      "source_repo": "Gymratik · guía esquemática propia",
-      "source_commit": "",
-      "published": {
-        "gif": "data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/videos/barbell-rdl-v1.gif",
-        "thumbnail": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-machine-reference.png",
-        "start": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-start.jpg",
-        "final": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-final.jpg",
-        "machine_reference": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-machine-reference.png"
-      },
-      "sha256": {
-        "source_gif": "680ae2efa489ee27df4d5b42b0f785ef4402a90f54d9c2b42ccee455c708d826",
-        "published_gif": "680ae2efa489ee27df4d5b42b0f785ef4402a90f54d9c2b42ccee455c708d826",
-        "thumbnail": "443853038fad0ab22aee76a9af384d4dce286d2d50d55d03cc12081bd0302690",
-        "start": "057a3e32af9db39d47afefa8e553f406eeeab90b30d2f27788f0fff7f5cba04a",
-        "final": "9778fbda2e3a2201c778765351260a67a9868b793ce3d9433fcbe9079806f654",
-        "machine_reference": "443853038fad0ab22aee76a9af384d4dce286d2d50d55d03cc12081bd0302690"
-      },
-      "gif": {
-        "width": 540,
-        "height": 360,
-        "frames": 72,
-        "frame_duration_ms": 33
-      },
-      "visual_review": "SCHEMATIC_RENDERED_AND_FRAME_CHECK_REQUIRED",
-      "rights_status": "ORIGINAL_LOCAL_ASSET",
-      "equipment_identity_status": "FREE_BAR_AND_PLATES"
-    },
-    {
-      "repo_id": "barbell-rdl-v1",
-      "title_es": "Peso muerto rumano con barra",
-      "target": "glúteos e isquiosurales",
-      "body_part": "upper legs",
-      "secondary": [
-        "cadena posterior",
-        "bisagra de cadera"
-      ],
-      "source_repo": "Gymratik · guía esquemática propia",
-      "source_commit": "",
-      "published": {
-        "gif": "data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/videos/barbell-rdl-v1.gif",
-        "thumbnail": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-machine-reference.png",
-        "start": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-start.jpg",
-        "final": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-final.jpg",
-        "machine_reference": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-machine-reference.png"
-      },
-      "sha256": {
-        "source_gif": "680ae2efa489ee27df4d5b42b0f785ef4402a90f54d9c2b42ccee455c708d826",
-        "published_gif": "680ae2efa489ee27df4d5b42b0f785ef4402a90f54d9c2b42ccee455c708d826",
-        "thumbnail": "443853038fad0ab22aee76a9af384d4dce286d2d50d55d03cc12081bd0302690",
-        "start": "057a3e32af9db39d47afefa8e553f406eeeab90b30d2f27788f0fff7f5cba04a",
-        "final": "9778fbda2e3a2201c778765351260a67a9868b793ce3d9433fcbe9079806f654",
-        "machine_reference": "443853038fad0ab22aee76a9af384d4dce286d2d50d55d03cc12081bd0302690"
-      },
-      "gif": {
-        "width": 540,
-        "height": 360,
-        "frames": 72,
-        "frame_duration_ms": 33
-      },
-      "visual_review": "SCHEMATIC_RENDERED_AND_FRAME_CHECK_REQUIRED",
-      "rights_status": "ORIGINAL_LOCAL_ASSET",
-      "equipment_identity_status": "FREE_BAR_AND_PLATES"
-    },
-    {
-      "repo_id": "barbell-rdl-v1",
-      "title_es": "Peso muerto rumano con barra",
-      "target": "glúteos e isquiosurales",
-      "body_part": "upper legs",
-      "secondary": [
-        "cadena posterior",
-        "bisagra de cadera"
-      ],
-      "source_repo": "Gymratik · guía esquemática propia",
-      "source_commit": "",
-      "published": {
-        "gif": "data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/videos/barbell-rdl-v1.gif",
-        "thumbnail": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-machine-reference.png",
-        "start": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-start.jpg",
-        "final": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-final.jpg",
-        "machine_reference": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-machine-reference.png"
-      },
-      "sha256": {
-        "source_gif": "680ae2efa489ee27df4d5b42b0f785ef4402a90f54d9c2b42ccee455c708d826",
-        "published_gif": "680ae2efa489ee27df4d5b42b0f785ef4402a90f54d9c2b42ccee455c708d826",
-        "thumbnail": "443853038fad0ab22aee76a9af384d4dce286d2d50d55d03cc12081bd0302690",
-        "start": "057a3e32af9db39d47afefa8e553f406eeeab90b30d2f27788f0fff7f5cba04a",
-        "final": "9778fbda2e3a2201c778765351260a67a9868b793ce3d9433fcbe9079806f654",
-        "machine_reference": "443853038fad0ab22aee76a9af384d4dce286d2d50d55d03cc12081bd0302690"
-      },
-      "gif": {
-        "width": 540,
-        "height": 360,
-        "frames": 72,
-        "frame_duration_ms": 33
-      },
-      "visual_review": "SCHEMATIC_RENDERED_AND_FRAME_CHECK_REQUIRED",
-      "rights_status": "ORIGINAL_LOCAL_ASSET",
-      "equipment_identity_status": "FREE_BAR_AND_PLATES"
-    },
-    {
-      "repo_id": "barbell-rdl-v1",
-      "title_es": "Peso muerto rumano con barra",
-      "target": "glúteos e isquiosurales",
-      "body_part": "upper legs",
-      "secondary": [
-        "cadena posterior",
-        "bisagra de cadera"
-      ],
-      "source_repo": "Gymratik · guía esquemática propia",
-      "source_commit": "",
-      "published": {
-        "gif": "data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/videos/barbell-rdl-v1.gif",
-        "thumbnail": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-machine-reference.png",
-        "start": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-start.jpg",
-        "final": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-final.jpg",
-        "machine_reference": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-machine-reference.png"
-      },
-      "sha256": {
-        "source_gif": "680ae2efa489ee27df4d5b42b0f785ef4402a90f54d9c2b42ccee455c708d826",
-        "published_gif": "680ae2efa489ee27df4d5b42b0f785ef4402a90f54d9c2b42ccee455c708d826",
-        "thumbnail": "443853038fad0ab22aee76a9af384d4dce286d2d50d55d03cc12081bd0302690",
-        "start": "057a3e32af9db39d47afefa8e553f406eeeab90b30d2f27788f0fff7f5cba04a",
-        "final": "9778fbda2e3a2201c778765351260a67a9868b793ce3d9433fcbe9079806f654",
-        "machine_reference": "443853038fad0ab22aee76a9af384d4dce286d2d50d55d03cc12081bd0302690"
-      },
-      "gif": {
-        "width": 540,
-        "height": 360,
-        "frames": 72,
-        "frame_duration_ms": 33
-      },
-      "visual_review": "SCHEMATIC_RENDERED_AND_FRAME_CHECK_REQUIRED",
-      "rights_status": "ORIGINAL_LOCAL_ASSET",
-      "equipment_identity_status": "FREE_BAR_AND_PLATES"
-    },
-    {
-      "repo_id": "barbell-rdl-v1",
-      "title_es": "Peso muerto rumano con barra",
-      "target": "glúteos e isquiosurales",
-      "body_part": "upper legs",
-      "secondary": [
-        "cadena posterior",
-        "bisagra de cadera"
-      ],
-      "source_repo": "Gymratik · guía esquemática propia",
-      "source_commit": "",
-      "published": {
-        "gif": "data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/videos/barbell-rdl-v1.gif",
-        "thumbnail": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-machine-reference.png",
-        "start": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-start.jpg",
-        "final": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-final.jpg",
-        "machine_reference": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-machine-reference.png"
-      },
-      "sha256": {
-        "source_gif": "680ae2efa489ee27df4d5b42b0f785ef4402a90f54d9c2b42ccee455c708d826",
-        "published_gif": "680ae2efa489ee27df4d5b42b0f785ef4402a90f54d9c2b42ccee455c708d826",
-        "thumbnail": "443853038fad0ab22aee76a9af384d4dce286d2d50d55d03cc12081bd0302690",
-        "start": "057a3e32af9db39d47afefa8e553f406eeeab90b30d2f27788f0fff7f5cba04a",
-        "final": "9778fbda2e3a2201c778765351260a67a9868b793ce3d9433fcbe9079806f654",
-        "machine_reference": "443853038fad0ab22aee76a9af384d4dce286d2d50d55d03cc12081bd0302690"
-      },
-      "gif": {
-        "width": 540,
-        "height": 360,
-        "frames": 72,
-        "frame_duration_ms": 33
-      },
-      "visual_review": "SCHEMATIC_RENDERED_AND_FRAME_CHECK_REQUIRED",
-      "rights_status": "ORIGINAL_LOCAL_ASSET",
-      "equipment_identity_status": "FREE_BAR_AND_PLATES"
-    },
-    {
-      "repo_id": "barbell-rdl-v1",
-      "title_es": "Peso muerto rumano con barra",
-      "target": "glúteos e isquiosurales",
-      "body_part": "upper legs",
-      "secondary": [
-        "cadena posterior",
-        "bisagra de cadera"
-      ],
-      "source_repo": "Gymratik · guía esquemática propia",
-      "source_commit": "",
-      "published": {
-        "gif": "data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/videos/barbell-rdl-v1.gif",
-        "thumbnail": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-machine-reference.png",
-        "start": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-start.jpg",
-        "final": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-final.jpg",
-        "machine_reference": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-machine-reference.png"
-      },
-      "sha256": {
-        "source_gif": "680ae2efa489ee27df4d5b42b0f785ef4402a90f54d9c2b42ccee455c708d826",
-        "published_gif": "680ae2efa489ee27df4d5b42b0f785ef4402a90f54d9c2b42ccee455c708d826",
-        "thumbnail": "443853038fad0ab22aee76a9af384d4dce286d2d50d55d03cc12081bd0302690",
-        "start": "057a3e32af9db39d47afefa8e553f406eeeab90b30d2f27788f0fff7f5cba04a",
-        "final": "9778fbda2e3a2201c778765351260a67a9868b793ce3d9433fcbe9079806f654",
-        "machine_reference": "443853038fad0ab22aee76a9af384d4dce286d2d50d55d03cc12081bd0302690"
-      },
-      "gif": {
-        "width": 540,
-        "height": 360,
-        "frames": 72,
-        "frame_duration_ms": 33
-      },
-      "visual_review": "SCHEMATIC_RENDERED_AND_FRAME_CHECK_REQUIRED",
-      "rights_status": "ORIGINAL_LOCAL_ASSET",
-      "equipment_identity_status": "FREE_BAR_AND_PLATES"
-    },
-    {
-      "repo_id": "barbell-rdl-v1",
-      "title_es": "Peso muerto rumano con barra",
-      "target": "glúteos e isquiosurales",
-      "body_part": "upper legs",
-      "secondary": [
-        "cadena posterior",
-        "bisagra de cadera"
-      ],
-      "source_repo": "Gymratik · guía esquemática propia",
-      "source_commit": "",
-      "published": {
-        "gif": "data/rutinas_autocontenidas/medios_publicados/ejercicios-compartido/videos/barbell-rdl-v1.gif",
-        "thumbnail": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-machine-reference.png",
-        "start": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-start.jpg",
-        "final": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-final.jpg",
-        "machine_reference": "data/rutinas_autocontenidas/medios_publicados/rutinas_autocontenidas/dia4_media_generated/barbell-rdl-v1-machine-reference.png"
-      },
-      "sha256": {
-        "source_gif": "62c864e109aa77f444626cfc689ab409770190e96d63e9ad736a41459f80c988",
-        "published_gif": "62c864e109aa77f444626cfc689ab409770190e96d63e9ad736a41459f80c988",
-        "thumbnail": "443853038fad0ab22aee76a9af384d4dce286d2d50d55d03cc12081bd0302690",
-        "start": "057a3e32af9db39d47afefa8e553f406eeeab90b30d2f27788f0fff7f5cba04a",
-        "final": "deb336966c053d5f9826cc3e0b7f0311fbe88230215fc8b89a5125406172d52f",
-        "machine_reference": "443853038fad0ab22aee76a9af384d4dce286d2d50d55d03cc12081bd0302690"
-      },
-      "gif": {
-        "width": 540,
-        "height": 360,
-        "frames": 72,
-        "frame_duration_ms": 33
-      },
-      "visual_review": "SCHEMATIC_RENDERED_AND_FRAME_CHECK_REQUIRED",
-      "rights_status": "ORIGINAL_LOCAL_ASSET",
-      "equipment_identity_status": "FREE_BAR_AND_PLATES"
     },
     {
       "repo_id": "barbell-rdl-v1",

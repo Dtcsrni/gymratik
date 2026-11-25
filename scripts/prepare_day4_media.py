@@ -25,7 +25,7 @@ MANIFEST_OUT = ROOT / "data" / "rutinas_autocontenidas" / "evidencia" / "dia4_me
 SOURCE_COMMIT = "7455efae41b330c265e7cd4b78dfa848e7ce5ebd"
 
 EXERCISES = (
-    ("2287-V07qpXy", "Prensa unilateral alterna", "cuádriceps", "upper legs", ("isquiosurales", "glúteos")),
+    ("1425-WWD6FzI", "Prensa unilateral alterna", "cuádriceps", "upper legs", ("isquiosurales", "glúteos")),
     ("0578-GUT8I22", "Peso muerto en máquina", "glúteos", "upper legs", ("isquiosurales", "cuádriceps")),
     ("0586-17lJ1kr", "Curl femoral tumbado", "isquiosurales", "upper legs", ("pantorrillas",)),
     ("0597-CHpahtl", "Abducción de cadera sentada", "abductores", "upper legs", ("glúteos", "isquiosurales")),
@@ -108,14 +108,23 @@ def publish_one(repo: str, title: str, primary: str, body_part: str, secondary: 
 
 def main() -> None:
     entries = [publish_one(*item) for item in EXERCISES]
-    manifest = {
+    manifest = json.loads(MANIFEST_OUT.read_text(encoding="utf-8")) if MANIFEST_OUT.is_file() else {}
+    replaced_ids = {item[0] for item in EXERCISES}
+    preserved = []
+    seen_ids = set(replaced_ids)
+    for item in manifest.get("entries", []):
+        repo_id = item.get("repo_id")
+        if repo_id and repo_id not in seen_ids:
+            preserved.append(item)
+            seen_ids.add(repo_id)
+    manifest.update({
         "schema": "routine-media-manifest-v1",
         "routine": "Día 4 · Pierna · equilibrio",
         "global_status": "CANDIDATES_PENDING_LICENSE_REVIEW",
         "rights_note": "Los medios son candidatos locales; conservar revisión de licencia, atribución y redistribución pendiente.",
-        "equipment_note": "La imagen no confirma la identidad ni disponibilidad de una máquina instalada.",
-        "entries": entries,
-    }
+        "entries": entries + preserved,
+    })
+    manifest.setdefault("equipment_note", "La imagen no confirma la identidad ni disponibilidad de una máquina instalada.")
     MANIFEST_OUT.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(f"PREPARED_DAY4_MEDIA entries={len(entries)} manifest={MANIFEST_OUT.relative_to(ROOT)}")
 

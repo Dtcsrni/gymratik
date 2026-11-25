@@ -135,6 +135,8 @@ button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gra
 .summaryActivityStatus.isResting .summaryActivityIndicator{background:#ffd277;box-shadow:0 0 .55rem #ffd277;animation:restSlowPulse 2.4s ease-in-out infinite}
 .summaryActivityStatus.isActive .summaryActivityIndicator{background:#65f2dd;box-shadow:0 0 .55rem #65f2dd;animation:activityFastPulse .68s ease-in-out infinite}
 .summaryActivityStatus.isPreparing .summaryActivityIndicator{background:#72dcff;box-shadow:0 0 .55rem #72dcff;animation:preparationPulse 1.3s ease-in-out infinite}
+.exerciseTimerChip.is-countdown-final,.summaryActivityStatus.is-countdown-final{animation:preparationPulse .65s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.exerciseTimerChip.is-countdown-final,.summaryActivityStatus.is-countdown-final{animation:none!important}}
 .summaryMascotWrap{position:relative;grid-column:3;grid-row:1/3;display:grid;width:68px;height:68px;place-items:center;align-self:center;overflow:visible;border:0;border-radius:0;background:transparent;box-shadow:none}
 #summaryActivityMascot{display:block;width:70px;height:70px;object-fit:contain;transform-origin:50% 82%;transition:filter .2s ease;image-rendering:auto}
 #summaryToggle.isResting #summaryActivityMascot{filter:drop-shadow(0 0 8px rgba(255,210,119,.36))}
@@ -159,6 +161,16 @@ button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gra
 .exerciseTimerChip[data-kind="set"]{border-color:#45d8c4;background:linear-gradient(125deg,rgba(10,83,78,.98),rgba(11,57,66,.98));box-shadow:inset 0 1px 0 rgba(227,255,250,.14),0 0 12px rgba(69,216,196,.12)}
 .exerciseTimerChip[data-kind="set"] .exerciseTimerLabel{color:#baf7ea}
 .exerciseTimerChip[data-kind="set"] .exerciseTimerValue{color:#a8ffe8}
+.exerciseTimerChip[data-kind="set"][data-series-index="1"]{border-color:#70d8ff;background:linear-gradient(125deg,#153b59,#102f49);box-shadow:inset 0 1px rgba(255,255,255,.12),0 0 11px rgba(112,216,255,.12)}
+.exerciseTimerChip[data-kind="set"][data-series-index="1"] .exerciseTimerLabel,.exerciseTimerChip[data-kind="set"][data-series-index="1"] .exerciseTimerValue{color:#d9f7ff}
+.exerciseTimerChip[data-kind="set"][data-series-index="2"]{border-color:#6ce7c7;background:linear-gradient(125deg,#124d47,#103c3c);box-shadow:inset 0 1px rgba(255,255,255,.12),0 0 11px rgba(108,231,199,.12)}
+.exerciseTimerChip[data-kind="set"][data-series-index="2"] .exerciseTimerLabel,.exerciseTimerChip[data-kind="set"][data-series-index="2"] .exerciseTimerValue{color:#e0fff5}
+.exerciseTimerChip[data-kind="set"][data-series-index="3"]{border-color:#c3a5ff;background:linear-gradient(125deg,#43356d,#302a55);box-shadow:inset 0 1px rgba(255,255,255,.12),0 0 11px rgba(195,165,255,.12)}
+.exerciseTimerChip[data-kind="set"][data-series-index="3"] .exerciseTimerLabel,.exerciseTimerChip[data-kind="set"][data-series-index="3"] .exerciseTimerValue{color:#eee5ff}
+.exerciseTimerChip[data-kind="set"][data-series-index="4"]{border-color:#ff9bb0;background:linear-gradient(125deg,#603644,#482d3b);box-shadow:inset 0 1px rgba(255,255,255,.12),0 0 11px rgba(255,155,176,.12)}
+.exerciseTimerChip[data-kind="set"][data-series-index="4"] .exerciseTimerLabel,.exerciseTimerChip[data-kind="set"][data-series-index="4"] .exerciseTimerValue{color:#ffe5e9}
+.exerciseTimerChip[data-kind="set"][data-series-index="5"]{border-color:#ffd277;background:linear-gradient(125deg,#5c4a21,#463a22);box-shadow:inset 0 1px rgba(255,255,255,.12),0 0 11px rgba(255,210,119,.12)}
+.exerciseTimerChip[data-kind="set"][data-series-index="5"] .exerciseTimerLabel,.exerciseTimerChip[data-kind="set"][data-series-index="5"] .exerciseTimerValue{color:#fff1cd}
 .exerciseTimerChip[data-kind="rest"]{border-color:#ffc95e;background:linear-gradient(125deg,rgba(103,69,15,.98),rgba(68,51,22,.98))}
 .exerciseTimerChip[data-kind="rest"] .exerciseTimerLabel{color:#ffedbb}
 .exerciseTimerChip[data-kind="rest"] .exerciseTimerValue{color:#ffe38d}
@@ -453,6 +465,9 @@ REST_TIMING_DISPLAY_CONTRACT = '''  const renderTimingDisplays = () => {
           display.append(chip);
         }
         chip.dataset.kind = entry.kind;
+        chip.classList.toggle('is-countdown-final', entry.countdownFinal === true);
+        if (entry.seriesIndex) chip.dataset.seriesIndex = String(entry.seriesIndex);
+        else delete chip.dataset.seriesIndex;
         chip.querySelector('.exerciseTimerLabel').textContent = entry.label;
         chip.querySelector('.exerciseTimerValue').textContent = entry.value;
         chip.setAttribute('aria-label', `${entry.label}: ${entry.value}`);
@@ -475,9 +490,9 @@ REST_TIMING_DISPLAY_CONTRACT = '''  const renderTimingDisplays = () => {
           const reps = Number.isInteger(repsValue) && repsValue >= 1 && repsValue <= 100 ? `${repsValue}r` : null;
           const loadValue = Number(record?.load);
           const loadUnit = record?.loadUnit || 'kg';
-          const load = record?.load !== null && record?.load !== undefined && Number.isFinite(loadValue) ? `${loadUnit === 'lb' ? Math.round(loadValue) : Number.isInteger(loadValue) ? loadValue : loadValue.toFixed(1)} ${loadUnit}` : null;
+          const load = record?.load !== null && record?.load !== undefined && Number.isFinite(loadValue) ? `${String(Number(loadValue.toFixed(2)))} ${loadUnit}` : null;
           const details = [reps, load].filter(Boolean).join(' · ') || 'sin datos';
-          entries.push({ key: `set-${index + 1}`, label: `S${index + 1} · ${details}`, value: formatElapsed(duration), kind: 'set' });
+          entries.push({ key: `set-${index + 1}`, label: `S${index + 1} · ${details}`, value: formatElapsed(duration), kind: 'set', seriesIndex: index + 1 });
         }
       });
       (timing?.restTimes || []).forEach((duration, index) => {
@@ -486,16 +501,18 @@ REST_TIMING_DISPLAY_CONTRACT = '''  const renderTimingDisplays = () => {
       if (preparing) {
         const preparation = seriesPreparation.get(item.index);
         const remaining = Math.max(0, (preparation?.endsAt || timing?.preparationEndsAt || now) - now);
-        entries.push({ key: 'preparation', label: 'Preparación', value: formatCountdown(remaining), kind: 'preparation' });
+        entries.push({ key: 'preparation', label: 'Preparación', value: formatCountdown(remaining), kind: 'preparation', countdownFinal: remaining > 0 && remaining <= 3000 });
       } else if (restActive) {
         const elapsed = Math.max(0, recommendation.minMs - restRemaining);
-        entries.push({ key: 'active-rest', label: 'Descanso activo', value: `${formatCountdown(restRemaining)} restante`, kind: 'active-rest', progress: recommendation.minMs ? elapsed / recommendation.minMs : 0 });
+        entries.push({ key: 'active-rest', label: 'Descanso activo', value: `${formatCountdown(restRemaining)} restante`, kind: 'active-rest', progress: recommendation.minMs ? elapsed / recommendation.minMs : 0, countdownFinal: restRemaining > 0 && restRemaining <= 3000 });
       } else if (timing?.restStartedAt && !row.complete && !seriesActive) {
         entries.push({ key: 'rest-ready', label: 'Descanso listo', value: 'Continuar cuando quieras', kind: 'preparation' });
       } else if (seriesActive) {
         entries.push({ key: `active-set-${row.done + 1}`, label: `Serie ${row.done + 1} · en curso`, value: formatElapsed(now - timing.seriesStartedAt), kind: 'active-set' });
       }
-      const elapsed = timing?.startedAt ? (timing.endedAt || now) - timing.startedAt : NaN;
+      const recordedElapsed = [...(timing?.seriesTimes || []), ...(timing?.restTimes || [])].reduce((sum, value) => sum + (Number.isFinite(value) ? Math.max(0, value) : 0), 0);
+      const endedAt = Number(timing?.endedAt) || (row.complete && timing?.startedAt ? timing.startedAt + recordedElapsed : now);
+      const elapsed = timing?.startedAt ? Math.max(0, endedAt - timing.startedAt) : NaN;
       if (Number.isFinite(elapsed)) entries.push({ key: 'exercise-total', label: 'Ejercicio', value: formatElapsed(elapsed), kind: 'exercise' });
       if (!entries.length) entries.push({ key: 'empty', label: row.complete ? 'Ejercicio' : 'Cronómetro', value: row.complete ? 'Completado' : 'Listo para iniciar', kind: 'empty' });
       renderExerciseTimer(item, entries, entries.map(entry => `${entry.label}, ${entry.value}`).join('. '));
@@ -527,21 +544,21 @@ REST_TIMING_DISPLAY_CONTRACT = '''  const renderTimingDisplays = () => {
       const restElapsed = timing?.restStartedAt ? Math.max(0, now - timing.restStartedAt) : 0;
       const recommendation = getRestRecommendation(item);
       const restRemaining = Math.max(0, recommendation.minMs - restElapsed);
-      const restActive = Boolean(!root?.sessionEndedAt && timing?.restStartedAt && restRemaining > 0);
+      const restActive = Boolean(!row.complete && !root?.sessionEndedAt && timing?.restStartedAt && restRemaining > 0);
       const seriesActive = Boolean(!row.complete && timing?.seriesStartedAt && !timing?.restStartedAt);
-      const restPending = Boolean(!root?.sessionEndedAt && timing?.restStartedAt && !seriesActive && !preparing);
+      const restPending = Boolean(!row.complete && !root?.sessionEndedAt && timing?.restStartedAt && !seriesActive && !preparing);
       const warmupActive = Boolean(!row.complete && timing?.warmupStartedAt && !restPending);
       const activity = warmupActive
         ? { kind: 'approximation', label: `Aproximación · ${item.title}`, clock: formatElapsed(now - timing.warmupStartedAt), startedAt: Number(timing.warmupStartedAt) || 0 }
         : restPending
-        ? { kind: restActive ? 'rest' : 'ready', label: restActive ? `Descanso · ${item.title}` : `Descanso listo · ${item.title}`, clock: restActive ? `${formatCountdown(restRemaining)} restantes` : 'Lista', startedAt: Number(timing.restStartedAt) || 0 }
+        ? { kind: restActive ? 'rest' : 'ready', label: restActive ? `Descanso · ${item.title}` : `Descanso listo · ${item.title}`, clock: restActive ? `${formatCountdown(restRemaining)} restantes` : 'Lista', startedAt: Number(timing.restStartedAt) || 0, remainingMs: restActive ? restRemaining : 0 }
         : preparing
-          ? { kind: 'preparing', label: `Preparación · ${item.title}`, clock: formatCountdown((preparation?.endsAt || timing?.preparationEndsAt || now) - now), startedAt: Number(timing?.preparationEndsAt) || now }
+          ? { kind: 'preparing', label: `Preparación · ${item.title}`, clock: formatCountdown((preparation?.endsAt || timing?.preparationEndsAt || now) - now), startedAt: (Number(preparation?.endsAt || timing?.preparationEndsAt) || now) - PREPARATION_MS, remainingMs: Math.max(0, (preparation?.endsAt || timing?.preparationEndsAt || now) - now) }
           : seriesActive
             ? { kind: 'strength', label: `Serie ${row.done + 1} activa · ${item.title}`, clock: formatElapsed(now - timing.seriesStartedAt), startedAt: Number(timing.seriesStartedAt) || 0 }
             : null;
       if (activity && (!currentActivity || activity.startedAt >= currentActivity.startedAt)) currentActivity = activity;
-      if (!root?.sessionEndedAt && timing?.restStartedAt) notifyRestReady(item, timing, restElapsed);
+      if (!row.complete && !root?.sessionEndedAt && timing?.restStartedAt) notifyRestReady(item, timing, restElapsed);
       const summaryButton = summaryList.querySelector(`[data-exercise="${item.index + 1}"]`);
       const summaryState = summaryButton?.querySelector('.summaryExerciseState');
       if (summaryButton && summaryState) {
@@ -580,7 +597,7 @@ REST_TIMING_DISPLAY_CONTRACT = '''  const renderTimingDisplays = () => {
     const warmup = getWarmupTiming();
     if (warmup.phase === 'preparing') {
       const startedAt = Number(warmup.preparationEndsAt) - PREPARATION_MS;
-      const activity = { kind: 'preparing', label: 'Preparación · Calentamiento', clock: formatCountdown(warmupPreparationRemaining()), startedAt };
+      const activity = { kind: 'preparing', label: 'Preparación · Calentamiento', clock: formatCountdown(warmupPreparationRemaining()), startedAt, remainingMs: warmupPreparationRemaining() };
       if (!currentActivity || activity.startedAt >= currentActivity.startedAt) currentActivity = activity;
     } else if (warmup.phase === 'cardio' || warmup.phase === 'mobility') {
       const startedAt = Number(warmup[`${warmup.phase}StartedAt`]) || 0;
@@ -619,6 +636,11 @@ REST_TIMING_DISPLAY_CONTRACT = '''  const renderTimingDisplays = () => {
       const progressText = `${doneExercises}/${exerciseItems.length} ejercicios · ${doneSeries}/${totalSeries} series`;
       const compactActivityLabels = { rest: 'Descanso', ready: 'Descanso listo', approximation: 'Aproximación', preparing: 'Preparación', strength: displayActivity.label.split(' · ')[0], cardio: 'Calentamiento · cardio', mobility: 'Calentamiento · movilidad', complete: 'Rutina completada', start: 'Listo para iniciar' };
       const activityText = `${compactActivityLabels[displayActivity.kind] || 'Sesión activa'} · ${displayActivity.clock}`;
+      const activityIsFinalCountdown = !document.hidden && currentActivity && currentActivity.remainingMs > 0 && currentActivity.remainingMs <= 3000 && currentActivity?.startedAt >= activityPageStartedAt;
+      if (activityIsFinalCountdown) {
+        const cueKey = `${currentActivity.kind}:${currentActivity.startedAt}`;
+        if (!playedCountdownCues.has(cueKey)) { playedCountdownCues.add(cueKey); playFeedback('countdown'); }
+      }
       activityHeadline.textContent = progressText;
       if (compactActivityHeadline) compactActivityHeadline.textContent = activityText;
       if (activityLabel) activityLabel.textContent = displayActivity.label;
@@ -626,6 +648,7 @@ REST_TIMING_DISPLAY_CONTRACT = '''  const renderTimingDisplays = () => {
       const activeKinds = ['strength', 'cardio', 'mobility', 'approximation'];
       const isActive = activeKinds.includes(displayActivity.kind);
       if (activityStatus) {
+        activityStatus.classList.toggle('is-countdown-final', activityIsFinalCountdown);
         activityStatus.classList.toggle('isResting', displayActivity.kind === 'rest');
         activityStatus.classList.toggle('isActive', isActive);
         activityStatus.classList.toggle('isPreparing', displayActivity.kind === 'preparing');
@@ -1196,7 +1219,13 @@ def sanitize_canonical_metadata(source: str) -> str:
     )
     source = re.sub(
         r"const phrase = motivationalQuotes\[motivationIndex(?: % motivationalQuotes\.length)?\];\s*motivationIndex = \(motivationIndex \+ 1\) % motivationalQuotes\.length;\s*try \{ localStorage\.setItem\(motivationKey, String\(motivationIndex\)\); \} catch \(_\) \{\}",
-        "const quoteCount = motivationalQuotes.length;\n    const avoidLast = quoteCount > 1 && lastMotivationIndex >= 0;\n    const poolSize = Math.max(1, quoteCount - (avoidLast ? 1 : 0));\n    let motivationIndex = Math.floor(Math.random() * poolSize);\n    if (avoidLast && motivationIndex >= lastMotivationIndex) motivationIndex += 1;\n    const phrase = motivationalQuotes[motivationIndex];\n    lastMotivationIndex = motivationIndex;\n    try { localStorage.setItem(motivationKey, String(lastMotivationIndex)); } catch (_) {}",
+        "const quoteCount = motivationalQuotes.length;\n    const featuredQuoteIndexes = motivationalQuotes.flatMap((quote, index) => quote.quoteLink && quote.author !== 'Gymratik' ? [index] : []);\n    const originalQuoteIndexes = motivationalQuotes.flatMap((quote, index) => !quote.quoteLink || quote.author === 'Gymratik' ? [index] : []);\n    const motivationCategoryKey = 'gymratik-motivation-category-v1';\n    let lastMotivationCategory = 'original';\n    try { lastMotivationCategory = localStorage.getItem(motivationCategoryKey) || 'original'; } catch (_) {}\n    const featuredPool = featuredQuoteIndexes.length > 0 && lastMotivationCategory !== 'featured';\n    const sourcePool = featuredPool ? featuredQuoteIndexes : originalQuoteIndexes.length ? originalQuoteIndexes : motivationalQuotes.map((_, index) => index);\n    const eligiblePool = sourcePool.filter(index => quoteCount <= 1 || index !== lastMotivationIndex);\n    const selectionPool = eligiblePool.length ? eligiblePool : sourcePool;\n    const motivationIndex = selectionPool[Math.floor(Math.random() * selectionPool.length)] ?? 0;\n    const phrase = motivationalQuotes[motivationIndex];\n    lastMotivationIndex = motivationIndex;\n    lastMotivationCategory = featuredPool ? 'featured' : 'original';\n    try { localStorage.setItem(motivationKey, String(lastMotivationIndex)); localStorage.setItem(motivationCategoryKey, lastMotivationCategory); } catch (_) {}",
+        source,
+        count=1,
+    )
+    source = re.sub(
+        r"const quoteCount = motivationalQuotes\.length;\s*const avoidLast = quoteCount > 1 && lastMotivationIndex >= 0;\s*const poolSize = Math\.max\(1, quoteCount - \(avoidLast \? 1 : 0\)\);\s*let motivationIndex = Math\.floor\(Math\.random\(\) \* poolSize\);\s*if \(avoidLast && motivationIndex >= lastMotivationIndex\) motivationIndex \+= 1;\s*(?:if \(window\.fitnessQuotesData\?\.quotes\?\.length\)[^\r\n]*\r?\n\s*)?const phrase = motivationalQuotes\[motivationIndex(?: % motivationalQuotes\.length)?\];\s*lastMotivationIndex = motivationIndex;\s*try \{ localStorage\.setItem\(motivationKey, String\(lastMotivationIndex\)\); \} catch \(_\) \{\}",
+        "const quoteCount = motivationalQuotes.length;\n    const featuredQuoteIndexes = motivationalQuotes.flatMap((quote, index) => quote.quoteLink && quote.author !== 'Gymratik' ? [index] : []);\n    const originalQuoteIndexes = motivationalQuotes.flatMap((quote, index) => !quote.quoteLink || quote.author === 'Gymratik' ? [index] : []);\n    const motivationCategoryKey = 'gymratik-motivation-category-v1';\n    let lastMotivationCategory = 'original';\n    try { lastMotivationCategory = localStorage.getItem(motivationCategoryKey) || 'original'; } catch (_) {}\n    const featuredPool = featuredQuoteIndexes.length > 0 && lastMotivationCategory !== 'featured';\n    const sourcePool = featuredPool ? featuredQuoteIndexes : originalQuoteIndexes.length ? originalQuoteIndexes : motivationalQuotes.map((_, index) => index);\n    const eligiblePool = sourcePool.filter(index => quoteCount <= 1 || index !== lastMotivationIndex);\n    const selectionPool = eligiblePool.length ? eligiblePool : sourcePool;\n    const motivationIndex = selectionPool[Math.floor(Math.random() * selectionPool.length)] ?? 0;\n    const phrase = motivationalQuotes[motivationIndex];\n    lastMotivationIndex = motivationIndex;\n    lastMotivationCategory = featuredPool ? 'featured' : 'original';\n    try { localStorage.setItem(motivationKey, String(lastMotivationIndex)); localStorage.setItem(motivationCategoryKey, lastMotivationCategory); } catch (_) {}",
         source,
         count=1,
     )
@@ -2169,6 +2198,16 @@ def standardize_shared_session_contract(source: str) -> str:
         timing_end = min(timing_end_candidates)
         source = source[:timing_start] + REST_TIMING_DISPLAY_CONTRACT + source[timing_end:]
         timing_display_count = 1
+    source = re.sub(
+        r"(?m)^  const activityPageStartedAt = Date\.now\(\);\r?\n  const playedCountdownCues = new Set\(\);\r?\n",
+        "",
+        source,
+    )
+    source = source.replace(
+        "  const renderTimingDisplays = () => {",
+        "  const activityPageStartedAt = Date.now();\n  const playedCountdownCues = new Set();\n  const renderTimingDisplays = () => {",
+        1,
+    )
     if "window.gymratikMascotVariant = 'neutral';" not in source:
         profile_mascot_init = """  window.gymratikMascotVariant = 'neutral';
   const updateActivityMascotProfile = profile => {
@@ -2799,7 +2838,7 @@ def standardize_muscle_visuals(source: str) -> str:
     source = standardize_quote_portrait_loading(source)
     source = source.replace(
         "if (seriesIndex + 1 < item.seriesKeys.length) timing.restStartedAt = timestamp; else timing.endedAt = timestamp;",
-        "if (seriesIndex + 1 < item.seriesKeys.length || exerciseItems.some(entry => !snapshot(entry).complete)) timing.restStartedAt = timestamp; else timing.endedAt = timestamp;",
+        "if (seriesIndex + 1 < item.seriesKeys.length) timing.restStartedAt = timestamp; else { timing.restStartedAt = 0; timing.endedAt = timestamp; }",
         1,
     )
     source = re.sub(
@@ -2867,6 +2906,7 @@ def standardize_muscle_visuals(source: str) -> str:
       cardio: [[440, .075, 0, .026], [554, .075, .12, .028], [659, .11, .24, .03]],
       mobility: [[440, .16, 0, .025], [523, .2, .22, .028]],
       preparation: [[392, .075, 0, .022], [494, .075, .14, .024], [659, .13, .28, .028]],
+      countdown: [[880, .075, 0, .018], [1047, .12, .12, .022]],
       activity: [[523, .1, 0, .03], [659, .13, .16, .034]],
       series: [[659, .085, 0, .032], [784, .14, .14, .036]],
       rest: [[440, .13, 0, .026], [587, .17, .2, .03]],
@@ -2904,7 +2944,7 @@ def standardize_muscle_visuals(source: str) -> str:
     if (!hapticsEnabled || typeof navigator.vibrate !== 'function') return;
     const patterns = {
       warmup: [18, 44, 18], cardio: [16, 34, 16, 34, 24], mobility: [20, 70, 20],
-      preparation: [14, 48, 14, 48, 26], activity: [20, 42, 28], series: [24, 54, 34],
+      preparation: [14, 48, 14, 48, 26], countdown: [12], activity: [20, 42, 28], series: [24, 54, 34],
       rest: [18, 68, 18, 125, 30], exercise: [28, 55, 28, 55, 42], session: [34, 66, 34, 66, 58]
     };
     try { navigator.vibrate(patterns[type] || []); } catch (_) {}
@@ -3402,7 +3442,7 @@ def standardize_series_entry_zone(source: str) -> str:
     )
     load_profile_block = """    const loadMath = {
       toKg(value, unit) { const numeric = Number(value); return unit === 'lb' ? numeric * 0.45359237 : numeric; },
-      toDisplay(kg, unit) { return unit === 'lb' ? kg / 0.45359237 : kg; },
+      toDisplay(kg, unit) { const value = unit === 'lb' ? kg / 0.45359237 : kg; return unit === 'lb' ? Math.round((value + Number.EPSILON) * 100) / 100 : value; },
       snapKg(kg, stepKg) { return Math.round(Number(kg) / Number(stepKg)) * Number(stepKg); },
       clampKg(kg, profile) { const value = Number(kg); if (!Number.isFinite(value)) return NaN; return Math.min(Number(profile.maxKg), Math.max(Number(profile.minKg), value)); },
       normalizeKg(kg, profile) { const value = Number(kg); if (!Number.isFinite(value)) return NaN; const normalized = profile.discreteStepKg ? this.snapKg(value, profile.stepKg) : Math.round(value * 10) / 10; return this.clampKg(normalized, profile); },
@@ -3569,6 +3609,7 @@ def standardize_series_entry_zone(source: str) -> str:
         "if (!(await confirmSuspiciousLoad(item))) return;\n      if (missingPerformance.length && !(await confirmMissingPerformance(missingPerformance))) return;\n      if (state[nextKey] === true) return;",
         1,
     )
+    source = re.sub(r"([ \t]*if \(!\(await confirmSuspiciousLoad\(item\)\)\) return;\r?\n)\1+", r"\1", source)
     source = source.replace(
         "const repsTitle = document.createElement('span'); repsTitle.textContent = 'Repeticiones realizadas · opcional'; const repsClear = document.createElement('button');",
         "const repsLabelText = document.createElement('span'); repsLabelText.textContent = 'Repeticiones'; const repsIcon = createPerformanceIcon('repeat-2'); const repsRequired = document.createElement('span'); repsRequired.className = 'performanceRequired'; repsRequired.textContent = 'Requerido'; const repsFieldLabel = document.createElement('span'); repsFieldLabel.className = 'performanceFieldLabel'; if (repsIcon) repsFieldLabel.append(repsIcon); repsFieldLabel.append(repsLabelText); const repsTitle = document.createElement('span'); repsTitle.className = 'performanceFieldTitleRow'; repsTitle.append(repsFieldLabel, repsRequired); const repsClear = document.createElement('button');",
@@ -3729,7 +3770,7 @@ def standardize_series_entry_zone(source: str) -> str:
     if (detail.direction === 'up') {
       celebrate(detail.target, 20);
       const loadValue = Number(detail.load);
-      const displayLoad = detail.loadUnit === 'lb' ? Math.round(loadValue) : Number.isInteger(loadValue) ? loadValue : loadValue.toFixed(1);
+      const displayLoad = String(Number(loadValue.toFixed(2)));
       encourage(`¡Carga aumentada en ${detail.title}! Serie completada con ${displayLoad} ${detail.loadUnit}. Buen progreso; conserva la técnica.`);
     } else if (detail.direction === 'down') {
       encourage(`Buen ajuste en ${detail.title}: completaste la serie con menos carga. Prioriza control y rango cómodo; progresar también es entrenar con criterio.`);
@@ -3741,7 +3782,7 @@ def standardize_series_entry_zone(source: str) -> str:
         source = source.replace(listener_anchor, weight_listener + listener_anchor, 1)
     source = source.replace(
         "encourage(`¡Carga aumentada en ${detail.title}! Serie completada con ${detail.load} ${detail.loadUnit}. Buen progreso; conserva la técnica.`);",
-        "const loadValue = Number(detail.load); const displayLoad = detail.loadUnit === 'lb' ? Math.round(loadValue) : Number.isInteger(loadValue) ? loadValue : loadValue.toFixed(1);\n      encourage(`¡Carga aumentada en ${detail.title}! Serie completada con ${displayLoad} ${detail.loadUnit}. Buen progreso; conserva la técnica.`);",
+        "const loadValue = Number(detail.load); const displayLoad = String(Number(loadValue.toFixed(2)));\n      encourage(`¡Carga aumentada en ${detail.title}! Serie completada con ${displayLoad} ${detail.loadUnit}. Buen progreso; conserva la técnica.`);",
     )
     if "Progresión sugerida: alcanzaste al menos" not in source:
         source = source.replace(
@@ -3931,12 +3972,12 @@ def standardize_series_entry_zone(source: str) -> str:
     )
     source = source.replace(
         "if (load !== null && item.performanceLoadOutput) item.performanceLoadOutput.textContent = loadUnit === 'lb' ? `${Number.isInteger(load) ? load : load.toFixed(1)} lb (${loadKg.toFixed(1)} kg)` : `${Number.isInteger(load) ? load : load.toFixed(1)} kg`;",
-        "if (load !== null && item.performanceLoadOutput) item.performanceLoadOutput.textContent = loadUnit === 'lb' ? `${Math.round(load)} lb (${loadKg.toFixed(1)} kg)` : `${Number.isInteger(load) ? load : load.toFixed(1)} kg`;",
+        "if (load !== null && item.performanceLoadOutput) item.performanceLoadOutput.textContent = loadUnit === 'lb' ? `${String(Number(load.toFixed(2)))} lb (${loadKg.toFixed(1)} kg)` : `${Number.isInteger(load) ? load : load.toFixed(1)} kg`;",
         1,
     )
     source = source.replace(
         "const original = `${Number.isInteger(Number(record.load)) ? Number(record.load) : Number(record.load).toFixed(1)} ${unit}`;",
-        "const original = `${unit === 'lb' ? Math.round(Number(record.load)) : Number.isInteger(Number(record.load)) ? Number(record.load) : Number(record.load).toFixed(1)} ${unit}`;",
+        "const original = `${String(Number(Number(record.load).toFixed(2)))} ${unit}`;",
     )
     if "const repFeedbackZone = value =>" not in source:
         source, guidance_count = re.subn(

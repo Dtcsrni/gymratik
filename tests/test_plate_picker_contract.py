@@ -31,11 +31,12 @@ class PlatePickerContractTests(unittest.TestCase):
             "const fitPlatePickerAboveSessionBar = () => requestAnimationFrame",
             "grid-template-rows:64px auto;justify-items:center",
             ".platePickerDiscFace",
-            "width:var(--plate-size,50px);height:var(--plate-size,50px)",
+            "width:min(var(--plate-size,50px),100%);height:min(var(--plate-size,50px),100%)",
+            "#081d2a 0 8%,#43c8cf 9% 13%",
             "platePickerDiscValue",
             "platePickerGroups.className = 'platePickerUnits'",
             "const plateKg = loadMath.toKg(weight, unit)",
-            "const plateSize = 34 + 28 * Math.max(0,Math.min(1,(Math.sqrt(plateKg)-minRoot)/(maxRoot-minRoot)))",
+            "const plateSize = 44 + 18 * Math.max(0,Math.min(1,(Math.sqrt(plateKg)-minRoot)/(maxRoot-minRoot)))",
             "tile.style.setProperty('--plate-size'",
             "Discos · libras (lb)",
             "Discos · kilogramos (kg)",
@@ -48,6 +49,7 @@ class PlatePickerContractTests(unittest.TestCase):
             "totalKg >= item.performanceLoadProfile.minKg",
             "item.platePickerExactLoadKg = totalKg",
             "item.performanceLoadExact = loadMath.toDisplay(totalKg, item.performanceLoadUnit)",
+            "platePickerHeaderTotal.textContent = pieces.length && Number.isFinite(appliedValue) ? transferText : 'Añadir'",
             "savePerformanceDraft()",
             "barra ni máquina",
             "aria-expanded",
@@ -92,6 +94,7 @@ class PlatePickerContractTests(unittest.TestCase):
                 self.assertIn("max-height:min(52svh,480px)", source)
                 self.assertIn("Toca + para añadir una pieza", source)
                 self.assertIn("platePickerDiscValue", source)
+                self.assertIn("width:min(var(--plate-size,50px),100%)", source)
                 self.assertIn("platePickerExactLoadKg = totalKg", source)
                 picker_start = source.index("const platePickerToggle")
                 picker_end = source.index("const progressionCue", picker_start)
@@ -100,9 +103,12 @@ class PlatePickerContractTests(unittest.TestCase):
                 self.assertIn("grid-template-rows:64px auto", source)
                 self.assertIn("const plateKg = loadMath.toKg(weight, unit)", source)
                 self.assertIn("tile.style.setProperty('--plate-size'", source)
-                self.assertIn("loadInput.step = hasExactPlateLoad ? 'any' : String(unitStep)", source)
+                self.assertIn("loadInput.step = 'any'", source)
+                self.assertIn("const displayValue = String(Number(value.toFixed(2)))", source)
+                self.assertIn("item.performanceLoadExact = entered; item.performanceLoadSelected = true", source)
+                self.assertNotIn("platePickerHeaderTotal.textContent = item.performanceLoadSelected ? loadOutput.textContent", source)
                 self.assertIn("platePickerExactLoadKg: item.platePickerExactLoadKg", source)
-                self.assertIn("item.platePickerExactLoadKg != null ? loadMath.toDisplay(kilograms, nextUnit)", source)
+                self.assertIn("const rounded = loadMath.toDisplay(kilograms, nextUnit)", source)
 
 
 if __name__ == "__main__":

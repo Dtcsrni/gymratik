@@ -76,7 +76,7 @@ class Element {
 }
 const elements = Object.fromEntries(ids.map(id => [id,new Element(id)]));
 elements.heroArt = new Element('hero-art');
-global.document = { querySelector:s=>s === '.hero-art' ? elements.heroArt : elements[s.slice(1)], createElement:()=>new Element(), createElementNS:()=>new Element(), addEventListener(){} };
+global.document = { documentElement:{dataset:{}}, hidden:false, querySelector:s=>s === '.hero-art' ? elements.heroArt : elements[s.slice(1)], createElement:()=>new Element(), createElementNS:()=>new Element(), addEventListener(){} };
 const now = Date.now();
 const session = (sessionId, offset, load, reps=8, otherRecords=[]) => ({sessionId,routineId:'day1',label:'Día 1 · Tirón',startedAt:now-offset,updatedAt:now-offset,status:'completed',completedSeries:2,totalSeries:3,performance:[{exerciseId:'row',exerciseName:'Remo horizontal en máquina',setNumber:1,reps,load,loadUnit:'kg',loadKg:load},...otherRecords]});
 global.window = { addEventListener(){}, GymratikInstallGate:{isInstalled:()=>true}, TrainingProgressStore:{getHistory:async limit=>{

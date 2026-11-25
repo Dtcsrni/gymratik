@@ -211,7 +211,7 @@ def main() -> None:
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     manifest["entries"] = [
         row for row in manifest["entries"]
-        if row.get("repo_id") not in {"0578-GUT8I22", "smith-rdl-v2"}
+        if row.get("repo_id") not in {"0578-GUT8I22", "barbell-rdl-v1", "smith-rdl-v2"}
     ]
     manifest["entries"].extend([entry, smith_entry])
     manifest["equipment_note"] = "La rutina v2 prioriza máquinas; la bisagra de cadera se hace en Smith. La carga efectiva depende del contrapeso del modelo instalado y no se infiere de esta guía genérica."

@@ -2823,9 +2823,10 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 <style data-enhancement="summary-free-navigation-v1">
 .sessionSummaryList{max-height:min(24dvh,168px)!important;overflow-y:auto!important;overscroll-behavior:contain!important;touch-action:pan-y!important;-webkit-overflow-scrolling:touch!important;scrollbar-gutter:stable}
 #floatingSessionSummary .sessionSummaryList{max-height:150px!important}
-#summaryToggle{grid-template-columns:auto minmax(0,1fr) 86px auto!important}
-.summaryMascotWrap{width:82px!important;height:82px!important}.summaryMascotWrap #summaryActivityMascot{width:78px!important;height:78px!important}
-@media(max-width:380px){#summaryToggle{grid-template-columns:auto minmax(0,1fr) 68px auto!important}.summaryMascotWrap{width:64px!important;height:64px!important}.summaryMascotWrap #summaryActivityMascot{width:60px!important;height:60px!important}}
+#floatingSessionSummary{overflow:visible!important}
+#summaryToggle{position:relative!important;grid-template-columns:auto minmax(0,1fr) 96px auto!important;min-height:68px!important;overflow:visible!important}
+.summaryMascotWrap{position:absolute!important;z-index:3;top:-14px;right:24px;width:96px!important;height:96px!important;overflow:visible!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}.summaryMascotWrap #summaryActivityMascot{width:94px!important;height:94px!important;object-fit:contain!important}
+@media(max-width:380px){#summaryToggle{grid-template-columns:auto minmax(0,1fr) 72px auto!important}.summaryMascotWrap{top:-12px;right:18px;width:86px!important;height:86px!important}.summaryMascotWrap #summaryActivityMascot{width:84px!important;height:84px!important}}
 @media(max-height:420px) and (max-width:900px){#floatingSessionSummary .sessionSummaryList{max-height:78px!important;gap:.12rem!important}}
 </style>
 <style data-enhancement="routine-context-disclosure-v1">
@@ -2842,21 +2843,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 @media(max-width:820px){article.card>.meta{order:1!important}article.card>.coach{order:2!important}article.card>.visual{order:3!important}}
 @media(prefers-reduced-motion:reduce){.routineContextDisclosure>summary::after{transition:none}}
 </style>
-<style data-fix="day4-static-and-gif-layout">
-.phaseRow .day4StaticFrame{object-fit:contain!important;background:#fff!important}.gifProof{margin-top:12px;padding:10px 12px;border:1px solid rgba(45,97,121,.55);border-radius:14px;background:rgba(12,24,34,.68)}.gifProofTitle{font-size:12px;font-weight:900;letter-spacing:.6px;color:#72D4F0;margin-bottom:7px}.gifPreview{max-width:240px;margin:0 auto;aspect-ratio:1/1}.gifPreview img.day4ExerciseGif{object-fit:contain!important}.gifProof .videoProof{margin-top:7px!important}@media(max-width:700px){.gifPreview{max-width:220px}}
-</style><style data-enhancement="weekly-routine-reset-v1">
-.sessionFooter{display:grid!important;grid-template-columns:minmax(0,1fr) repeat(2,minmax(9rem,12rem))!important;align-items:center!important;gap:.8rem!important;width:min(100%,62rem)!important;margin:1.5rem auto calc(10rem + env(safe-area-inset-bottom,0px))!important;padding:1rem!important;border:1px solid rgba(255,157,162,.4)!important;border-radius:1rem!important;background:linear-gradient(115deg,rgba(37,32,49,.96),rgba(17,38,54,.96))!important;box-shadow:0 12px 34px rgba(0,0,0,.2)!important;visibility:visible!important;opacity:1!important}
-.sessionResetCopy{display:grid;gap:.2rem;min-width:0;color:#f4fbff}.sessionResetCopy strong{font-size:.9rem}.sessionResetCopy span{color:#b8cbd4;font-size:.76rem;line-height:1.4}
-#resetSession{display:block!important;visibility:visible!important;opacity:1!important;width:100%;min-height:52px;margin:0;padding:.72rem 1rem;border:1px solid rgba(255,157,162,.72);border-radius:.8rem;background:linear-gradient(110deg,rgba(113,44,61,.58),rgba(64,42,73,.68));color:#ffe4e6;font:inherit;font-size:.9rem;font-weight:850;cursor:pointer}
-#finishDay{display:block!important;visibility:visible!important;opacity:1!important;width:100%;min-height:52px;margin:0;padding:.72rem 1rem;border:1px solid rgba(101,242,221,.58);border-radius:.8rem;background:linear-gradient(110deg,rgba(18,112,100,.58),rgba(19,78,93,.68));color:#dffff9;font:inherit;font-size:.9rem;font-weight:850;cursor:pointer}
-#finishDay::before{content:"✓";margin-right:.5rem;font-size:1rem}
-#resetSession::before{content:"↻";margin-right:.5rem;font-size:1.1rem}
- #resetSession:focus-visible,#finishDay:focus-visible{outline:3px solid #72dcff;outline-offset:3px}
-@media(prefers-reduced-motion:no-preference){#resetSession,#finishDay{transition:background-color .2s ease,border-color .2s ease,transform .2s ease}#resetSession:hover{border-color:#ffb6bb;background-color:rgba(145,53,70,.38);transform:translateY(-1px)}#finishDay:hover{border-color:#8bffeb;background-color:rgba(35,145,126,.4);transform:translateY(-1px)}}
-@media(prefers-reduced-motion:reduce){#resetSession,#finishDay{transition:none!important}}
-@media(max-width:520px){.sessionFooter{grid-template-columns:1fr!important;gap:.55rem!important;padding:.75rem!important}.sessionResetCopy strong{font-size:.82rem}.sessionResetCopy span{font-size:.7rem}}
-.sessionFooter.is-session-complete{grid-template-columns:minmax(0,1fr)!important}.sessionFooter.is-session-complete .sessionResetCopy{display:none!important}#finishDay[hidden]{display:none!important}</style>
-  <script src="../../../page-update-client.js"></script>
+<script src="../../../page-update-client.js"></script>
 <style data-enhancement="plate-picker-v1">
 .platePickerToggle{display:flex;align-items:center;justify-content:space-between;gap:.65rem;width:100%;min-height:50px;margin-top:.45rem;padding:.62rem .75rem;border:1px solid rgba(105,215,255,.42);border-radius:.8rem;background:linear-gradient(110deg,rgba(14,50,68,.98),rgba(7,28,42,.98));color:#e8faff;font:inherit;font-size:.88rem;font-weight:900;text-align:left;cursor:pointer;box-shadow:inset 0 1px rgba(255,255,255,.05)}
 .platePickerToggle:focus-visible,.platePickerOption:focus-visible,.platePickerRemove:focus-visible,.platePickerAction:focus-visible{outline:3px solid #5ce8c8;outline-offset:2px}
@@ -2871,14 +2858,15 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 .platePicker .platePickerItem[data-selected="true"]{border-color:rgba(101,242,221,.76);background:linear-gradient(155deg,rgba(13,74,77,.98),rgba(7,34,45,.99));box-shadow:0 0 0 1px rgba(101,242,221,.13),inset 0 1px rgba(255,255,255,.08)}
 .platePicker .platePickerOption{position:relative;display:grid!important;grid-template-rows:64px auto;justify-items:center;align-content:center;align-items:center;gap:.25rem;width:100%;min-width:0;min-height:94px;padding:.16rem .08rem;border:0;border-radius:.65rem;background:transparent;color:#fff;font:inherit;cursor:pointer;touch-action:manipulation}
 .platePicker .platePickerOption:active{transform:scale(.96)}.platePicker .platePickerOption::after{content:"+";position:absolute;top:0;right:0;display:grid;place-items:center;width:24px;height:24px;border:1px solid rgba(112,241,215,.55);border-radius:50%;background:#103749;color:#afffee;font-size:1rem;font-weight:950;line-height:1}
-.platePickerDiscFace{display:flex;flex-direction:column;align-items:center;justify-content:center;width:var(--plate-size,50px);height:var(--plate-size,50px);flex:none;border:3px solid #72e5ed;border-radius:50%;background:radial-gradient(circle at 50% 50%,#d7fff4 0 8%,#1a5668 10% 17%,#10384c 19% 58%,#39b7c4 61% 69%,#0a293a 72% 100%);box-shadow:inset 0 0 0 2px rgba(4,18,30,.74),0 2px 8px rgba(0,0,0,.35),0 0 12px rgba(80,218,226,.18);color:#fff;transition:width .18s ease,height .18s ease,transform .18s ease}
+.platePickerDiscFace{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;width:min(var(--plate-size,50px),100%);height:min(var(--plate-size,50px),100%);flex:none;border:3px solid #72e5ed;border-radius:50%;background:radial-gradient(circle at 50% 50%,#081d2a 0 8%,#43c8cf 9% 13%,#10384c 14% 48%,#225e73 50% 54%,#39b7c4 56% 67%,#0a293a 69% 100%);box-shadow:inset 0 0 0 2px rgba(4,18,30,.74),inset 0 3px 5px rgba(255,255,255,.2),0 2px 8px rgba(0,0,0,.35),0 0 12px rgba(80,218,226,.18);color:#fff;transition:width .18s ease,height .18s ease,transform .18s ease}
 .platePickerDiscValue{font-size:.75rem;font-weight:1000;line-height:1;text-shadow:0 1px 3px #061b29;white-space:nowrap}.platePickerDiscUnit{margin-top:2px;color:#bafff1;font-size:.52rem;font-weight:950;letter-spacing:.04em;line-height:1;text-transform:uppercase;white-space:nowrap}
-.platePickerDiscFace[data-unit="lb"]{border-color:#8cc6ff;background:radial-gradient(circle at 50% 50%,#e6f4ff 0 8%,#326c9d 10% 17%,#153e60 19% 58%,#579bdb 61% 69%,#0a293a 72% 100%)}.platePickerDiscFace[data-unit="lb"] .platePickerDiscUnit{color:#d8edff}
+.platePickerDiscFace[data-unit="lb"]{border-color:#8cc6ff;background:radial-gradient(circle at 50% 50%,#081d2a 0 8%,#72b8f2 9% 13%,#153e60 14% 48%,#326c9d 50% 54%,#579bdb 56% 67%,#0a293a 69% 100%)}.platePickerDiscFace[data-unit="lb"] .platePickerDiscUnit{color:#d8edff}
 .platePicker .platePickerCount{min-height:1em;padding:.08rem .2rem;border-radius:999px;background:rgba(101,242,221,.1);color:#8ff8e3;font-size:.66rem;font-weight:950;line-height:1;white-space:nowrap}.platePickerRemove{position:absolute;z-index:2;top:.2rem;left:.2rem;display:grid;place-items:center;width:26px;height:26px;padding:0;border:1px solid rgba(255,214,145,.52);border-radius:50%;background:rgba(63,43,18,.96);color:#ffe3aa;font:inherit;font-size:1rem;font-weight:950;cursor:pointer}.platePickerRemove[hidden]{display:none}
 .platePickerActions{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.8fr);gap:.48rem}.platePickerAction{min-height:48px;padding:.48rem .55rem;border:1px solid rgba(105,215,255,.4);border-radius:.72rem;background:linear-gradient(145deg,#0e2c40,#0a2133);color:#e2f7fd;font:inherit;font-size:.78rem;font-weight:900;line-height:1.18;cursor:pointer}.platePickerActionPrimary{border-color:transparent;background:linear-gradient(105deg,#63edd2,#58d8f0);color:#06222b;box-shadow:0 5px 16px rgba(51,215,194,.14)}.platePickerAction:disabled{opacity:.48;cursor:not-allowed}.platePickerAction:not(:disabled):active{transform:translateY(1px) scale(.99)}
 @media(max-width:680px){.platePicker{max-height:min(62vh,560px);max-height:min(62svh,560px);grid-template-rows:auto auto minmax(0,1fr) auto;overflow:hidden}.platePickerUnits{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(105,215,255,.4) transparent}}
 @media(min-width:390px) and (min-height:800px) and (max-width:680px){.platePicker{max-height:min(52vh,480px);max-height:min(52svh,480px)}}
-@media(max-width:360px){.platePicker .platePickerGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important}.platePicker{padding:.55rem}.platePicker .platePickerItem{min-height:96px}.platePicker .platePickerOption{grid-template-rows:64px auto;min-height:90px}.platePickerActions{grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr)}}
+@media(max-width:430px){.platePicker .platePickerGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:360px){.platePicker .platePickerGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.platePicker{padding:.55rem}.platePicker .platePickerItem{min-height:96px}.platePicker .platePickerOption{grid-template-rows:64px auto;min-height:90px}.platePickerActions{grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr)}}
 </style>
 <style data-enhancement="exercise-history-visuals-v1">
 .exerciseHistorySummary{display:grid;gap:.48rem;min-width:0;margin:.12rem 0;padding:.6rem;border:1px solid rgba(105,215,255,.22);border-radius:.82rem;background:linear-gradient(135deg,rgba(8,31,46,.88),rgba(10,39,51,.72))}
@@ -2886,6 +2874,21 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 .exerciseHistoryLabel{color:#b8d4de;font-size:.66rem;font-weight:900;letter-spacing:.055em;text-transform:uppercase}
 .exerciseHistoryBest{color:#75f0d4;font-size:clamp(.9rem,3.4vw,1.08rem);font-weight:950;font-variant-numeric:tabular-nums}
 .exerciseHistoryDate{color:#a9c2cd;font-size:.63rem;font-weight:700}
+</style>
+<style data-fix="day4-static-and-gif-layout">
+.phaseRow .day4StaticFrame{object-fit:contain!important;background:#fff!important}.gifProof{margin-top:12px;padding:10px 12px;border:1px solid rgba(45,97,121,.55);border-radius:14px;background:rgba(12,24,34,.68)}.gifProofTitle{font-size:12px;font-weight:900;letter-spacing:.6px;color:#72D4F0;margin-bottom:7px}.gifPreview{max-width:240px;margin:0 auto;aspect-ratio:1/1}.gifPreview img.day4ExerciseGif{object-fit:contain!important}.gifProof .videoProof{margin-top:7px!important}@media(max-width:700px){.gifPreview{max-width:220px}}
+</style><style data-enhancement="weekly-routine-reset-v1">
+.sessionFooter{display:grid!important;grid-template-columns:minmax(0,1fr) repeat(2,minmax(9rem,12rem))!important;align-items:center!important;gap:.8rem!important;width:min(100%,62rem)!important;margin:1.5rem auto calc(10rem + env(safe-area-inset-bottom,0px))!important;padding:1rem!important;border:1px solid rgba(255,157,162,.4)!important;border-radius:1rem!important;background:linear-gradient(115deg,rgba(37,32,49,.96),rgba(17,38,54,.96))!important;box-shadow:0 12px 34px rgba(0,0,0,.2)!important;visibility:visible!important;opacity:1!important}
+.sessionFooter.is-session-complete{grid-template-columns:minmax(0,1fr)!important}.sessionFooter.is-session-complete .sessionResetCopy{display:none!important}#finishDay[hidden]{display:none!important}
+.sessionResetCopy{display:grid;gap:.2rem;min-width:0;color:#f4fbff}.sessionResetCopy strong{font-size:.9rem}.sessionResetCopy span{color:#b8cbd4;font-size:.76rem;line-height:1.4}
+#resetSession{display:block!important;visibility:visible!important;opacity:1!important;width:100%;min-height:52px;margin:0;padding:.72rem 1rem;border:1px solid rgba(255,157,162,.72);border-radius:.8rem;background:linear-gradient(110deg,rgba(113,44,61,.58),rgba(64,42,73,.68));color:#ffe4e6;font:inherit;font-size:.9rem;font-weight:850;cursor:pointer}
+#finishDay{display:block!important;visibility:visible!important;opacity:1!important;width:100%;min-height:52px;margin:0;padding:.72rem 1rem;border:1px solid rgba(101,242,221,.58);border-radius:.8rem;background:linear-gradient(110deg,rgba(18,112,100,.58),rgba(19,78,93,.68));color:#dffff9;font:inherit;font-size:.9rem;font-weight:850;cursor:pointer}
+#finishDay::before{content:"✓";margin-right:.5rem;font-size:1rem}
+#resetSession::before{content:"↻";margin-right:.5rem;font-size:1.1rem}
+ #resetSession:focus-visible,#finishDay:focus-visible{outline:3px solid #72dcff;outline-offset:3px}
+@media(prefers-reduced-motion:no-preference){#resetSession,#finishDay{transition:background-color .2s ease,border-color .2s ease,transform .2s ease}#resetSession:hover{border-color:#ffb6bb;background-color:rgba(145,53,70,.38);transform:translateY(-1px)}#finishDay:hover{border-color:#8bffeb;background-color:rgba(35,145,126,.4);transform:translateY(-1px)}}
+@media(prefers-reduced-motion:reduce){#resetSession,#finishDay{transition:none!important}}
+@media(max-width:520px){.sessionFooter{grid-template-columns:1fr!important;gap:.55rem!important;padding:.75rem!important}.sessionResetCopy strong{font-size:.82rem}.sessionResetCopy span{font-size:.7rem}}
 </style>
 </head><body><svg id="gymratikLucideSprite" class="gymratikIconSprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
 <symbol id="gymratik-icon-activity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></symbol>
@@ -2991,7 +2994,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 <section class="sessionDashboard">
 <div class="dashCard total"><div class="dashIcon"><svg aria-hidden="true" viewbox="0 0 64 64"><circle cx="32" cy="35" fill="none" r="20" stroke="currentColor" stroke-width="5"></circle><path d="M32 35V23M32 35l9 5M24 7h16M32 7v8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="5"></path></svg></div><div><div class="dashLabel">Duración total estimada</div><div class="dashValue">22<strong class="timeCue">90–115 min</strong></div><div class="dashSub">3 + 3 + 4 + 3 + 3 + 3 + 3 series</div></div></div>
 <div class="dashCard focus"><div class="dashIcon"><svg aria-hidden="true" viewbox="0 0 64 64"><circle cx="32" cy="32" fill="none" r="22" stroke="currentColor" stroke-width="5"></circle><circle cx="32" cy="32" fill="none" r="12" stroke="currentColor" stroke-width="5"></circle><circle cx="32" cy="32" fill="currentColor" r="4"></circle><path d="M46 18l8-8M44 10h10v10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path></svg></div><div><div class="dashLabel">Enfoque principal</div><div class="dashValue">Espalda + bíceps</div><div class="dashSub">Con trabajo complementario de deltoides posterior y curl sentado de bíceps</div></div></div>
-<div class="dashCard flow"><div class="dashIcon"><svg aria-hidden="true" viewbox="0 0 64 64"><path d="M18 9h28M18 55h28M22 10c0 12 4 16 10 22-6 6-10 10-10 22M42 10c0 12-4 16-10 22 6 6 10 10 10 22" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"></path><path d="M26 47h12l-6-7z" fill="currentColor"></path></svg></div><div><div class="dashLabel">Ritmo de trabajo</div><div class="dashValue">Descansos guiados</div><div class="dashSub">De 60 s a 3 min según el ejercicio</div></div></div>
+<div class="dashCard flow"><div class="dashIcon"><svg aria-hidden="true" viewbox="0 0 64 64"><path d="M18 9h28M18 55h28M22 10c0 12 4 16 10 22-6 6-10 10-10 22M42 10c0 12-4 16-10 22 6 6 10 10 10 22" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"></path><path d="M26 47h12l-6-7z" fill="currentColor"></path></svg></div><div><div class="dashLabel">Ritmo de trabajo</div><div class="dashValue">Descansos guiados</div><div class="dashSub">De 75 s a 3.75 min según el ejercicio</div></div></div>
 </section>
 <section class="note notePanel">
 <div class="noteIcon">
@@ -3013,13 +3016,13 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 <article class="card" data-media-mode="GIF" data-exercise-index="1">
 <div aria-hidden="true" class="cardGlow"></div>
 <div class="meta"><div class="metaTop"><div class="num">1</div></div><div class="exTitle">PRENSA UNILATERAL ALTERNA</div><div class="zone">PIERNA · CUÁDRICEPS</div><div class="chipRow"><span class="infoChip chipExercise">Ejercicio 1</span><span class="infoChip">PIERNA</span><span class="infoChip">CUÁDRICEPS</span></div><div class="machinePill"><span class="pillIcon" aria-hidden="true"><svg class="lucide lucide-dumbbell gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-dumbbell"></use></svg></span><span class="pillText">prensa de piernas con plataforma y apoyo estable</span></div></div>
-<div class="visual"><div class="referenceRow"><div class="machineRefBox"><img alt="Referencia visual del patrón prensa unilateral alterna" src="../medios_publicados/rutinas_autocontenidas/dia4_media_generated/2287-V07qpXy-machine-reference.png" loading="lazy"/><span class="refTag">REFERENCIA VISUAL · NO CONFIRMA EQUIPO</span></div><div class="muscleRefBox"><div class="muscleInfo"><span class="primary"><span class="muscleTag">ENFOQUE</span> Cuádriceps; asisten isquiosurales y glúteos</span><span class="secondary">La referencia ayuda a identificar el patrón; no confirma la identidad del equipo instalado.</span></div></div></div>
-<div class="photoTitleRow"><b>POSICIÓN Y RECORRIDO</b></div><div class="phaseRow"><div class="phaseCol"><div class="phaseLabel">Inicio · imagen estática</div><div class="photo techniqueVisual"><img class="realphoto routineStaticFrame" src="../medios_publicados/rutinas_autocontenidas/dia4_media_generated/2287-V07qpXy-start.jpg" alt="PRENSA UNILATERAL ALTERNA · posición inicial estática" loading="lazy"/><div class="brokenFallback">Imagen estática inicial no disponible.</div></div><div class="source">Inicio · posición de partida · sin rebotes</div></div><div class="swap" aria-hidden="true">→</div><div class="phaseCol"><div class="phaseLabel">Final · imagen estática</div><div class="photo techniqueVisual"><img class="realphoto routineStaticFrame" src="../medios_publicados/rutinas_autocontenidas/dia4_media_generated/2287-V07qpXy-final.jpg" alt="PRENSA UNILATERAL ALTERNA · posición final estática" loading="lazy"/><div class="brokenFallback">Imagen estática final no disponible.</div></div><div class="source">Final · contracción controlada · regreso lento</div></div></div>
-<div class="gifProof"><div class="gifProofTitle">GIF · RECORRIDO COMPLETO</div><div class="photo techniqueVisual gifPreview"><img class="realphoto routineExerciseGif" src="../medios_publicados/ejercicios-compartido/videos/2287-V07qpXy.gif" data-static-src="../medios_publicados/rutinas_autocontenidas/dia4_media_generated/2287-V07qpXy-start.jpg" alt="PRENSA UNILATERAL ALTERNA · GIF local del recorrido completo" loading="lazy"/><div class="brokenFallback">GIF no disponible; se conserva la referencia estática.</div></div><div class="videoProof"><span>GIF local · 2287-V07qpXy · secuencia de referencia técnica</span></div></div></div>
+<div class="visual"><div class="referenceRow"><div class="machineRefBox"><img alt="Referencia visual del patrón prensa unilateral alterna" src="../medios_publicados/rutinas_autocontenidas/dia4_media_generated/1425-WWD6FzI-machine-reference.png" loading="lazy"/><span class="refTag">REFERENCIA VISUAL · NO CONFIRMA EQUIPO</span></div><div class="muscleRefBox"><div class="muscleInfo"><span class="primary"><span class="muscleTag">ENFOQUE</span> Cuádriceps; asisten isquiosurales y glúteos</span><span class="secondary">La referencia ayuda a identificar el patrón; no confirma la identidad del equipo instalado.</span></div></div></div>
+<div class="photoTitleRow"><b>POSICIÓN Y RECORRIDO</b></div><div class="phaseRow"><div class="phaseCol"><div class="phaseLabel">Inicio · imagen estática</div><div class="photo techniqueVisual"><img class="realphoto routineStaticFrame" src="../medios_publicados/rutinas_autocontenidas/dia4_media_generated/1425-WWD6FzI-start.jpg" alt="PRENSA UNILATERAL ALTERNA · posición inicial estática" loading="lazy"/><div class="brokenFallback">Imagen estática inicial no disponible.</div></div><div class="source">Inicio · posición de partida · sin rebotes</div></div><div class="swap" aria-hidden="true">→</div><div class="phaseCol"><div class="phaseLabel">Final · imagen estática</div><div class="photo techniqueVisual"><img class="realphoto routineStaticFrame" src="../medios_publicados/rutinas_autocontenidas/dia4_media_generated/1425-WWD6FzI-final.jpg" alt="PRENSA UNILATERAL ALTERNA · posición final estática" loading="lazy"/><div class="brokenFallback">Imagen estática final no disponible.</div></div><div class="source">Final · contracción controlada · regreso lento</div></div></div>
+<div class="gifProof"><div class="gifProofTitle">GIF · RECORRIDO COMPLETO</div><div class="photo techniqueVisual gifPreview"><img class="realphoto routineExerciseGif" src="../medios_publicados/ejercicios-compartido/videos/1425-WWD6FzI.gif" data-static-src="../medios_publicados/rutinas_autocontenidas/dia4_media_generated/1425-WWD6FzI-start.jpg" alt="PRENSA UNILATERAL ALTERNA · GIF local del recorrido completo" loading="lazy"/><div class="brokenFallback">GIF no disponible; se conserva la referencia estática.</div></div><div class="videoProof"><span>GIF local · 1425-WWD6FzI · secuencia de referencia técnica</span></div></div></div>
 <div class="coach"><div class="coachRibbon"><span class="coachRibbonIcon" aria-hidden="true"><svg class="lucide lucide-list-checks gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-list-checks"></use></svg></span><span>Checklist técnico</span></div><div class="coachHeader">Técnica clave</div><div class="exerciseQuickSummary" data-exercise-quick-summary aria-label="Resumen del ejercicio"></div><div class="metrics"><div class="metric series"><div class="metricText"><div class="metricLabel">Series</div><div class="metricVal">3 series</div></div></div><div class="metric reps"><div class="metricText"><div class="metricLabel">Repeticiones</div><div class="metricVal">8–12 por lado repeticiones</div></div></div><div class="metric rest"><div class="metricText"><div class="metricLabel">Descanso</div><div class="metricVal"><strong class="timeCue">2.5–3.5 min</strong></div></div></div><div class="metric duration"><div class="metricText"><div class="metricLabel">Duración aprox.</div><div class="metricVal"><strong class="timeCue">10–13 min</strong></div></div></div></div>
 <div class="exerciseTracker" data-exercise="1" data-series-keys="e1s1 e1s2 e1s3"><div class="exerciseTrackerHead"><span>Contador de series</span><span class="exerciseTrackerMeta"><strong class="exerciseProgress">0/3</strong><span class="exerciseStatus" hidden><span class="completionMark" aria-hidden="true">✓</span> Completado</span></span></div><div class="exerciseSetButtons" role="group" aria-label="Contador de series del ejercicio 1"><p class="exerciseWarmupHint" id="exerciseWarmupHint" hidden aria-live="polite">Aproximación: usa una carga ligera y recorrido controlado; se registra aparte y no suma al volumen de trabajo.</p><button type="button" class="setButton warmupSet" data-key="w1" aria-pressed="false" hidden aria-hidden="true" tabindex="-1">Calentamiento</button><button type="button" class="completeSetButton" aria-label="Iniciar serie 1 de 3" aria-describedby="exerciseWarmupHint">Iniciar serie 1 de 3</button><button type="button" class="machinePendingToggle" data-pending-key="p1" aria-pressed="false">⚠ Máquina ocupada</button><div class="nextExerciseRow"><button type="button" class="nextExerciseCue" data-next="2" hidden><span class="nextArrow" aria-hidden="true">↓</span> Siguiente: 02 · Peso muerto rumano en smith</button></div></div></div>
 <details class="techAccordion" data-enhancement="technique-accordion-v1"><summary>Técnica esencial</summary><div class="techSteps"><div class="techStep setup"><div class="techStepTitle"><svg class="lucide lucide-settings-2 gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-settings-2"></use></svg><span>Posición</span></div><div class="techStepText">Pelvis apoyada; trabaja un lado a la vez.</div></div><div class="techStep move"><div class="techStepTitle"><svg class="lucide lucide-move-up-right gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-move-up-right"></use></svg><span>Movimiento</span></div><div class="techStepText">Empuja con un pie; cambia de lado sin bloquear la rodilla.</div></div><div class="techStep warning"><div class="techStepTitle"><svg class="lucide lucide-triangle-alert gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-triangle-alert"></use></svg><span>Evita</span></div><div class="techStepText">No levantes la pelvis ni hundas la rodilla hacia dentro.</div></div></div></details></div></article>
-<article class="card" data-media-mode="GIF" data-history-exercise-id="day4-smith-rdl-v2" data-exercise-index="2">
+<article class="card" data-media-mode="GIF" data-exercise-index="2" data-history-exercise-id="day4-smith-rdl-v2">
 <div aria-hidden="true" class="cardGlow"></div>
 <div class="meta"><div class="metaTop"><div class="num">2</div></div><div class="exTitle">PESO MUERTO RUMANO EN SMITH</div><div class="zone">CADERA · GLÚTEOS E ISQUIOSURALES</div><div class="chipRow"><span class="infoChip chipExercise">Ejercicio 2</span><span class="infoChip">CADERA</span><span class="infoChip">GLÚTEOS E ISQUIOSURALES</span></div><div class="machinePill"><span class="pillIcon" aria-hidden="true"><svg class="lucide lucide-dumbbell gymratikIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#gymratik-icon-dumbbell"></use></svg></span><span class="pillText">máquina Smith · barra guiada y seguros</span></div></div>
 <div class="visual"><div class="referenceRow"><div class="machineRefBox"><img alt="Referencia visual del patrón peso muerto rumano en smith" src="../medios_publicados/rutinas_autocontenidas/dia4_media_generated/smith-rdl-v2-machine-reference.png" loading="lazy"/><span class="refTag">REFERENCIA VISUAL · NO CONFIRMA EQUIPO</span></div><div class="muscleRefBox"><div class="muscleInfo"><span class="primary"><span class="muscleTag">ENFOQUE</span> Glúteos e isquiosurales; bisagra de cadera</span><span class="secondary">La referencia ayuda a identificar el patrón; no confirma la identidad del equipo instalado.</span></div></div></div>
@@ -3591,8 +3594,6 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     try { navigator.vibrate(patterns[type] || []); } catch (_) {}
   };
   const playFeedback = type => { playMilestoneSound(type); playHaptic(type); };
-  const activityPageStartedAt = Date.now();
-  const playedCountdownCues = new Set();
   const fitnessQuotePayload = window.fitnessQuotesData || {};
   const topicLabels = { bodybuilding: "culturismo", weightlifting: "levantamiento de pesas", powerlifting: "powerlifting", boxing: "boxeo", basketball: "baloncesto", football: "fútbol americano", soccer: "fútbol", tennis: "tenis", swim: "natación", swimming: "natación", cycling: "ciclismo", marathon: "maratón", sprint: "atletismo", running: "carrera", wrestling: "lucha", skating: "patinaje", surfing: "surf", yoga: "yoga", pilates: "Pilates", gym: "entrenamiento en gimnasio", fitness: "fitness", workout: "entrenamiento", training: "entrenamiento" };
   const authorContextTopicOrder = ["bodybuilding", "powerlifting", "weightlifting", "boxing", "basketball", "football", "soccer", "tennis", "wrestling", "swimming", "swim", "cycling", "marathon", "sprint", "running", "skating", "surfing", "yoga", "pilates", "athlete", "sportsman", "athletic", "fitness", "workout", "training", "gym"];
@@ -3618,14 +3619,21 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     if (!quoteEl || !sourceEl) return;
     if (window.fitnessQuotesData?.quotes?.length) motivationalQuotes = window.fitnessQuotesData.quotes.map(item => ({ content: item.quoteEs || item.quoteOriginal, author: item.author || '', context: item.authorContext || fallbackAuthorContext(item), portrait: item.portrait ? `../frases_fitness/${item.portrait}` : '', quoteLink: item.sourceUrl || '', photoLink: item.photoSourceUrl || '', photoLine: item.photoCredit || '' }));
     const quoteCount = motivationalQuotes.length;
-    const avoidLast = quoteCount > 1 && lastMotivationIndex >= 0;
-    const poolSize = Math.max(1, quoteCount - (avoidLast ? 1 : 0));
-    let motivationIndex = Math.floor(Math.random() * poolSize);
-    if (avoidLast && motivationIndex >= lastMotivationIndex) motivationIndex += 1;
+    const featuredQuoteIndexes = motivationalQuotes.flatMap((quote, index) => quote.quoteLink && quote.author !== 'Gymratik' ? [index] : []);
+    const originalQuoteIndexes = motivationalQuotes.flatMap((quote, index) => !quote.quoteLink || quote.author === 'Gymratik' ? [index] : []);
+    const motivationCategoryKey = 'gymratik-motivation-category-v1';
+    let lastMotivationCategory = 'original';
+    try { lastMotivationCategory = localStorage.getItem(motivationCategoryKey) || 'original'; } catch (_) {}
+    const featuredPool = featuredQuoteIndexes.length > 0 && lastMotivationCategory !== 'featured';
+    const sourcePool = featuredPool ? featuredQuoteIndexes : originalQuoteIndexes.length ? originalQuoteIndexes : motivationalQuotes.map((_, index) => index);
+    const eligiblePool = sourcePool.filter(index => quoteCount <= 1 || index !== lastMotivationIndex);
+    const selectionPool = eligiblePool.length ? eligiblePool : sourcePool;
+    const motivationIndex = selectionPool[Math.floor(Math.random() * selectionPool.length)] ?? 0;
     if (window.fitnessQuotesData?.quotes?.length) motivationalQuotes = window.fitnessQuotesData.quotes.map(item => ({ content: item.quoteEs || item.quoteOriginal, author: item.author || '', context: item.authorContext || fallbackAuthorContext(item), portrait: item.portrait ? `../frases_fitness/${item.portrait}` : '', quoteLink: item.sourceUrl || '', photoLink: item.photoSourceUrl || '', photoLine: item.photoCredit || '' }));
     const phrase = motivationalQuotes[motivationIndex % motivationalQuotes.length];
     lastMotivationIndex = motivationIndex;
-    try { localStorage.setItem(motivationKey, String(lastMotivationIndex)); } catch (_) {}
+    lastMotivationCategory = featuredPool ? 'featured' : 'original';
+    try { localStorage.setItem(motivationKey, String(lastMotivationIndex)); localStorage.setItem(motivationCategoryKey, lastMotivationCategory); } catch (_) {}
     quoteEl.textContent = `“${phrase.content}”`;
     sourceEl.textContent = `— ${phrase.author}${phrase.context ? ` · ${phrase.context}` : ""}`;
     sourceEl.hidden = !phrase.author;
@@ -3721,7 +3729,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     item.repMaximum = rangeMatch ? Number(rangeMatch[2]) : 100;
     const loadMath = {
       toKg(value, unit) { const numeric = Number(value); return unit === 'lb' ? numeric * 0.45359237 : numeric; },
-      toDisplay(kg, unit) { return unit === 'lb' ? kg / 0.45359237 : kg; },
+      toDisplay(kg, unit) { const value = unit === 'lb' ? kg / 0.45359237 : kg; return unit === 'lb' ? Math.round((value + Number.EPSILON) * 100) / 100 : value; },
       snapKg(kg, stepKg) { return Math.round(Number(kg) / Number(stepKg)) * Number(stepKg); },
       clampKg(kg, profile) { const value = Number(kg); if (!Number.isFinite(value)) return NaN; return Math.min(Number(profile.maxKg), Math.max(Number(profile.minKg), value)); },
       normalizeKg(kg, profile) { const value = Number(kg); if (!Number.isFinite(value)) return NaN; const normalized = profile.discreteStepKg ? this.snapKg(value, profile.stepKg) : Math.round(value * 10) / 10; return this.clampKg(normalized, profile); },
@@ -3804,13 +3812,13 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
 
     const platePickerToggle = document.createElement('button'); platePickerToggle.type = 'button'; platePickerToggle.className = 'platePickerToggle'; platePickerToggle.setAttribute('aria-expanded', 'false');
     const platePickerLabel = document.createElement('span'); platePickerLabel.className = 'platePickerToggleLabel'; const platePickerIcon = createPerformanceIcon('weight'); if (platePickerIcon) platePickerLabel.append(platePickerIcon); const platePickerTitle = document.createElement('span'); platePickerTitle.textContent = 'Discos'; platePickerLabel.append(platePickerTitle);
-    const platePickerHeaderTotal = document.createElement('span'); platePickerHeaderTotal.className = 'platePickerToggleTotal'; platePickerHeaderTotal.textContent = item.performanceLoadSelected ? loadOutput.textContent : 'Elegir'; platePickerToggle.append(platePickerLabel, platePickerHeaderTotal);
+    const platePickerHeaderTotal = document.createElement('span'); platePickerHeaderTotal.className = 'platePickerToggleTotal'; platePickerHeaderTotal.textContent = 'Añadir'; platePickerToggle.append(platePickerLabel, platePickerHeaderTotal);
     const platePickerPanel = document.createElement('section'); platePickerPanel.className = 'platePicker'; platePickerPanel.hidden = true; platePickerPanel.setAttribute('aria-label', 'Selector de discos'); platePickerPanel.id = `plate-picker-${item.index + 1}`; platePickerToggle.setAttribute('aria-controls', platePickerPanel.id);
     const platePickerHelp = document.createElement('p'); platePickerHelp.className = 'platePickerHelp'; platePickerHelp.textContent = 'Toca + para añadir una pieza; usa − para quitarla. Puedes mezclar kg y lb.';
     const platePickerSelection = document.createElement('div'); platePickerSelection.className = 'platePickerSelection'; const platePickerSelectionTitle = document.createElement('span'); platePickerSelectionTitle.className = 'platePickerSelectionTitle'; platePickerSelectionTitle.textContent = 'Suma de discos'; const platePickerTotal = document.createElement('output'); platePickerTotal.className = 'platePickerTotal'; platePickerTotal.setAttribute('aria-live', 'polite'); platePickerTotal.textContent = '0 kg · 0 lb'; const platePickerComposition = document.createElement('output'); platePickerComposition.className = 'platePickerComposition'; platePickerComposition.textContent = 'Aún no hay discos añadidos.'; const platePickerTransfer = document.createElement('span'); platePickerTransfer.className = 'platePickerTransfer'; platePickerTransfer.textContent = 'La suma se transferirá al selector Carga.'; const platePickerStatus = document.createElement('p'); platePickerStatus.className = 'platePickerStatus'; platePickerStatus.setAttribute('role', 'status'); platePickerSelection.append(platePickerSelectionTitle, platePickerTotal, platePickerComposition, platePickerTransfer, platePickerStatus);
     const platePickerGroups = document.createElement('div'); platePickerGroups.className = 'platePickerUnits'; const platePickerCounts = new Map();
     const platePickerOptions = [['lb',[45,35,25,20,15,10,5,2.5]],['kg',[25,20,15,10,5,2.5,1.25,0.5,0.25]]];
-    platePickerOptions.forEach(([unit,values]) => { const group = document.createElement('section'); group.className = 'platePickerUnit'; const heading = document.createElement('h4'); heading.className = 'platePickerUnitTitle'; heading.textContent = unit === 'lb' ? 'Discos · libras (lb)' : 'Discos · kilogramos (kg)'; const grid = document.createElement('div'); grid.className = 'platePickerGrid'; values.forEach(weight => { const key = `${unit}:${weight}`; const tile = document.createElement('div'); tile.className = 'platePickerItem'; tile.dataset.weight = String(weight); tile.dataset.unit = unit; tile.dataset.selected = 'false'; const plateKg = loadMath.toKg(weight, unit); const minRoot = Math.sqrt(0.25); const maxRoot = Math.sqrt(25); const plateSize = 34 + 28 * Math.max(0,Math.min(1,(Math.sqrt(plateKg)-minRoot)/(maxRoot-minRoot))); tile.style.setProperty('--plate-size',`${plateSize.toFixed(1)}px`); const add = document.createElement('button'); add.type = 'button'; add.className = 'platePickerOption'; add.setAttribute('aria-label', `Agregar disco de ${weight} ${unit}`); const face = document.createElement('span'); face.className = 'platePickerDiscFace'; face.dataset.unit = unit; face.setAttribute('aria-hidden','true'); const faceValue = document.createElement('strong'); faceValue.className = 'platePickerDiscValue'; faceValue.textContent = String(weight); const faceUnit = document.createElement('span'); faceUnit.className = 'platePickerDiscUnit'; faceUnit.textContent = unit; face.append(faceValue,faceUnit); const count = document.createElement('span'); count.className = 'platePickerCount'; count.textContent = 'Añadir'; add.append(face,count); const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'platePickerRemove'; remove.textContent = '−'; remove.hidden = true; remove.setAttribute('aria-label', `Quitar un disco de ${weight} ${unit}`); const renderCount = () => { const amount = platePickerCounts.get(key) || 0; tile.dataset.selected = String(amount > 0); count.textContent = amount ? `×${amount} · añadir` : 'Añadir'; remove.hidden = !amount; add.setAttribute('aria-label', `${amount ? 'Agregar otro' : 'Agregar'} disco de ${weight} ${unit}${amount ? `; seleccionados ${amount}` : ''}`); }; add.addEventListener('click', () => { platePickerCounts.set(key,(platePickerCounts.get(key)||0)+1); renderCount(); renderPlatePicker(); }); remove.addEventListener('click', () => { const amount = (platePickerCounts.get(key)||0)-1; if (amount > 0) platePickerCounts.set(key,amount); else platePickerCounts.delete(key); renderCount(); renderPlatePicker(); }); tile.append(add,remove); grid.append(tile); }); group.append(heading,grid); platePickerGroups.append(group); });
+    platePickerOptions.forEach(([unit,values]) => { const group = document.createElement('section'); group.className = 'platePickerUnit'; const heading = document.createElement('h4'); heading.className = 'platePickerUnitTitle'; heading.textContent = unit === 'lb' ? 'Discos · libras (lb)' : 'Discos · kilogramos (kg)'; const grid = document.createElement('div'); grid.className = 'platePickerGrid'; values.forEach(weight => { const key = `${unit}:${weight}`; const tile = document.createElement('div'); tile.className = 'platePickerItem'; tile.dataset.weight = String(weight); tile.dataset.unit = unit; tile.dataset.selected = 'false'; const plateKg = loadMath.toKg(weight, unit); const minRoot = Math.sqrt(0.25); const maxRoot = Math.sqrt(25); const plateSize = 44 + 18 * Math.max(0,Math.min(1,(Math.sqrt(plateKg)-minRoot)/(maxRoot-minRoot))); tile.style.setProperty('--plate-size',`${plateSize.toFixed(1)}px`); const add = document.createElement('button'); add.type = 'button'; add.className = 'platePickerOption'; add.setAttribute('aria-label', `Agregar disco de ${weight} ${unit}`); const face = document.createElement('span'); face.className = 'platePickerDiscFace'; face.dataset.unit = unit; face.setAttribute('aria-hidden','true'); const faceValue = document.createElement('strong'); faceValue.className = 'platePickerDiscValue'; faceValue.textContent = String(weight); const faceUnit = document.createElement('span'); faceUnit.className = 'platePickerDiscUnit'; faceUnit.textContent = unit; face.append(faceValue,faceUnit); const count = document.createElement('span'); count.className = 'platePickerCount'; count.textContent = 'Añadir'; add.append(face,count); const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'platePickerRemove'; remove.textContent = '−'; remove.hidden = true; remove.setAttribute('aria-label', `Quitar un disco de ${weight} ${unit}`); const renderCount = () => { const amount = platePickerCounts.get(key) || 0; tile.dataset.selected = String(amount > 0); count.textContent = amount ? `×${amount} · añadir` : 'Añadir'; remove.hidden = !amount; add.setAttribute('aria-label', `${amount ? 'Agregar otro' : 'Agregar'} disco de ${weight} ${unit}${amount ? `; seleccionados ${amount}` : ''}`); }; add.addEventListener('click', () => { platePickerCounts.set(key,(platePickerCounts.get(key)||0)+1); renderCount(); renderPlatePicker(); }); remove.addEventListener('click', () => { const amount = (platePickerCounts.get(key)||0)-1; if (amount > 0) platePickerCounts.set(key,amount); else platePickerCounts.delete(key); renderCount(); renderPlatePicker(); }); tile.append(add,remove); grid.append(tile); }); group.append(heading,grid); platePickerGroups.append(group); });
     const platePickerActions = document.createElement('div'); platePickerActions.className = 'platePickerActions'; const platePickerApply = document.createElement('button'); platePickerApply.type = 'button'; platePickerApply.className = 'platePickerAction platePickerActionPrimary'; platePickerApply.textContent = 'Añade discos para aplicar'; platePickerApply.disabled = true; const platePickerClear = document.createElement('button'); platePickerClear.type = 'button'; platePickerClear.className = 'platePickerAction'; platePickerClear.textContent = 'Vaciar discos'; platePickerActions.append(platePickerApply,platePickerClear);
     platePickerPanel.append(platePickerHelp,platePickerSelection,platePickerGroups,platePickerActions); loadLabel.append(platePickerToggle,platePickerPanel);
 
@@ -3877,7 +3885,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     const savedLoadIsValid = savedLoadWasSelected && Number.isFinite(savedLoadKg) && savedLoadKg >= item.performanceLoadProfile.minKg && savedLoadKg <= item.performanceLoadProfile.maxKg;
     item.platePickerExactLoadKg = savedDraft?.platePickerExactLoadKg != null && Number.isFinite(savedPlateKg) && savedPlateKg >= item.performanceLoadProfile.minKg && savedPlateKg <= item.performanceLoadProfile.maxKg ? savedPlateKg : null;
     const savedLoadDraftInvalid = savedLoadWasSelected && !savedLoadIsValid;
-    item.performanceLoadExact = savedLoadIsValid ? loadMath.toDisplay(loadMath.normalizeKg(savedLoadKg, item.performanceLoadProfile), item.performanceLoadUnit) : 0;
+    item.performanceLoadExact = savedLoadIsValid ? Number(savedLoadValue) : 0;
     item.performanceLoadSelected = savedLoadIsValid;
     const updateRangeFill = input => { const min = Number(input.min) || 0; const max = Number(input.max) || 100; const value = Number(input.value) || 0; input.style.setProperty('--range-progress', `${Math.max(0, Math.min(100, (value - min) / Math.max(1, max - min) * 100))}%`); };
     item.performanceRangeFill = updateRangeFill;
@@ -3888,14 +3896,14 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       const exactPlateKg = Number(item.platePickerExactLoadKg);
       const hasExactPlateLoad = item.platePickerExactLoadKg != null && Number.isFinite(exactPlateKg) && exactPlateKg >= item.performanceLoadProfile.minKg && exactPlateKg <= item.performanceLoadProfile.maxKg;
       const displayedValue = item.performanceLoadSelected && Number.isFinite(selectedValue)
-        ? hasExactPlateLoad ? loadMath.toDisplay(exactPlateKg, unit) : loadMath.toDisplay(loadMath.normalizeKg(loadMath.toKg(selectedValue, unit), item.performanceLoadProfile), unit)
+        ? hasExactPlateLoad ? loadMath.toDisplay(exactPlateKg, unit) : Math.min(profileMax, Math.max(profileMin, selectedValue))
         : profileMin;
-      loadInput.min = String(profileMin); loadInput.max = String(profileMax); loadInput.step = hasExactPlateLoad ? 'any' : String(unitStep); loadInput.dataset.loadProfile = item.performanceLoadProfile.label; loadInput.dataset.maxKg = String(item.performanceLoadProfile.maxKg);
+      loadInput.min = String(profileMin); loadInput.max = String(profileMax); loadInput.step = 'any'; loadInput.dataset.loadProfile = item.performanceLoadProfile.label; loadInput.dataset.maxKg = String(item.performanceLoadProfile.maxKg);
       if (item.performanceLoadSelected) item.performanceLoadExact = displayedValue;
       loadInput.value = String(displayedValue);
       loadUnitSelect.value = unit;
       const value = Number(item.performanceLoadExact) || 0;
-      const displayValue = item.platePickerExactLoadKg != null ? String(Math.round(value * 100) / 100) : unit === 'lb' ? String(Math.round(value)) : Number.isInteger(value) ? String(value) : value.toFixed(1);
+      const displayValue = String(Number(value.toFixed(2)));
       loadOutput.textContent = item.performanceLoadSelected ? `${displayValue} ${unit}` : 'Sin registrar · toca para añadir'; loadOutput.dataset.selected = String(item.performanceLoadSelected); loadClear.hidden = !item.performanceLoadSelected; updateRangeFill(loadInput);
     };
     const setPerformanceLoadMode = isWarmup => {
@@ -3995,20 +4003,20 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       platePickerApply.textContent = valid ? `Usar ${transferText} en Carga` : pieces.length ? 'Revisa el rango de carga' : 'Añade discos para aplicar';
       platePickerApply.disabled = !valid;
       platePickerStatus.textContent = !pieces.length ? 'Agrega una o más piezas para habilitar el traspaso.' : !valid ? `Fuera del rango de este ejercicio (${item.performanceLoadProfile.minKg}–${item.performanceLoadProfile.maxKg} kg).` : 'Cuenta las piezas elegidas; no incluye barra ni máquina.';
-      platePickerHeaderTotal.textContent = pieces.length && Number.isFinite(appliedValue) ? transferText : item.performanceLoadSelected ? loadOutput.textContent : 'Elegir';
+      platePickerHeaderTotal.textContent = pieces.length && Number.isFinite(appliedValue) ? transferText : 'Añadir';
     };
     const fitPlatePickerAboveSessionBar = () => requestAnimationFrame(() => { const bar = document.getElementById('floatingSessionSummary'); if (!bar || getComputedStyle(bar).position !== 'fixed') return; const panelBox = platePickerPanel.getBoundingClientRect(); const safeBottom = bar.getBoundingClientRect().top - 10; const overflow = panelBox.bottom - safeBottom; const scrollRoom = Math.max(0, panelBox.top - 12); if (overflow > 0 && scrollRoom > 0) window.scrollBy({top: Math.min(overflow, scrollRoom), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'}); });
     platePickerToggle.addEventListener('click', () => { const open = platePickerPanel.hidden; platePickerPanel.hidden = !open; platePickerToggle.setAttribute('aria-expanded', String(open)); if (open) { renderPlatePicker(); fitPlatePickerAboveSessionBar(); } });
     const clearPlatePickerCounts = () => { platePickerCounts.clear(); platePickerPanel.querySelectorAll('.platePickerItem').forEach(tile => { tile.dataset.selected = 'false'; }); platePickerPanel.querySelectorAll('.platePickerCount').forEach(count => { count.textContent = 'Añadir'; }); platePickerPanel.querySelectorAll('.platePickerRemove').forEach(remove => { remove.hidden = true; }); renderPlatePicker(); };
     platePickerClear.addEventListener('click', clearPlatePickerCounts);
     const resetPlatePickerDraft = clearPlatePickerCounts;
-    const syncPlatePickerHeader = () => { if (!platePickerCounts.size) platePickerHeaderTotal.textContent = item.performanceLoadSelected ? loadOutput.textContent : 'Elegir'; };
+    const syncPlatePickerHeader = () => { if (!platePickerCounts.size) platePickerHeaderTotal.textContent = 'Añadir'; };
     item.performanceLoad.addEventListener('input', () => { resetPlatePickerDraft(); queueMicrotask(syncPlatePickerHeader); });
     loadUnitSelect.addEventListener('change', () => queueMicrotask(() => { renderPlatePicker(); syncPlatePickerHeader(); }));
     loadOutput.addEventListener('click', resetPlatePickerDraft);
     loadLabel.addEventListener('focusout', () => queueMicrotask(syncPlatePickerHeader));
     platePickerApply.addEventListener('click', () => { let totalKg = 0; for (const [key,count] of platePickerCounts) { const [unit,raw] = key.split(':'); totalKg += loadMath.toKg(Number(raw) * count, unit); } totalKg = Math.round(totalKg * 1000000) / 1000000; if (!Number.isFinite(totalKg) || totalKg <= 0 || totalKg < item.performanceLoadProfile.minKg || totalKg > item.performanceLoadProfile.maxKg) return; item.platePickerExactLoadKg = totalKg; item.performanceLoadExact = loadMath.toDisplay(totalKg, item.performanceLoadUnit); item.performanceLoadSelected = true; loadInput.value = String(item.performanceLoadExact); updateLoadControl(); savePerformanceDraft(); platePickerHeaderTotal.textContent = loadOutput.textContent; platePickerPanel.hidden = true; platePickerToggle.setAttribute('aria-expanded','false'); });
-    item.performanceLoadClear.addEventListener('click', () => { clearPlatePickerCounts(); platePickerHeaderTotal.textContent = 'Elegir'; });
+    item.performanceLoadClear.addEventListener('click', () => { clearPlatePickerCounts(); platePickerHeaderTotal.textContent = 'Añadir'; });
     const savedReps = Number(savedDraft?.reps); const savedRepsValid = Number.isInteger(savedReps) && savedReps >= item.repMinimum && savedReps <= item.repMaximum + 4; item.performanceReps.value = String(savedRepsValid ? savedReps : item.repMinimum); item.performanceReps.dataset.selected = String(savedRepsValid); if (item.performanceLoadSelected) item.performanceLoad.value = savedDraft.load;
     const repFeedbackZone = value => {
       if (value < item.repMinimum) return 'below';
@@ -4045,12 +4053,12 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     renderPerformanceReps();
     updateLoadControl();
     item.performanceReps.addEventListener('input', () => { item.performanceReps.dataset.selected = 'true'; renderPerformanceReps(); savePerformanceDraft(); });
-    item.performanceLoad.addEventListener('input', () => { item.platePickerExactLoadKg = null; const enteredKg = loadMath.toKg(item.performanceLoad.value, item.performanceLoadUnit); item.performanceLoadExact = loadMath.toDisplay(loadMath.normalizeKg(enteredKg, item.performanceLoadProfile), item.performanceLoadUnit); item.performanceLoadSelected = Number.isFinite(enteredKg); updateLoadControl(); savePerformanceDraft(); });
+    item.performanceLoad.addEventListener('input', () => { item.platePickerExactLoadKg = null; const entered = Number(item.performanceLoad.value); item.performanceLoadExact = entered; item.performanceLoadSelected = Number.isFinite(entered); updateLoadControl(); savePerformanceDraft(); });
     loadClear.addEventListener('click', () => { item.platePickerExactLoadKg = null; item.performanceLoadSelected = false; item.performanceLoadExact = 0; item.performanceLoad.value = item.performanceLoad.min; updateLoadControl(); savePerformanceDraft(); });
     loadOutput.addEventListener('click', () => {
       if (loadLabel.querySelector('.performanceLoadDirect')) return;
-      const editor = document.createElement('input'); editor.type = 'number'; editor.inputMode = 'decimal'; editor.min = loadInput.min; editor.max = loadInput.max; editor.step = '0.1'; editor.className = 'performanceLoadDirect'; editor.setAttribute('aria-label', `Introducir carga exacta en ${item.performanceLoadUnit}`); editor.value = item.performanceLoadSelected ? String(item.performanceLoadExact) : ''; loadOutput.replaceWith(editor); editor.focus(); editor.select();
-      const finish = commit => { if (!editor.isConnected) return; if (commit && editor.value === '') { item.platePickerExactLoadKg = null; item.performanceLoadSelected = false; item.performanceLoadExact = 0; loadInput.value = '0'; } else if (commit) { const entered = Number(editor.value); if (Number.isFinite(entered) && entered >= Number(loadInput.min) && entered <= Number(loadInput.max)) { item.platePickerExactLoadKg = null; item.performanceLoadExact = loadMath.toDisplay(loadMath.normalizeKg(loadMath.toKg(entered, item.performanceLoadUnit), item.performanceLoadProfile), item.performanceLoadUnit); item.performanceLoadSelected = true; loadInput.value = String(item.performanceLoadExact); } } editor.replaceWith(loadOutput); updateLoadControl(); savePerformanceDraft(); };
+      const editor = document.createElement('input'); editor.type = 'number'; editor.inputMode = 'decimal'; editor.min = loadInput.min; editor.max = loadInput.max; editor.step = 'any'; editor.className = 'performanceLoadDirect'; editor.setAttribute('aria-label', `Introducir carga exacta en ${item.performanceLoadUnit}`); editor.value = item.performanceLoadSelected ? String(item.performanceLoadExact) : ''; loadOutput.replaceWith(editor); editor.focus(); editor.select();
+      const finish = commit => { if (!editor.isConnected) return; if (commit && editor.value === '') { item.platePickerExactLoadKg = null; item.performanceLoadSelected = false; item.performanceLoadExact = 0; loadInput.value = '0'; } else if (commit) { const entered = Number(editor.value); if (Number.isFinite(entered) && entered >= Number(loadInput.min) && entered <= Number(loadInput.max)) { item.platePickerExactLoadKg = null; item.performanceLoadExact = entered; item.performanceLoadSelected = true; loadInput.value = String(item.performanceLoadExact); } } editor.replaceWith(loadOutput); updateLoadControl(); savePerformanceDraft(); };
       editor.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); finish(true); event.stopPropagation(); } if (event.key === 'Escape') { event.preventDefault(); finish(false); } });
       editor.addEventListener('blur', () => queueMicrotask(() => finish(true)), { once: true });
     });
@@ -4062,7 +4070,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       const kilograms = item.platePickerExactLoadKg != null ? Number(item.platePickerExactLoadKg) : loadMath.toKg(currentLoad, previousUnit);
       item.performanceLoadUnit = nextUnit;
       const { min: profileMin, max: profileMax } = loadMath.bounds(item.performanceLoadProfile, nextUnit);
-      const rounded = item.platePickerExactLoadKg != null ? loadMath.toDisplay(kilograms, nextUnit) : loadMath.toDisplay(loadMath.normalizeKg(kilograms, item.performanceLoadProfile), nextUnit);
+      const rounded = loadMath.toDisplay(kilograms, nextUnit);
       item.performanceLoadExact = item.performanceLoadSelected ? Math.min(profileMax, Math.max(profileMin, rounded)) : profileMin;
       item.performanceLoad.value = String(item.performanceLoadExact);
       updateLoadControl();
@@ -4084,7 +4092,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
           const step = item.performanceLoadUnit === 'lb' ? 5 : item.performanceLoadProfile.stepKg;
           const min = Math.ceil(item.performanceLoadProfile.minKg * factor / step) * step;
           const max = Math.floor(item.performanceLoadProfile.maxKg * factor / step) * step;
-          const restored = loadMath.toDisplay(loadMath.snapKg(storedKg, item.performanceLoadProfile.stepKg), item.performanceLoadUnit);
+          const restored = loadMath.toDisplay(storedKg, item.performanceLoadUnit);
           item.performanceLoadExact = restored; item.performanceLoad.value = String(restored); item.performanceLoadSelected = true; updateLoadControl(); savePerformanceDraft();
         }
       }
@@ -4093,7 +4101,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
         return record && record.exerciseId === (item.historyExerciseId || String(item.index + 1)) && Number.isInteger(reps) && reps >= 1 && reps <= 100;
       }).sort((a, b) => a.setNumber - b.setNumber);
       if (!records.length) return;
-      const formatLoad = record => { if (record.load == null) return ''; const unit = record.loadUnit === 'lb' ? 'lb' : 'kg'; const loadKg = Number.isFinite(Number(record.loadKg)) ? Number(record.loadKg) : unit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load); const original = `${unit === 'lb' ? Math.round(Number(record.load)) : Number.isInteger(Number(record.load)) ? Number(record.load) : Number(record.load).toFixed(1)} ${unit}`; return unit === 'lb' ? `${original} (${loadKg.toFixed(1)} kg)` : original; };
+      const formatLoad = record => { if (record.load == null) return ''; const unit = record.loadUnit === 'lb' ? 'lb' : 'kg'; const loadKg = Number.isFinite(Number(record.loadKg)) ? Number(record.loadKg) : unit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load); const original = `${String(Number(Number(record.load).toFixed(2)))} ${unit}`; return unit === 'lb' ? `${original} (${loadKg.toFixed(1)} kg)` : original; };
       const summary = records.map(record => `${record.reps} ${record.reps === 1 ? 'repetición' : 'repeticiones'}${record.load == null ? '' : ` · ${formatLoad(record)}`}`).join(' / ');
       const allAtTop = records.length === item.seriesKeys.length && records.every(record => record.reps >= item.repMaximum);
       const kilograms = record => Number.isFinite(Number(record.loadKg)) ? Number(record.loadKg) : record.loadUnit === 'lb' ? Number(record.load) * 0.45359237 : Number(record.load);
@@ -4155,8 +4163,10 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
   const getExerciseTiming = item => { const root = getTimingState(); const key = String(item.index + 1); if (!root.exercises[key]) root.exercises[key] = { startedAt: 0, seriesStartedAt: 0, preparationEndsAt: 0, preparationKind: '', seriesTimes: [], restStartedAt: 0, restTimes: [], restNotifiedAt: 0, restReminderNotifiedAt: 0, endedAt: 0 }; const timing = root.exercises[key]; ['startedAt','seriesStartedAt','preparationEndsAt','restStartedAt','restNotifiedAt','restReminderNotifiedAt','endedAt','warmupStartedAt','warmupDurationMs'].forEach(keyName => { if (!Number.isFinite(timing[keyName]) || timing[keyName] < 0) timing[keyName] = 0; }); if (!Array.isArray(timing.seriesTimes)) timing.seriesTimes = []; if (!Array.isArray(timing.restTimes)) timing.restTimes = []; return timing; };
   const startTiming = (item, timestamp = Date.now(), startSeries = false) => { const root = getTimingState(); const timing = getExerciseTiming(item); if (!timing.startedAt) { timing.startedAt = timestamp; if (startSeries) timing.seriesStartedAt = timestamp; if (!root.sessionStartedAt) root.sessionStartedAt = timestamp; save(); } else if (startSeries && !timing.seriesStartedAt && !timing.restStartedAt && !timing.endedAt) { timing.seriesStartedAt = timestamp; save(); } return timing; };
   const beginSeries = (item, timestamp = Date.now()) => { const timing = startTiming(item, timestamp, true); const nextIndex = item.seriesKeys.findIndex(key => state[key] !== true); if (nextIndex < 0) return timing; if (nextIndex === 0 && timing.restStartedAt && state.__warmupPerformance?.[String(item.index + 1)]) state.__warmupPerformance[String(item.index + 1)].restDurationMs = Math.min(MAX_TIMING_MS, Math.max(0, timestamp - timing.restStartedAt)); if (nextIndex > 0 && timing.restStartedAt) timing.restTimes[nextIndex - 1] = Math.min(MAX_TIMING_MS, Math.max(0, timestamp - timing.restStartedAt)); timing.restStartedAt = 0; timing.restNotifiedAt = 0; timing.restReminderNotifiedAt = 0;timing.seriesStartedAt = timestamp; timing.endedAt = 0; save(); return timing; };
-  const recordSeriesTime = (item, seriesIndex, timestamp = Date.now()) => { const root = getTimingState(); const timing = getExerciseTiming(item); if (!timing.startedAt) startTiming(item, timestamp); if (seriesIndex > 0 && timing.restStartedAt) timing.restTimes[seriesIndex - 1] = Math.min(MAX_TIMING_MS, Math.max(0, timestamp - timing.restStartedAt)); timing.restStartedAt = 0; timing.restNotifiedAt = 0; timing.restReminderNotifiedAt = 0;if (timing.seriesTimes[seriesIndex] == null) timing.seriesTimes[seriesIndex] = Math.min(MAX_TIMING_MS, Math.max(0, timestamp - (timing.seriesStartedAt || timestamp))); timing.seriesStartedAt = 0; if (seriesIndex + 1 < item.seriesKeys.length || exerciseItems.some(entry => !snapshot(entry).complete)) timing.restStartedAt = timestamp; else timing.endedAt = timestamp; if (exerciseItems.every(entry => snapshot(entry).complete) && !root.sessionEndedAt) { root.sessionEndedAt = timestamp; root.sessionEndReason = Object.values(state.__skippedExercises || {}).some(Boolean) ? 'partial' : 'complete'; } save(); };
+  const recordSeriesTime = (item, seriesIndex, timestamp = Date.now()) => { const root = getTimingState(); const timing = getExerciseTiming(item); if (!timing.startedAt) startTiming(item, timestamp); if (seriesIndex > 0 && timing.restStartedAt) timing.restTimes[seriesIndex - 1] = Math.min(MAX_TIMING_MS, Math.max(0, timestamp - timing.restStartedAt)); timing.restStartedAt = 0; timing.restNotifiedAt = 0; timing.restReminderNotifiedAt = 0;if (timing.seriesTimes[seriesIndex] == null) timing.seriesTimes[seriesIndex] = Math.min(MAX_TIMING_MS, Math.max(0, timestamp - (timing.seriesStartedAt || timestamp))); timing.seriesStartedAt = 0; if (seriesIndex + 1 < item.seriesKeys.length) timing.restStartedAt = timestamp; else { timing.restStartedAt = 0; timing.endedAt = timestamp; } if (exerciseItems.every(entry => snapshot(entry).complete) && !root.sessionEndedAt) { root.sessionEndedAt = timestamp; root.sessionEndReason = Object.values(state.__skippedExercises || {}).some(Boolean) ? 'partial' : 'complete'; } save(); };
   exerciseItems.forEach(item => { const display = document.createElement('div'); display.className = 'exerciseTiming'; display.setAttribute('role', 'group'); display.setAttribute('aria-live', 'off'); display.textContent = '⏱ Serie — · Ejercicio —'; item.timingDisplay = display; const restDisplay = document.createElement('div'); restDisplay.className = 'exerciseRest'; restDisplay.setAttribute('role', 'status'); restDisplay.setAttribute('aria-live', 'polite'); restDisplay.hidden = true; restDisplay.textContent = '⏳ Descanso en curso: 00:00'; item.restDisplay = restDisplay; item.tracker.querySelector('.exerciseTrackerHead')?.after(display); display.after(restDisplay); });
+  const activityPageStartedAt = Date.now();
+  const playedCountdownCues = new Set();
   const renderTimingDisplays = () => {
     const renderExerciseTimer = (item, entries, label) => {
       const display = item.timingDisplay;
@@ -4180,6 +4190,9 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
           display.append(chip);
         }
         chip.dataset.kind = entry.kind;
+        chip.classList.toggle('is-countdown-final', entry.countdownFinal === true);
+        if (entry.seriesIndex) chip.dataset.seriesIndex = String(entry.seriesIndex);
+        else delete chip.dataset.seriesIndex;
         chip.querySelector('.exerciseTimerLabel').textContent = entry.label;
         chip.querySelector('.exerciseTimerValue').textContent = entry.value;
         chip.setAttribute('aria-label', `${entry.label}: ${entry.value}`);
@@ -4202,9 +4215,9 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
           const reps = Number.isInteger(repsValue) && repsValue >= 1 && repsValue <= 100 ? `${repsValue}r` : null;
           const loadValue = Number(record?.load);
           const loadUnit = record?.loadUnit || 'kg';
-          const load = record?.load !== null && record?.load !== undefined && Number.isFinite(loadValue) ? `${loadUnit === 'lb' ? Math.round(loadValue) : Number.isInteger(loadValue) ? loadValue : loadValue.toFixed(1)} ${loadUnit}` : null;
+          const load = record?.load !== null && record?.load !== undefined && Number.isFinite(loadValue) ? `${String(Number(loadValue.toFixed(2)))} ${loadUnit}` : null;
           const details = [reps, load].filter(Boolean).join(' · ') || 'sin datos';
-          entries.push({ key: `set-${index + 1}`, label: `S${index + 1} · ${details}`, value: formatElapsed(duration), kind: 'set' });
+          entries.push({ key: `set-${index + 1}`, label: `S${index + 1} · ${details}`, value: formatElapsed(duration), kind: 'set', seriesIndex: index + 1 });
         }
       });
       (timing?.restTimes || []).forEach((duration, index) => {
@@ -4213,16 +4226,18 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       if (preparing) {
         const preparation = seriesPreparation.get(item.index);
         const remaining = Math.max(0, (preparation?.endsAt || timing?.preparationEndsAt || now) - now);
-        entries.push({ key: 'preparation', label: 'Preparación', value: formatCountdown(remaining), kind: 'preparation' });
+        entries.push({ key: 'preparation', label: 'Preparación', value: formatCountdown(remaining), kind: 'preparation', countdownFinal: remaining > 0 && remaining <= 3000 });
       } else if (restActive) {
         const elapsed = Math.max(0, recommendation.minMs - restRemaining);
-        entries.push({ key: 'active-rest', label: 'Descanso activo', value: `${formatCountdown(restRemaining)} restante`, kind: 'active-rest', progress: recommendation.minMs ? elapsed / recommendation.minMs : 0 });
+        entries.push({ key: 'active-rest', label: 'Descanso activo', value: `${formatCountdown(restRemaining)} restante`, kind: 'active-rest', progress: recommendation.minMs ? elapsed / recommendation.minMs : 0, countdownFinal: restRemaining > 0 && restRemaining <= 3000 });
       } else if (timing?.restStartedAt && !row.complete && !seriesActive) {
         entries.push({ key: 'rest-ready', label: 'Descanso listo', value: 'Continuar cuando quieras', kind: 'preparation' });
       } else if (seriesActive) {
         entries.push({ key: `active-set-${row.done + 1}`, label: `Serie ${row.done + 1} · en curso`, value: formatElapsed(now - timing.seriesStartedAt), kind: 'active-set' });
       }
-      const elapsed = timing?.startedAt ? (timing.endedAt || now) - timing.startedAt : NaN;
+      const recordedElapsed = [...(timing?.seriesTimes || []), ...(timing?.restTimes || [])].reduce((sum, value) => sum + (Number.isFinite(value) ? Math.max(0, value) : 0), 0);
+      const endedAt = Number(timing?.endedAt) || (row.complete && timing?.startedAt ? timing.startedAt + recordedElapsed : now);
+      const elapsed = timing?.startedAt ? Math.max(0, endedAt - timing.startedAt) : NaN;
       if (Number.isFinite(elapsed)) entries.push({ key: 'exercise-total', label: 'Ejercicio', value: formatElapsed(elapsed), kind: 'exercise' });
       if (!entries.length) entries.push({ key: 'empty', label: row.complete ? 'Ejercicio' : 'Cronómetro', value: row.complete ? 'Completado' : 'Listo para iniciar', kind: 'empty' });
       renderExerciseTimer(item, entries, entries.map(entry => `${entry.label}, ${entry.value}`).join('. '));
@@ -4254,21 +4269,21 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       const restElapsed = timing?.restStartedAt ? Math.max(0, now - timing.restStartedAt) : 0;
       const recommendation = getRestRecommendation(item);
       const restRemaining = Math.max(0, recommendation.minMs - restElapsed);
-      const restActive = Boolean(!root?.sessionEndedAt && timing?.restStartedAt && restRemaining > 0);
+      const restActive = Boolean(!row.complete && !root?.sessionEndedAt && timing?.restStartedAt && restRemaining > 0);
       const seriesActive = Boolean(!row.complete && timing?.seriesStartedAt && !timing?.restStartedAt);
-      const restPending = Boolean(!root?.sessionEndedAt && timing?.restStartedAt && !seriesActive && !preparing);
+      const restPending = Boolean(!row.complete && !root?.sessionEndedAt && timing?.restStartedAt && !seriesActive && !preparing);
       const warmupActive = Boolean(!row.complete && timing?.warmupStartedAt && !restPending);
       const activity = warmupActive
         ? { kind: 'approximation', label: `Aproximación · ${item.title}`, clock: formatElapsed(now - timing.warmupStartedAt), startedAt: Number(timing.warmupStartedAt) || 0 }
         : restPending
-        ? { kind: restActive ? 'rest' : 'ready', label: restActive ? `Descanso · ${item.title}` : `Descanso listo · ${item.title}`, clock: restActive ? `${formatCountdown(restRemaining)} restantes` : 'Lista', startedAt: Number(timing.restStartedAt) || 0 }
+        ? { kind: restActive ? 'rest' : 'ready', label: restActive ? `Descanso · ${item.title}` : `Descanso listo · ${item.title}`, clock: restActive ? `${formatCountdown(restRemaining)} restantes` : 'Lista', startedAt: Number(timing.restStartedAt) || 0, remainingMs: restActive ? restRemaining : 0 }
         : preparing
-          ? { kind: 'preparing', label: `Preparación · ${item.title}`, clock: formatCountdown((preparation?.endsAt || timing?.preparationEndsAt || now) - now), startedAt: Number(timing?.preparationEndsAt) || now }
+          ? { kind: 'preparing', label: `Preparación · ${item.title}`, clock: formatCountdown((preparation?.endsAt || timing?.preparationEndsAt || now) - now), startedAt: (Number(preparation?.endsAt || timing?.preparationEndsAt) || now) - PREPARATION_MS, remainingMs: Math.max(0, (preparation?.endsAt || timing?.preparationEndsAt || now) - now) }
           : seriesActive
             ? { kind: 'strength', label: `Serie ${row.done + 1} activa · ${item.title}`, clock: formatElapsed(now - timing.seriesStartedAt), startedAt: Number(timing.seriesStartedAt) || 0 }
             : null;
       if (activity && (!currentActivity || activity.startedAt >= currentActivity.startedAt)) currentActivity = activity;
-      if (!root?.sessionEndedAt && timing?.restStartedAt) notifyRestReady(item, timing, restElapsed);
+      if (!row.complete && !root?.sessionEndedAt && timing?.restStartedAt) notifyRestReady(item, timing, restElapsed);
       const summaryButton = summaryList.querySelector(`[data-exercise="${item.index + 1}"]`);
       const summaryState = summaryButton?.querySelector('.summaryExerciseState');
       if (summaryButton && summaryState) {
@@ -4307,7 +4322,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
     const warmup = getWarmupTiming();
     if (warmup.phase === 'preparing') {
       const startedAt = Number(warmup.preparationEndsAt) - PREPARATION_MS;
-      const activity = { kind: 'preparing', label: 'Preparación · Calentamiento', clock: formatCountdown(warmupPreparationRemaining()), startedAt };
+      const activity = { kind: 'preparing', label: 'Preparación · Calentamiento', clock: formatCountdown(warmupPreparationRemaining()), startedAt, remainingMs: warmupPreparationRemaining() };
       if (!currentActivity || activity.startedAt >= currentActivity.startedAt) currentActivity = activity;
     } else if (warmup.phase === 'cardio' || warmup.phase === 'mobility') {
       const startedAt = Number(warmup[`${warmup.phase}StartedAt`]) || 0;
@@ -4346,6 +4361,11 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       const progressText = `${doneExercises}/${exerciseItems.length} ejercicios · ${doneSeries}/${totalSeries} series`;
       const compactActivityLabels = { rest: 'Descanso', ready: 'Descanso listo', approximation: 'Aproximación', preparing: 'Preparación', strength: displayActivity.label.split(' · ')[0], cardio: 'Calentamiento · cardio', mobility: 'Calentamiento · movilidad', complete: 'Rutina completada', start: 'Listo para iniciar' };
       const activityText = `${compactActivityLabels[displayActivity.kind] || 'Sesión activa'} · ${displayActivity.clock}`;
+      const activityIsFinalCountdown = !document.hidden && currentActivity && currentActivity.remainingMs > 0 && currentActivity.remainingMs <= 3000 && currentActivity?.startedAt >= activityPageStartedAt;
+      if (activityIsFinalCountdown) {
+        const cueKey = `${currentActivity.kind}:${currentActivity.startedAt}`;
+        if (!playedCountdownCues.has(cueKey)) { playedCountdownCues.add(cueKey); playFeedback('countdown'); }
+      }
       activityHeadline.textContent = progressText;
       if (compactActivityHeadline) compactActivityHeadline.textContent = activityText;
       if (activityLabel) activityLabel.textContent = displayActivity.label;
@@ -4353,6 +4373,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       const activeKinds = ['strength', 'cardio', 'mobility', 'approximation'];
       const isActive = activeKinds.includes(displayActivity.kind);
       if (activityStatus) {
+        activityStatus.classList.toggle('is-countdown-final', activityIsFinalCountdown);
         activityStatus.classList.toggle('isResting', displayActivity.kind === 'rest');
         activityStatus.classList.toggle('isActive', isActive);
         activityStatus.classList.toggle('isPreparing', displayActivity.kind === 'preparing');
@@ -5214,7 +5235,7 @@ html.is-document-hidden,html.is-document-hidden *,html.is-document-hidden::befor
       if (!state.__performance) state.__performance = {};
       if (!state.__performance[String(item.index + 1)]) state.__performance[String(item.index + 1)] = {};
       state.__performance[String(item.index + 1)][nextKey] = { title: item.title, reps: repsSelected ? reps : null, load: loadSelected ? load : null, loadUnit, loadKg: loadSelected ? loadKg : null, durationMs: Math.min(MAX_TIMING_MS, Math.max(0, completedAt - Number(activeTiming.seriesStartedAt || completedAt))), updatedAt: completedAt };
-      if (load !== null && item.performanceLoadOutput) item.performanceLoadOutput.textContent = loadUnit === 'lb' ? `${Math.round(load)} lb (${loadKg.toFixed(1)} kg)` : `${Number.isInteger(load) ? load : load.toFixed(1)} kg`;
+      if (load !== null && item.performanceLoadOutput) item.performanceLoadOutput.textContent = loadUnit === 'lb' ? `${String(Number(load.toFixed(2)))} lb (${loadKg.toFixed(1)} kg)` : `${Number.isInteger(load) ? load : load.toFixed(1)} kg`;
       item.performanceReps.value = String(item.repMinimum);
       item.performanceReps.dataset.selected = 'false';
       item.performanceRepsOutput.textContent = `Sin registrar · ${item.repMinimum}–${item.repMaximum + 4} posibles`; item.performanceRepsOutput.dataset.selected = 'false'; item.performanceRepsClear.hidden = true; item.performanceRangeFill?.(item.performanceReps);
@@ -7486,7 +7507,7 @@ body{height:auto!important;min-height:100%!important;overflow-x:hidden!important
   window.addEventListener('gymratik:weight-change', event => {
     const detail = event.detail || {};
     if (detail.direction === 'up') {
-      const loadValue = Number(detail.load); const displayLoad = detail.loadUnit === 'lb' ? Math.round(loadValue) : Number.isInteger(loadValue) ? loadValue : loadValue.toFixed(1);
+      const loadValue = Number(detail.load); const displayLoad = String(Number(loadValue.toFixed(2)));
       encourage(`¡Carga aumentada en ${detail.title}! Serie completada con ${displayLoad} ${detail.loadUnit}. Buen progreso; conserva la técnica.`);
     } else if (detail.direction === 'down') {
       encourage(`Buen ajuste en ${detail.title}: completaste la serie con menos carga. Prioriza control y rango cómodo; progresar también es entrenar con criterio.`);
@@ -7810,217 +7831,6 @@ body{height:auto!important;min-height:100%!important;overflow-x:hidden!important
 @media(max-width:640px){.routine-home-link{top:.15rem!important;left:.65rem!important;min-height:44px!important;padding:.45rem .68rem!important;font-size:.82rem!important}.hero>div:first-of-type{padding-top:56px!important}.routine-home-link .gymratikIcon{width:1rem;height:1rem;flex-basis:1rem}}
 @media(prefers-reduced-motion:reduce){.gymratikIcon{transition:none!important}}
 </style>
-<script data-fix="day4-local-gif-fallback">
-(function(){
-  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  document.querySelectorAll('.day4ExerciseGif').forEach(function(img){
-    const staticSrc = img.dataset.staticSrc;
-    let staticAttempted = false;
-    const staticUrl = staticSrc ? new URL(staticSrc, document.baseURI).href : '';
-    const useStatic = function(){
-      if(staticAttempted || !staticUrl) return;
-      staticAttempted = true;
-      img.hidden = false;
-      img.style.display = '';
-      img.src = staticUrl;
-    };
-    const showBroken = function(){
-      if(!staticAttempted && staticUrl){ useStatic(); return; }
-      img.hidden = true;
-      img.style.display = 'none';
-      const fallback = img.closest('.photo')?.querySelector('.brokenFallback');
-      if(fallback) fallback.style.display = 'flex';
-    };
-    // El template asigna un onerror genérico que oculta la imagen. Día 4 usa
-    // un fallback estático explícito, por lo que este manejador lo reemplaza.
-    img.onerror = null;
-    img.addEventListener('error', showBroken);
-    if(reduced) useStatic();
-    else if(img.complete && img.naturalWidth === 0) showBroken();
-  });
-})();
-</script>
-</div>
-<!-- canonical media contract references: 1350-7I6LNUG.jpg · 1350-7I6LNUG-final.png -->
-<style data-enhancement="compact-routine-metrics-v1">
-.metrics{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr))!important;align-items:stretch!important;gap:7px!important;margin:0 0 8px!important}
-.metric{min-width:0!important;min-height:54px!important;padding:7px 9px!important;gap:7px!important;border-radius:13px!important}
-.metricIcon{width:29px!important;height:29px!important;flex:0 0 29px!important;padding:4px!important;border-radius:9px!important}
-.metricText{min-width:0!important}
-.metricLabel{font-size:9px!important;line-height:1.1!important;letter-spacing:.055em!important;margin-bottom:3px!important}
-.metricVal{font-size:clamp(.86rem,3.6vw,1.05rem)!important;line-height:1.12!important;overflow-wrap:anywhere!important}
-@media(max-width:360px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:5px!important}.metric{min-height:48px!important;padding:6px!important;gap:5px!important}.metricIcon{width:25px!important;height:25px!important;flex-basis:25px!important}.metricLabel{font-size:8px!important}.metricVal{font-size:.82rem!important}}
-</style>
-<style data-fix="rest-countdown-activity-v1">
-.warmupHead p,.warmupCopy p,.warmupInstructions{font-size:clamp(13px,3.6vw,15px)!important;line-height:1.45!important}
-.warmupVisual[data-media-state="FALLBACK_STATIC"] .warmupGif,.gifFrame[data-media-state="FALLBACK_STATIC"] .gifMotion{display:none!important}
-.warmupVisual[data-media-state="FALLBACK_STATIC"] .warmupFallback,.gifFrame[data-media-state="FALLBACK_STATIC"] .gifFallback{display:block!important}
-.exerciseTracker{position:relative;z-index:2;pointer-events:auto}
-.exerciseTracker .completeSetButton{position:relative;z-index:4;pointer-events:auto}
-.exerciseTracker .skipExerciseButton{flex:0 0 auto;min-height:34px;margin-top:.1rem;padding:.35rem .55rem;border-color:rgba(255,179,132,.24);background:rgba(74,34,38,.22);color:rgba(255,213,197,.6);font-size:.64rem;opacity:.55;transition:opacity .18s ease,border-color .18s ease,background .18s ease,color .18s ease}
-.exerciseTracker .skipExerciseButton:hover,.exerciseTracker .skipExerciseButton:focus-visible,.exerciseTracker .skipExerciseButton.is-holding{border-color:rgba(255,179,132,.78);background:rgba(74,34,38,.82);color:#ffe0d3;opacity:1}
-.exerciseTracker .skipExerciseButton:disabled{opacity:.3}
-.exerciseTracker .holdFeedback{opacity:.5}
-.summaryExercise.isResting .summaryExerciseState{color:#ffd277}
-.summaryExercise.isResting .summaryExerciseState{animation:restSlowPulse 2.4s ease-in-out infinite}
-.summaryExercise.isSeriesActive .summaryExerciseState{color:#65f2dd;animation:activityFastPulse .68s ease-in-out infinite}
-.summaryExercise.isPreparing .summaryExerciseState{color:#72dcff}
-.warmupProgressSegment.is-current,.seriesProgressSegment.is-current{border-color:#72dcff;animation:progressPulse 1.15s ease-in-out infinite}
-.warmupProgressSegment.is-current::after,.seriesProgressSegment.is-current::after{transform:scaleX(.38);opacity:1;background-image:linear-gradient(100deg,#159bb3 0%,#35d6a4 55%,#a0d95c 100%);background-size:220% 100%;animation:progressActiveSweep 1.6s linear infinite}
-.warmupProgressSegment.is-next,.seriesProgressSegment.is-next{border-color:rgba(114,220,255,.32);animation:none}
-.summaryToggle.isActive::before,.summaryToggle.isResting::before,.summaryToggle.isPreparing::before{content:"";width:.48rem;height:.48rem;flex:none;border-radius:50%;background:currentColor;box-shadow:0 0 .55rem currentColor;animation:activityFastPulse .68s ease-in-out infinite}
-.warmupTracker>.warmupProgressSegments{margin:.3rem 0 .45rem}
-.warmupInstructions{margin:.15rem 0 .4rem;color:#c5e3eb;font-size:.68rem;line-height:1.4}
-.exerciseWarmupHint{flex:1 1 100%;margin:.25rem 0;padding:.5rem .65rem;border:1px solid rgba(255,210,119,.4);border-radius:.7rem;background:rgba(112,79,21,.2);color:#ffe4a4;font-size:.68rem;line-height:1.4}.exerciseWarmupHint[hidden]{display:none!important}.exerciseTracker.is-approximation{border-color:rgba(255,210,119,.68);box-shadow:0 0 0 1px rgba(255,210,119,.12)}.exerciseTracker .approximationProgress{display:flex;align-items:center;gap:.45rem;margin:.35rem 0;color:#ffd277;font-size:.68rem;font-weight:850}.approximationProgress[hidden]{display:none!important}.approximationProgressTrack{height:8px;flex:1;overflow:hidden;border:1px solid rgba(255,210,119,.38);border-radius:999px;background:rgba(6,25,37,.82)}.approximationProgressTrack>span{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#b98221,#ffd277);transition:width .25s ease}.approximationProgress[data-active=true] .approximationProgressTrack>span{width:48%;animation:restSlowPulse 2.4s ease-in-out infinite}.approximationProgress[data-complete=true] .approximationProgressTrack>span{width:100%}.performanceEntry.is-approximation{border-color:rgba(255,210,119,.48)!important;background:linear-gradient(145deg,rgba(65,48,22,.68),rgba(5,22,34,.96))!important}.performanceEntry.is-approximation .progressionCue{color:#ffe4a4!important}button.completeSetButton.is-approximation{border-color:#ffd277;background:linear-gradient(135deg,#9a6b17,#725019);color:#fff0bd;box-shadow:0 0 0 1px rgba(255,210,119,.2)}button.completeSetButton.is-approximation-active{animation:restSlowPulse 2.4s ease-in-out infinite}.exerciseTracker.is-approximation .exerciseWarmupHint{display:block}
-.warmupTrackerActions button[data-phase="preparing"],.warmupTrackerActions button[data-phase="cardio"],.warmupTrackerActions button[data-phase="mobility"]{border-color:rgba(114,220,255,.7);background:rgba(24,75,101,.7);color:#d8f5ff}
-.warmupTrackerActions button[data-phase="done"]{border-color:rgba(101,242,221,.65);background:rgba(19,73,72,.65);color:#b9fff1}
-.summaryToggle.isResting{border:1px solid rgba(255,210,119,.78);background:linear-gradient(90deg,rgba(112,79,21,.96),rgba(83,61,29,.92));color:#ffe4a4;animation:restSlowPulse 2.4s ease-in-out infinite}
-.summaryToggle.isActive{border:1px solid rgba(101,242,221,.78);background:linear-gradient(90deg,rgba(19,105,91,.96),rgba(19,73,72,.92));color:#b9fff1;animation:activityFastPulse .68s ease-in-out infinite}
-.summaryToggle.isPreparing{border:1px solid rgba(114,220,255,.65);background:linear-gradient(90deg,rgba(24,75,101,.96),rgba(15,45,65,.92));color:#bfeeff}
-.summaryToggle.isApproximation,.summaryActivityStatus.isApproximation{border-color:rgba(255,210,119,.72);background:linear-gradient(105deg,rgba(112,79,21,.62),rgba(83,61,29,.46));color:#ffe4a4}
-.summaryToggle.isApproximation::before,.summaryActivityStatus.isApproximation .summaryActivityIndicator{background:#ffd277;box-shadow:0 0 .55rem #ffd277;animation:restSlowPulse 2.4s ease-in-out infinite}
-.summaryExercise.isApproximation{border-color:rgba(255,210,119,.72);background:rgba(83,61,29,.42)}
-button.completeSetButton.is-resting{border-color:#ffd277;background:linear-gradient(135deg,#9a6b17,#725019);color:#fff0bd;box-shadow:0 0 0 1px rgba(255,210,119,.2)}
-button.completeSetButton.is-series-active{border-color:#65f2dd;background:linear-gradient(135deg,#159d83,#146d5e);color:#eafff8;box-shadow:0 0 0 1px rgba(101,242,221,.2)}
-button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gradient(135deg,#18506b,#17384c);color:#d8f5ff;animation:preparationPulse 1.3s ease-in-out infinite}
-.exerciseTracker:has(.completeSetButton.is-resting){border-color:rgba(255,210,119,.82);box-shadow:0 0 18px rgba(255,210,119,.14)}
-.exerciseTracker:has(.completeSetButton.is-series-active){border-color:rgba(101,242,221,.76);box-shadow:0 0 18px rgba(101,242,221,.14)}
-.exerciseTracker:has(.completeSetButton.is-resting) .exerciseRest{border-color:#ffd277;background:rgba(112,79,21,.44);color:#ffe4a4;animation:restSlowPulse 2.4s ease-in-out infinite}
-.exerciseTracker:has(.completeSetButton.is-series-active) .seriesProgressSegment.is-current{border-color:#65f2dd;animation:activityFastPulse .68s ease-in-out infinite}
-.summaryExercise.isResting{border-color:rgba(255,210,119,.78);background:rgba(83,61,29,.5);animation:restSlowPulse 2.4s ease-in-out infinite}
-.summaryExercise.isSeriesActive{border-color:rgba(101,242,221,.78);background:rgba(19,73,72,.56)}
-.seriesProgressSegment.is-current.is-resting{border-color:#ffd277;animation:restSlowPulse 2.4s ease-in-out infinite}
-.seriesProgressSegment.is-current.is-resting::after{transform:scaleX(.38);background-image:linear-gradient(100deg,#b98221 0%,#ffd277 55%,#fff0bd 100%);background-size:220% 100%;animation:progressActiveSweep 2.4s linear infinite}
-.seriesProgressSegment.is-current.is-active{border-color:#65f2dd;animation:activityFastPulse .68s ease-in-out infinite}
-.summaryActivityStatus.isResting{border-color:rgba(255,210,119,.62);background:rgba(83,61,29,.38);color:#ffe4a4}
-.summaryActivityStatus.isActive{border-color:rgba(101,242,221,.58);background:rgba(19,73,72,.38);color:#b9fff1}
-.summaryActivityStatus.isPreparing{border-color:rgba(114,220,255,.56);background:rgba(24,75,101,.36);color:#d8f5ff}
-.summaryActivityStatus.isResting .summaryActivityIndicator{background:#ffd277;box-shadow:0 0 .55rem #ffd277;animation:restSlowPulse 2.4s ease-in-out infinite}
-.summaryActivityStatus.isActive .summaryActivityIndicator{background:#65f2dd;box-shadow:0 0 .55rem #65f2dd;animation:activityFastPulse .68s ease-in-out infinite}
-.summaryActivityStatus.isPreparing .summaryActivityIndicator{background:#72dcff;box-shadow:0 0 .55rem #72dcff;animation:preparationPulse 1.3s ease-in-out infinite}
-.summaryMascotWrap{position:relative;grid-column:3;grid-row:1/3;display:grid;width:68px;height:68px;place-items:center;align-self:center;overflow:visible;border:0;border-radius:0;background:transparent;box-shadow:none}
-#summaryActivityMascot{display:block;width:70px;height:70px;object-fit:contain;transform-origin:50% 82%;transition:filter .2s ease;image-rendering:auto}
-#summaryToggle.isResting #summaryActivityMascot{filter:drop-shadow(0 0 8px rgba(255,210,119,.36))}
-#summaryToggle.isActive #summaryActivityMascot{filter:drop-shadow(0 0 8px rgba(101,242,221,.3))}
-#summaryActivityMascot[data-motion="start"]{animation:mascotIdleBreath 4s ease-in-out infinite}
-#summaryActivityMascot[data-motion="ready"]{animation:mascotReadyShift 2.8s ease-in-out infinite}
-#summaryActivityMascot[data-motion="preparing"]{animation:mascotPreparationBrace 1.8s cubic-bezier(.35,0,.2,1) infinite}
-#summaryActivityMascot[data-motion="approximation"]{animation:mascotWarmupFlow 2.1s ease-in-out infinite}
-#summaryActivityMascot[data-motion="strength"]{animation:mascotStrengthEffort 1.35s cubic-bezier(.35,0,.2,1) infinite}
-#summaryActivityMascot[data-motion="cardio"]{animation:mascotCardioCadence .68s cubic-bezier(.4,0,.6,1) infinite}
-#summaryActivityMascot[data-motion="mobility"]{animation:mascotMobilityFlow 2.4s cubic-bezier(.4,0,.6,1) infinite}
-#summaryActivityMascot[data-motion="rest"]{animation:mascotRecoveryBreath 3.6s ease-in-out infinite}
-#summaryActivityMascot[data-motion="celebration"]{animation:mascotApprovalCelebrate 1.8s cubic-bezier(.2,.8,.2,1) infinite;filter:drop-shadow(0 0 9px rgba(255,220,116,.85))}
-.summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"]){border:0;border-radius:0;background:transparent;box-shadow:none}
-.summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"])::before,.summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"])::after{position:absolute;z-index:2;color:#ffe18a;font-size:14px;line-height:1;pointer-events:none;animation:mascotSparkle .9s ease-in-out infinite alternate}
-.summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"])::before{content:"✦";top:-5px;right:-4px}
-.summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"])::after{content:"✧";bottom:-3px;left:-4px;animation-delay:.3s}
-.exerciseTiming{display:flex;flex-wrap:wrap;align-items:center;gap:.42rem;margin:.4rem 0 .5rem;padding:.42rem .46rem;border:1px solid rgba(114,220,255,.24);border-radius:.9rem;background:linear-gradient(105deg,rgba(5,23,35,.92),rgba(8,31,44,.82));color:#e2f4fa;font-size:.68rem;line-height:1.15}
-.exerciseTimerChip{position:relative;display:inline-flex;align-items:center;gap:.4rem;min-height:32px;max-width:100%;overflow:hidden;padding:.38rem .58rem;border:1px solid rgba(111,205,237,.58);border-radius:999px;background:linear-gradient(125deg,rgba(17,62,83,.98),rgba(12,45,66,.98));color:#f2fbff;font-variant-numeric:tabular-nums;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
-.exerciseTimerLabel{color:#d0e8f2;font-size:.58rem;font-weight:900;letter-spacing:.055em;text-transform:uppercase}
-.exerciseTimerValue{color:#fff;font-size:.72rem;font-weight:950}
-.exerciseTimerChip[data-kind="set"]{border-color:#45d8c4;background:linear-gradient(125deg,rgba(10,83,78,.98),rgba(11,57,66,.98));box-shadow:inset 0 1px 0 rgba(227,255,250,.14),0 0 12px rgba(69,216,196,.12)}
-.exerciseTimerChip[data-kind="set"] .exerciseTimerLabel{color:#baf7ea}
-.exerciseTimerChip[data-kind="set"] .exerciseTimerValue{color:#a8ffe8}
-.exerciseTimerChip[data-kind="rest"]{border-color:#ffc95e;background:linear-gradient(125deg,rgba(103,69,15,.98),rgba(68,51,22,.98))}
-.exerciseTimerChip[data-kind="rest"] .exerciseTimerLabel{color:#ffedbb}
-.exerciseTimerChip[data-kind="rest"] .exerciseTimerValue{color:#ffe38d}
-.exerciseTimerChip[data-kind="exercise"]{border-color:#63cfff;background:linear-gradient(125deg,rgba(17,67,111,.98),rgba(13,48,85,.98))}
-.exerciseTimerChip[data-kind="exercise"] .exerciseTimerLabel{color:#d0f1ff}
-.exerciseTimerChip[data-kind="preparation"]{border-color:#bba0ff;background:linear-gradient(125deg,rgba(62,43,113,.98),rgba(37,37,83,.98))}
-.exerciseTimerChip[data-kind="preparation"] .exerciseTimerValue{color:#e1d6ff}
-.exerciseTimerChip[data-kind="active-set"]{border-color:#62ffe0;background:linear-gradient(105deg,rgba(11,112,97,.98),rgba(10,62,71,.98));box-shadow:0 0 16px rgba(101,242,221,.2)}
-.exerciseTimerChip[data-kind="active-set"]::before,.exerciseTimerChip[data-kind="active-rest"]::before{width:.42rem;height:.42rem;flex:none;border-radius:50%;background:#65f2dd;content:"";box-shadow:0 0 .5rem currentColor;animation:timerActivityPulse .82s ease-in-out infinite}
-.exerciseTimerChip[data-kind="active-set"]::after{position:absolute;right:0;bottom:0;left:0;height:2px;background:linear-gradient(90deg,transparent,#65f2dd,transparent);content:"";animation:timerActivitySweep 2.3s ease-in-out infinite}
-.exerciseTimerChip[data-kind="active-rest"]{border-color:#ffd277;background:linear-gradient(105deg,rgba(139,91,14,.98),rgba(83,55,19,.98));box-shadow:0 0 14px rgba(255,210,119,.2)}
-.exerciseTimerChip[data-kind="active-rest"]::after{position:absolute;right:0;bottom:0;left:0;height:2px;transform:scaleX(var(--timer-progress,0));transform-origin:left;background:linear-gradient(90deg,#b98221,#ffd277);content:"";transition:transform .35s linear}
-.exerciseTimerChip[data-kind="active-rest"]::before{background:#ffd277;color:#ffd277}
-.exerciseTimerChip[data-kind="empty"]{border-style:dashed;color:#99b7c1}
-.exerciseTimerChip[hidden]{display:none}
-@keyframes timerActivityPulse{0%,100%{opacity:.72;transform:scale(.82)}50%{opacity:1;transform:scale(1.15)}}
-@keyframes timerActivitySweep{0%{transform:translateX(-100%);opacity:.15}50%{opacity:.9}100%{transform:translateX(100%);opacity:.15}}
-@keyframes mascotIdleBreath{0%,100%{transform:translateY(1px) rotate(-.5deg) scale(1)}50%{transform:translateY(-1px) rotate(.5deg) scale(1.025,1.012)}}
-@keyframes mascotReadyShift{0%,100%{transform:translateX(-1px) rotate(-1.2deg)}32%{transform:translateX(1px) rotate(1deg)}68%{transform:translateY(-1px) rotate(.2deg)}}
-@keyframes mascotPreparationBrace{0%,100%{transform:translateY(1px) rotate(0) scale(1)}32%{transform:translate(-2px,1px) rotate(-2.8deg) scale(1.015,.99)}58%{transform:translate(1px,-1px) rotate(1.2deg) scale(1.005,1.01)}}
-@keyframes mascotWarmupFlow{0%,100%{transform:rotate(-1.5deg) translateY(0)}28%{transform:rotate(2deg) translateY(-1px)}63%{transform:rotate(-2deg) translateY(-1px)}82%{transform:rotate(1deg)}}
-@keyframes mascotStrengthEffort{0%,100%{transform:translateY(1px) rotate(-.5deg) scale(1)}28%{transform:translateY(-2px) rotate(1deg) scale(1.035,.975)}55%{transform:translateY(0) rotate(-.7deg) scale(.99,1.015)}78%{transform:translateY(1px) scale(1.01,.995)}}
-@keyframes mascotCardioCadence{0%,100%{transform:translateY(1px) rotate(-2deg) scale(1,.99)}25%{transform:translateY(-3px) rotate(1.5deg) scale(.99,1.025)}50%{transform:translateY(0) rotate(-1deg) scale(1.015,.985)}75%{transform:translateY(-2px) rotate(2deg) scale(.99,1.015)}}
-@keyframes mascotMobilityFlow{0%,100%{transform:rotate(-4deg) translateX(-1px)}38%{transform:rotate(1deg) translateX(0)}70%{transform:rotate(4deg) translateX(1px)}}
-@keyframes mascotRecoveryBreath{0%,100%{transform:translateY(1px) rotate(.4deg) scale(1)}45%{transform:translateY(-1px) rotate(-.4deg) scale(1.02,1.015)}72%{transform:translateY(0) scale(1.008,.998)}}
-@keyframes mascotApprovalCelebrate{0%,100%{transform:translateY(0) rotate(-1deg) scale(1)}24%{transform:translateY(-4px) rotate(1.5deg) scale(1.045)}48%{transform:translateY(-1px) rotate(0) scale(1.015)}72%{transform:translateY(-2px) rotate(-1deg) scale(1.03)}}
-@keyframes mascotToastApproval{0%,100%{transform:translateY(1px) rotate(-1deg)}35%{transform:translateY(-2px) rotate(1deg)}68%{transform:translateY(0) rotate(-.4deg)}}
-@keyframes mascotSparkle{from{opacity:.45;transform:scale(.7) rotate(-18deg)}to{opacity:1;transform:scale(1.15) rotate(18deg)}}
-.summaryExercise{position:relative;overflow:hidden;min-height:52px;transition:background-color .2s ease,border-color .2s ease,transform .18s ease}
-.summaryExercise::before,.summaryExercise::after{position:absolute;right:.68rem;bottom:.38rem;left:.68rem;height:4px;border-radius:999px;content:"";pointer-events:none}
-.summaryExercise::before{background:rgba(30,61,75,.95);box-shadow:inset 0 0 0 1px rgba(114,220,255,.3)}
-.summaryExercise::after{transform:scaleX(var(--summary-progress,0));transform-origin:left;background:linear-gradient(90deg,#159bb3,#35d6a4,#a0d95c);transition:transform .48s cubic-bezier(.2,.75,.25,1),filter .2s ease}
-.summaryExercise.isDone::after{transform:scaleX(1);background:linear-gradient(90deg,#1ec89b,#88e56c)}
-.summaryExercise.isCurrent{border-color:rgba(101,242,221,.7);box-shadow:0 0 0 1px rgba(101,242,221,.16)}
-.summaryExercise.isCurrent:not(.isSeriesActive):not(.isResting){animation:none}
-.summaryExercise.isSeriesActive::after{filter:brightness(1.15);animation:activityFastPulse .68s ease-in-out infinite}
-.summaryExercise.isResting{box-shadow:0 0 0 1px rgba(255,210,119,.24),0 0 14px rgba(255,210,119,.12)}
-.summaryProgressTrack{height:7px;overflow:hidden;border:1px solid rgba(114,220,255,.18);border-radius:999px;background:rgba(4,20,31,.78)}
-.summaryProgressTrack>span{display:block;width:100%;height:100%;transform:scaleX(var(--summary-progress,0));transform-origin:left;border-radius:inherit;background:linear-gradient(90deg,#159bb3,#35d6a4,#a0d95c);transition:transform .5s cubic-bezier(.2,.75,.25,1)}
-#floatingSessionSummary{position:fixed!important;right:max(.65rem,env(safe-area-inset-right))!important;bottom:max(.65rem,env(safe-area-inset-bottom))!important;z-index:40;width:min(420px,calc(100vw - 1.3rem))!important;max-height:min(42dvh,380px)!important;border:1px solid rgba(114,220,255,.42)!important;border-radius:1rem!important;background:rgba(6,24,37,.97)!important;box-shadow:0 18px 54px rgba(0,0,0,.42),0 0 30px rgba(71,202,216,.14)!important;backdrop-filter:blur(18px)!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
-#summaryToggle{display:grid!important;grid-template-columns:auto minmax(0,1fr) clamp(50px,14vw,68px) auto!important;grid-template-rows:auto auto;flex:none!important;min-height:78px!important;gap:.22rem .55rem!important;padding:.55rem .7rem!important;background:linear-gradient(105deg,rgba(14,73,90,.98),rgba(37,42,75,.98))!important;font-size:.84rem!important;line-height:1.22!important}
-#summaryActivityIcon{grid-column:1;grid-row:1/3;align-self:center}
-#summaryToggle #summaryHeadline{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums}
-#summaryActivityHeadline{grid-column:2;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#bfdce5;font-size:.72rem;font-weight:750;line-height:1.2}
-#summaryActivityHeadline::before{content:"";display:inline-block;width:.4rem;height:.4rem;margin-right:.35rem;border-radius:50%;vertical-align:.03rem;background:#82aebb}
-#summaryToggle.isResting #summaryActivityHeadline::before{background:#ffd277;animation:restSlowPulse 2.4s ease-in-out infinite}
-#summaryToggle.isActive #summaryActivityHeadline::before{background:#65f2dd;animation:activityFastPulse .68s ease-in-out infinite}
-#summaryToggle.isPreparing #summaryActivityHeadline::before{background:#72dcff;animation:preparationPulse 1.3s ease-in-out infinite}
-#summaryToggle .summaryMascotWrap{grid-column:3;grid-row:1/3}
-#summaryToggle .summaryChevron{grid-column:4;grid-row:1/3;align-self:center;margin-left:0!important;font-size:1.1rem!important}
-#summaryToggle[aria-expanded="true"]{grid-template-rows:auto;min-height:50px!important}
-#summaryToggle[aria-expanded="true"] #summaryActivityHeadline{display:none}
-#summaryToggle[aria-expanded="true"] #summaryActivityIcon,#summaryToggle[aria-expanded="true"] .summaryMascotWrap,#summaryToggle[aria-expanded="true"] .summaryChevron{grid-row:1}
-#summaryToggle.isResting{border:1px solid rgba(255,210,119,.82)!important;background:linear-gradient(105deg,rgba(112,79,21,.98),rgba(83,61,29,.96))!important;color:#ffe4a4!important}
-#summaryToggle.isActive{border:1px solid rgba(101,242,221,.82)!important;background:linear-gradient(105deg,rgba(19,105,91,.98),rgba(19,73,72,.96))!important;color:#b9fff1!important}
-#summaryToggle.isPreparing{border:1px solid rgba(114,220,255,.72)!important;background:linear-gradient(105deg,rgba(24,75,101,.98),rgba(15,45,65,.96))!important;color:#d8f5ff!important}
-#summaryToggle.isComplete{border:1px solid rgba(255,220,116,.82)!important;background:linear-gradient(105deg,rgba(112,79,21,.96),rgba(72,51,80,.98))!important;color:#fff0b4!important}
-#summaryToggle.isResting,#summaryToggle.isActive,#summaryToggle.isPreparing,#summaryToggle.isComplete{animation:none!important}
-#summaryBody{min-height:0;padding:.55rem .65rem .68rem!important;overflow:hidden;display:flex!important;flex-direction:column!important;gap:.42rem}
-#summaryBody[hidden]{display:none!important}
-.summaryTotals{flex:none!important;min-height:28px;padding:.1rem .15rem!important;font-size:.72rem!important}
-.summaryTotals span{display:inline-flex;align-items:center;min-height:28px;padding:.18rem .58rem;border:1px solid rgba(255,210,119,.26);border-radius:999px;background:rgba(83,61,29,.22);font-size:.76rem!important;font-weight:850}
-.summaryActivityStatus{display:flex;align-items:center;gap:.55rem;flex:none;min-height:44px;padding:.48rem .62rem;border:1px solid rgba(114,220,255,.2);border-radius:.65rem;background:rgba(14,44,61,.66);color:#d5edf4;font-size:.76rem;font-weight:850;line-height:1.25}
-.summaryActivityIndicator{width:.52rem;height:.52rem;flex:none;border-radius:50%;background:#82aebb;box-shadow:0 0 .4rem rgba(130,174,187,.26)}
-.summaryActivityLabel{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.summaryActivityClock{flex:none;color:inherit;font-variant-numeric:tabular-nums;font-size:.76rem;font-weight:950}
-.summaryActivityStatus.isIdle .summaryActivityIndicator{background:#82aebb;animation:none}
-.summaryOverallProgress{flex:none}
-.summaryTime{flex:none!important;margin:0!important;font-size:.74rem!important;line-height:1.35!important}
-.sessionSummaryList{min-height:0;max-height:min(34dvh,320px)!important;gap:.34rem!important;padding:.04rem .12rem .1rem .02rem!important;overflow-y:auto!important;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(114,220,255,.42) transparent;-webkit-overflow-scrolling:touch}
-.summaryExercise{grid-template-columns:minmax(0,1fr) auto!important;gap:.2rem .55rem!important;min-height:48px!important;padding:.48rem .68rem .72rem!important;border-radius:.68rem!important}
-.summaryExerciseName{font-size:.78rem!important;line-height:1.25!important;white-space:nowrap!important;display:block!important;overflow:hidden;text-overflow:ellipsis}
-.summaryExerciseState{font-size:.78rem!important;line-height:1.2!important;font-variant-numeric:tabular-nums}
-.summaryExercise.isCurrent{scroll-margin-block:8px}
-.summaryActivityStatus:not(.isIdle){animation:summaryStatusIn .24s ease-out both}
-@keyframes summaryStatusIn{from{opacity:.5;transform:translateY(3px)}to{opacity:1;transform:none}}
-@media(max-width:640px){#floatingSessionSummary{right:max(.55rem,env(safe-area-inset-right))!important;bottom:max(.55rem,env(safe-area-inset-bottom))!important;width:min(420px,calc(100vw - 1.1rem))!important;max-height:min(44dvh,400px)!important}#summaryToggle{grid-template-columns:auto minmax(0,1fr) 64px auto!important;min-height:68px!important}.sessionSummaryList{max-height:min(28dvh,180px)!important}.summaryExercise{min-height:44px!important;padding:.42rem .6rem .68rem!important}.summaryExercise::before,.summaryExercise::after{right:.6rem;bottom:.34rem;height:4px}.summaryExerciseName{font-size:.74rem!important}.summaryMascotWrap{width:62px;height:62px;border-radius:.88rem}#summaryActivityMascot{width:58px;height:58px}}
-@media(max-width:640px){#summaryToggle[aria-expanded="true"]{grid-template-columns:auto minmax(0,1fr) 58px auto!important;grid-template-rows:auto auto!important;min-height:58px!important}#summaryToggle[aria-expanded="true"] #summaryActivityHeadline{display:block!important;font-size:.62rem!important;line-height:1.1!important}#summaryToggle[aria-expanded="true"] .summaryMascotWrap{width:54px!important;height:54px!important}#summaryToggle[aria-expanded="true"] #summaryActivityMascot{width:50px!important;height:50px!important}#summaryToggle[aria-expanded="true"] + #summaryBody{max-height:none!important;padding:.32rem .48rem .42rem!important;gap:.28rem!important}#summaryToggle[aria-expanded="true"] + #summaryBody .summaryTotals{display:none!important}#summaryToggle[aria-expanded="true"] + #summaryBody .summaryActivityStatus{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}#summaryToggle[aria-expanded="true"] + #summaryBody #summaryElapsed{display:none!important}}
-@media(max-width:380px){.summaryMascotWrap{width:54px;height:54px}#summaryActivityMascot{width:50px;height:50px}#summaryToggle{grid-template-columns:auto minmax(0,1fr) 54px auto!important;gap:.2rem .38rem!important;padding:.48rem .5rem!important}}
-@media(max-height:680px){#floatingSessionSummary{max-height:min(62dvh,380px)!important}.sessionSummaryList{max-height:min(28dvh,180px)!important}}
-@media(min-width:341px) and (max-width:640px) and (min-height:600px) and (max-height:680px){#floatingSessionSummary{max-height:min(58dvh,380px)!important}}
-@media(max-height:420px) and (max-width:900px){#floatingSessionSummary{max-height:min(62.5dvh,225px)!important}.sessionSummaryList{max-height:min(24dvh,90px)!important;gap:.12rem!important}.summaryToggle[aria-expanded=true]{min-height:48px!important}.summaryActivityStatus{min-height:32px!important;padding:.24rem .45rem!important;font-size:.65rem!important}.summaryBody{gap:.18rem!important;padding:.2rem .4rem .28rem!important}.summaryTotals,.summaryTotals span{min-height:20px!important}.summaryTotals span{padding:.12rem .42rem!important;font-size:.58rem!important}.summaryExercise{min-height:24px!important;padding:.06rem .35rem .28rem!important}.summaryExerciseName,.summaryExerciseState{font-size:.58rem!important}}
-@media(max-width:380px){.exerciseTiming{gap:.28rem;padding:.3rem}.exerciseTimerChip{min-height:28px;padding:.3rem .42rem;gap:.28rem}.exerciseTimerLabel{font-size:.52rem}.exerciseTimerValue{font-size:.65rem}}
-@media(prefers-reduced-motion:reduce){.exerciseTimerChip[data-kind="active-set"]::before,.exerciseTimerChip[data-kind="active-rest"]::before,.exerciseTimerChip[data-kind="active-set"]::after,.summaryActivityStatus:not(.isIdle),.summaryActivityStatus.isResting .summaryActivityIndicator,.summaryActivityStatus.isActive .summaryActivityIndicator,.summaryActivityStatus.isPreparing .summaryActivityIndicator,.summaryActivityStatus.isApproximation .summaryActivityIndicator,#summaryActivityMascot,.summaryMascotWrap::before,.summaryMascotWrap::after,.summaryExercise::after,.summaryProgressTrack>span,.summaryExercise,.warmupProgressSegment.is-current,.seriesProgressSegment.is-current,.warmupProgressSegment.is-current::after,.seriesProgressSegment.is-current::after,.approximationProgress[data-active=true] .approximationProgressTrack>span{animation:none!important;transition:none!important}#floatingSessionSummary,#summaryToggle{scroll-behavior:auto}}
-@keyframes activityFillGlow{from{opacity:1}to{opacity:1}}
-@keyframes progressActiveSweep{from{background-position:100% 0}to{background-position:-120% 0}}
-@keyframes restSlowPulse{50%{opacity:.78}}
-@keyframes activityFastPulse{50%{opacity:.72}}
-@keyframes preparationPulse{50%{opacity:.78;filter:brightness(1.18);box-shadow:0 0 10px rgba(114,220,255,.25)}}
-@media(prefers-reduced-motion:reduce){.summaryToggle.isResting,.summaryToggle.isActive,.summaryToggle.isPreparing,.summaryToggle.isResting::before,.summaryToggle.isActive::before,.summaryToggle.isPreparing::before,.summaryExercise.isResting,.summaryExercise.isSeriesActive,.summaryExercise.isResting .summaryExerciseState,.summaryExercise.isSeriesActive .summaryExerciseState,.summaryExercise.isSeriesActive::after,button.completeSetButton.is-resting,button.completeSetButton.is-series-active,button.completeSetButton.is-preparing,.exerciseTracker:has(.completeSetButton.is-resting) .exerciseRest,.exerciseTracker:has(.completeSetButton.is-series-active) .seriesProgressSegment.is-current,.warmupProgressSegment.is-current,.seriesProgressSegment.is-current,.seriesProgressSegment.is-current.is-resting,.seriesProgressSegment.is-current.is-active,.seriesProgressSegment.is-current.is-resting::after,.warmupProgressSegment.is-current::after,.seriesProgressSegment.is-current::after{animation:none}}
-</style>
-<style data-enhancement="approval-toast-mascot-v1">
-#gymratikEncouragement .toastMascot{display:block;flex:0 0 54px;width:54px;height:54px;object-fit:contain;transform-origin:50% 82%;animation:mascotToastApproval 1.4s ease-in-out infinite}
-#gymratikEncouragement .toastCopy{min-width:0;overflow-wrap:anywhere}
-@media(max-width:380px){#gymratikEncouragement{gap:.4rem;min-height:56px;padding:.35rem .65rem .35rem .4rem;font-size:.82rem}#gymratikEncouragement .toastMascot{flex-basis:46px;width:46px;height:46px}}
-</style>
-
-
-
 <style data-enhancement="mobile-summary-layout-v1">
 @media(max-width:640px){
   /* En móvil, prioriza el registro y mantiene las referencias agrupadas al
@@ -8134,6 +7944,252 @@ button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gra
 @media(prefers-reduced-motion:reduce){main.cards article.card{scroll-behavior:auto}}
 </style>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script data-fix="day4-local-gif-fallback">
+(function(){
+  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll('.day4ExerciseGif').forEach(function(img){
+    const staticSrc = img.dataset.staticSrc;
+    let staticAttempted = false;
+    const staticUrl = staticSrc ? new URL(staticSrc, document.baseURI).href : '';
+    const useStatic = function(){
+      if(staticAttempted || !staticUrl) return;
+      staticAttempted = true;
+      img.hidden = false;
+      img.style.display = '';
+      img.src = staticUrl;
+    };
+    const showBroken = function(){
+      if(!staticAttempted && staticUrl){ useStatic(); return; }
+      img.hidden = true;
+      img.style.display = 'none';
+      const fallback = img.closest('.photo')?.querySelector('.brokenFallback');
+      if(fallback) fallback.style.display = 'flex';
+    };
+    // El template asigna un onerror genérico que oculta la imagen. Día 4 usa
+    // un fallback estático explícito, por lo que este manejador lo reemplaza.
+    img.onerror = null;
+    img.addEventListener('error', showBroken);
+    if(reduced) useStatic();
+    else if(img.complete && img.naturalWidth === 0) showBroken();
+  });
+})();
+</script>
+</div>
+<!-- canonical media contract references: 1350-7I6LNUG.jpg · 1350-7I6LNUG-final.png -->
+<style data-enhancement="compact-routine-metrics-v1">
+.metrics{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr))!important;align-items:stretch!important;gap:7px!important;margin:0 0 8px!important}
+.metric{min-width:0!important;min-height:54px!important;padding:7px 9px!important;gap:7px!important;border-radius:13px!important}
+.metricIcon{width:29px!important;height:29px!important;flex:0 0 29px!important;padding:4px!important;border-radius:9px!important}
+.metricText{min-width:0!important}
+.metricLabel{font-size:9px!important;line-height:1.1!important;letter-spacing:.055em!important;margin-bottom:3px!important}
+.metricVal{font-size:clamp(.86rem,3.6vw,1.05rem)!important;line-height:1.12!important;overflow-wrap:anywhere!important}
+@media(max-width:360px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:5px!important}.metric{min-height:48px!important;padding:6px!important;gap:5px!important}.metricIcon{width:25px!important;height:25px!important;flex-basis:25px!important}.metricLabel{font-size:8px!important}.metricVal{font-size:.82rem!important}}
+</style>
+<style data-fix="rest-countdown-activity-v1">
+.warmupHead p,.warmupCopy p,.warmupInstructions{font-size:clamp(13px,3.6vw,15px)!important;line-height:1.45!important}
+.warmupVisual[data-media-state="FALLBACK_STATIC"] .warmupGif,.gifFrame[data-media-state="FALLBACK_STATIC"] .gifMotion{display:none!important}
+.warmupVisual[data-media-state="FALLBACK_STATIC"] .warmupFallback,.gifFrame[data-media-state="FALLBACK_STATIC"] .gifFallback{display:block!important}
+.exerciseTracker{position:relative;z-index:2;pointer-events:auto}
+.exerciseTracker .completeSetButton{position:relative;z-index:4;pointer-events:auto}
+.exerciseTracker .skipExerciseButton{flex:0 0 auto;min-height:34px;margin-top:.1rem;padding:.35rem .55rem;border-color:rgba(255,179,132,.24);background:rgba(74,34,38,.22);color:rgba(255,213,197,.6);font-size:.64rem;opacity:.55;transition:opacity .18s ease,border-color .18s ease,background .18s ease,color .18s ease}
+.exerciseTracker .skipExerciseButton:hover,.exerciseTracker .skipExerciseButton:focus-visible,.exerciseTracker .skipExerciseButton.is-holding{border-color:rgba(255,179,132,.78);background:rgba(74,34,38,.82);color:#ffe0d3;opacity:1}
+.exerciseTracker .skipExerciseButton:disabled{opacity:.3}
+.exerciseTracker .holdFeedback{opacity:.5}
+.summaryExercise.isResting .summaryExerciseState{color:#ffd277}
+.summaryExercise.isResting .summaryExerciseState{animation:restSlowPulse 2.4s ease-in-out infinite}
+.summaryExercise.isSeriesActive .summaryExerciseState{color:#65f2dd;animation:activityFastPulse .68s ease-in-out infinite}
+.summaryExercise.isPreparing .summaryExerciseState{color:#72dcff}
+.warmupProgressSegment.is-current,.seriesProgressSegment.is-current{border-color:#72dcff;animation:progressPulse 1.15s ease-in-out infinite}
+.warmupProgressSegment.is-current::after,.seriesProgressSegment.is-current::after{transform:scaleX(.38);opacity:1;background-image:linear-gradient(100deg,#159bb3 0%,#35d6a4 55%,#a0d95c 100%);background-size:220% 100%;animation:progressActiveSweep 1.6s linear infinite}
+.warmupProgressSegment.is-next,.seriesProgressSegment.is-next{border-color:rgba(114,220,255,.32);animation:none}
+.summaryToggle.isActive::before,.summaryToggle.isResting::before,.summaryToggle.isPreparing::before{content:"";width:.48rem;height:.48rem;flex:none;border-radius:50%;background:currentColor;box-shadow:0 0 .55rem currentColor;animation:activityFastPulse .68s ease-in-out infinite}
+.warmupTracker>.warmupProgressSegments{margin:.3rem 0 .45rem}
+.warmupInstructions{margin:.15rem 0 .4rem;color:#c5e3eb;font-size:.68rem;line-height:1.4}
+.exerciseWarmupHint{flex:1 1 100%;margin:.25rem 0;padding:.5rem .65rem;border:1px solid rgba(255,210,119,.4);border-radius:.7rem;background:rgba(112,79,21,.2);color:#ffe4a4;font-size:.68rem;line-height:1.4}.exerciseWarmupHint[hidden]{display:none!important}.exerciseTracker.is-approximation{border-color:rgba(255,210,119,.68);box-shadow:0 0 0 1px rgba(255,210,119,.12)}.exerciseTracker .approximationProgress{display:flex;align-items:center;gap:.45rem;margin:.35rem 0;color:#ffd277;font-size:.68rem;font-weight:850}.approximationProgress[hidden]{display:none!important}.approximationProgressTrack{height:8px;flex:1;overflow:hidden;border:1px solid rgba(255,210,119,.38);border-radius:999px;background:rgba(6,25,37,.82)}.approximationProgressTrack>span{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#b98221,#ffd277);transition:width .25s ease}.approximationProgress[data-active=true] .approximationProgressTrack>span{width:48%;animation:restSlowPulse 2.4s ease-in-out infinite}.approximationProgress[data-complete=true] .approximationProgressTrack>span{width:100%}.performanceEntry.is-approximation{border-color:rgba(255,210,119,.48)!important;background:linear-gradient(145deg,rgba(65,48,22,.68),rgba(5,22,34,.96))!important}.performanceEntry.is-approximation .progressionCue{color:#ffe4a4!important}button.completeSetButton.is-approximation{border-color:#ffd277;background:linear-gradient(135deg,#9a6b17,#725019);color:#fff0bd;box-shadow:0 0 0 1px rgba(255,210,119,.2)}button.completeSetButton.is-approximation-active{animation:restSlowPulse 2.4s ease-in-out infinite}.exerciseTracker.is-approximation .exerciseWarmupHint{display:block}
+.warmupTrackerActions button[data-phase="preparing"],.warmupTrackerActions button[data-phase="cardio"],.warmupTrackerActions button[data-phase="mobility"]{border-color:rgba(114,220,255,.7);background:rgba(24,75,101,.7);color:#d8f5ff}
+.warmupTrackerActions button[data-phase="done"]{border-color:rgba(101,242,221,.65);background:rgba(19,73,72,.65);color:#b9fff1}
+.summaryToggle.isResting{border:1px solid rgba(255,210,119,.78);background:linear-gradient(90deg,rgba(112,79,21,.96),rgba(83,61,29,.92));color:#ffe4a4;animation:restSlowPulse 2.4s ease-in-out infinite}
+.summaryToggle.isActive{border:1px solid rgba(101,242,221,.78);background:linear-gradient(90deg,rgba(19,105,91,.96),rgba(19,73,72,.92));color:#b9fff1;animation:activityFastPulse .68s ease-in-out infinite}
+.summaryToggle.isPreparing{border:1px solid rgba(114,220,255,.65);background:linear-gradient(90deg,rgba(24,75,101,.96),rgba(15,45,65,.92));color:#bfeeff}
+.summaryToggle.isApproximation,.summaryActivityStatus.isApproximation{border-color:rgba(255,210,119,.72);background:linear-gradient(105deg,rgba(112,79,21,.62),rgba(83,61,29,.46));color:#ffe4a4}
+.summaryToggle.isApproximation::before,.summaryActivityStatus.isApproximation .summaryActivityIndicator{background:#ffd277;box-shadow:0 0 .55rem #ffd277;animation:restSlowPulse 2.4s ease-in-out infinite}
+.summaryExercise.isApproximation{border-color:rgba(255,210,119,.72);background:rgba(83,61,29,.42)}
+button.completeSetButton.is-resting{border-color:#ffd277;background:linear-gradient(135deg,#9a6b17,#725019);color:#fff0bd;box-shadow:0 0 0 1px rgba(255,210,119,.2)}
+button.completeSetButton.is-series-active{border-color:#65f2dd;background:linear-gradient(135deg,#159d83,#146d5e);color:#eafff8;box-shadow:0 0 0 1px rgba(101,242,221,.2)}
+button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gradient(135deg,#18506b,#17384c);color:#d8f5ff;animation:preparationPulse 1.3s ease-in-out infinite}
+.exerciseTracker:has(.completeSetButton.is-resting){border-color:rgba(255,210,119,.82);box-shadow:0 0 18px rgba(255,210,119,.14)}
+.exerciseTracker:has(.completeSetButton.is-series-active){border-color:rgba(101,242,221,.76);box-shadow:0 0 18px rgba(101,242,221,.14)}
+.exerciseTracker:has(.completeSetButton.is-resting) .exerciseRest{border-color:#ffd277;background:rgba(112,79,21,.44);color:#ffe4a4;animation:restSlowPulse 2.4s ease-in-out infinite}
+.exerciseTracker:has(.completeSetButton.is-series-active) .seriesProgressSegment.is-current{border-color:#65f2dd;animation:activityFastPulse .68s ease-in-out infinite}
+.summaryExercise.isResting{border-color:rgba(255,210,119,.78);background:rgba(83,61,29,.5);animation:restSlowPulse 2.4s ease-in-out infinite}
+.summaryExercise.isSeriesActive{border-color:rgba(101,242,221,.78);background:rgba(19,73,72,.56)}
+.seriesProgressSegment.is-current.is-resting{border-color:#ffd277;animation:restSlowPulse 2.4s ease-in-out infinite}
+.seriesProgressSegment.is-current.is-resting::after{transform:scaleX(.38);background-image:linear-gradient(100deg,#b98221 0%,#ffd277 55%,#fff0bd 100%);background-size:220% 100%;animation:progressActiveSweep 2.4s linear infinite}
+.seriesProgressSegment.is-current.is-active{border-color:#65f2dd;animation:activityFastPulse .68s ease-in-out infinite}
+.summaryActivityStatus.isResting{border-color:rgba(255,210,119,.62);background:rgba(83,61,29,.38);color:#ffe4a4}
+.summaryActivityStatus.isActive{border-color:rgba(101,242,221,.58);background:rgba(19,73,72,.38);color:#b9fff1}
+.summaryActivityStatus.isPreparing{border-color:rgba(114,220,255,.56);background:rgba(24,75,101,.36);color:#d8f5ff}
+.summaryActivityStatus.isResting .summaryActivityIndicator{background:#ffd277;box-shadow:0 0 .55rem #ffd277;animation:restSlowPulse 2.4s ease-in-out infinite}
+.summaryActivityStatus.isActive .summaryActivityIndicator{background:#65f2dd;box-shadow:0 0 .55rem #65f2dd;animation:activityFastPulse .68s ease-in-out infinite}
+.summaryActivityStatus.isPreparing .summaryActivityIndicator{background:#72dcff;box-shadow:0 0 .55rem #72dcff;animation:preparationPulse 1.3s ease-in-out infinite}
+.exerciseTimerChip.is-countdown-final,.summaryActivityStatus.is-countdown-final{animation:preparationPulse .65s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.exerciseTimerChip.is-countdown-final,.summaryActivityStatus.is-countdown-final{animation:none!important}}
+.summaryMascotWrap{position:relative;grid-column:3;grid-row:1/3;display:grid;width:68px;height:68px;place-items:center;align-self:center;overflow:visible;border:0;border-radius:0;background:transparent;box-shadow:none}
+#summaryActivityMascot{display:block;width:70px;height:70px;object-fit:contain;transform-origin:50% 82%;transition:filter .2s ease;image-rendering:auto}
+#summaryToggle.isResting #summaryActivityMascot{filter:drop-shadow(0 0 8px rgba(255,210,119,.36))}
+#summaryToggle.isActive #summaryActivityMascot{filter:drop-shadow(0 0 8px rgba(101,242,221,.3))}
+#summaryActivityMascot[data-motion="start"]{animation:mascotIdleBreath 4s ease-in-out infinite}
+#summaryActivityMascot[data-motion="ready"]{animation:mascotReadyShift 2.8s ease-in-out infinite}
+#summaryActivityMascot[data-motion="preparing"]{animation:mascotPreparationBrace 1.8s cubic-bezier(.35,0,.2,1) infinite}
+#summaryActivityMascot[data-motion="approximation"]{animation:mascotWarmupFlow 2.1s ease-in-out infinite}
+#summaryActivityMascot[data-motion="strength"]{animation:mascotStrengthEffort 1.35s cubic-bezier(.35,0,.2,1) infinite}
+#summaryActivityMascot[data-motion="cardio"]{animation:mascotCardioCadence .68s cubic-bezier(.4,0,.6,1) infinite}
+#summaryActivityMascot[data-motion="mobility"]{animation:mascotMobilityFlow 2.4s cubic-bezier(.4,0,.6,1) infinite}
+#summaryActivityMascot[data-motion="rest"]{animation:mascotRecoveryBreath 3.6s ease-in-out infinite}
+#summaryActivityMascot[data-motion="celebration"]{animation:mascotApprovalCelebrate 1.8s cubic-bezier(.2,.8,.2,1) infinite;filter:drop-shadow(0 0 9px rgba(255,220,116,.85))}
+.summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"]){border:0;border-radius:0;background:transparent;box-shadow:none}
+.summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"])::before,.summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"])::after{position:absolute;z-index:2;color:#ffe18a;font-size:14px;line-height:1;pointer-events:none;animation:mascotSparkle .9s ease-in-out infinite alternate}
+.summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"])::before{content:"✦";top:-5px;right:-4px}
+.summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"])::after{content:"✧";bottom:-3px;left:-4px;animation-delay:.3s}
+.exerciseTiming{display:flex;flex-wrap:wrap;align-items:center;gap:.42rem;margin:.4rem 0 .5rem;padding:.42rem .46rem;border:1px solid rgba(114,220,255,.24);border-radius:.9rem;background:linear-gradient(105deg,rgba(5,23,35,.92),rgba(8,31,44,.82));color:#e2f4fa;font-size:.68rem;line-height:1.15}
+.exerciseTimerChip{position:relative;display:inline-flex;align-items:center;gap:.4rem;min-height:32px;max-width:100%;overflow:hidden;padding:.38rem .58rem;border:1px solid rgba(111,205,237,.58);border-radius:999px;background:linear-gradient(125deg,rgba(17,62,83,.98),rgba(12,45,66,.98));color:#f2fbff;font-variant-numeric:tabular-nums;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.exerciseTimerLabel{color:#d0e8f2;font-size:.58rem;font-weight:900;letter-spacing:.055em;text-transform:uppercase}
+.exerciseTimerValue{color:#fff;font-size:.72rem;font-weight:950}
+.exerciseTimerChip[data-kind="set"]{border-color:#45d8c4;background:linear-gradient(125deg,rgba(10,83,78,.98),rgba(11,57,66,.98));box-shadow:inset 0 1px 0 rgba(227,255,250,.14),0 0 12px rgba(69,216,196,.12)}
+.exerciseTimerChip[data-kind="set"] .exerciseTimerLabel{color:#baf7ea}
+.exerciseTimerChip[data-kind="set"] .exerciseTimerValue{color:#a8ffe8}
+.exerciseTimerChip[data-kind="set"][data-series-index="1"]{border-color:#70d8ff;background:linear-gradient(125deg,#153b59,#102f49);box-shadow:inset 0 1px rgba(255,255,255,.12),0 0 11px rgba(112,216,255,.12)}
+.exerciseTimerChip[data-kind="set"][data-series-index="1"] .exerciseTimerLabel,.exerciseTimerChip[data-kind="set"][data-series-index="1"] .exerciseTimerValue{color:#d9f7ff}
+.exerciseTimerChip[data-kind="set"][data-series-index="2"]{border-color:#6ce7c7;background:linear-gradient(125deg,#124d47,#103c3c);box-shadow:inset 0 1px rgba(255,255,255,.12),0 0 11px rgba(108,231,199,.12)}
+.exerciseTimerChip[data-kind="set"][data-series-index="2"] .exerciseTimerLabel,.exerciseTimerChip[data-kind="set"][data-series-index="2"] .exerciseTimerValue{color:#e0fff5}
+.exerciseTimerChip[data-kind="set"][data-series-index="3"]{border-color:#c3a5ff;background:linear-gradient(125deg,#43356d,#302a55);box-shadow:inset 0 1px rgba(255,255,255,.12),0 0 11px rgba(195,165,255,.12)}
+.exerciseTimerChip[data-kind="set"][data-series-index="3"] .exerciseTimerLabel,.exerciseTimerChip[data-kind="set"][data-series-index="3"] .exerciseTimerValue{color:#eee5ff}
+.exerciseTimerChip[data-kind="set"][data-series-index="4"]{border-color:#ff9bb0;background:linear-gradient(125deg,#603644,#482d3b);box-shadow:inset 0 1px rgba(255,255,255,.12),0 0 11px rgba(255,155,176,.12)}
+.exerciseTimerChip[data-kind="set"][data-series-index="4"] .exerciseTimerLabel,.exerciseTimerChip[data-kind="set"][data-series-index="4"] .exerciseTimerValue{color:#ffe5e9}
+.exerciseTimerChip[data-kind="set"][data-series-index="5"]{border-color:#ffd277;background:linear-gradient(125deg,#5c4a21,#463a22);box-shadow:inset 0 1px rgba(255,255,255,.12),0 0 11px rgba(255,210,119,.12)}
+.exerciseTimerChip[data-kind="set"][data-series-index="5"] .exerciseTimerLabel,.exerciseTimerChip[data-kind="set"][data-series-index="5"] .exerciseTimerValue{color:#fff1cd}
+.exerciseTimerChip[data-kind="rest"]{border-color:#ffc95e;background:linear-gradient(125deg,rgba(103,69,15,.98),rgba(68,51,22,.98))}
+.exerciseTimerChip[data-kind="rest"] .exerciseTimerLabel{color:#ffedbb}
+.exerciseTimerChip[data-kind="rest"] .exerciseTimerValue{color:#ffe38d}
+.exerciseTimerChip[data-kind="exercise"]{border-color:#63cfff;background:linear-gradient(125deg,rgba(17,67,111,.98),rgba(13,48,85,.98))}
+.exerciseTimerChip[data-kind="exercise"] .exerciseTimerLabel{color:#d0f1ff}
+.exerciseTimerChip[data-kind="preparation"]{border-color:#bba0ff;background:linear-gradient(125deg,rgba(62,43,113,.98),rgba(37,37,83,.98))}
+.exerciseTimerChip[data-kind="preparation"] .exerciseTimerValue{color:#e1d6ff}
+.exerciseTimerChip[data-kind="active-set"]{border-color:#62ffe0;background:linear-gradient(105deg,rgba(11,112,97,.98),rgba(10,62,71,.98));box-shadow:0 0 16px rgba(101,242,221,.2)}
+.exerciseTimerChip[data-kind="active-set"]::before,.exerciseTimerChip[data-kind="active-rest"]::before{width:.42rem;height:.42rem;flex:none;border-radius:50%;background:#65f2dd;content:"";box-shadow:0 0 .5rem currentColor;animation:timerActivityPulse .82s ease-in-out infinite}
+.exerciseTimerChip[data-kind="active-set"]::after{position:absolute;right:0;bottom:0;left:0;height:2px;background:linear-gradient(90deg,transparent,#65f2dd,transparent);content:"";animation:timerActivitySweep 2.3s ease-in-out infinite}
+.exerciseTimerChip[data-kind="active-rest"]{border-color:#ffd277;background:linear-gradient(105deg,rgba(139,91,14,.98),rgba(83,55,19,.98));box-shadow:0 0 14px rgba(255,210,119,.2)}
+.exerciseTimerChip[data-kind="active-rest"]::after{position:absolute;right:0;bottom:0;left:0;height:2px;transform:scaleX(var(--timer-progress,0));transform-origin:left;background:linear-gradient(90deg,#b98221,#ffd277);content:"";transition:transform .35s linear}
+.exerciseTimerChip[data-kind="active-rest"]::before{background:#ffd277;color:#ffd277}
+.exerciseTimerChip[data-kind="empty"]{border-style:dashed;color:#99b7c1}
+.exerciseTimerChip[hidden]{display:none}
+@keyframes timerActivityPulse{0%,100%{opacity:.72;transform:scale(.82)}50%{opacity:1;transform:scale(1.15)}}
+@keyframes timerActivitySweep{0%{transform:translateX(-100%);opacity:.15}50%{opacity:.9}100%{transform:translateX(100%);opacity:.15}}
+@keyframes mascotIdleBreath{0%,100%{transform:translateY(1px) rotate(-.5deg) scale(1)}50%{transform:translateY(-1px) rotate(.5deg) scale(1.025,1.012)}}
+@keyframes mascotReadyShift{0%,100%{transform:translateX(-1px) rotate(-1.2deg)}32%{transform:translateX(1px) rotate(1deg)}68%{transform:translateY(-1px) rotate(.2deg)}}
+@keyframes mascotPreparationBrace{0%,100%{transform:translateY(1px) rotate(0) scale(1)}32%{transform:translate(-2px,1px) rotate(-2.8deg) scale(1.015,.99)}58%{transform:translate(1px,-1px) rotate(1.2deg) scale(1.005,1.01)}}
+@keyframes mascotWarmupFlow{0%,100%{transform:rotate(-1.5deg) translateY(0)}28%{transform:rotate(2deg) translateY(-1px)}63%{transform:rotate(-2deg) translateY(-1px)}82%{transform:rotate(1deg)}}
+@keyframes mascotStrengthEffort{0%,100%{transform:translateY(1px) rotate(-.5deg) scale(1)}28%{transform:translateY(-2px) rotate(1deg) scale(1.035,.975)}55%{transform:translateY(0) rotate(-.7deg) scale(.99,1.015)}78%{transform:translateY(1px) scale(1.01,.995)}}
+@keyframes mascotCardioCadence{0%,100%{transform:translateY(1px) rotate(-2deg) scale(1,.99)}25%{transform:translateY(-3px) rotate(1.5deg) scale(.99,1.025)}50%{transform:translateY(0) rotate(-1deg) scale(1.015,.985)}75%{transform:translateY(-2px) rotate(2deg) scale(.99,1.015)}}
+@keyframes mascotMobilityFlow{0%,100%{transform:rotate(-4deg) translateX(-1px)}38%{transform:rotate(1deg) translateX(0)}70%{transform:rotate(4deg) translateX(1px)}}
+@keyframes mascotRecoveryBreath{0%,100%{transform:translateY(1px) rotate(.4deg) scale(1)}45%{transform:translateY(-1px) rotate(-.4deg) scale(1.02,1.015)}72%{transform:translateY(0) scale(1.008,.998)}}
+@keyframes mascotApprovalCelebrate{0%,100%{transform:translateY(0) rotate(-1deg) scale(1)}24%{transform:translateY(-4px) rotate(1.5deg) scale(1.045)}48%{transform:translateY(-1px) rotate(0) scale(1.015)}72%{transform:translateY(-2px) rotate(-1deg) scale(1.03)}}
+@keyframes mascotToastApproval{0%,100%{transform:translateY(1px) rotate(-1deg)}35%{transform:translateY(-2px) rotate(1deg)}68%{transform:translateY(0) rotate(-.4deg)}}
+@keyframes mascotSparkle{from{opacity:.45;transform:scale(.7) rotate(-18deg)}to{opacity:1;transform:scale(1.15) rotate(18deg)}}
+.summaryExercise{position:relative;overflow:hidden;min-height:52px;transition:background-color .2s ease,border-color .2s ease,transform .18s ease}
+.summaryExercise::before,.summaryExercise::after{position:absolute;right:.68rem;bottom:.38rem;left:.68rem;height:4px;border-radius:999px;content:"";pointer-events:none}
+.summaryExercise::before{background:rgba(30,61,75,.95);box-shadow:inset 0 0 0 1px rgba(114,220,255,.3)}
+.summaryExercise::after{transform:scaleX(var(--summary-progress,0));transform-origin:left;background:linear-gradient(90deg,#159bb3,#35d6a4,#a0d95c);transition:transform .48s cubic-bezier(.2,.75,.25,1),filter .2s ease}
+.summaryExercise.isDone::after{transform:scaleX(1);background:linear-gradient(90deg,#1ec89b,#88e56c)}
+.summaryExercise.isCurrent{border-color:rgba(101,242,221,.7);box-shadow:0 0 0 1px rgba(101,242,221,.16)}
+.summaryExercise.isCurrent:not(.isSeriesActive):not(.isResting){animation:none}
+.summaryExercise.isSeriesActive::after{filter:brightness(1.15);animation:activityFastPulse .68s ease-in-out infinite}
+.summaryExercise.isResting{box-shadow:0 0 0 1px rgba(255,210,119,.24),0 0 14px rgba(255,210,119,.12)}
+.summaryProgressTrack{height:7px;overflow:hidden;border:1px solid rgba(114,220,255,.18);border-radius:999px;background:rgba(4,20,31,.78)}
+.summaryProgressTrack>span{display:block;width:100%;height:100%;transform:scaleX(var(--summary-progress,0));transform-origin:left;border-radius:inherit;background:linear-gradient(90deg,#159bb3,#35d6a4,#a0d95c);transition:transform .5s cubic-bezier(.2,.75,.25,1)}
+#floatingSessionSummary{position:fixed!important;right:max(.65rem,env(safe-area-inset-right))!important;bottom:max(.65rem,env(safe-area-inset-bottom))!important;z-index:40;width:min(420px,calc(100vw - 1.3rem))!important;max-height:min(42dvh,380px)!important;border:1px solid rgba(114,220,255,.42)!important;border-radius:1rem!important;background:rgba(6,24,37,.97)!important;box-shadow:0 18px 54px rgba(0,0,0,.42),0 0 30px rgba(71,202,216,.14)!important;backdrop-filter:blur(18px)!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+#summaryToggle{display:grid!important;grid-template-columns:auto minmax(0,1fr) clamp(50px,14vw,68px) auto!important;grid-template-rows:auto auto;flex:none!important;min-height:78px!important;gap:.22rem .55rem!important;padding:.55rem .7rem!important;background:linear-gradient(105deg,rgba(14,73,90,.98),rgba(37,42,75,.98))!important;font-size:.84rem!important;line-height:1.22!important}
+#summaryActivityIcon{grid-column:1;grid-row:1/3;align-self:center}
+#summaryToggle #summaryHeadline{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums}
+#summaryActivityHeadline{grid-column:2;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#bfdce5;font-size:.72rem;font-weight:750;line-height:1.2}
+#summaryActivityHeadline::before{content:"";display:inline-block;width:.4rem;height:.4rem;margin-right:.35rem;border-radius:50%;vertical-align:.03rem;background:#82aebb}
+#summaryToggle.isResting #summaryActivityHeadline::before{background:#ffd277;animation:restSlowPulse 2.4s ease-in-out infinite}
+#summaryToggle.isActive #summaryActivityHeadline::before{background:#65f2dd;animation:activityFastPulse .68s ease-in-out infinite}
+#summaryToggle.isPreparing #summaryActivityHeadline::before{background:#72dcff;animation:preparationPulse 1.3s ease-in-out infinite}
+#summaryToggle .summaryMascotWrap{grid-column:3;grid-row:1/3}
+#summaryToggle .summaryChevron{grid-column:4;grid-row:1/3;align-self:center;margin-left:0!important;font-size:1.1rem!important}
+#summaryToggle[aria-expanded="true"]{grid-template-rows:auto;min-height:50px!important}
+#summaryToggle[aria-expanded="true"] #summaryActivityHeadline{display:none}
+#summaryToggle[aria-expanded="true"] #summaryActivityIcon,#summaryToggle[aria-expanded="true"] .summaryMascotWrap,#summaryToggle[aria-expanded="true"] .summaryChevron{grid-row:1}
+#summaryToggle.isResting{border:1px solid rgba(255,210,119,.82)!important;background:linear-gradient(105deg,rgba(112,79,21,.98),rgba(83,61,29,.96))!important;color:#ffe4a4!important}
+#summaryToggle.isActive{border:1px solid rgba(101,242,221,.82)!important;background:linear-gradient(105deg,rgba(19,105,91,.98),rgba(19,73,72,.96))!important;color:#b9fff1!important}
+#summaryToggle.isPreparing{border:1px solid rgba(114,220,255,.72)!important;background:linear-gradient(105deg,rgba(24,75,101,.98),rgba(15,45,65,.96))!important;color:#d8f5ff!important}
+#summaryToggle.isComplete{border:1px solid rgba(255,220,116,.82)!important;background:linear-gradient(105deg,rgba(112,79,21,.96),rgba(72,51,80,.98))!important;color:#fff0b4!important}
+#summaryToggle.isResting,#summaryToggle.isActive,#summaryToggle.isPreparing,#summaryToggle.isComplete{animation:none!important}
+#summaryBody{min-height:0;padding:.55rem .65rem .68rem!important;overflow:hidden;display:flex!important;flex-direction:column!important;gap:.42rem}
+#summaryBody[hidden]{display:none!important}
+.summaryTotals{flex:none!important;min-height:28px;padding:.1rem .15rem!important;font-size:.72rem!important}
+.summaryTotals span{display:inline-flex;align-items:center;min-height:28px;padding:.18rem .58rem;border:1px solid rgba(255,210,119,.26);border-radius:999px;background:rgba(83,61,29,.22);font-size:.76rem!important;font-weight:850}
+.summaryActivityStatus{display:flex;align-items:center;gap:.55rem;flex:none;min-height:44px;padding:.48rem .62rem;border:1px solid rgba(114,220,255,.2);border-radius:.65rem;background:rgba(14,44,61,.66);color:#d5edf4;font-size:.76rem;font-weight:850;line-height:1.25}
+.summaryActivityIndicator{width:.52rem;height:.52rem;flex:none;border-radius:50%;background:#82aebb;box-shadow:0 0 .4rem rgba(130,174,187,.26)}
+.summaryActivityLabel{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.summaryActivityClock{flex:none;color:inherit;font-variant-numeric:tabular-nums;font-size:.76rem;font-weight:950}
+.summaryActivityStatus.isIdle .summaryActivityIndicator{background:#82aebb;animation:none}
+.summaryOverallProgress{flex:none}
+.summaryTime{flex:none!important;margin:0!important;font-size:.74rem!important;line-height:1.35!important}
+.sessionSummaryList{min-height:0;max-height:min(34dvh,320px)!important;gap:.34rem!important;padding:.04rem .12rem .1rem .02rem!important;overflow-y:auto!important;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(114,220,255,.42) transparent;-webkit-overflow-scrolling:touch}
+.summaryExercise{grid-template-columns:minmax(0,1fr) auto!important;gap:.2rem .55rem!important;min-height:48px!important;padding:.48rem .68rem .72rem!important;border-radius:.68rem!important}
+.summaryExerciseName{font-size:.78rem!important;line-height:1.25!important;white-space:nowrap!important;display:block!important;overflow:hidden;text-overflow:ellipsis}
+.summaryExerciseState{font-size:.78rem!important;line-height:1.2!important;font-variant-numeric:tabular-nums}
+.summaryExercise.isCurrent{scroll-margin-block:8px}
+.summaryActivityStatus:not(.isIdle){animation:summaryStatusIn .24s ease-out both}
+@keyframes summaryStatusIn{from{opacity:.5;transform:translateY(3px)}to{opacity:1;transform:none}}
+@media(max-width:640px){#floatingSessionSummary{right:max(.55rem,env(safe-area-inset-right))!important;bottom:max(.55rem,env(safe-area-inset-bottom))!important;width:min(420px,calc(100vw - 1.1rem))!important;max-height:min(44dvh,400px)!important}#summaryToggle{grid-template-columns:auto minmax(0,1fr) 64px auto!important;min-height:68px!important}.sessionSummaryList{max-height:min(28dvh,180px)!important}.summaryExercise{min-height:44px!important;padding:.42rem .6rem .68rem!important}.summaryExercise::before,.summaryExercise::after{right:.6rem;bottom:.34rem;height:4px}.summaryExerciseName{font-size:.74rem!important}.summaryMascotWrap{width:62px;height:62px;border-radius:.88rem}#summaryActivityMascot{width:58px;height:58px}}
+@media(max-width:640px){#summaryToggle[aria-expanded="true"]{grid-template-columns:auto minmax(0,1fr) 58px auto!important;grid-template-rows:auto auto!important;min-height:58px!important}#summaryToggle[aria-expanded="true"] #summaryActivityHeadline{display:block!important;font-size:.62rem!important;line-height:1.1!important}#summaryToggle[aria-expanded="true"] .summaryMascotWrap{width:54px!important;height:54px!important}#summaryToggle[aria-expanded="true"] #summaryActivityMascot{width:50px!important;height:50px!important}#summaryToggle[aria-expanded="true"] + #summaryBody{max-height:none!important;padding:.32rem .48rem .42rem!important;gap:.28rem!important}#summaryToggle[aria-expanded="true"] + #summaryBody .summaryTotals{display:none!important}#summaryToggle[aria-expanded="true"] + #summaryBody .summaryActivityStatus{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}#summaryToggle[aria-expanded="true"] + #summaryBody #summaryElapsed{display:none!important}}
+@media(max-width:380px){.summaryMascotWrap{width:54px;height:54px}#summaryActivityMascot{width:50px;height:50px}#summaryToggle{grid-template-columns:auto minmax(0,1fr) 54px auto!important;gap:.2rem .38rem!important;padding:.48rem .5rem!important}}
+@media(max-height:680px){#floatingSessionSummary{max-height:min(62dvh,380px)!important}.sessionSummaryList{max-height:min(28dvh,180px)!important}}
+@media(min-width:341px) and (max-width:640px) and (min-height:600px) and (max-height:680px){#floatingSessionSummary{max-height:min(58dvh,380px)!important}}
+@media(max-height:420px) and (max-width:900px){#floatingSessionSummary{max-height:min(62.5dvh,225px)!important}.sessionSummaryList{max-height:min(24dvh,90px)!important;gap:.12rem!important}.summaryToggle[aria-expanded=true]{min-height:48px!important}.summaryActivityStatus{min-height:32px!important;padding:.24rem .45rem!important;font-size:.65rem!important}.summaryBody{gap:.18rem!important;padding:.2rem .4rem .28rem!important}.summaryTotals,.summaryTotals span{min-height:20px!important}.summaryTotals span{padding:.12rem .42rem!important;font-size:.58rem!important}.summaryExercise{min-height:24px!important;padding:.06rem .35rem .28rem!important}.summaryExerciseName,.summaryExerciseState{font-size:.58rem!important}}
+@media(max-width:380px){.exerciseTiming{gap:.28rem;padding:.3rem}.exerciseTimerChip{min-height:28px;padding:.3rem .42rem;gap:.28rem}.exerciseTimerLabel{font-size:.52rem}.exerciseTimerValue{font-size:.65rem}}
+@media(prefers-reduced-motion:reduce){.exerciseTimerChip[data-kind="active-set"]::before,.exerciseTimerChip[data-kind="active-rest"]::before,.exerciseTimerChip[data-kind="active-set"]::after,.summaryActivityStatus:not(.isIdle),.summaryActivityStatus.isResting .summaryActivityIndicator,.summaryActivityStatus.isActive .summaryActivityIndicator,.summaryActivityStatus.isPreparing .summaryActivityIndicator,.summaryActivityStatus.isApproximation .summaryActivityIndicator,#summaryActivityMascot,.summaryMascotWrap::before,.summaryMascotWrap::after,.summaryExercise::after,.summaryProgressTrack>span,.summaryExercise,.warmupProgressSegment.is-current,.seriesProgressSegment.is-current,.warmupProgressSegment.is-current::after,.seriesProgressSegment.is-current::after,.approximationProgress[data-active=true] .approximationProgressTrack>span{animation:none!important;transition:none!important}#floatingSessionSummary,#summaryToggle{scroll-behavior:auto}}
+@keyframes activityFillGlow{from{opacity:1}to{opacity:1}}
+@keyframes progressActiveSweep{from{background-position:100% 0}to{background-position:-120% 0}}
+@keyframes restSlowPulse{50%{opacity:.78}}
+@keyframes activityFastPulse{50%{opacity:.72}}
+@keyframes preparationPulse{50%{opacity:.78;filter:brightness(1.18);box-shadow:0 0 10px rgba(114,220,255,.25)}}
+@media(prefers-reduced-motion:reduce){.summaryToggle.isResting,.summaryToggle.isActive,.summaryToggle.isPreparing,.summaryToggle.isResting::before,.summaryToggle.isActive::before,.summaryToggle.isPreparing::before,.summaryExercise.isResting,.summaryExercise.isSeriesActive,.summaryExercise.isResting .summaryExerciseState,.summaryExercise.isSeriesActive .summaryExerciseState,.summaryExercise.isSeriesActive::after,button.completeSetButton.is-resting,button.completeSetButton.is-series-active,button.completeSetButton.is-preparing,.exerciseTracker:has(.completeSetButton.is-resting) .exerciseRest,.exerciseTracker:has(.completeSetButton.is-series-active) .seriesProgressSegment.is-current,.warmupProgressSegment.is-current,.seriesProgressSegment.is-current,.seriesProgressSegment.is-current.is-resting,.seriesProgressSegment.is-current.is-active,.seriesProgressSegment.is-current.is-resting::after,.warmupProgressSegment.is-current::after,.seriesProgressSegment.is-current::after{animation:none}}
+</style>
+<style data-enhancement="approval-toast-mascot-v1">
+#gymratikEncouragement .toastMascot{display:block;flex:0 0 54px;width:54px;height:54px;object-fit:contain;transform-origin:50% 82%;animation:mascotToastApproval 1.4s ease-in-out infinite}
+#gymratikEncouragement .toastCopy{min-width:0;overflow-wrap:anywhere}
+@media(max-width:380px){#gymratikEncouragement{gap:.4rem;min-height:56px;padding:.35rem .65rem .35rem .4rem;font-size:.82rem}#gymratikEncouragement .toastMascot{flex-basis:46px;width:46px;height:46px}}
+</style>
 <style data-enhancement="exercise-focus-occupied-quote-v9">
 /* Separa visualmente cada ejercicio y reserva el ámbar para una máquina ocupada. */
 main.cards article.card[data-exercise-index]{--exercise-accent:#72dcff;position:relative;border:1px solid color-mix(in srgb,var(--exercise-accent) 30%,transparent);transition:border-color .24s ease,box-shadow .24s ease,transform .24s ease}

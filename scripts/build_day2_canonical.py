@@ -195,9 +195,9 @@ def build_gif_script(template: str) -> str:
       thumbnail:"../medios_publicados/rutinas_autocontenidas/dia2_media_generated/hip_thrust_machine_booty_builder_correct_form.jpg",
       key:"HIP THRUST",
       kind:"gif",
-      label:"GIF · demostración oficial",
-      alt:"GIF oficial de hip thrust en máquina: espalda apoyada, pies en plataforma y extensión controlada de cadera",
-      note:"Demostración oficial Booty Builder · Correct vs Incorrect Form.",
+      label:"GIF · patrón de movimiento",
+      alt:"Demostración de hip thrust con apoyo elevado: extensión controlada de cadera; no muestra la máquina de la tarjeta",
+      note:"Referencia del movimiento; la máquina mostrada en la tarjeta es una referencia de equipo separada.",
       sourceHref:"https://bootybuilder.com/how-to-use-the-booty-builder/",
       sourceLabel:"Fuente oficial Booty Builder"
     },
