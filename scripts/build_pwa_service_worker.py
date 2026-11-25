@@ -352,6 +352,34 @@ const RESOURCE_BYTES = {{
   {size_map}
 }};
 const CACHE_COMPLETE_KEY = new URL('./__gymratik_complete__', self.registration.scope).href;
+const ROLLBACK_KEY = new URL('./__gymratik_rollback__', self.registration.scope).href;
+const HEALTH_KEY = new URL('./__gymratik_health__', self.registration.scope).href;
+const PROBATION_KEY = new URL('./__gymratik_probation__', self.registration.scope).href;
+const ROLLBACK_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+async function readRollbackState(cache) {{
+  const response = await cache.match(ROLLBACK_KEY);
+  return response ? response.json().catch(() => null) : null;
+}}
+
+async function serveStableVersion(request, stableCache) {{
+  const cached = await stableCache.match(request, {{ ignoreSearch: true }});
+  const isNavigation = request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html');
+  if (!isNavigation) return cached || new Response('El recurso no está disponible en la versión estable.', {{ status: 503, headers: {{ 'content-type': 'text/plain; charset=utf-8' }} }});
+  const shell = cached || await stableCache.match(new URL('./index.html', self.registration.scope));
+  if (!shell) return fetch(request);
+  let html = await shell.text();
+  const baseUrl = new URL('./', self.registration.scope).href;
+  if (/<base\b/i.test(html)) html = html.replace(/<base\b[^>]*>/i, `<base href="${{baseUrl}}">`);
+  else html = html.replace(/<head(?:\s[^>]*)?>/i, (head) => `${{head}}<base href="${{baseUrl}}">`);
+  const recovery = `<aside id="gymratik-stable-recovery" role="status" style="position:fixed;z-index:2147483000;left:12px;right:12px;bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border:1px solid #72dfce;border-radius:16px;background:#0b2334;color:#f4fbff;font:600 15px/1.4 system-ui,sans-serif;box-shadow:0 8px 30px #0008"><span>Gymratik volvió a la versión estable. Tus entrenamientos siguen guardados.</span><button type="button" style="border:0;border-radius:12px;padding:12px 16px;background:#ffcc65;color:#18202a;font:700 15px system-ui,sans-serif" onclick="this.disabled=true;const c=navigator.serviceWorker.controller;if(!c){{location.reload();return}}const h=e=>{{if(e.data?.type==='GYMRATIK_RETRY_ACCEPTED'){{navigator.serviceWorker.removeEventListener('message',h);location.reload()}}}};navigator.serviceWorker.addEventListener('message',h);c.postMessage({{type:'RETRY_CANDIDATE'}});setTimeout(()=>location.reload(),2500)">Reintentar versión nueva</button></aside>`;
+  html = html.replace(/<body(?:\s[^>]*)?>/i, (body) => `${{body}}${{recovery}}`);
+  const headers = new Headers(shell.headers);
+  headers.delete('content-length');
+  headers.delete('content-encoding');
+  headers.set('content-type', 'text/html; charset=utf-8');
+  return new Response(html, {{ status: shell.status, statusText: shell.statusText, headers }});
+}}
 
 async function reportProgress(completed, bytesCompleted, current = '') {{
   const clients = await self.clients.matchAll({{ type: 'window', includeUncontrolled: true }});
@@ -466,7 +494,7 @@ self.addEventListener('install', (event) => {{
         }};
         await Promise.all(Array.from({{ length: Math.min(6, installResources.length) }}, downloadNext));
         if (firstError) throw firstError;
-        await cache.put(CACHE_COMPLETE_KEY, new Response(JSON.stringify({{ cacheName: CACHE_NAME, completedAt: Date.now() }}), {{ headers: {{ 'content-type': 'application/json' }} }}));
+        await cache.put(CACHE_COMPLETE_KEY, new Response(JSON.stringify({{ cacheName: CACHE_NAME, version: APP_VERSION, buildId: BUILD_ID, completedAt: Date.now() }}), {{ headers: {{ 'content-type': 'application/json' }} }}));
         break;
       }} catch (error) {{
         await caches.delete(CACHE_NAME);
@@ -484,6 +512,34 @@ self.addEventListener('install', (event) => {{
 self.addEventListener('message', (event) => {{
   // El mensaje se envía directamente al worker en espera; `self` aquí es el global, no un objeto ServiceWorker.
   if (event.data?.type === 'ACTIVATE_UPDATE') event.waitUntil(self.skipWaiting());
+  if (event.data?.type === 'GYMRATIK_HEALTHY') event.waitUntil((async () => {{
+    const cache = await caches.open(CACHE_NAME);
+    await cache.put(HEALTH_KEY, new Response(JSON.stringify({{ version: APP_VERSION, buildId: BUILD_ID, checkedAt: Date.now() }}), {{ headers: {{ 'content-type': 'application/json' }} }}));
+    event.source?.postMessage({{ type: 'GYMRATIK_HEALTH_ACCEPTED', version: APP_VERSION }});
+  }})());
+  if (event.data?.type === 'GYMRATIK_STARTUP_FAILED' || event.data?.type === 'GYMRATIK_STORAGE_FAILED') event.waitUntil((async () => {{
+    const cache = await caches.open(CACHE_NAME);
+    const probationResponse = await cache.match(PROBATION_KEY);
+    const probation = probationResponse ? await probationResponse.json().catch(() => null) : null;
+    if (!probation || Date.now() - Number(probation.activatedAt || 0) > ROLLBACK_WINDOW_MS) {{
+      event.source?.postMessage({{ type: 'GYMRATIK_ROLLBACK_UNAVAILABLE', reason: 'outside-update-probation' }});
+      return;
+    }}
+    const previous = PREVIOUS_CACHE_NAME ? await caches.open(PREVIOUS_CACHE_NAME) : null;
+    const previousComplete = previous && await previous.match(CACHE_COMPLETE_KEY);
+    if (!previousComplete) {{
+      event.source?.postMessage({{ type: 'GYMRATIK_ROLLBACK_UNAVAILABLE', reason: 'no-complete-stable-cache' }});
+      return;
+    }}
+    await cache.put(ROLLBACK_KEY, new Response(JSON.stringify({{ stableCache: PREVIOUS_CACHE_NAME, candidateVersion: APP_VERSION, failedAt: Date.now(), code: String(event.data?.code || 'startup-failure').slice(0, 80) }}), {{ headers: {{ 'content-type': 'application/json' }} }}));
+    const stableMeta = await previousComplete.json().catch(() => ({{}}));
+    event.source?.postMessage({{ type: 'GYMRATIK_ROLLBACK_READY', stableVersion: stableMeta.version || 'anterior' }});
+  }})());
+  if (event.data?.type === 'RETRY_CANDIDATE') event.waitUntil((async () => {{
+    const cache = await caches.open(CACHE_NAME);
+    await cache.delete(ROLLBACK_KEY);
+    event.source?.postMessage({{ type: 'GYMRATIK_RETRY_ACCEPTED', version: APP_VERSION }});
+  }})());
   if (event.data?.type === 'GET_VERSION_STATUS') {{
     event.source?.postMessage({{ type: 'VERSION_STATUS', cacheName: CACHE_NAME, version: APP_VERSION, buildId: BUILD_ID, total: PRECACHE.length }});
   }}
@@ -491,8 +547,12 @@ self.addEventListener('message', (event) => {{
 
 self.addEventListener('activate', (event) => {{
   event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.filter((key) => key.startsWith('entrenamiento-pwa-') && key !== CACHE_NAME).map((key) => caches.delete(key))))
+    caches.open(CACHE_NAME).then(cache => cache.put(PROBATION_KEY, new Response(JSON.stringify({{ version: APP_VERSION, buildId: BUILD_ID, activatedAt: Date.now() }}), {{ headers: {{ 'content-type': 'application/json' }} }}))).then(() => caches.keys()).then(async (keys) => {{
+      const previous = PREVIOUS_CACHE_NAME && keys.includes(PREVIOUS_CACHE_NAME) ? await caches.open(PREVIOUS_CACHE_NAME) : null;
+      const previousComplete = previous && await previous.match(CACHE_COMPLETE_KEY);
+      const keep = new Set([CACHE_NAME, ...(previousComplete ? [PREVIOUS_CACHE_NAME] : [])]);
+      await Promise.all(keys.filter((key) => key.startsWith('entrenamiento-pwa-') && !keep.has(key)).map((key) => caches.delete(key)));
+    }})
       .then(() => self.clients.claim())
       .then(() => notifyClientsAppUpdated())
   );
@@ -506,6 +566,11 @@ self.addEventListener('fetch', (event) => {{
 
   event.respondWith((async () => {{
     const cache = await caches.open(CACHE_NAME);
+    const rollback = await readRollbackState(cache);
+    if (rollback?.stableCache) {{
+      const stable = await caches.open(rollback.stableCache);
+      return serveStableVersion(request, stable);
+    }}
     const cached = await cache.match(request, {{ ignoreSearch: true }});
     const isNavigation = request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html');
     const bypassCache = ['no-cache', 'no-store', 'reload'].includes(request.cache);

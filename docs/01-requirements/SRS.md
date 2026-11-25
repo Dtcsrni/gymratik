@@ -31,7 +31,7 @@ La compatibilidad efectiva depende del navegador y el sistema operativo. Las pru
 - **FUN-PWA-001 · P0:** el inicio deberá distinguir la lectura de datos locales de la comprobación y preparación de recursos; solo mostrará porcentajes medibles.
   - Aceptación: el progreso de descarga informa recursos completados y total; la lectura local no se cancela por un timeout fijo; los errores explican la causa disponible y ofrecen reintentar sin borrar datos.
 - **FUN-PWA-002 · P0:** la inicialización local y la preparación de recursos deberán poder avanzar en paralelo; cuando una actualización esté lista, se aplicará de inmediato y recargará las pantallas abiertas.
-  - Aceptación: el avance personal se conserva fuera de Cache API; el cambio de controlador recarga cada pantalla una sola vez; ante error al iniciar la nueva versión, se conserva la caché activa y se ofrece reintentar.
+  - Aceptación: el avance personal se conserva fuera de Cache API; el cambio de controlador recarga cada pantalla una sola vez; ante error crítico en las primeras 24 horas, se sirve la caché estable previa y se ofrece reintentar la candidata.
 - **FUN-PWA-003 · P0:** la preparación offline deberá incluir la portada, las cuatro rutinas canónicas y el inventario visual local vigente.
   - Aceptación: solo se declara completo el paquete después de guardar todo el inventario requerido; las cuatro rutinas abren sin red y muestran los recursos locales disponibles.
 - **FUN-PWA-004 · P1:** el usuario podrá elegir `Preguntar cada vez` (predeterminado), `Permitir siempre` o `Solo Wi-Fi` para descargas gestionadas por la PWA.
@@ -52,6 +52,8 @@ La compatibilidad efectiva depende del navegador y el sistema operativo. Las pru
   - Aceptación: la versión visible, el Service Worker y el manifiesto coinciden; antes de activar, el Service Worker verifica el manifiesto y el tamaño/hash de cada recurso; una discrepancia cancela la instalación y conserva la versión activa.
 - **FUN-PWA-012 · P1:** las actualizaciones reutilizarán desde la última caché completa los recursos cuyos bytes coincidan con el manifiesto nuevo.
   - Aceptación: pruebas con inventario sin cambios reutilizan todos los recursos; al modificar uno, solo ese recurso y el manifiesto se descargan; cachés previas incompletas no se usan como fuente incremental.
+- **FUN-PWA-013 · P0:** la versión recién activada deberá validar el inicio y la escritura/lectura local sin modificar datos de entrenamiento; ante un fallo crítico durante las 24 horas de estabilización, la aplicación volverá a la caché completa previa y ofrecerá reintentar la versión nueva.
+  - Aceptación: las pruebas fuerzan errores de inicio y persistencia, verifican que se sirve íntegra la versión previa, que IndexedDB conserva sus stores y registros, que el usuario ve la opción de reintento, y que un error tras 24 horas no cambia la versión ni borra datos.
 
 ### 4.2 Perfil, sesiones e historial local
 

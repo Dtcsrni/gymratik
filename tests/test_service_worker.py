@@ -1,6 +1,7 @@
 import re
 import unittest
 import json
+import subprocess
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -239,18 +240,98 @@ class ServiceWorkerContractTests(unittest.TestCase):
         ):
             self.assertIn(marker, self.service_worker)
 
-    def test_new_version_startup_failure_offers_retry_without_automatic_rollback(self):
+    def test_new_version_startup_failure_rolls_back_to_complete_previous_cache_and_offers_retry(self):
         client = (ROOT / "page-update-client.js").read_text(encoding="utf-8")
         self.assertIn("activationKey", client)
-        self.assertIn("La versión nueva encontró un error al iniciar", client)
+        self.assertIn("La versión nueva no pudo validar el inicio", client)
         self.assertIn("retryToast", client)
         self.assertIn("setTimeout(dismissRetryToast, toastDurationMs)", client)
-        self.assertIn("readinessTimer = window.setTimeout(() => offerRetry('timeout'), 12000)", client)
-        self.assertIn("retryToast.dataset.sessionBar", client)
-        self.assertNotIn("offerRetry();\n    window.addEventListener", client)
-        self.assertNotIn("retryPanel", client)
+        self.assertIn("setTimeout(() => requestRollback('startup-timeout'), 30000)", client)
+        self.assertIn("GYMRATIK_STARTUP_FAILED", client)
+        self.assertIn("GYMRATIK_STORAGE_FAILED", client)
+        self.assertIn("GYMRATIK_ROLLBACK_READY", client)
         self.assertIn("gymratik-startup-ready", client)
         self.assertNotIn("unregister()", client)
+        for source in (self.service_worker, self.generator):
+            self.assertIn("ROLLBACK_WINDOW_MS = 24 * 60 * 60 * 1000", source)
+            self.assertIn("GYMRATIK_ROLLBACK_UNAVAILABLE", source)
+            self.assertIn("ROLLBACK_KEY", source)
+            self.assertIn("serveStableVersion(request, stable)", source)
+            self.assertIn("Reintentar versión nueva", source)
+            self.assertIn("!keep.has(key)", source)
+            self.assertIn("RETRY_CANDIDATE", source)
+
+    def test_update_health_check_is_non_destructive_and_requires_indexeddb_round_trip(self):
+        store = (ROOT / "progress-store.js").read_text(encoding="utf-8")
+        client = (ROOT / "page-update-client.js").read_text(encoding="utf-8")
+        self.assertIn("async function checkStorage()", store)
+        self.assertIn("transaction(db, [META_STORE], 'readwrite'", store)
+        self.assertIn("store.put(probe)", store)
+        self.assertIn("store.get(probeKey)", store)
+        self.assertIn("store.delete(probeKey)", store)
+        self.assertNotIn("PROGRESS_STORE], 'readwrite'", store.split("async function checkStorage()", 1)[1].split("window.TrainingProgressStore", 1)[0])
+        self.assertIn("await Promise.all([store.getHistory(1), store.getProfile()])", client)
+
+    def test_service_worker_serves_stable_cache_after_critical_failure_and_can_retry_candidate(self):
+        script = r"""
+const fs = require('fs'), vm = require('vm'), assert = require('assert');
+const source = fs.readFileSync(process.argv[1], 'utf8');
+const scope = 'https://gymratik.test/';
+const activeName = source.match(/const CACHE_NAME = '([^']+)'/)[1];
+const previousName = source.match(/const PREVIOUS_CACHE_NAME = '([^']+)'/)[1];
+const completeKey = new URL('./__gymratik_complete__', scope).href;
+class TestCache {
+  constructor() { this.entries = new Map(); }
+  key(value) { return value instanceof Request ? value.url : new URL(String(value), scope).href; }
+  async match(value) { const direct = this.entries.get(this.key(value)); return direct?.clone(); }
+  async put(value, response) { this.entries.set(this.key(value), response.clone()); }
+  async delete(value) { return this.entries.delete(this.key(value)); }
+  async keys() { return [...this.entries.keys()].map(url => new Request(url)); }
+}
+const cacheMap = new Map([[activeName, new TestCache()], [previousName, new TestCache()]]);
+const caches = {
+  async open(name) { if (!cacheMap.has(name)) cacheMap.set(name, new TestCache()); return cacheMap.get(name); },
+  async keys() { return [...cacheMap.keys()]; }, async delete(name) { return cacheMap.delete(name); }
+};
+const active = cacheMap.get(activeName), stable = cacheMap.get(previousName);
+const rollbackKey = new URL('./__gymratik_rollback__', scope).href;
+const probationKey = new URL('./__gymratik_probation__', scope).href;
+active.entries.set(probationKey, new Response(JSON.stringify({ activatedAt: Date.now() })));
+stable.entries.set(completeKey, new Response(JSON.stringify({ version: '0.7.27' })));
+stable.entries.set(new URL('./index.html', scope).href, new Response('<html><head></head><body>Versión estable</body></html>', { headers: { 'content-type': 'text/html' } }));
+const handlers = {};
+const self = { registration: { scope, active: {} }, clients: { async claim() {}, async matchAll() { return []; } }, skipWaiting() {}, addEventListener(name, callback) { handlers[name] = callback; } };
+vm.runInNewContext(source, { self, caches, URL, Map, Set, Request, Response, Headers, fetch: async () => { throw new Error('offline'); }, crypto: { subtle: {} }, console, Date, Promise, Uint8Array, Array, Object, Number, Error, Math });
+async function send(type) {
+  const tasks = [], replies = [];
+  handlers.message({ data: { type, code: 'test-critical-error' }, source: { postMessage(reply) { replies.push(reply); } }, waitUntil(task) { tasks.push(task); } });
+  await Promise.all(tasks);
+  return replies;
+}
+(async () => {
+  const replies = await send('GYMRATIK_STARTUP_FAILED');
+  assert.strictEqual(replies[0].type, 'GYMRATIK_ROLLBACK_READY');
+  assert.strictEqual(replies[0].stableVersion, '0.7.27');
+  const request = { url: new URL('./index.html', scope).href, method: 'GET', mode: 'navigate', cache: 'default', headers: new Headers({ accept: 'text/html' }) };
+  let responsePromise;
+  handlers.fetch({ request, respondWith(value) { responsePromise = value; } });
+  const response = await responsePromise;
+  const html = await response.text();
+  assert.match(html, /Versión estable/);
+  assert.match(html, /Reintentar versión nueva/);
+  assert.strictEqual(response.headers.get('content-type'), 'text/html; charset=utf-8');
+  await send('RETRY_CANDIDATE');
+  assert.strictEqual(await active.match(rollbackKey), undefined, 'manual retry clears rollback mode without changing training storage');
+  active.entries.set(probationKey, new Response(JSON.stringify({ activatedAt: Date.now() - 25 * 60 * 60 * 1000 })));
+  const expired = await send('GYMRATIK_STORAGE_FAILED');
+  assert.strictEqual(expired[0].type, 'GYMRATIK_ROLLBACK_UNAVAILABLE', 'rollback is limited to the 24-hour stabilization window');
+  assert.strictEqual(await active.match(rollbackKey), undefined);
+  console.log(JSON.stringify({ ok: true }));
+})().catch(error => { console.error(error); process.exit(1); });
+"""
+        result = subprocess.run(["node", "-e", script, str(ROOT / "sw.js")], cwd=ROOT, check=False, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), {"ok": True})
 
     def test_deep_offline_navigation_fallback_anchors_shell_to_registration_scope(self):
         for source in (self.service_worker, self.generator):

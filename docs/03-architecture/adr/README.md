@@ -26,7 +26,8 @@ nutrición, IA e integraciones quedan diferidas.
 | [ADR-016](ADR-016-actualizacion-segura-pwa.md) | Inicio y actualización segura de la PWA | Superseded |
 | [ADR-017](ADR-017-politica-de-actualizacion-y-cache-pwa.md) | Política de actualización, red y caché acotada de la PWA | Superseded |
 | [ADR-018](ADR-018-retencion-manual-de-datos-pwa.md) | Retención manual de datos y archivo semanal | Accepted |
-| [ADR-019](ADR-019-actualizacion-incremental-pwa.md) | Versionado explícito y actualización incremental verificable de la PWA | Accepted |
+| [ADR-019](ADR-019-actualizacion-incremental-pwa.md) | Versionado explícito y actualización incremental verificable de la PWA | Superseded |
+| [ADR-020](ADR-020-rollback-de-actualizacion-pwa.md) | Estabilización y rollback seguro de actualizaciones PWA | Accepted |
 
 ## Plantilla
 

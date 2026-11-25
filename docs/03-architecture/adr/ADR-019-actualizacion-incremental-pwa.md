@@ -1,6 +1,6 @@
 # ADR-019 — Versionado explícito y actualización incremental verificable de la PWA
 
-**Estado:** Accepted
+**Estado:** Superseded by [ADR-020](ADR-020-rollback-de-actualizacion-pwa.md)
 **Fecha:** 2026-11-19
 **Supersede:** ADR-017 (las decisiones de retención de datos de ADR-018 siguen vigentes)
 
@@ -12,7 +12,7 @@ El Service Worker identificaba la versión mediante un prefijo del hash de su in
 
 1. `app-version.json` será la fuente de la versión semántica visible. El generador sincroniza la marca de portada, el Service Worker y `release-manifest.json`. El manifiesto lista cada recurso precacheado (excepto a sí mismo) con URL, tamaño y SHA-256, además del SHA-256 del generador; su `buildId` se deriva de la versión, del generador y de esas entradas, por lo que el manifiesto no crea una referencia hash circular.
 2. Antes de descargar recursos, el worker verifica que el manifiesto servido coincide con sus constantes embebidas. Examina recursos de la última caché marcada completa, reutiliza los bytes cuyo tamaño y SHA-256 coinciden y descarga solo los que falten o difieran. Verifica las respuestas antes de guardarlas y escribe la marca de caché completa únicamente al final. Se mantienen hasta seis descargas concurrentes y un reintento de cuota.
-3. Se conserva una caché completa previa durante la preparación. Al completarse la instalación, la aplicación autoriza la activación inmediatamente; `controllerchange` recarga la página. Si la nueva versión falla antes de terminar el inicio, la página ofrece recargar para reintentar. No hay rollback automático.
+3. Se conserva una caché completa previa durante la preparación. Al completarse la instalación, la aplicación autoriza la activación inmediatamente; `controllerchange` recarga la página. La política de estabilización y recuperación queda definida en ADR-020.
 4. `Preguntar cada vez` es el valor predeterminado. En una red móvil o de tipo desconocido, la aplicación no inicia por sí misma `registration.update()`; la interfaz ofrece un botón que expresa la autorización para comprobar y descargar. `Solo Wi-Fi` se comporta como antes, y `Permitir siempre` conserva descargas automáticas.
    La preferencia se guarda con una nueva clave local; se ignora la clave de la versión anterior porque esa versión la sobrescribía forzosamente con `always` y ya no permite distinguir la selección original del usuario.
 5. La preferencia solo regula acciones iniciadas por la aplicación. El navegador puede comprobar el script del Service Worker o iniciar una instalación según su propia política; la PWA no puede garantizar tráfico celular cero. Las versiones semánticas y el manifiesto son metadatos de integridad, no firmas criptográficas de autoría.

@@ -878,8 +878,9 @@ SESSION_COMPLETION_UPDATE = r'''  const renderSessionRecap = complete => {
 
 
 def apply_interaction_redesign(source: str) -> str:
+    source = source.replace('<script src="../../../page-update-client.js" defer></script>', '<script src="../../../page-update-client.js"></script>')
     if './page-update-client.js' not in source:
-        source = source.replace('</head>', '  <script src="../../../page-update-client.js" defer></script>\n</head>', 1)
+        source = source.replace('</head>', '  <script src="../../../page-update-client.js"></script>\n</head>', 1)
     source = source.replace(
         'const activityText = `${displayActivity.label} · ${displayActivity.clock}`;',
         "const compactActivityLabels = { rest: 'Descanso', ready: 'Descanso listo', approximation: 'Aproximación', preparing: 'Preparación', strength: displayActivity.label.split(' · ')[0], cardio: 'Calentamiento · cardio', mobility: 'Calentamiento · movilidad', complete: 'Rutina completada', start: 'Listo para iniciar' };\n      const activityText = `${compactActivityLabels[displayActivity.kind] || 'Sesión activa'} · ${displayActivity.clock}`;",

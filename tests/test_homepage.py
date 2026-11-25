@@ -25,8 +25,9 @@ class HomepageContractTests(unittest.TestCase):
         self.assertEqual(self.manifest["name"], "Gymratik: Rutinas y progreso")
         self.assertEqual(self.manifest["short_name"], "Gymratik")
         self.assertIn("Gymratik: Rutinas y progreso", self.html)
-        self.assertIn('aria-label="Gymratik v0.7.26, inicio"', self.html)
-        self.assertIn('class="brand-version" aria-label="Versión 0.7.26">v0.7.26', self.html)
+        version = json.loads((ROOT / "app-version.json").read_text(encoding="utf-8"))["version"]
+        self.assertIn(f'aria-label="Gymratik v{version}, inicio"', self.html)
+        self.assertIn(f'class="brand-version" aria-label="Versión {version}">v{version}', self.html)
         self.assertIn('<span class="brand-mark" aria-hidden="true"><img src="./assets/branding/gymratik-mascots-mark-v2.png" alt=""></span>', self.html)
         self.assertIn("background:rgba(11,16,23,.72)", self.html)
         self.assertIn(".hero-strength-stage", self.html)
@@ -879,7 +880,8 @@ console.log(JSON.stringify({ok:true,weekSessions:week.length,recommendations:['d
 
     def test_homepage_reloads_after_service_worker_controller_change(self):
         client = (ROOT / "page-update-client.js").read_text(encoding="utf-8")
-        self.assertIn('src="./page-update-client.js" defer', self.html)
+        self.assertIn('src="./page-update-client.js"', self.html)
+        self.assertNotIn('src="./page-update-client.js" defer', self.html)
         self.assertIn("addEventListener('controllerchange'", client)
         self.assertIn('window.location.reload()', client)
 

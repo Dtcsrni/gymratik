@@ -874,5 +874,21 @@
     return { indexedDB: 'indexedDB' in window, persistent };
   }
 
-  window.TrainingProgressStore = Object.freeze({ capture, clearAll, clearRoutine, getDashboard, getProfile, saveProfile, getHistory, exportData, importData, requestPersistence, storageStatus, classifyTemporalRelation: temporalRelation });
+  async function checkStorage() {
+    requireInstalledApp();
+    const probeKey = `health-check-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const probe = { key: probeKey, checkedAt: Date.now() };
+    const db = await openDatabase();
+    const probeRequest = await transaction(db, [META_STORE], 'readwrite', tx => {
+      const store = tx.objectStore(META_STORE);
+      store.put(probe);
+      const verification = store.get(probeKey);
+      store.delete(probeKey);
+      return verification;
+    });
+    if (probeRequest?.result?.key !== probeKey) throw new Error('La lectura de verificación de IndexedDB falló');
+    return { indexedDB: true };
+  }
+
+  window.TrainingProgressStore = Object.freeze({ capture, clearAll, clearRoutine, getDashboard, getProfile, saveProfile, getHistory, exportData, importData, requestPersistence, storageStatus, checkStorage, classifyTemporalRelation: temporalRelation });
 })();

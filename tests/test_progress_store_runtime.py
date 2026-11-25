@@ -9,6 +9,45 @@ STORE = ROOT / "progress-store.js"
 
 
 class ProgressStoreRuntimeTests(unittest.TestCase):
+    def test_storage_health_probe_round_trips_and_removes_only_its_temporary_meta_record(self):
+        script = r"""
+const fs = require('fs'), vm = require('vm'), assert = require('assert');
+const source = fs.readFileSync(process.argv[1], 'utf8');
+const records = new Map(), stores = new Map();
+function makeStore(name) {
+  return {
+    name, indexNames: { contains() { return false; } }, createIndex() {},
+    put(value) { records.set(`${name}:${value.key || value.routineId || value.sessionId || value.activityKey || value.profileId}`, value); },
+    get(key) { const request = { result: records.get(`${name}:${key}`) }; return request; },
+    delete(key) { records.delete(`${name}:${key}`); }, clear() {}, getAll() { return { result: [] }; },
+    openCursor() { const request = { result: null }; setTimeout(() => request.onsuccess?.(), 0); return request; },
+    index() { return { openCursor() { return { result: null }; } }; }
+  };
+}
+const db = {
+  get objectStoreNames() { return { contains: name => stores.has(name), [Symbol.iterator]: function* () { yield* stores.keys(); } }; },
+  createObjectStore(name) { stores.set(name, makeStore(name)); return stores.get(name); },
+  transaction(names) { const tx = { objectStore(name) { if (!stores.has(name)) throw new Error(`missing ${name}`); return stores.get(name); } }; setTimeout(() => tx.oncomplete?.(), 0); return tx; }, close() {}
+};
+const window = {
+  GymratikInstallGate: { isInstalled() { return true; } },
+  CustomEvent: class CustomEvent { constructor(name, init) { this.name = name; this.detail = init?.detail; } }, dispatchEvent() {},
+  localStorage: { getItem() { return null; }, setItem() {}, removeItem() {} },
+  indexedDB: { open() { const request = { result: db, transaction: { objectStore(name) { return stores.get(name); } } }; setTimeout(() => { request.onupgradeneeded({ oldVersion: 0 }); setTimeout(() => request.onsuccess(), 0); }, 0); return request; } }
+};
+vm.runInNewContext(source, { window, CustomEvent: window.CustomEvent, localStorage: window.localStorage, navigator: {}, console, Date, Math, setTimeout, clearTimeout });
+(async () => {
+  const result = await window.TrainingProgressStore.checkStorage();
+  assert.strictEqual(result.indexedDB, true);
+  assert.strictEqual([...records.keys()].some(key => key.includes('health-check-')), false, 'temporary check record must be removed in the same transaction');
+  assert.deepStrictEqual([...stores.keys()].sort(), ['activity', 'meta', 'profiles', 'routineProgress', 'sessions']);
+  console.log(JSON.stringify({ ok: true }));
+})().catch(error => { console.error(error); process.exit(1); });
+"""
+        result = subprocess.run(["node", "-e", script, str(STORE)], cwd=ROOT, check=False, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), {"ok": True})
+
     def test_home_dashboard_clears_unscoped_legacy_completion_before_it_can_be_adopted(self):
         script = r"""
 const fs = require('fs'), vm = require('vm'), assert = require('assert');
