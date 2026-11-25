@@ -2442,7 +2442,7 @@ def validate_motivation_card(browser, widths=(320, 360, 412, 530)) -> dict:
 
 
 def validate_plate_picker_layout(browser, routines=ROUTINES) -> list[dict]:
-    """Comprueba grupos, mosaico y recursos del selector de discos en móvil."""
+    """Comprueba legibilidad, ajuste y traspaso de la suma al control de carga."""
     results = []
     for name, _sex, _variant in routines:
         for width, height in ((320, 568), (412, 915)):
@@ -2466,12 +2466,11 @@ def validate_plate_picker_layout(browser, routines=ROUTINES) -> list[dict]:
                 context.close()
                 raise AssertionError(f"{name}: el selector no muestra ambos grupos de discos")
             page.wait_for_function("() => { const actions=document.querySelector('.platePickerActions')?.getBoundingClientRect(), bar=document.querySelector('#floatingSessionSummary')?.getBoundingClientRect(); return !actions || !bar || actions.bottom <= bar.top - 8; }", timeout=5_000)
-            panel.evaluate("async panel => Promise.all([...panel.querySelectorAll('.platePickerOption img')].map(async image => { image.loading='eager'; try { await image.decode(); } catch (_) {} }))")
             metrics = panel.evaluate("""panel => {
               const rect = element => { const r=element.getBoundingClientRect(); return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height}; };
               const groups=[...panel.querySelectorAll('.platePickerUnit')].map(group => {
                 const grid=group.querySelector('.platePickerGrid');
-                const items=[...group.querySelectorAll('.platePickerItem')].map(item => ({box:rect(item),label:rect(item.querySelector('.platePickerOption span')),image:rect(item.querySelector('img')),loaded:item.querySelector('img').complete&&item.querySelector('img').naturalWidth>0}));
+                const items=[...group.querySelectorAll('.platePickerItem')].map(item => { const face=item.querySelector('.platePickerDiscFace'); const value=face?.querySelector('.platePickerDiscValue'); const unit=face?.querySelector('.platePickerDiscUnit'); const weight=Number(item.dataset.weight); const unitCode=item.dataset.unit; return {box:rect(item),face:rect(face),value:rect(value),unit:rect(unit),valueText:value?.textContent,unitText:unit?.textContent,kilograms:weight*(unitCode==='lb'?0.45359237:1),faceReadable:Boolean(value?.textContent&&unit?.textContent&&getComputedStyle(value).whiteSpace==='nowrap'&&getComputedStyle(unit).whiteSpace==='nowrap'&&value.scrollWidth<=value.clientWidth+1)}; });
                 return {title:group.querySelector('h4').textContent,box:rect(group),grid:rect(grid),items};
               });
               const overlap=(a,b)=>a.x < b.right-1 && a.right > b.x+1 && a.y < b.bottom-1 && a.bottom > b.y+1;
@@ -2484,6 +2483,10 @@ def validate_plate_picker_layout(browser, routines=ROUTINES) -> list[dict]:
             if metrics["scrollWidth"] > metrics["clientWidth"] + 1 or metrics["itemOverlap"]:
                 context.close()
                 raise AssertionError(f"{name} a {width}px: desbordamiento o discos superpuestos: {metrics}")
+            weighted_discs = sorted((item for group in metrics["groups"] for item in group["items"]), key=lambda item: item["kilograms"])
+            if any(next_item["face"]["width"] + .5 < item["face"]["width"] for item, next_item in zip(weighted_discs, weighted_discs[1:])) or weighted_discs[-1]["face"]["width"] <= weighted_discs[0]["face"]["width"]:
+                context.close()
+                raise AssertionError(f"{name} a {width}px: el tamaño visual no crece con el peso equivalente: {metrics}")
             compact_phone = width >= 390 and height >= 800
             max_panel_height = min(height * (.52 if compact_phone else .62), 480 if compact_phone else 560)
             panel_top = panel.evaluate("element => element.getBoundingClientRect().top")
@@ -2496,14 +2499,32 @@ def validate_plate_picker_layout(browser, routines=ROUTINES) -> list[dict]:
                     context.close()
                     raise AssertionError(f"{name} a {width}px: grupo de discos comprimido: {metrics}")
                 for item in group["items"]:
-                    if not item["loaded"] or item["box"]["width"] < 45 or item["label"]["width"] > item["box"]["width"] + 1:
+                    if item["box"]["width"] < 60 or item["face"]["width"] < 42 or not item["faceReadable"]:
                         context.close()
-                        raise AssertionError(f"{name} a {width}px: disco o etiqueta no carga/cabe en su tarjeta: {metrics}")
+                        raise AssertionError(f"{name} a {width}px: valor/unidad del disco no es legible o no cabe: {metrics}")
+            transfer_result = None
+            if name == routines[0][0] and width == 412:
+                panel.locator('.platePickerOption[aria-label="Agregar disco de 25 kg"]').click()
+                panel.locator('.platePickerOption[aria-label="Agregar disco de 45 lb"]').click()
+                total_text = panel.locator('.platePickerTotal').inner_text()
+                if '45.41 kg' not in total_text or '100.12 lb' not in total_text:
+                    context.close()
+                    raise AssertionError(f"La suma mixta no coincide: {total_text}")
+                load_unit = page.locator('article.card[data-exercise-index] .performanceLoadUnit').first
+                load_unit.evaluate("element => { element.disabled=false; element.value='lb'; element.dispatchEvent(new Event('change',{bubbles:true})); }")
+                page.wait_for_function("() => document.querySelector('.platePickerTransfer')?.textContent.includes('100.12 lb')", timeout=3_000)
+                panel.locator('.platePickerActionPrimary').click()
+                load_output = page.locator('article.card[data-exercise-index] .performanceLoadValue').first.inner_text()
+                load_value = page.locator('article.card[data-exercise-index] .performanceLoad').first.input_value()
+                if load_output != '100.12 lb' or abs(float(load_value) - 100.116) > .02:
+                    context.close()
+                    raise AssertionError(f"La carga aplicada no conserva la suma mixta: {load_output} / {load_value}")
+                transfer_result = {"mixedPlates": total_text, "loadSelector": load_output, "rangeValue": load_value}
             if SCREENSHOT_DIR is not None:
                 SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
                 panel.evaluate("element => { element.scrollTop=0; element.querySelector('.platePickerUnits').scrollTop=0; }")
                 panel.screenshot(path=str(SCREENSHOT_DIR / f"plate-picker-day-{name.split('_')[2]}-{width}.png"))
-            results.append({"routine": name, "viewport": f"{width}x{height}", "panelHeight": round(metrics["panelHeight"]), "panelMaxHeight": round(max_panel_height), "plateListScroll": f'{metrics["groupsClientHeight"]}/{metrics["groupsScrollHeight"]}', "actionHeights": [round(button["height"]) for button in metrics["actionButtons"]], "groupWidths": [round(group["box"]["width"]) for group in metrics["groups"]], "tileWidths": [round(group["items"][0]["box"]["width"]) for group in metrics["groups"]], "imagesLoaded": sum(item["loaded"] for group in metrics["groups"] for item in group["items"])})
+            results.append({"routine": name, "viewport": f"{width}x{height}", "panelHeight": round(metrics["panelHeight"]), "panelMaxHeight": round(max_panel_height), "plateListScroll": f'{metrics["groupsClientHeight"]}/{metrics["groupsScrollHeight"]}', "actionHeights": [round(button["height"]) for button in metrics["actionButtons"]], "groupWidths": [round(group["box"]["width"]) for group in metrics["groups"]], "tileWidths": [round(group["items"][0]["box"]["width"]) for group in metrics["groups"]], "transfer": transfer_result})
             context.close()
     return results
 
