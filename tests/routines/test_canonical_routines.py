@@ -1174,10 +1174,9 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 self.assertTrue(cards)
                 for index, card in enumerate(cards, 1):
                     with self.subTest(path=path.name, exercise=index):
-                        self.assertIn('class="meta"', card)
-                        self.assertIn('class="exTitle"', card)
-                        self.assertIn('class="visual"', card)
-                        self.assertIn('class="coach"', card)
+                        sections = [card.find(f'class="{section}"') for section in ('meta', 'visual', 'coach')]
+                        self.assertTrue(all(position >= 0 for position in sections))
+                        self.assertEqual(sections, sorted(sections), "encabezado, referencia y prescripción deben conservar el orden común")
         self.assertEqual(len(set(layout_styles)), 1, "los cuatro días deben compartir exactamente el mismo layout móvil")
 
     def test_every_exercise_keeps_one_ordered_control_and_technique_section_inside_its_coach(self) -> None:
@@ -1197,6 +1196,9 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 techniques = list(technique_open.finditer(card))
                 with self.subTest(path=path.name, exercise=index):
                     self.assertIsNotNone(coach)
+                    for section in ('meta', 'visual'):
+                        self.assertEqual(card.count(f'class="{section}"'), 1)
+                    self.assertEqual(card.count('class="coach"'), 1)
                     self.assertEqual(len(trackers), 1)
                     self.assertEqual(len(techniques), 1)
                     coach_end = close_div_offset(card, coach.end())
@@ -1250,11 +1252,16 @@ console.log(JSON.stringify({{profiles:profiles.length,units:2}}));
                 self.assertIn("Number.isFinite(kg) && kg >= realisticMinKg && kg <= realisticMaxKg", source)
                 self.assertIn("Number(record.reps) >= 1 && Number(record.reps) <= 100", source)
                 self.assertIn("exerciseHistoryBest.textContent =", source)
-                self.assertIn("exerciseSetPills.replaceChildren()", source)
-                self.assertIn("appendMetric(`${reps} rep`)", source)
-                self.assertIn("formatElapsed(duration)", source)
+                self.assertIn("item.tracker.append(performancePanel)", source)
+                self.assertIn("item.tracker.querySelector('.exerciseTrackerHead')?.after(display)", source)
+                self.assertIn("entries.push({ key: `set-${index + 1}`, label: `S${index + 1} · ${details}`, value: formatElapsed(duration), kind: 'set' })", source)
+                self.assertNotIn("exerciseSetPills", source)
+                self.assertNotIn("Series de la sesión", source)
+                self.assertIn('.exerciseTimerChip[data-kind="set"]{border-color:#45d8c4', source)
+                self.assertIn('.exerciseTimerChip[data-kind="rest"]{border-color:#ffc95e', source)
+                self.assertIn('.exerciseTimerChip[data-kind="exercise"]{border-color:#63cfff', source)
+                self.assertIn('.exerciseTimerChip[data-kind="preparation"]{border-color:#bba0ff', source)
                 self.assertIn("realisticDeltaKg", source)
-                self.assertIn("row.dataset.zone = zone", source)
                 self.assertIn("item.renderExerciseHistory?.();", source)
                 self.assertIn('aria-label="Iniciar serie 1 de ', source)
 

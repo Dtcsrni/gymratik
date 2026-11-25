@@ -76,16 +76,6 @@ button:not(:disabled):active,[role="button"]:not([aria-disabled="true"]):active{
 .exerciseHistoryLabel{color:#b8d4de;font-size:.66rem;font-weight:900;letter-spacing:.055em;text-transform:uppercase}
 .exerciseHistoryBest{color:#75f0d4;font-size:clamp(.9rem,3.4vw,1.08rem);font-weight:950;font-variant-numeric:tabular-nums}
 .exerciseHistoryDate{color:#a9c2cd;font-size:.63rem;font-weight:700}
-.exerciseHistorySubhead{margin:0;color:#a9c2cd;font-size:.64rem;font-weight:850}
-.exerciseSetPills{display:flex;flex-wrap:wrap;gap:.35rem;margin:0;padding:0;list-style:none}
-.exerciseSetPill{display:flex;flex-wrap:wrap;align-items:center;gap:.18rem .38rem;min-width:0;max-width:100%;padding:.36rem .48rem;border:1px solid rgba(67,220,185,.38);border-radius:.68rem;background:rgba(15,65,62,.42);color:#eafffb;font-size:.65rem;font-weight:800;line-height:1.25;font-variant-numeric:tabular-nums}
-.exerciseSetPill[data-zone="below"],.exerciseSetPill[data-zone="low"]{border-color:rgba(255,210,119,.5);background:rgba(91,63,25,.3)}
-.exerciseSetPill[data-zone="high"]{border-color:rgba(112,220,255,.5);background:rgba(20,65,91,.4)}
-.exerciseSetPill[data-zone="above"]{border-color:rgba(194,164,255,.52);background:rgba(66,48,93,.38)}
-.exerciseSetPill[data-zone="invalid"]{border-color:rgba(255,146,123,.52);background:rgba(87,39,43,.36)}
-.exerciseSetPillIndex{color:#76e8d2;font-weight:950}.exerciseSetPill[data-zone="below"] .exerciseSetPillIndex,.exerciseSetPill[data-zone="low"] .exerciseSetPillIndex{color:#ffd277}.exerciseSetPill[data-zone="high"] .exerciseSetPillIndex{color:#70dcff}.exerciseSetPill[data-zone="above"] .exerciseSetPillIndex{color:#c2a4ff}.exerciseSetPill[data-zone="invalid"] .exerciseSetPillIndex{color:#ffad99}
-.exerciseSetPillMetric{white-space:nowrap}.exerciseSetPill[data-pending="true"]{border-style:dashed;color:#a9c2cd}
-.exerciseSetPillEmpty{margin:0;color:#a9c2cd;font-size:.67rem;line-height:1.35}
 .performanceEntry.isLocked{border-color:rgba(101,242,221,.38)!important;background:linear-gradient(145deg,rgba(14,48,52,.84),rgba(5,22,34,.96))!important}.performanceEntry.isLocked :disabled{cursor:not-allowed!important}.performanceEntry.isLocked .performanceField{opacity:.76}
 .performanceEntry{grid-template-columns:minmax(0,1fr)!important;gap:.55rem!important;padding:.65rem!important;border-color:rgba(105,215,255,.25)!important;border-radius:1rem!important;background:linear-gradient(145deg,rgba(10,33,48,.94),rgba(5,22,34,.96))!important}
 .performanceField input[type="range"]{height:38px!important;min-height:38px!important;margin:0!important;touch-action:pan-x!important}
@@ -162,22 +152,26 @@ button.completeSetButton.is-preparing{border-color:#72dcff;background:linear-gra
 .summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"])::before,.summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"])::after{position:absolute;z-index:2;color:#ffe18a;font-size:14px;line-height:1;pointer-events:none;animation:mascotSparkle .9s ease-in-out infinite alternate}
 .summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"])::before{content:"✦";top:-5px;right:-4px}
 .summaryMascotWrap:has(#summaryActivityMascot[data-motion="celebration"])::after{content:"✧";bottom:-3px;left:-4px;animation-delay:.3s}
-.exerciseTiming{display:flex;flex-wrap:wrap;align-items:center;gap:.38rem;margin:.4rem 0 .5rem;padding:.38rem .42rem;border:1px solid rgba(114,220,255,.13);border-radius:.85rem;background:linear-gradient(105deg,rgba(5,23,35,.68),rgba(8,31,44,.46));color:#bad4de;font-size:.65rem;line-height:1.1}
-.exerciseTimerChip{position:relative;display:inline-flex;align-items:center;gap:.38rem;min-height:30px;max-width:100%;overflow:hidden;padding:.35rem .55rem;border:1px solid rgba(114,220,255,.19);border-radius:999px;background:rgba(16,47,63,.75);font-variant-numeric:tabular-nums;white-space:nowrap}
-.exerciseTimerLabel{color:#a9cbd6;font-size:.56rem;font-weight:850;letter-spacing:.06em;text-transform:uppercase}
-.exerciseTimerValue{color:#e5f5f8;font-size:.69rem;font-weight:900}
-.exerciseTimerChip[data-kind="set"]{border-color:rgba(53,214,164,.25)}
-.exerciseTimerChip[data-kind="set"] .exerciseTimerValue{color:#80edcf}
-.exerciseTimerChip[data-kind="rest"]{border-color:rgba(255,210,119,.3)}
-.exerciseTimerChip[data-kind="rest"] .exerciseTimerValue{color:#ffdc8d}
-.exerciseTimerChip[data-kind="exercise"]{border-color:rgba(114,220,255,.2)}
-.exerciseTimerChip[data-kind="active-set"]{border-color:rgba(101,242,221,.74);background:linear-gradient(105deg,rgba(19,105,91,.72),rgba(10,54,57,.9));box-shadow:0 0 14px rgba(101,242,221,.13)}
+.exerciseTiming{display:flex;flex-wrap:wrap;align-items:center;gap:.42rem;margin:.4rem 0 .5rem;padding:.42rem .46rem;border:1px solid rgba(114,220,255,.24);border-radius:.9rem;background:linear-gradient(105deg,rgba(5,23,35,.92),rgba(8,31,44,.82));color:#e2f4fa;font-size:.68rem;line-height:1.15}
+.exerciseTimerChip{position:relative;display:inline-flex;align-items:center;gap:.4rem;min-height:32px;max-width:100%;overflow:hidden;padding:.38rem .58rem;border:1px solid rgba(111,205,237,.58);border-radius:999px;background:linear-gradient(125deg,rgba(17,62,83,.98),rgba(12,45,66,.98));color:#f2fbff;font-variant-numeric:tabular-nums;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.exerciseTimerLabel{color:#d0e8f2;font-size:.58rem;font-weight:900;letter-spacing:.055em;text-transform:uppercase}
+.exerciseTimerValue{color:#fff;font-size:.72rem;font-weight:950}
+.exerciseTimerChip[data-kind="set"]{border-color:#45d8c4;background:linear-gradient(125deg,rgba(10,83,78,.98),rgba(11,57,66,.98));box-shadow:inset 0 1px 0 rgba(227,255,250,.14),0 0 12px rgba(69,216,196,.12)}
+.exerciseTimerChip[data-kind="set"] .exerciseTimerLabel{color:#baf7ea}
+.exerciseTimerChip[data-kind="set"] .exerciseTimerValue{color:#a8ffe8}
+.exerciseTimerChip[data-kind="rest"]{border-color:#ffc95e;background:linear-gradient(125deg,rgba(103,69,15,.98),rgba(68,51,22,.98))}
+.exerciseTimerChip[data-kind="rest"] .exerciseTimerLabel{color:#ffedbb}
+.exerciseTimerChip[data-kind="rest"] .exerciseTimerValue{color:#ffe38d}
+.exerciseTimerChip[data-kind="exercise"]{border-color:#63cfff;background:linear-gradient(125deg,rgba(17,67,111,.98),rgba(13,48,85,.98))}
+.exerciseTimerChip[data-kind="exercise"] .exerciseTimerLabel{color:#d0f1ff}
+.exerciseTimerChip[data-kind="preparation"]{border-color:#bba0ff;background:linear-gradient(125deg,rgba(62,43,113,.98),rgba(37,37,83,.98))}
+.exerciseTimerChip[data-kind="preparation"] .exerciseTimerValue{color:#e1d6ff}
+.exerciseTimerChip[data-kind="active-set"]{border-color:#62ffe0;background:linear-gradient(105deg,rgba(11,112,97,.98),rgba(10,62,71,.98));box-shadow:0 0 16px rgba(101,242,221,.2)}
 .exerciseTimerChip[data-kind="active-set"]::before,.exerciseTimerChip[data-kind="active-rest"]::before{width:.42rem;height:.42rem;flex:none;border-radius:50%;background:#65f2dd;content:"";box-shadow:0 0 .5rem currentColor;animation:timerActivityPulse .82s ease-in-out infinite}
 .exerciseTimerChip[data-kind="active-set"]::after{position:absolute;right:0;bottom:0;left:0;height:2px;background:linear-gradient(90deg,transparent,#65f2dd,transparent);content:"";animation:timerActivitySweep 2.3s ease-in-out infinite}
-.exerciseTimerChip[data-kind="active-rest"]{border-color:rgba(255,210,119,.72);background:linear-gradient(105deg,rgba(112,79,21,.56),rgba(68,51,27,.8));box-shadow:0 0 12px rgba(255,210,119,.11)}
+.exerciseTimerChip[data-kind="active-rest"]{border-color:#ffd277;background:linear-gradient(105deg,rgba(139,91,14,.98),rgba(83,55,19,.98));box-shadow:0 0 14px rgba(255,210,119,.2)}
 .exerciseTimerChip[data-kind="active-rest"]::after{position:absolute;right:0;bottom:0;left:0;height:2px;transform:scaleX(var(--timer-progress,0));transform-origin:left;background:linear-gradient(90deg,#b98221,#ffd277);content:"";transition:transform .35s linear}
 .exerciseTimerChip[data-kind="active-rest"]::before{background:#ffd277;color:#ffd277}
-.exerciseTimerChip[data-kind="preparation"]{border-color:rgba(114,220,255,.62);background:rgba(24,75,101,.6)}
 .exerciseTimerChip[data-kind="empty"]{border-style:dashed;color:#99b7c1}
 .exerciseTimerChip[hidden]{display:none}
 @keyframes timerActivityPulse{0%,100%{opacity:.72;transform:scale(.82)}50%{opacity:1;transform:scale(1.15)}}
@@ -1337,12 +1331,19 @@ def apply_warmup_load_selector_contract(source: str) -> str:
 
 
 def standardize_exercise_history_visuals(source: str) -> str:
-    """Show each exercise's validated historical maximum and compact set pills."""
-    history_rules = re.search(r'(\.exerciseHistorySummary\{.*?\.exerciseSetPillEmpty\{.*?\})\n\.performanceEntry\.isLocked', INTERACTION_FEEDBACK_STYLE, flags=re.S)
+    """Show only the validated historical maximum; set details live beside the set control."""
+    if 'data-fix="rest-countdown-activity-v1"' in source:
+        source = re.sub(r'<style data-fix="rest-countdown-activity-v1">.*?</style>', lambda _: REST_COUNTDOWN_STYLE, source, count=1, flags=re.S)
+    else:
+        source = source.replace("</head>", REST_COUNTDOWN_STYLE + "\n</head>", 1)
+    history_rules = re.search(r'(\.exerciseHistorySummary\{.*?\.exerciseHistoryDate\{[^\n]*\})', INTERACTION_FEEDBACK_STYLE, flags=re.S)
     if not history_rules:
-        raise ValueError("Faltan los estilos de la vista compacta del historial por ejercicio")
-    if 'data-enhancement="exercise-history-visuals-v1"' not in source:
-        source = source.replace("</head>", f'<style data-enhancement="exercise-history-visuals-v1">\n{history_rules.group(1)}\n</style>\n</head>', 1)
+        raise ValueError("Faltan los estilos del máximo histórico por ejercicio")
+    history_style = f'<style data-enhancement="exercise-history-visuals-v1">\n{history_rules.group(1)}\n</style>'
+    if 'data-enhancement="exercise-history-visuals-v1"' in source:
+        source = re.sub(r'<style data-enhancement="exercise-history-visuals-v1">.*?</style>', lambda _: history_style, source, count=1, flags=re.S)
+    else:
+        source = source.replace("</head>", history_style + "\n</head>", 1)
     anchor = """    const progressionCue = document.createElement('p'); progressionCue.className = 'progressionCue'; progressionCue.setAttribute('role', 'status'); progressionCue.textContent = `Registra repeticiones y carga para completar. Si no conoces algún dato, toca «Quitar» y podrás continuar después de confirmar que quedará sin registrar. Rango de carga: ${item.performanceLoadProfile.minKg}–${item.performanceLoadProfile.maxKg} kg.`;
     performancePanel.append(repsLabel, loadLabel, progressionCue);"""
     replacement = """    const exerciseHistorySummary = document.createElement('section'); exerciseHistorySummary.className = 'exerciseHistorySummary'; exerciseHistorySummary.setAttribute('aria-label', `Historial validado de ${item.title}`);
@@ -1350,12 +1351,10 @@ def standardize_exercise_history_visuals(source: str) -> str:
     const exerciseHistoryLabel = document.createElement('span'); exerciseHistoryLabel.className = 'exerciseHistoryLabel'; exerciseHistoryLabel.textContent = 'Máximo histórico válido';
     const exerciseHistoryBest = document.createElement('output'); exerciseHistoryBest.className = 'exerciseHistoryBest'; exerciseHistoryBest.setAttribute('aria-live', 'polite'); exerciseHistoryBest.textContent = 'Sin cargas históricas válidas'; exerciseHistoryHeading.append(exerciseHistoryLabel, exerciseHistoryBest);
     const exerciseHistoryDate = document.createElement('span'); exerciseHistoryDate.className = 'exerciseHistoryDate';
-    const exerciseHistorySubhead = document.createElement('p'); exerciseHistorySubhead.className = 'exerciseHistorySubhead'; exerciseHistorySubhead.textContent = 'Series de la sesión';
-    const exerciseSetPills = document.createElement('ul'); exerciseSetPills.className = 'exerciseSetPills'; exerciseSetPills.setAttribute('aria-label', `Datos por serie de ${item.title}`);
     const progressionCue = document.createElement('p'); progressionCue.className = 'progressionCue'; progressionCue.setAttribute('role', 'status'); progressionCue.textContent = `Registra repeticiones y carga para completar. Si no conoces algún dato, toca «Quitar» y podrás continuar después de confirmar que quedará sin registrar. Rango de carga: ${item.performanceLoadProfile.minKg}–${item.performanceLoadProfile.maxKg} kg.`;
-    exerciseHistorySummary.append(exerciseHistoryHeading, exerciseHistoryDate, exerciseHistorySubhead, exerciseSetPills);
+    exerciseHistorySummary.append(exerciseHistoryHeading, exerciseHistoryDate);
     performancePanel.append(repsLabel, loadLabel, exerciseHistorySummary, progressionCue);
-    item.exerciseHistoryBest = exerciseHistoryBest; item.exerciseHistoryDate = exerciseHistoryDate; item.exerciseSetPills = exerciseSetPills;
+    item.exerciseHistoryBest = exerciseHistoryBest; item.exerciseHistoryDate = exerciseHistoryDate;
     item.renderExerciseHistory = () => {
       const formatHistoryElapsed = milliseconds => { const seconds = Math.max(0, Math.floor(Number(milliseconds) / 1000)); const minutes = Math.floor(seconds / 60); const remainder = seconds % 60; return `${String(minutes).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`; };
       const profile = item.performanceLoadProfile;
@@ -1379,7 +1378,6 @@ def standardize_exercise_history_visuals(source: str) -> str:
         validHistorySessions.push({ session, records }); previousSessionMaxKg = sessionMaxKg;
       });
       const validHistorical = validHistorySessions.flatMap(({ session, records }) => records.map(record => ({ record, session })));
-      item.validExerciseHistory = validHistorySessions;
       validHistorical.sort((a, b) => kgFor(b.record) - kgFor(a.record) || Number(b.record.updatedAt || b.session.endedAt || b.session.updatedAt || 0) - Number(a.record.updatedAt || a.session.endedAt || a.session.updatedAt || 0));
       const best = validHistorical[0];
       if (best) {
@@ -1390,31 +1388,6 @@ def standardize_exercise_history_visuals(source: str) -> str:
         const timestamp = Number(best.record.updatedAt || best.session.endedAt || best.session.updatedAt || 0);
         exerciseHistoryDate.textContent = timestamp > 0 ? `Registrado el ${new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(timestamp))}` : '';
       } else { exerciseHistoryBest.textContent = 'Sin cargas históricas válidas'; exerciseHistoryDate.textContent = ''; }
-      const current = state.__performance?.[String(item.index + 1)] || {};
-      const currentRows = item.seriesKeys.map((key, index) => ({ ...(current[key] || {}), _setNumber: index + 1, _pending: !current[key] }));
-      const timing = state.__timing?.exercises?.[String(item.index + 1)];
-      const hasCurrent = currentRows.some(row => !row._pending) || Boolean(timing?.startedAt || timing?.seriesStartedAt || timing?.endedAt);
-      let rows = currentRows;
-      if (!hasCurrent) {
-        const latestValid = item.validExerciseHistory?.[item.validExerciseHistory.length - 1]; const latest = latestValid?.session;
-        rows = latest ? latestValid.records.slice().sort((a, b) => Number(a.setNumber || 0) - Number(b.setNumber || 0)).map((record, index) => ({ ...record, _setNumber: Number(record.setNumber) || index + 1, _session: latest })) : [];
-      }
-      exerciseSetPills.replaceChildren();
-      if (!rows.length) { const empty = document.createElement('li'); empty.className = 'exerciseSetPillEmpty'; empty.textContent = 'Aún no hay series registradas para este ejercicio.'; exerciseSetPills.append(empty); return; }
-      rows.forEach((record, index) => {
-        const row = document.createElement('li'); row.className = 'exerciseSetPill';
-        const reps = Number(record.reps); const validReps = Number.isInteger(reps) && reps >= 1 && reps <= 100; const kg = kgFor(record);
-        const zone = !validReps ? kg === null && record.load !== null && record.load !== undefined && String(record.load).trim() !== '' ? 'invalid' : 'mid' : reps < item.repMinimum ? 'below' : reps <= item.repMinimum + 1 ? 'low' : reps < item.repMaximum - 1 ? 'mid' : reps <= item.repMaximum ? 'high' : 'above';
-        row.dataset.zone = zone; row.dataset.pending = String(Boolean(record._pending));
-        const indexLabel = document.createElement('span'); indexLabel.className = 'exerciseSetPillIndex'; indexLabel.textContent = `S${record._setNumber || index + 1}`; row.append(indexLabel);
-        const appendMetric = text => { const metric = document.createElement('span'); metric.className = 'exerciseSetPillMetric'; metric.textContent = text; row.append(metric); };
-        if (validReps) appendMetric(`${reps} rep`); else if (record._pending) appendMetric('Pendiente'); else appendMetric('Rep. —');
-        if (kg !== null) { const unit = record.loadUnit === 'lb' ? 'lb' : 'kg'; const value = unit === 'lb' ? kg / 0.45359237 : kg; appendMetric(`${new Intl.NumberFormat('es-MX', { maximumFractionDigits: 1 }).format(value)} ${unit}`); }
-        else if (record.load !== null && record.load !== undefined && String(record.load).trim() !== '') appendMetric('Carga omitida'); else appendMetric('Sin carga');
-        const duration = Number(record.durationMs); if (Number.isFinite(duration) && duration > 0) appendMetric(formatHistoryElapsed(duration));
-        row.setAttribute('aria-label', `${indexLabel.textContent}, ${validReps ? `${reps} repeticiones` : 'repeticiones sin registrar'}, ${kg !== null ? 'carga válida' : 'sin carga válida'}${Number.isFinite(duration) && duration > 0 ? `, duración ${formatHistoryElapsed(duration)}` : ''}`);
-        exerciseSetPills.append(row);
-      });
     };
     item.renderExerciseHistory();"""
     if anchor in source:
@@ -1434,6 +1407,20 @@ def standardize_exercise_history_visuals(source: str) -> str:
             raise ValueError("No se pudo actualizar el render ya existente del historial por ejercicio")
     else:
         raise ValueError("No se encontró la creación del resumen de progresión para agregar el máximo histórico por ejercicio")
+    source = re.sub(
+        r"    const exerciseHistorySubhead = document\.createElement\('p'\);.*?\n    const exerciseSetPills = document\.createElement\('ul'\);.*?\n",
+        "",
+        source,
+        count=1,
+    )
+    source = source.replace(
+        "exerciseHistorySummary.append(exerciseHistoryHeading, exerciseHistoryDate, exerciseHistorySubhead, exerciseSetPills);",
+        "exerciseHistorySummary.append(exerciseHistoryHeading, exerciseHistoryDate);",
+    )
+    source = source.replace(
+        "item.exerciseHistoryBest = exerciseHistoryBest; item.exerciseHistoryDate = exerciseHistoryDate; item.exerciseSetPills = exerciseSetPills;",
+        "item.exerciseHistoryBest = exerciseHistoryBest; item.exerciseHistoryDate = exerciseHistoryDate;",
+    )
     source = re.sub(
         r"const completed = skipped \|\| done === item\.seriesKeys\.length;(?:\s*item\.renderExerciseHistory\?\.\(\);)*",
         "const completed = skipped || done === item.seriesKeys.length; item.renderExerciseHistory?.();",
